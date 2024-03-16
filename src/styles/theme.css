@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root[data-theme="light"] {
+  --color-background: 187 204 247;
+  --color-paper: 209 221 250;
+  --color-text-primary: 0 10 36;
+  --color-text-secondary: 204 218 255;
+
+  --color-primary: 1 40 131;
+  --color-secondary: 252 98 254;
+}
+:root[data-theme="dark"] {
+  --color-background: 8 25 68;
+  --color-paper: 5 17 46;
+  --color-text-primary: 219 229 255;
+  --color-text-secondary: 0 14 51;
+
+  --color-primary: 124 163 254;
+  --color-secondary: 155 1 157;
+}
+
+#app {
+  @apply bg-background text-skin-primary;
+}
+
+* {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+a {
+  @apply text-primary;
+}
+
+a:hover {
+  @apply underline;
+}
