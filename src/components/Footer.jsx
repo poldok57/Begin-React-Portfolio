@@ -18,14 +18,7 @@ export const Footer = () => {
         </a>
         <SocialNetworks socialNetworks={SOCIAL_NETWORKS} />
       </div>
-      <div className="grid grid-cols-6">
-        <div>6</div>
-        <div className="grid grid-cols-5">5</div>
-        <div className="grid grid-cols-4">4</div>
-        <div className="grid grid-cols-3">3</div>
-        <div className="grid grid-cols-2">2</div>
-        <div>1</div>
-      </div>
+
       <p>
         Created for educational purpose for the{" "}
         <a href="https://codelynx.dev/beginreact">BeginReact.dev formation</a> !

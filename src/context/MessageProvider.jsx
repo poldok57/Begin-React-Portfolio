@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, memo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { Button } from "../components/atom/Button";
 import { withMousePosition } from "./withMousePosition";
 import { MdCopyAll } from "react-icons/md";
@@ -81,7 +81,9 @@ const ShowDivAlertMessages = ({
       }, 100);
     }
   }
-  //console.log("ShowDivAlertMessages, displayAlert:", displayAlert);
+  if (props?.trace)
+    console.log("render [ShowDivAlertMessages], display:", display);
+
   return (
     <div
       style={style}
@@ -136,14 +138,9 @@ const ShowDivAlertMessages = ({
   );
 };
 
-const ShowAlertWithMousePosition = withMousePosition(
-  memo(ShowDivAlertMessages)
-);
-
 export const ShowAlertMessages = ({ display = true, ...props }) => {
   const [messages, setMessages] = useState([]);
   const { useMessageListener } = useMessage();
-
   const newMessage = useMessageListener();
 
   const clearMessages = () => {
@@ -162,12 +159,15 @@ export const ShowAlertMessages = ({ display = true, ...props }) => {
     });
   }, [newMessage]);
 
-  return (
-    <ShowAlertWithMousePosition
-      display={display}
-      messages={messages}
-      clearMessages={clearMessages}
-      {...props}
-    />
-  );
+  return useMemo(() => {
+    return (
+      <ShowDivAlertMessages
+        display={display}
+        messages={messages}
+        clearMessages={clearMessages}
+        {...props}
+      />
+    );
+  }, [messages, display]);
 };
+export const ShowAlertMessagesWP = withMousePosition(ShowAlertMessages);

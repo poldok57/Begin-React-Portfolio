@@ -1,6 +1,6 @@
 import { SectionWrapper } from "../atom/SectionWrapper";
 import { MemoryBoard } from "./MemoryBoard";
-import { MemoryReset } from "./MemoryReset";
+import { MemoryResetWP } from "./MemoryReset";
 import { MemoryProvider } from "./MemoryProvider";
 
 export const MemorySection = () => {
@@ -10,9 +10,17 @@ export const MemorySection = () => {
         <div className="flex flex-col items-center gap-14">
           <div className="flex flex-col items-center gap-2">
             <MemoryBoard />
-
-            <MemoryReset className="absolute" defaultFixed="true" />
           </div>
+
+          <MemoryResetWP
+            trace="false"
+            close="false"
+            titleBar="true"
+            titleHide="false"
+            title="Reset panel"
+            titleHeight={30}
+            style={{ position: "relative" }}
+          />
         </div>
       </MemoryProvider>
     </SectionWrapper>

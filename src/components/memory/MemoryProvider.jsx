@@ -11,7 +11,7 @@ import { useMessage } from "../../context/MessageProvider";
 
 const MemoryContext = createContext({ startTime: 0, getNbrTry: () => 0 });
 
-export const MemoryProvider = ({ children }) => {
+export const MemoryProvider = ({ children, ...props }) => {
   // const [nbrTry, setNbrTry] = useState(0);
   const [size, setSize] = useState({ width: 6, height: 6 });
   const [cards, setCards] = useState(() => getInitialMemory(6 * 6));
@@ -162,7 +162,9 @@ export const MemoryProvider = ({ children }) => {
   };
 
   return (
-    <MemoryContext.Provider value={values}>{children}</MemoryContext.Provider>
+    <MemoryContext.Provider {...props} value={values}>
+      {children}
+    </MemoryContext.Provider>
   );
 };
 

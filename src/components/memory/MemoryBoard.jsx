@@ -5,6 +5,7 @@ import { MemoryNbrTry } from "./MemoryNbrTry";
 import { useMemoryContext } from "./MemoryProvider";
 import { HightLightOnRender } from "../../context/HightLightOnRender";
 import { useMessage } from "../../context/MessageProvider";
+import clsx from "clsx";
 
 export const MemoryBoard = () => {
   // Memory Game - Exercise
@@ -33,8 +34,6 @@ export const MemoryBoard = () => {
     finisedRef.current = false;
   }
   const size = getSize();
-  const cName = `grid w-max grid-cols-${size.width} gap-2`;
-  // const cName = "grid w-max grid-cols-6 gap-2"`;
 
   // alertMessage(`reload, size: ${size.width}x${size.height}`);
   return (
@@ -42,7 +41,16 @@ export const MemoryBoard = () => {
       <MemoryNbrTry stop={finised} />
       <p style={{ color: "red", fontWeight: "bold", height: 15 }}>{info}</p>
       size: {size.width}x{size.height}
-      <HightLightOnRender off={true} className={cName}>
+      <HightLightOnRender
+        off={true}
+        className={clsx("grid w-max gap-2", {
+          "grid-cols-6": size.width == 6,
+          "grid-cols-5": size.width == 5,
+          "grid-cols-4": size.width == 4,
+          "grid-cols-3": size.width == 3,
+          "grid-cols-2": size.width == 2,
+        })}
+      >
         {cards.map((card, idx) => (
           <MemoryCard key={idx} card={card} idx={idx} />
         ))}

@@ -24,9 +24,8 @@ const HeroPresentation = () => {
         </span>
       </h1>
       <p className="max-w-xl text-xl drop-shadow-[0_20px_20px_rgba(0,0,200,0.8)]">
-        <b>Apprenti React.</b> I’m a software developer that make thing on
-        internet, very happy to see your here, place holder please fill
-        something here please fill something here.
+        <b>React Factory.</b> Just try to have Fun, with React toolkit
+        development.
       </p>
     </div>
   );
@@ -39,7 +38,12 @@ export const HeroSection = () => {
   return (
     <HightLightOnRender className="relative m-auto flex w-full max-w-4xl flex-col">
       <HeroLogoWP className="top-0 right-0 md:absolute" />
-      <HeroPresentationWP className="md:relative" />
+      <HeroPresentationWP
+        trace="false"
+        className="md:relative"
+        titleBar="true"
+        title="Welcome to the React Factory !"
+      />
     </HightLightOnRender>
   );
 };

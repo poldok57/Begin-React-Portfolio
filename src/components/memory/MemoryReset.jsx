@@ -1,6 +1,6 @@
 import { useMemoryContext } from "./MemoryProvider";
 import { Button } from "../atom/Button";
-import { useRef, forwardRef, memo } from "react";
+import { useRef, forwardRef } from "react";
 import { useMessage } from "../../context/MessageProvider";
 import { withMousePosition } from "../../context/withMousePosition";
 
@@ -34,9 +34,9 @@ const InputDimension = forwardRef(function InputDimension(props, ref) {
   };
 
   return (
-    <>
+    <div>
       <label
-        className="rounded-md border-2 border-primary bg-background p-1"
+        className="rounded-md border-2 border-primary bg-background p-2"
         htmlFor={id}
       >
         {label} &nbsp;:
@@ -49,10 +49,10 @@ const InputDimension = forwardRef(function InputDimension(props, ref) {
           }}
           type="number"
           placeholder="Enter height"
-          className="w-6/10 mx-2 my-1 rounded-md bg-paper p-1"
+          className="w-6/10 m-1 rounded-md bg-paper p-1"
         />
       </label>
-    </>
+    </div>
   );
 });
 
@@ -110,11 +110,8 @@ export const MemoryReset = () => {
   const size = getSize() ?? { width: 6, height: 6 };
 
   return (
-    <div>
-      <form
-        onSubmit={handleReset}
-        className="m-auto flex justify-between rounded-md border border-secondary bg-paper p-2 shadow-lg"
-      >
+    <div className="rounded-md border border-secondary bg-paper p-2 shadow-lg">
+      <form onSubmit={handleReset} className="m-auto flex justify-between p-2">
         <div className="mx-1">
           <div className="flex w-full justify-center">
             <SelectType ref={inputTypeRef} />
