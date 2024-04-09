@@ -5,6 +5,7 @@ import { MemoryNbrTry } from "./MemoryNbrTry";
 import { useMemoryContext } from "./MemoryProvider";
 import { HightLightOnRender } from "../../context/HightLightOnRender";
 import { useMessage } from "../../context/MessageProvider";
+import { withMousePosition } from "../../context/withMousePosition";
 import clsx from "clsx";
 
 export const MemoryBoard = () => {
@@ -38,12 +39,14 @@ export const MemoryBoard = () => {
   // alertMessage(`reload, size: ${size.width}x${size.height}`);
   return (
     <>
-      <MemoryNbrTry stop={finised} />
+      <MemoryNbrTry stop={finised} className="mt-6" />
       <p style={{ color: "red", fontWeight: "bold", height: 15 }}>{info}</p>
       size: {size.width}x{size.height}
       <HightLightOnRender
         off={true}
         className={clsx("grid w-max gap-2", {
+          "grid-cols-8": size.width == 8,
+          "grid-cols-7": size.width == 7,
           "grid-cols-6": size.width == 6,
           "grid-cols-5": size.width == 5,
           "grid-cols-4": size.width == 4,
@@ -58,3 +61,5 @@ export const MemoryBoard = () => {
     </>
   );
 };
+
+export const MemoryBoardWP = withMousePosition(MemoryBoard);

@@ -1,7 +1,7 @@
 import { useMemoryContext } from "./MemoryProvider";
 import { useEffect, useState } from "react";
 
-export const MemoryNbrTry = ({ stop = false }) => {
+export const MemoryNbrTry = ({ stop = false, ...props }) => {
   const { getNbrTry, startTime } = useMemoryContext();
   const [duree, setDuree] = useState(0);
 
@@ -26,11 +26,15 @@ export const MemoryNbrTry = ({ stop = false }) => {
     return () => clearInterval(interval);
   }, [startTime, stop]);
 
-  return !getNbrTry() ? (
-    <p>Start playing, choose two cards !</p>
-  ) : (
-    <p>
-      Try: <b>{getNbrTry()}</b> in <b>{duree}</b>
-    </p>
+  return (
+    <div {...props}>
+      {!getNbrTry() ? (
+        <p>Start playing, choose two cards !</p>
+      ) : (
+        <p>
+          Try: <b>{getNbrTry()}</b> in <b>{duree}</b>
+        </p>
+      )}
+    </div>
   );
 };

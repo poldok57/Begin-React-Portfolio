@@ -6,13 +6,13 @@ import { CARD_STATE } from "../../lib/memory";
 import { useTheme } from "../../context/ThemeProvider";
 import { useMemoryContext } from "./MemoryProvider";
 
-const DEFAULT_WIDTH = 100;
+const DEFAULT_WIDTH = 80;
 export const MemoryCard = ({ card, idx }) => {
   // const [showLayer, setShowLayer] = useState(false);
   const timerRef = useRef();
   const isReturned =
     card.state === CARD_STATE.RETURNED || card.state === CARD_STATE.FIND;
-  const { onClick } = useMemoryContext();
+  const { onClick, getWidthCards } = useMemoryContext();
 
   const hightLightImage = (e) => {
     // add class hightlight to target
@@ -45,7 +45,7 @@ export const MemoryCard = ({ card, idx }) => {
         >
           <img
             src={"/images" + card.emoji}
-            width={DEFAULT_WIDTH}
+            width={getWidthCards()}
             onClick={(e) => {
               hightLightImage(e);
             }}

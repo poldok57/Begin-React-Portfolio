@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MdOutlineClose } from "react-icons/md";
 import { debounceLogs } from "../lib/debounce-logs";
-import { mouseIsInsideRect, BORDER } from "../lib/mouse-position";
+import {
+  mouseIsInsideRect,
+  mouseIsOnBorderRect,
+  mousePointer,
+  BORDER,
+} from "../lib/mouse-position";
 import { ToggleSwitch } from "../components/atom/ToggleSwitch";
 import { TitleBar } from "../components/atom/TitleBar";
 import clsx from "clsx";
@@ -27,6 +32,14 @@ export const mouseIsInsideComponent = (event, component) => {
   }
   return false;
 };
+export const mouseIsOnBorder = (event, component) => {
+  if (component) {
+    const rect = component.getBoundingClientRect();
+    const coordinates = { x: event.clientX, y: event.clientY };
+    return mouseIsOnBorderRect(coordinates, rect);
+  }
+  return null;
+};
 
 export function withMousePosition(Component) {
   /**
@@ -45,6 +58,7 @@ export function withMousePosition(Component) {
     style = {},
     className,
     locked = true,
+    resizeable = false,
     titleBar = false,
     titleHide = true,
     title = "",
@@ -73,6 +87,7 @@ export function withMousePosition(Component) {
 
     titleBar = titleBar === true || titleBar === "true" ? true : false;
     titleHide = titleHide === true || titleHide === "true" ? true : false;
+    resizeable = resizeable === true || resizeable === "true" ? true : false;
 
     const setCanMove = (value) => {
       canMoveRef.current = value;
@@ -108,6 +123,61 @@ export function withMousePosition(Component) {
           );
         }
       }
+    };
+
+    const resizeElement = ({ style, mouse, component, border }) => {
+      const rect = component.getBoundingClientRect();
+      let newStyle = { ...style };
+      newStyle.left = rect.left;
+      newStyle.top = rect.top;
+      newStyle.width = rect.width;
+      newStyle.height = rect.height;
+      switch (border) {
+        case BORDER.CORNER.TOP_LEFT:
+          newStyle.width =
+            component.offsetWidth + component.offsetLeft - mouse.x;
+          newStyle.height =
+            component.offsetHeight + component.offsetTop - mouse.y;
+          newStyle.left = mouse.x;
+          newStyle.top = mouse.y;
+          break;
+        case BORDER.CORNER.TOP_RIGHT:
+          newStyle.width = mouse.x - component.offsetLeft;
+          newStyle.height =
+            component.offsetHeight + component.offsetTop - mouse.y;
+          newStyle.top = mouse.y;
+          break;
+
+        case BORDER.CORNER.BOTTOM_LEFT:
+          newStyle.width =
+            component.offsetWidth + component.offsetLeft - mouse.x;
+          newStyle.height = mouse.y - component.offsetTop;
+          newStyle.left = mouse.x;
+          break;
+        case BORDER.CORNER.BOTTOM_RIGHT:
+          newStyle.width = mouse.x - component.offsetLeft;
+          newStyle.height = mouse.y - component.offsetTop;
+          break;
+        case BORDER.LEFT:
+          newStyle.width =
+            component.offsetWidth + component.offsetLeft - mouse.x;
+          newStyle.left = mouse.x;
+          break;
+        case BORDER.RIGHT:
+          newStyle.width = mouse.x - component.offsetLeft;
+          break;
+        case BORDER.TOP:
+          newStyle.height =
+            component.offsetHeight + component.offsetTop - mouse.y;
+          newStyle.top = mouse.y;
+          break;
+        case BORDER.BOTTOM:
+          newStyle.height = mouse.y - component.offsetTop;
+          break;
+        default:
+          break;
+      }
+      return newStyle;
     };
 
     /**
@@ -207,6 +277,10 @@ export function withMousePosition(Component) {
         if (waitEvent && waitEvent.contains(event.target)) {
           setCanMove(true);
 
+          if (resizeable) {
+            onBorderRef.current = mouseIsOnBorder(event, component);
+          }
+
           setMousePosition({ x: event.clientX, y: event.clientY });
           // difference between the mouse and the component
           diffRef.current = {
@@ -275,6 +349,9 @@ export function withMousePosition(Component) {
           comp.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
 
+        // if (resizeable) {
+        //   componentRect.current = comp.getBoundingClientRect();
+        // }
         componentPos.current = { x: comp.offsetLeft, y: comp.offsetTop };
       }
 
@@ -291,13 +368,24 @@ export function withMousePosition(Component) {
 
     let newStyle = { ...styleRef.current };
     if (canMove()) {
-      /**
-       * move the component
-       */
-      newStyle.left = mousePosition ? mousePosition.x - diffRef.current.x : 0;
-      newStyle.top = mousePosition ? mousePosition.y - diffRef.current.y : 0;
-      newStyle.position = typePositionRef.current;
-
+      if (resizeable && onBorderRef.current !== BORDER.INSIDE) {
+        /**
+         * resize the component
+         */
+        newStyle = resizeElement({
+          style: newStyle,
+          mouse: mousePosition,
+          component: componentRef.current,
+          border: onBorderRef.current,
+        });
+      } else {
+        /**
+         * move the component
+         */
+        newStyle.left = mousePosition ? mousePosition.x - diffRef.current.x : 0;
+        newStyle.top = mousePosition ? mousePosition.y - diffRef.current.y : 0;
+        newStyle.position = typePositionRef.current;
+      }
       if (trace.current) {
         debounceLogs(
           "new position:",
@@ -336,6 +424,17 @@ export function withMousePosition(Component) {
     if (newStyle.top) newStyle.bottom = "auto";
     if (newStyle.left) newStyle.right = "auto";
 
+    const typeCursor = !(resizeable || isLocked)
+      ? "move"
+      : mousePointer(onBorderRef.current);
+    if (trace.current) {
+      debounceLogs(
+        `[${Component.name}] cursor:`,
+        typeCursor,
+        "border:",
+        onBorderRef.current
+      );
+    }
     return (
       <div
         ref={componentRef}
@@ -343,7 +442,11 @@ export function withMousePosition(Component) {
         className={clsx("group hover:z-40", className, {
           "border-grey-800 cursor-pointer border shadow-lg": canMove(),
           "hover:cursor-default": isLocked || titleBar,
-          "hover:cursor-move": !(isLocked || titleBar),
+          "hover:cursor-move": !(isLocked || titleBar) && typeCursor === "move",
+          "hover:cursor-ew-resize": typeCursor === "ew-resize",
+          "hover:cursor-ns-resize": typeCursor === "ns-resize",
+          "hover:cursor-nwse-resize": typeCursor === "nwse-resize",
+          "hover:cursor-nesw-resize": typeCursor === "nesw-resize",
         })}
       >
         <Component {...props} />

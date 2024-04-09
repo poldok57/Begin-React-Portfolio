@@ -1,6 +1,7 @@
+import React, { useMemo, useState, useRef, forwardRef } from "react";
 import { useMemoryContext } from "./MemoryProvider";
 import { Button } from "../atom/Button";
-import { useRef, forwardRef } from "react";
+
 import { useMessage } from "../../context/MessageProvider";
 import { withMousePosition } from "../../context/withMousePosition";
 
@@ -65,7 +66,7 @@ const SelectType = forwardRef(function SelectType(props, ref) {
 
   return (
     <div
-      onChange={onChange}
+      onChange={(e) => props.setType(e.target.value)}
       className="flex w-9/12 justify-between gap-5 rounded-md border-2 border-primary bg-background p-2"
     >
       <label>
@@ -86,11 +87,41 @@ const SelectType = forwardRef(function SelectType(props, ref) {
   );
 });
 
+const ResizePicture = ({ children, ...props }) => {
+  const id = props.id || props.name;
+  const { alertMessage } = useMessage();
+  const { setWidthCards, getWidthCards } = useMemoryContext();
+
+  const size = [60, 70, 80, 100, 125, 150];
+
+  const onChange = (e) => {
+    setWidthCards(e.target.value);
+    alertMessage(`Resize picture to ${e.target.value}`);
+  };
+
+  return (
+    <label
+      className="rounded-md border-2 border-primary bg-background p-2"
+      htmlFor={id}
+    >
+      {children} &nbsp;
+      <select onChange={onChange} value={getWidthCards()}>
+        {size.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+};
+
 export const MemoryReset = () => {
   const { resetGame, getSize } = useMemoryContext();
   const inputRowsRef = useRef();
   const inputColsRef = useRef();
   const inputTypeRef = useRef("images");
+  const [inputType, setInputType] = useState("images"); // ["emoji", "images"
   const { alertMessage } = useMessage();
 
   const handleReset = (e) => {
@@ -104,43 +135,56 @@ export const MemoryReset = () => {
       `Reset game with size: ${size.width}x${size.height}, type: ${inputTypeRef.current}`
     );
 
-    resetGame(size, inputTypeRef.current);
+    resetGame(size, inputType);
   };
 
-  const size = getSize() ?? { width: 6, height: 6 };
+  const size = getSize() ?? { width: 5, height: 5 };
 
-  return (
-    <div className="rounded-md border border-secondary bg-paper p-2 shadow-lg">
-      <form onSubmit={handleReset} className="m-auto flex justify-between p-2">
-        <div className="mx-1">
+  return useMemo(() => {
+    alertMessage(`MemoryReset size: ${size.width}x${size.height}`);
+    return (
+      <div className="rounded-md border border-secondary bg-paper shadow-lg">
+        <form
+          onSubmit={handleReset}
+          className="m-auto flex justify-between p-2"
+        >
+          <div className="mx-1">
+            <div className="flex w-full justify-center">
+              <SelectType ref={inputTypeRef} setType={setInputType} />
+            </div>
+            <div className="flex w-full items-center justify-between gap-2 pt-2">
+              <InputDimension
+                ref={inputColsRef}
+                name="width"
+                max="8"
+                min="3"
+                defaultValue={size.width}
+              />
+              <InputDimension
+                ref={inputRowsRef}
+                name="height"
+                max="9"
+                min="2"
+                defaultValue={size.height}
+              />
+            </div>
+          </div>
+          <div className="mx-1 flex items-center">
+            <Button type="submit" className="h-24">
+              Reset
+            </Button>
+          </div>
+        </form>
+        {inputType === "images" && (
           <div className="flex w-full justify-center">
-            <SelectType ref={inputTypeRef} />
+            <ResizePicture id="resize" name="resize">
+              Resize picture
+            </ResizePicture>
           </div>
-          <div className="flex w-full items-center justify-between gap-2 pt-2">
-            <InputDimension
-              ref={inputColsRef}
-              name="width"
-              max="6"
-              min="3"
-              defaultValue={size.width}
-            />
-            <InputDimension
-              ref={inputRowsRef}
-              name="height"
-              max="6"
-              min="2"
-              defaultValue={size.height}
-            />
-          </div>
-        </div>
-        <div className="mx-1 flex items-center">
-          <Button type="submit" className="h-24">
-            Reset
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
+        )}
+      </div>
+    );
+  }, [size.width, size.height, inputType]);
 };
 
 export const MemoryResetWP = withMousePosition(MemoryReset);

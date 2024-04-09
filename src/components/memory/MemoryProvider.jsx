@@ -8,13 +8,17 @@ import {
 
 import { GAME_STATUS } from "../../lib/memory";
 import { useMessage } from "../../context/MessageProvider";
+const DEFAULT_WIDTH = 80;
 
 const MemoryContext = createContext({ startTime: 0, getNbrTry: () => 0 });
 
 export const MemoryProvider = ({ children, ...props }) => {
   // const [nbrTry, setNbrTry] = useState(0);
-  const [size, setSize] = useState({ width: 6, height: 6 });
-  const [cards, setCards] = useState(() => getInitialMemory(6 * 6));
+  const [size, setSize] = useState({ width: 5, height: 4 });
+  const [cards, setCards] = useState(() =>
+    getInitialMemory(size.width * size.height)
+  );
+  const [widthCards, setWidthCards] = useState(DEFAULT_WIDTH);
 
   const gameStatusRef = useRef(GAME_STATUS.PLAYING);
   const nbrTryRef = useRef(0);
@@ -26,7 +30,9 @@ export const MemoryProvider = ({ children, ...props }) => {
   const getCards = () => {
     return cards;
   };
-
+  const getWidthCards = () => {
+    return widthCards;
+  };
   const getNbrTry = () => {
     return nbrTryRef.current;
   };
@@ -158,6 +164,8 @@ export const MemoryProvider = ({ children, ...props }) => {
 
     getCards,
     getSize,
+    getWidthCards,
+    setWidthCards,
     resetGame,
   };
 

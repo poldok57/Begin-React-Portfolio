@@ -18,17 +18,19 @@ const MyApp = ({ Component, pageProps }) => {
             <Component {...pageProps} />
           </div>
           <ShowAlertMessagesWP
+            trace="false"
             display="true"
             close="false"
-            style={{ position: "fixed", right: 50, bottom: 300 }}
+            style={{ position: "fixed", right: 50, bottom: 200 }}
             locked="false"
-            trace="true"
           />
         </MessageProvider>
         <TestImageWP
           className="absolute rounded-md border-double border-primary"
           locked="false"
           close="true"
+          trace="true"
+          resizeable="true"
           style={{
             left: "50px",
             top: "75px",

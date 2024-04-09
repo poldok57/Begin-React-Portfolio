@@ -4,7 +4,10 @@ import { withMousePosition } from "./withMousePosition";
 import { MdCopyAll } from "react-icons/md";
 import clsx from "clsx";
 
-const MessageContext = createContext({ messages: [], alertMessage: () => {} });
+const MessageContext = createContext({
+  alertMessage: () => {},
+  useMessageListener: () => {},
+});
 const MAX_MESSAGES = 10;
 const EVENT_NAME = "addMessage";
 
@@ -32,8 +35,6 @@ const useMessageListener = () => {
 };
 
 export const MessageProvider = ({ children }) => {
-  // const [messages, setMessages] = useState([]);
-
   const alertMessage = (message) => {
     addEventMessage(message);
   };
@@ -56,6 +57,15 @@ export const useMessage = () => {
   return context;
 };
 
+/**
+ * ShowDivAlertMessages component to display messages in a div
+ * @param {object} props
+ * @param {string} props.style  - style of the div
+ * @param {string} props.className - class of the div
+ * @param {boolean} props.display - display messages in the div or not
+ * @param {array} props.messages - array of messages to display
+ * @param {function} props.clearMessages - function to clear messages
+ */
 const ShowDivAlertMessages = ({
   style,
   className,
@@ -126,9 +136,9 @@ const ShowDivAlertMessages = ({
             </ul>
           </div>
         )}
-        {messages.length > 0 && (
+        {messages.length > 0 && displayAlert && (
           <div className="flex justify-center bg-gray-200 p-3">
-            <Button className="bg-secondary" onClick={() => clearMessages([])}>
+            <Button className="bg-secondary" onClick={() => clearMessages()}>
               Clear
             </Button>
           </div>
@@ -138,25 +148,30 @@ const ShowDivAlertMessages = ({
   );
 };
 
+/**
+ * ShowAlertMessages component to display messages
+ * @param {object} props
+ * @param {boolean} props.display - display messages or not
+ */
 export const ShowAlertMessages = ({ display = true, ...props }) => {
   const [messages, setMessages] = useState([]);
   const { useMessageListener } = useMessage();
   const newMessage = useMessageListener();
 
-  const clearMessages = () => {
-    setMessages([]);
+  const addMessage = (message) => {
+    setMessages((curr) => {
+      if (curr.length > MAX_MESSAGES) {
+        curr.shift();
+      }
+      return [...curr, message];
+    });
   };
 
   useEffect(() => {
     if (!newMessage) return;
 
     // console.log("alertMessage recue:", newMessage);
-    setMessages((prevMessages) => {
-      if (prevMessages.length >= MAX_MESSAGES) {
-        prevMessages.shift(); // remove the first element
-      }
-      return [...prevMessages, newMessage];
-    });
+    addMessage(newMessage);
   }, [newMessage]);
 
   return useMemo(() => {
@@ -164,10 +179,11 @@ export const ShowAlertMessages = ({ display = true, ...props }) => {
       <ShowDivAlertMessages
         display={display}
         messages={messages}
-        clearMessages={clearMessages}
+        clearMessages={() => setMessages([])}
         {...props}
       />
     );
   }, [messages, display]);
 };
+
 export const ShowAlertMessagesWP = withMousePosition(ShowAlertMessages);

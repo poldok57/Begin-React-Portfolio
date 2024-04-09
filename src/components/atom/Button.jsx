@@ -1,4 +1,4 @@
-import clsx from 'clsx';
+import clsx from "clsx";
 
 /**
  * Simple button for the application
@@ -9,17 +9,26 @@ import clsx from 'clsx';
  * @returns {JSX.Element}
  * @constructor
  */
-export const Button = ({ children, disabled, className, ...props }) => {
+export const Button = ({
+  children,
+  disabled,
+  selected,
+  className,
+  ...props
+}) => {
   return (
     <button
       className={clsx(
-        'inline-block rounded bg-primary px-8 py-3 text-sm font-medium text-white transition',
-        'focus:outline-none focus:ring focus:ring-primary focus:ring-opacity-50',
-        'disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600',
+        "inline-block rounded bg-primary px-8 py-3 text-sm font-medium text-white transition",
+
+        "disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600",
         className,
         {
-          'hover:scale-105  hover:shadow-xl': !disabled,
-          'active:bg-primary active:opacity-80': !disabled,
+          "focus:outline-none focus:ring focus:ring-primary focus:ring-opacity-50":
+            !selected,
+          "outline-double ring-4 ring-secondary ring-opacity-80": selected,
+          "hover:scale-105  hover:shadow-xl": !disabled,
+          "active:bg-primary active:opacity-80": !disabled,
         }
       )}
       disabled={disabled}

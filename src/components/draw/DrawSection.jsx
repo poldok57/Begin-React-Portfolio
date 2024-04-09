@@ -1,9 +1,9 @@
-import { SectionWrapper } from '../atom/SectionWrapper';
-import { Draw } from './Draw';
+import { SectionWrapper } from "../atom/SectionWrapper";
+import { Draw } from "./Draw";
 
 export const DrawSection = () => {
   return (
-    <SectionWrapper title="Montre moi ton amour !">
+    <SectionWrapper title="Dessine-moi un mouton !">
       <Draw />
     </SectionWrapper>
   );
