@@ -1,4 +1,7 @@
 import {
+  BORDER,
+  badgePosition,
+  middleButtonPosition,
   mouseIsInsideRect,
   mouseIsOnBorderRect,
   setDecalage,
@@ -45,6 +48,21 @@ export const isOnSquareBorder = (coord, square, withButton = false) => {
     right: square.x + square.width,
     bottom: square.y + square.height,
   };
+
+  if (withButton) {
+    const badgePos = badgePosition(rect);
+
+    if (mouseIsInsideRect(coord, badgePos)) {
+      return BORDER.ON_BUTTON;
+    }
+
+    const middleButton = middleButtonPosition(rect);
+    if (mouseIsInsideRect(coord, middleButton)) {
+      if (coord.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
+      if (coord.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
+      return BORDER.INSIDE;
+    }
+  }
 
   if (!mouseIsInsideRect(coord, rect)) return null;
 

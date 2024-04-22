@@ -10,73 +10,90 @@ export const DRAWING_MODES = {
   DRAW: "draw",
   LINE: "line",
   SQUARE: "square",
+  CIRCLE: "circle",
+  TEXT: "text",
   ERASE: "erase",
   UNDO: "undo",
   SAVE: "save",
   INIT: "init",
+  DRAWING_CHANGE: "drawingChange",
 };
+export const ALL_DRAWING_MODES = [
+  DRAWING_MODES.DRAW,
+  DRAWING_MODES.LINE,
+  DRAWING_MODES.SQUARE,
+  DRAWING_MODES.CIRCLE,
+  DRAWING_MODES.TEXT,
+];
 
-// Draw exercise
 export const Draw = () => {
   const canvas = useRef(null);
   const history = useRef([]);
-  const drawingParams = {
+  const startCoordinate = useRef(null);
+  let drawingParamsRef = useRef({
+    mode: DRAWING_MODES.INIT,
+    withText: false,
+    fixed: false,
     color: DEFAULT_COLOR,
     width: DEFAULT_SIZE,
     opacity: DEFAULT_OPACITY,
-    mode: DRAWING_MODES.INIT,
-  };
+    filled: true,
+    radius: 10,
+    text: "",
+    textColor: "black",
+    font: "Arial",
+    bold: false,
+    italic: false,
+    fontSize: 20,
+  });
 
   const getDrowingParams = () => {
-    return drawingParams;
+    return drawingParamsRef.current;
   };
 
-  const setDrowingParams = ({ color, width, opacity, mode }) => {
-    if (color !== null && color !== undefined) {
-      drawingParams.color = color;
-    }
-    if (width !== null && width !== undefined) {
-      drawingParams.width = width;
-    }
-    if (opacity !== null && opacity !== undefined) {
-      drawingParams.opacity = opacity / 100;
-    }
-    if (mode !== null && mode !== undefined) {
-      switch (mode) {
-        case DRAWING_MODES.UNDO:
-          if (!canvas.current) break;
-          if (history.current.length > 0) {
-            // Restore the last saved state
-            // const lastState = history.current.pop();
-            let lastState = history.current.pop();
-            if (history.current.length > 0) {
-              lastState = history.current[history.current.length - 1];
-            }
-            const ctx = canvas.current.getContext("2d");
-            ctx.putImageData(lastState, 0, 0);
-          }
+  const setDrawingParams = (props) => {
+    drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
 
-          // console.log("Undo...", history.current.length);
-          break;
-        case DRAWING_MODES.ERASE:
-          canvas.current
-            .getContext("2d")
-            .clearRect(0, 0, canvas.current.width, canvas.current.height);
-          history.current = [];
-          drawingParams.mode = DRAWING_MODES.INIT;
-          break;
-        case DRAWING_MODES.SAVE:
-          if (canvas.current) {
-            const dataURL = canvas.current.toDataURL();
-            const link = document.createElement("a");
-            link.href = dataURL;
-            link.download = "my-drawing.png";
-            link.click();
+    if (drawingParamsRef.current.opacity > 1)
+      drawingParamsRef.current.opacity /= 100;
+  };
+  const changeMode = (mode) => {
+    switch (mode) {
+      case DRAWING_MODES.UNDO:
+        if (!canvas.current) break;
+        if (history.current.length > 0) {
+          // Restore the last saved state
+          // const lastState = history.current.pop();
+          let lastState = history.current.pop();
+          if (history.current.length > 0) {
+            lastState = history.current[history.current.length - 1];
           }
-          break;
-        default:
-          drawingParams.mode = mode;
-      }
+          const ctx = canvas.current.getContext("2d");
+          ctx.putImageData(lastState.image, 0, 0);
+          startCoordinate.current = lastState.startCoordinate;
+        }
+
+        // console.log("Undo...", history.current.length);
+        break;
+      case DRAWING_MODES.ERASE:
+        canvas.current
+          .getContext("2d")
+          .clearRect(0, 0, canvas.current.width, canvas.current.height);
+        history.current = [];
+        startCoordinate.current = null;
+        drawingParamsRef.current.mode = DRAWING_MODES.INIT;
+        break;
+      case DRAWING_MODES.SAVE:
+        if (canvas.current) {
+          const dataURL = canvas.current.toDataURL();
+          const link = document.createElement("a");
+          link.href = dataURL;
+          link.download = "my-drawing.png";
+          link.click();
+        }
+        break;
+      default:
+        drawingParamsRef.current.mode = mode;
     }
   };
 
@@ -85,14 +102,13 @@ export const Draw = () => {
       <DrawCanvas
         canvas={canvas}
         history={history}
+        startCoordinate={startCoordinate}
         getParams={getDrowingParams}
       />
       <DrawControl
-        setParams={setDrowingParams}
-        color={drawingParams.color}
-        width={drawingParams.width}
-        opacity={drawingParams.opacity * 100}
-        defaultMode={DRAWING_MODES.DRAW}
+        setParams={setDrawingParams}
+        changeMode={changeMode}
+        drawingParams={drawingParamsRef.current}
       />
     </div>
   );

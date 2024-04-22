@@ -15,6 +15,7 @@ export const ToggleSwitch = ({
   onChange,
   defaultChecked,
   color = "blue",
+  id,
   initialColor = "gray",
   ...props
 }) => {
@@ -22,6 +23,7 @@ export const ToggleSwitch = ({
     <div {...props}>
       <label className="relative inline-flex cursor-pointer items-center">
         <input
+          id={id}
           alt="toggle switch input"
           type="checkbox"
           className="peer sr-only"

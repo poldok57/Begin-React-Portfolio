@@ -1,34 +1,38 @@
 import React, { useState } from "react";
 import { MdTimeline } from "react-icons/md";
+// import { MdRadioButtonUnchecked } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
-import { BiSquare } from "react-icons/bi";
 
 import { Button } from "../atom/Button";
 import { DRAWING_MODES } from "./Draw";
+import { DrawControlText } from "./DrawControlText";
+import { DrawControlShape } from "./DrawControlShape";
+import { DrawControlLine } from "./DrawControlLine";
+
+// import clsx from "clsx";
 
 export const DrawControl = ({
   setParams,
+  changeMode,
   defaultMode,
-  color,
-  width,
-  opacity,
+  drawingParams,
 }) => {
   const [mode, setMode] = useState(defaultMode);
-  const handleColorChange = (event) => {
-    setParams({ color: event.target.value });
+  const [withText, setWithText] = useState(false);
+
+  const addEventChangeMode = (mode) => {
+    const event = new CustomEvent("modeChanged", { detail: { mode } });
+    document.dispatchEvent(event);
   };
-  const handleSizeChange = (event) => {
-    setParams({ width: event.target.value });
+  const handleParamChange = (newParams) => {
+    setParams(newParams);
+    addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
   };
-  const handleOpacityChange = (event) => {
-    setParams({ opacity: event.target.value });
-  };
+
   const handleModeChange = (newMode) => {
     setMode(newMode);
-    setParams({ mode: newMode });
-  };
-  const handleModeAction = (newMode) => {
-    setParams({ mode: newMode });
+    changeMode(newMode);
+    addEventChangeMode(newMode);
   };
 
   return (
@@ -47,66 +51,37 @@ export const DrawControl = ({
           <MdTimeline />
         </Button>
         <Button
-          selected={mode == DRAWING_MODES.SQUARE}
-          onClick={() => handleModeChange(DRAWING_MODES.SQUARE)}
+          selected={mode == DRAWING_MODES.TEXT}
+          onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
         >
-          <BiSquare />
+          Text
         </Button>
-        <Button onClick={() => handleModeAction(DRAWING_MODES.UNDO)}>
+      </div>
+      <DrawControlLine
+        handleParamChange={handleParamChange}
+        drawingParams={drawingParams}
+      />
+      <DrawControlShape
+        mode={mode}
+        drawingParams={drawingParams}
+        handleParamChange={handleParamChange}
+        handleModeChange={handleModeChange}
+        setWithText={setWithText}
+      />
+      <DrawControlText
+        mode={mode}
+        hidden={mode != DRAWING_MODES.TEXT && withText === false}
+        drawingParams={drawingParams}
+        handleTextParams={handleParamChange}
+      />
+
+      <div className="relative m-auto flex gap-4">
+        <Button onClick={() => changeMode(DRAWING_MODES.UNDO)}>
           <SlActionUndo />
         </Button>
-      </div>
-      <div className="flex flex-row gap-4">
-        <label
-          htmlFor="draw-color-picker"
-          className="flex items-center justify-center gap-4"
-        >
-          Color
-          <input
-            id="draw-color-picker"
-            type="color"
-            defaultValue={color}
-            onChange={handleColorChange}
-          />
-        </label>
-        <label
-          htmlFor="draw-size-picker"
-          className="flex items-center justify-center gap-4"
-        >
-          Line size
-          <input
-            className="h-2 w-full bg-gray-300 opacity-75 outline-none transition-opacity hover:opacity-100"
-            id="draw-size-picker"
-            type="range"
-            defaultValue={width}
-            min="2"
-            max="32"
-            step="2"
-            onChange={handleSizeChange}
-            style={{ width: "100px" }}
-          />
-        </label>
-        <label
-          htmlFor="draw-opacity-picker"
-          className="flex items-center justify-center gap-4"
-        >
-          Line opacity
-          <input
-            id="draw-size-picker"
-            type="range"
-            defaultValue={opacity}
-            min="5"
-            max="100"
-            step="5"
-            onChange={handleOpacityChange}
-            style={{ width: "80px" }}
-          />
-        </label>
-      </div>
-      <div className="relative m-auto flex gap-4">
         <Button
           onClick={() => {
-            handleModeAction(DRAWING_MODES.ERASE);
+            changeMode(DRAWING_MODES.ERASE);
             setMode(DRAWING_MODES.DRAW);
             // if (canvas.current) {} canvas.current.getContext("2d").reset();
           }}
@@ -115,7 +90,7 @@ export const DrawControl = ({
         </Button>
         <Button
           onClick={() => {
-            handleModeAction(DRAWING_MODES.UNDO);
+            changeMode(DRAWING_MODES.SAVE);
           }}
         >
           Save my drawing

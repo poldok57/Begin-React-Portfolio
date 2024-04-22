@@ -1,18 +1,23 @@
 export const BORDER = {
-  RIGHT: "right",
-  LEFT: "left",
-  TOP: "top",
-  BOTTOM: "bottom",
+  RIGHT: "brd-right",
+  LEFT: "brd-left",
+  TOP: "brd-top",
+  BOTTOM: "brd-bottom",
   CORNER: {
-    TOP_LEFT: "top-left",
-    TOP_RIGHT: "top-right",
-    BOTTOM_LEFT: "bottom-left",
-    BOTTOM_RIGHT: "bottom-right",
+    TOP_LEFT: "crn-top-left",
+    TOP_RIGHT: "crn-top-right",
+    BOTTOM_LEFT: "crn-bottom-left",
+    BOTTOM_RIGHT: "crn-bottom-right",
   },
   ON_BUTTON: "on-button",
+  ON_MIDDLE_BUTTON: "on-button-middle",
+  ON_BUTTON_LEFT: "on-button-left",
+  ON_BUTTON_RIGHT: "on-button-right",
   INSIDE: "inside",
 };
 
+const BADGE_RADIUS = 10;
+const MIDDLE_BTN_RADIUS = 12;
 let margin = 5;
 
 export const setMargin = (newMargin) => {
@@ -20,6 +25,23 @@ export const setMargin = (newMargin) => {
 };
 
 let decalage = { x: 0, y: 0 };
+
+export const isBorder = (border) => {
+  // if border starts with "brd-" or "crn-" return true
+  return border && (border.startsWith("brd-") || border.startsWith("crn-"));
+};
+export const isCorner = (border) => {
+  // if border starts with "crn-" return true
+  return border && border.startsWith("crn-");
+};
+export const isInside = (border) => {
+  // if border is "inside" return true
+  return border === BORDER.INSIDE;
+};
+export const isOnButton = (border) => {
+  // if border starts with "on-" return true
+  return border && border.startsWith("on-");
+};
 
 export const setDecalage = (coord, rect) => {
   decalage.x = coord.x - rect.left;
@@ -62,22 +84,80 @@ export const mousePointer = (mouseOnBorder) => {
     case BORDER.INSIDE:
       return "move";
     case BORDER.ON_BUTTON:
+    case BORDER.ON_MIDDLE_BUTTON:
+    case BORDER.ON_BUTTON_LEFT:
+    case BORDER.ON_BUTTON_RIGHT:
       return "pointer";
     default:
       return "default";
   }
 };
 
+/**
+ * Return the position of the badge at top right of the rectangle
+ * @param {object} rect - rectangle coordinates
+ */
+export const badgePosition = (rect) => {
+  const x = rect.x ?? rect.left;
+  const y = rect.y ?? rect.top;
+  const w = rect.width ?? rect.right - rect.left;
+  // const h = rect.height ?? rect.bottom - rect.top;
+  const badge = {
+    width: BADGE_RADIUS * 2,
+    height: BADGE_RADIUS * 2,
+    left: Math.max(x + w - BADGE_RADIUS * 2, x + 55),
+    top: y,
+    bottom: y + BADGE_RADIUS * 2,
+
+    radius: BADGE_RADIUS,
+  };
+  badge.right = badge.left + badge.width;
+  badge.centerX = badge.left + badge.width / 2;
+  badge.centerY = badge.top + badge.height / 2;
+  return badge;
+};
+/**
+ * Return the position of the middle button at the center of the rectangle
+ * @param {object} rect - rectangle coordinates
+ */
+export const middleButtonPosition = (rect) => {
+  const x = rect.x ?? rect.left;
+  const y = rect.y ?? rect.top;
+  const w = rect.width ?? rect.right - rect.left;
+  const h = rect.height ?? rect.bottom - rect.top;
+  const middleButton = {
+    left: x + w / 2 - MIDDLE_BTN_RADIUS * 2,
+    right: x + w / 2 + MIDDLE_BTN_RADIUS * 2,
+    middle: x + w / 2,
+    top: y + Math.max(h / 2 - MIDDLE_BTN_RADIUS, 30),
+    axeX1: x + w / 2 - 1 - MIDDLE_BTN_RADIUS,
+    axeX2: x + w / 2 + 1 + MIDDLE_BTN_RADIUS,
+    radius: MIDDLE_BTN_RADIUS,
+  };
+  middleButton.axeY = middleButton.top + MIDDLE_BTN_RADIUS;
+  middleButton.bottom = middleButton.top + MIDDLE_BTN_RADIUS * 2;
+
+  return middleButton;
+};
+/**
+ * Return the border where the mouse is
+ * @param {object} coord - mouse coordinates
+ * @param {object} rect - rectangle coordinates
+ * @param {boolean} withButton - if the button is on the rectangle
+ * @returns {string} - border where the mouse is
+ */
 export const mouseIsOnBorderRect = (coord, rect, withButton = false) => {
   if (withButton) {
-    // button is on top right corner of the rectangle (double margin)
+    const middleButton = middleButtonPosition(rect);
+
     if (
-      coord.x >= rect.right - margin * 4 &&
-      coord.x <= rect.right &&
-      coord.y >= rect.top &&
-      coord.y <= rect.top + margin * 4
+      coord.x >= middleButton.left &&
+      coord.x <= middleButton.right &&
+      coord.y >= middleButton.top &&
+      coord.y <= middleButton.bottom
     ) {
-      return BORDER.ON_BUTTON;
+      if (coord.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
+      if (coord.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
     }
   } else if (
     coord.x >= rect.right - margin &&
@@ -138,40 +218,41 @@ export const mouseIsOnBorderRect = (coord, rect, withButton = false) => {
 };
 export const resizeRect = (coord, rect, border) => {
   let newRect = { ...rect };
+  const minimumSize = 25;
   switch (border) {
     case BORDER.CORNER.TOP_LEFT:
-      newRect.width = rect.width + rect.left - coord.x;
-      newRect.height = rect.height + rect.top - coord.y;
+      newRect.width = Math.max(rect.width + rect.left - coord.x, minimumSize);
+      newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
       newRect.left = coord.x;
       newRect.top = coord.y;
       break;
     case BORDER.CORNER.TOP_RIGHT:
-      newRect.width = coord.x - rect.left;
-      newRect.height = rect.height + rect.top - coord.y;
+      newRect.width = Math.max(coord.x - rect.left, minimumSize);
+      newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
       newRect.top = coord.y;
       break;
     case BORDER.CORNER.BOTTOM_LEFT:
-      newRect.width = rect.width + rect.left - coord.x;
-      newRect.height = coord.y - rect.top;
+      newRect.width = Math.max(rect.width + rect.left - coord.x, minimumSize);
+      newRect.height = Math.max(coord.y - rect.top, minimumSize);
       newRect.left = coord.x;
       break;
     case BORDER.CORNER.BOTTOM_RIGHT:
-      newRect.width = coord.x - rect.left;
-      newRect.height = coord.y - rect.top;
+      newRect.width = Math.max(coord.x - rect.left, minimumSize);
+      newRect.height = Math.max(coord.y - rect.top, minimumSize);
       break;
     case BORDER.LEFT:
-      newRect.width = rect.width + rect.left - coord.x;
+      newRect.width = Math.max(rect.width + rect.left - coord.x, minimumSize);
       newRect.left = coord.x;
       break;
     case BORDER.RIGHT:
-      newRect.width = coord.x - rect.left;
+      newRect.width = Math.max(coord.x - rect.left, minimumSize);
       break;
     case BORDER.TOP:
-      newRect.height = rect.height + rect.top - coord.y;
+      newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
       newRect.top = coord.y;
       break;
     case BORDER.BOTTOM:
-      newRect.height = coord.y - rect.top;
+      newRect.height = Math.max(coord.y - rect.top, minimumSize);
       break;
     default:
       break;
