@@ -4,15 +4,14 @@ import {
   middleButtonPosition,
   mouseIsInsideRect,
   mouseIsOnBorderRect,
-  setDecalage,
-  getRectDecalage,
+  getRectOffset,
   resizeRect,
 } from "./mouse-position.js";
 
 /**
  * is the mouse inside the square
  */
-export const isInsideSquare = (coord, square, setDecal = false) => {
+export const isInsideSquare = (coord, square) => {
   const rect = {
     left: square.x,
     top: square.y,
@@ -21,24 +20,20 @@ export const isInsideSquare = (coord, square, setDecal = false) => {
   };
 
   const isInside = mouseIsInsideRect(coord, rect);
-  if (setDecal && isInside) {
-    setDecalage(coord, rect);
-  }
 
   return isInside;
 };
 
-export const setSquareDecalage = (coord, square) => {
+export const getSquareOffset = (coord, square) => {
   const rect = {
     left: square.x,
     top: square.y,
   };
-  return setDecalage(coord, rect);
+  return getRectOffset(coord, rect);
 };
 
-export const getSquareDecalage = (coord) => {
-  const rect = getRectDecalage(coord);
-  return { x: rect.left, y: rect.top };
+export const getSquarePosition = (coord, offset) => {
+  return { x: coord.x + offset.x, y: coord.y + offset.y };
 };
 
 export const isOnSquareBorder = (coord, square, withButton = false) => {

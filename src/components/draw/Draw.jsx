@@ -32,19 +32,28 @@ export const Draw = () => {
   const startCoordinate = useRef(null);
   let drawingParamsRef = useRef({
     mode: DRAWING_MODES.INIT,
-    withText: false,
     fixed: false,
     color: DEFAULT_COLOR,
     width: DEFAULT_SIZE,
     opacity: DEFAULT_OPACITY,
     filled: true,
     radius: 10,
-    text: "",
-    textColor: "black",
-    font: "Arial",
-    bold: false,
-    italic: false,
-    fontSize: 20,
+    withText: false,
+    text: {
+      text: "",
+      color: "#404080",
+      font: "Arial",
+      bold: 100,
+      italic: false,
+      fontSize: 20,
+    },
+
+    withBorder: false,
+    border: {
+      color: "#a0a0a0",
+      width: 1,
+      interval: 1,
+    },
   });
 
   const getDrowingParams = () => {
@@ -53,6 +62,8 @@ export const Draw = () => {
 
   const setDrawingParams = (props) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
+
+    console.log("modif:", props, "Drawing Params: ", drawingParamsRef.current);
 
     if (drawingParamsRef.current.opacity > 1)
       drawingParamsRef.current.opacity /= 100;

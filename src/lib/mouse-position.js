@@ -24,8 +24,6 @@ export const setMargin = (newMargin) => {
   margin = newMargin;
 };
 
-let decalage = { x: 0, y: 0 };
-
 export const isBorder = (border) => {
   // if border starts with "brd-" or "crn-" return true
   return border && (border.startsWith("brd-") || border.startsWith("crn-"));
@@ -43,12 +41,13 @@ export const isOnButton = (border) => {
   return border && border.startsWith("on-");
 };
 
-export const setDecalage = (coord, rect) => {
-  decalage.x = coord.x - rect.left;
-  decalage.y = coord.y - rect.top;
+export const getRectOffset = (coord, rect) => {
+  const x = rect.left - coord.x;
+  const y = rect.top - coord.y;
+  return { x, y };
 };
-export const getRectDecalage = (coord) => {
-  return { left: coord.x - decalage.x, top: coord.y - decalage.y };
+export const getRectPosition = (coord, offset) => {
+  return { left: coord.x + offset.x, top: coord.y + offset.y };
 };
 
 export const mouseIsInsideRect = (coord, rect) => {

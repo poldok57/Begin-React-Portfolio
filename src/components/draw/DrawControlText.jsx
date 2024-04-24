@@ -7,8 +7,13 @@ export const DrawControlText = ({
   drawingParams,
   handleTextParams,
 }) => {
-  const [bold, setBold] = useState(drawingParams.bold);
+  // const [bold, setBold] = useState(drawingParams.bold);
   const [italic, setItalic] = useState(drawingParams.italic);
+
+  const handleText = (param) => {
+    drawingParams.text = { ...drawingParams.text, ...param };
+    handleTextParams({ text: drawingParams.text });
+  };
 
   return (
     <div
@@ -24,8 +29,8 @@ export const DrawControlText = ({
           Font:
           <select
             id="text-font-selector"
-            defaultValue={drawingParams.font}
-            onChange={(event) => handleTextParams({ font: event.target.value })}
+            defaultValue={drawingParams.text.font}
+            onChange={(event) => handleText({ font: event.target.value })}
           >
             <option value="Arial">Arial</option>
             <option value="Verdana">Verdana</option>
@@ -42,35 +47,39 @@ export const DrawControlText = ({
           <input
             id="text-size-picker"
             type="range"
-            defaultValue={drawingParams.fontSize}
+            defaultValue={drawingParams.text.fontSize}
             min="12"
             max="64"
             step="2"
-            onChange={(event) =>
-              handleTextParams({ fontSize: event.target.value })
-            }
+            onChange={(event) => handleText({ fontSize: event.target.value })}
             style={{ width: "80px" }}
           />
         </label>
-        <Button
-          selected={bold}
-          onClick={() => {
-            const b = !bold;
-            setBold(b);
-            handleTextParams({ bold: b });
-          }}
+        <label
+          htmlFor="text-size-picker"
+          className="flex items-center justify-center gap-2"
         >
-          B
-        </Button>
+          Bold :
+          <input
+            id="text-bold-picker"
+            type="range"
+            defaultValue={drawingParams.text.bold}
+            min="100"
+            max="900"
+            step="100"
+            onChange={(event) => handleText({ bold: event.target.value })}
+            style={{ width: "50px" }}
+          />
+        </label>
         <Button
           selected={italic}
           onClick={() => {
             const i = !italic;
             setItalic(i);
-            handleTextParams({ italic: i });
+            handleText({ italic: i });
           }}
         >
-          I
+          Italic
         </Button>
       </div>
       <div className="flex flex-row gap-2">
@@ -82,8 +91,8 @@ export const DrawControlText = ({
           <input
             id="text"
             type="text"
-            defaultValue={drawingParams.text}
-            onChange={(event) => handleTextParams({ text: event.target.value })}
+            defaultValue={drawingParams.text.text}
+            onChange={(event) => handleText({ text: event.target.value })}
           />
         </label>
         <label
@@ -94,8 +103,8 @@ export const DrawControlText = ({
           <input
             id="text-color-picker"
             type="color"
-            defaultValue={drawingParams.textColor}
-            onChange={(e) => handleTextParams({ textColor: e.target.value })}
+            defaultValue={drawingParams.text.color}
+            onChange={(e) => handleText({ color: e.target.value })}
           />
         </label>
       </div>
