@@ -32,15 +32,14 @@ export const isCorner = (border) => {
   // if border starts with "crn-" return true
   return border && border.startsWith("crn-");
 };
-export const isInside = (border) => {
-  // if border is "inside" return true
-  return border === BORDER.INSIDE;
-};
 export const isOnButton = (border) => {
   // if border starts with "on-" return true
   return border && border.startsWith("on-");
 };
-
+export const isInside = (border) => {
+  // if border is "inside" return true
+  return border === BORDER.INSIDE || isOnButton(border);
+};
 export const getRectOffset = (coord, rect) => {
   const x = rect.left - coord.x;
   const y = rect.top - coord.y;

@@ -13,26 +13,26 @@ export const DrawControlShape = ({
   handleModeChange,
   setWithText,
 }) => {
-  const handleRadiusChange = (event) => {
-    handleParamChange({ radius: event.target.value });
-  };
-  const handleFilled = (event) => {
-    handleParamChange({ filled: event.target.checked });
-  };
-  const handleWithText = (event) => {
-    setWithText(event.target.checked);
-    handleParamChange({ withText: event.target.checked });
-  };
-  const handleWithBorder = (event) => {
-    handleParamChange({ withBorder: event.target.checked });
+  const handleShape = (param) => {
+    drawingParams.shape = { ...drawingParams.shape, ...param };
+    handleParamChange({ shape: drawingParams.shape });
   };
   const handleBorder = (param) => {
     drawingParams.border = { ...drawingParams.border, ...param };
     handleParamChange({ border: drawingParams.border });
   };
+  const handleWithText = (event) => {
+    setWithText(event.target.checked);
+    handleShape({ withText: event.target.checked });
+  };
 
   return (
-    <div className="flex flex-col border-2 border-secondary p-2">
+    <div
+      className={clsx("flex flex-col border-2 border-secondary p-2", {
+        "bg-paper":
+          mode === DRAWING_MODES.CIRCLE || mode === DRAWING_MODES.SQUARE,
+      })}
+    >
       <div className="flex flex-row gap-4">
         <Button
           selected={mode == DRAWING_MODES.CIRCLE}
@@ -56,8 +56,8 @@ export const DrawControlShape = ({
         >
           <ToggleSwitch
             id="toggle-filled"
-            defaultChecked={drawingParams.filled}
-            onChange={(event) => handleFilled(event)}
+            defaultChecked={drawingParams.shape.filled}
+            onChange={(event) => handleShape({ filled: event.target.checked })}
           />
           Filled
         </label>
@@ -71,11 +71,11 @@ export const DrawControlShape = ({
           <input
             id="draw-radius-picker"
             type="range"
-            defaultValue={drawingParams.radius}
+            defaultValue={drawingParams.shape.radius}
             min="0"
             max="50"
             step="1"
-            onChange={handleRadiusChange}
+            onChange={(event) => handleShape({ radius: event.target.value })}
             style={{ width: "60px" }}
           />
         </label>
@@ -88,7 +88,7 @@ export const DrawControlShape = ({
         >
           <ToggleSwitch
             id="toggle-text"
-            defaultChecked={drawingParams.withText}
+            defaultChecked={drawingParams.shape.withText}
             onChange={(event) => handleWithText(event)}
           />
           With Text
@@ -105,8 +105,10 @@ export const DrawControlShape = ({
         >
           <ToggleSwitch
             id="toggle-Border"
-            defaultChecked={drawingParams.withBorder}
-            onChange={(event) => handleWithBorder(event)}
+            defaultChecked={drawingParams.shape.withBorder}
+            onChange={(event) =>
+              handleShape({ withBorder: event.target.checked })
+            }
           />
           Border
         </label>

@@ -235,7 +235,11 @@ export const drawSquare = (ctx, square) => {
 
   ctx.beginPath();
 
-  if (!square.filled) {
+  const radius = square.shape.radius;
+  const filled = square.shape.filled;
+
+  if (!filled) {
+    ctx.strokeStyle = square.color;
     ctx.lineWidth = square.lineWidth;
     const lineWidth = square.lineWidth;
     width -= lineWidth;
@@ -244,20 +248,21 @@ export const drawSquare = (ctx, square) => {
     y += lineWidth / 2;
   }
 
-  if (!square.radius || square.radius < 1) {
+  if (!radius || radius < 1) {
     ctx.rect(x, y, width, height);
   } else {
-    drawRoundedRect(ctx, x, y, width, height, square.radius);
+    drawRoundedRect(ctx, x, y, width, height, radius);
   }
 
-  if (square.filled) {
+  if (filled) {
     ctx.fill();
   } else {
-    if (square.radius === 0) {
+    if (radius === 0) {
       ctx.lineJoin = "miter";
     }
     ctx.stroke();
   }
+  ctx.closePath();
 
   if (square.rotation !== 0) {
     ctx.restore();
@@ -266,7 +271,7 @@ export const drawSquare = (ctx, square) => {
 /**
  * Function to show a square or an ellipse on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ * @param {object} square - {x, y, width, height, color, type, rotation}
  */
 export const drawEllipse = (ctx, square) => {
   let { x, y, width, height } = square;
@@ -277,7 +282,10 @@ export const drawEllipse = (ctx, square) => {
   ctx.fillStyle = square.color;
   ctx.beginPath();
 
-  if (!square.filled) {
+  const filled = square.shape.filled;
+
+  if (!filled) {
+    ctx.strokeStyle = square.color;
     ctx.lineWidth = square.lineWidth;
     const lineWidth = square.lineWidth || 1;
     width -= lineWidth;
@@ -295,11 +303,12 @@ export const drawEllipse = (ctx, square) => {
     0,
     2 * Math.PI
   );
-  if (square.filled) {
+  if (filled) {
     ctx.fill();
   } else {
     ctx.stroke();
   }
+  ctx.closePath();
 
   if (square.rotation !== 0) {
     ctx.restore();
@@ -309,28 +318,30 @@ export const drawEllipse = (ctx, square) => {
 /**
  * Function to show a border around a square or an ellipse on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ * @param {object} square - {x, y, width, height, color,  rotation}
  */
 export const drawBorder = (ctx, square) => {
   const bWidth = parseFloat(square.border.width);
   const bInterval = parseFloat(square.border.interval);
+  let radius = parseInt(square.shape.radius);
   const borderShape = { ...square };
 
-  ctx.strokeStyle = square.border.color;
-  ctx.lineWidth = bWidth;
-  borderShape.filled = false;
+  borderShape.lineWidth = bWidth;
+  borderShape.color = square.border.color;
   borderShape.width += bWidth * 2 + bInterval * 2;
   borderShape.height += bWidth * 2 + bInterval * 2;
   borderShape.x -= bWidth + bInterval;
   borderShape.y -= bWidth + bInterval;
 
-  if (borderShape.radius > 0) {
-    borderShape.radius = borderShape.radius + bWidth + bInterval;
+  if (radius > 0) {
+    radius = radius + bWidth + bInterval;
   } else {
     ctx.lineJoin = "miter";
   }
 
-  switch (borderShape.type) {
+  borderShape.shape = { ...square.shape, radius: radius, filled: false };
+
+  switch (square.type) {
     case "circle":
       drawEllipse(ctx, borderShape);
       break;
@@ -341,24 +352,29 @@ export const drawBorder = (ctx, square) => {
 /**
  * Function to show a text on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ * @param {object} square - {x, y, width, height, color, type, rotation}
  */
 export const drawText = (ctx, square) => {
   let w, h;
-  const text = square.text.text;
 
   if (square.rotation !== 0) {
     rotateElement(ctx, square, square.rotation);
   }
 
+  const paramsText = square.text;
+  const text = paramsText.text ?? "";
+
+  ctx.font = `${paramsText.bold} ${paramsText.italic ? "italic" : ""} ${
+    paramsText.fontSize
+  }px ${paramsText.font}`;
+
   // console.log("draw text", square);
-  ctx.fillStyle = square.text.color;
-  ctx.font = square.fontString;
+  ctx.fillStyle = paramsText.color;
 
   w = ctx.measureText(text).width;
   h = ctx.measureText(text).actualBoundingBoxAscent;
 
-  if (square.withText) {
+  if (square.shape.withText) {
     // text with rectangle or ellipse
     const paddingY = (square.height - h) / 2;
     const paddingX = (square.width - w) / 2;
@@ -376,7 +392,7 @@ export const drawText = (ctx, square) => {
 /**
  * Function to show a square, an ellipse or a text on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ * @param {object} square - {x, y, width, height, color, type, rotation}
  * @param {boolean} withBtn - if the button should be displayed
  */
 export const drawElement = (ctx, square, withBtn, border) => {
@@ -398,7 +414,7 @@ export const drawElement = (ctx, square, withBtn, border) => {
 /**
  * draw buttons from shape on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ * @param {object} square - {x, y, width, height, color, type, rotation}
  * @param {string} border - border where the mouse is
  */
 export const drawButtons = (ctx, square, border) => {
@@ -449,10 +465,16 @@ export const drawButtons = (ctx, square, border) => {
   switch (square.type) {
     case "text":
       {
-        const w = ctx.measureText(square.text.text).width;
-        const h = ctx.measureText(square.text.text).actualBoundingBoxAscent;
+        const paramsText = square.text;
+        const text = paramsText.text ?? "";
 
-        const padding = Math.min(5, h / 2);
+        ctx.font = `${paramsText.bold} ${paramsText.italic ? "italic" : ""} ${
+          paramsText.fontSize
+        }px ${paramsText.font}`;
+        const w = ctx.measureText(text).width;
+        const h = ctx.measureText(text).actualBoundingBoxAscent;
+
+        const padding = Math.min(6, h / 2);
 
         // console.log("draw text, w:", square.width, " h:", square.height);
         ctx.beginPath();
@@ -481,8 +503,8 @@ export const drawButtons = (ctx, square, border) => {
       break;
 
     default:
-      // show the rectangle around the form
-      if (square.radius > 10 && square.withBorder === false) {
+      // show the rectangle around the shape
+      if (square.radius > 10 && square.shape.withBorder === false) {
         ctx.lineWidth = 0.5;
         ctx.rect(square.x, square.y, square.width, square.height);
         ctx.stroke();

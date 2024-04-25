@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { Button } from "../atom/Button";
+import { fontOptions } from "../../lib/font-family";
+import { DRAWING_MODES } from "./Draw";
 import clsx from "clsx";
 
 export const DrawControlText = ({
+  mode,
   hidden,
   drawingParams,
   handleTextParams,
 }) => {
-  // const [bold, setBold] = useState(drawingParams.bold);
-  const [italic, setItalic] = useState(drawingParams.italic);
+  const [italic, setItalic] = useState(drawingParams.text.italic);
 
   const handleText = (param) => {
     drawingParams.text = { ...drawingParams.text, ...param };
@@ -19,6 +21,7 @@ export const DrawControlText = ({
     <div
       className={clsx("flex flex-col gap-4 border-2 border-secondary p-2", {
         hidden: hidden,
+        "bg-paper": mode === DRAWING_MODES.TEXT,
       })}
     >
       <div className="flex flex-row gap-2">
@@ -28,15 +31,16 @@ export const DrawControlText = ({
         >
           Font:
           <select
+            style={{ width: "120px" }}
             id="text-font-selector"
             defaultValue={drawingParams.text.font}
             onChange={(event) => handleText({ font: event.target.value })}
           >
-            <option value="Arial">Arial</option>
-            <option value="Verdana">Verdana</option>
-            <option value="Helvetica">Helvetica</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Courier New">Courier New</option>
+            {fontOptions.map((font, index) => (
+              <option key={index} value={font} style={{ fontFamily: font }}>
+                {font}
+              </option>
+            ))}
           </select>
         </label>
         <label
@@ -91,6 +95,7 @@ export const DrawControlText = ({
           <input
             id="text"
             type="text"
+            className="rounded-md border-2 border-black bg-paper p-2"
             defaultValue={drawingParams.text.text}
             onChange={(event) => handleText({ text: event.target.value })}
           />

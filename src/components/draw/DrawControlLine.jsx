@@ -1,16 +1,22 @@
-export const DrawControlLine = ({ handleParamChange, drawingParams }) => {
+import clsx from "clsx";
+import { DRAWING_MODES } from "./Draw";
+export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
   const handleColorChange = (event) => {
     handleParamChange({ color: event.target.value });
   };
   const handleSizeChange = (event) => {
-    handleParamChange({ width: event.target.value });
+    handleParamChange({ lineWidth: event.target.value });
   };
   const handleOpacityChange = (event) => {
     handleParamChange({ opacity: event.target.value });
   };
 
   return (
-    <div className="flex flex-row gap-4 border border-secondary p-2">
+    <div
+      className={clsx("flex flex-row gap-4 border border-secondary p-2", {
+        "bg-paper": mode === DRAWING_MODES.LINE || mode === DRAWING_MODES.DRAW,
+      })}
+    >
       <label
         htmlFor="draw-color-picker"
         className="flex items-center justify-center gap-4"
@@ -32,7 +38,7 @@ export const DrawControlLine = ({ handleParamChange, drawingParams }) => {
           className="h-2 w-full bg-gray-300 opacity-75 outline-none transition-opacity hover:opacity-100"
           id="draw-size-picker"
           type="range"
-          defaultValue={drawingParams.width}
+          defaultValue={drawingParams.lineWidth}
           min="2"
           max="32"
           step="2"

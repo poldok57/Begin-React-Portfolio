@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { forwardRef } from "react";
 
 /**
  * Simple button for the application
@@ -9,15 +10,13 @@ import clsx from "clsx";
  * @returns {JSX.Element}
  * @constructor
  */
-export const Button = ({
-  children,
-  disabled,
-  selected,
-  className,
-  ...props
-}) => {
+export const Button = forwardRef(function Button(
+  { children, disabled, selected, className, ...props },
+  ref
+) {
   return (
     <button
+      ref={ref}
       className={clsx(
         "inline-block rounded bg-primary px-8 py-3 text-sm font-medium text-white transition",
 
@@ -37,4 +36,4 @@ export const Button = ({
       {children}
     </button>
   );
-};
+});

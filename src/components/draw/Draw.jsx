@@ -34,11 +34,14 @@ export const Draw = () => {
     mode: DRAWING_MODES.INIT,
     fixed: false,
     color: DEFAULT_COLOR,
-    width: DEFAULT_SIZE,
+    lineWidth: DEFAULT_SIZE,
     opacity: DEFAULT_OPACITY,
-    filled: true,
-    radius: 10,
-    withText: false,
+    shape: {
+      filled: true,
+      radius: 10,
+      withText: false,
+      withBorder: false,
+    },
     text: {
       text: "",
       color: "#404080",
@@ -47,8 +50,6 @@ export const Draw = () => {
       italic: false,
       fontSize: 20,
     },
-
-    withBorder: false,
     border: {
       color: "#a0a0a0",
       width: 1,
@@ -63,12 +64,10 @@ export const Draw = () => {
   const setDrawingParams = (props) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
 
-    console.log("modif:", props, "Drawing Params: ", drawingParamsRef.current);
-
     if (drawingParamsRef.current.opacity > 1)
       drawingParamsRef.current.opacity /= 100;
   };
-  const changeMode = (mode) => {
+  const changeMode = (mode, option = null) => {
     switch (mode) {
       case DRAWING_MODES.UNDO:
         if (!canvas.current) break;
@@ -96,10 +95,13 @@ export const Draw = () => {
         break;
       case DRAWING_MODES.SAVE:
         if (canvas.current) {
+          if (option == null) {
+            option = "my-drawing";
+          }
           const dataURL = canvas.current.toDataURL();
           const link = document.createElement("a");
           link.href = dataURL;
-          link.download = "my-drawing.png";
+          link.download = option + ".png";
           link.click();
         }
         break;

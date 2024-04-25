@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useMessage } from "../../context/MessageProvider";
-import { BORDER, mousePointer, isBorder } from "../../lib/mouse-position";
+import {
+  BORDER,
+  mousePointer,
+  isBorder,
+  isInside,
+} from "../../lib/mouse-position";
 import {
   basicLine,
   drawSquare,
@@ -44,6 +49,7 @@ export const DrawCanvas = ({
     show: true,
   });
   const squareRef = useRef(null);
+  const offsetRef = useRef({ x: -SQUARE_WIDTH / 2, y: -SQUARE_HEIGHT / 2 });
 
   const lineCap = useRef("round");
 
@@ -54,19 +60,15 @@ export const DrawCanvas = ({
       type: type,
       x: WIDTH / 2,
       y: HEIGHT / 2,
-      offset: { x: -SQUARE_WIDTH / 2, y: -SQUARE_HEIGHT / 2 },
-      radius: drawingParams.current.radius ?? 5,
       width: SQUARE_WIDTH,
       height: type == DRAWING_MODES.CIRCLE ? SQUARE_WIDTH : SQUARE_HEIGHT,
-      color: "grey",
+      color: drawingParams.current.color,
+      lineWidth: drawingParams.current.lineWidth,
       opacity: 1,
       rotation: 0,
-      filled: drawingParams.current.filled ?? true,
-      withText: drawingParams.current.withText ?? false,
-      text: { ...drawingParams.current.text },
-
-      withBorder: drawingParams.current.withBorder ?? false,
+      shape: { ...drawingParams.current.shape },
       border: { ...drawingParams.current.border },
+      text: { ...drawingParams.current.text },
     };
     fixed = false;
   };
@@ -136,7 +138,7 @@ export const DrawCanvas = ({
 
     if (drawingParams.current) {
       ctx.strokeStyle = drawingParams.current.color;
-      ctx.lineWidth = drawingParams.current.width;
+      ctx.lineWidth = drawingParams.current.lineWidth;
     }
     if (lineCap.current) {
       ctx.lineCap = lineCap.current;
@@ -172,7 +174,7 @@ export const DrawCanvas = ({
       case DRAWING_MODES.TEXT:
       case DRAWING_MODES.SQUARE:
       case DRAWING_MODES.CIRCLE:
-        squareRef.current.filled = drawingParams.current.filled;
+        squareRef.current.shape = { ...drawingParams.current.shape };
         if (fixed) {
           // isInsideSquare(getCoordinates(), squareRef.current, true);
           const border = isOnSquareBorder(
@@ -186,7 +188,7 @@ export const DrawCanvas = ({
               (drawingParams.current.mode === DRAWING_MODES.TEXT &&
                 isBorder(border))
             ) {
-              squareRef.current.offset = getSquareOffset(
+              offsetRef.current = getSquareOffset(
                 getCoordinates(),
                 squareRef.current
               );
@@ -315,11 +317,9 @@ export const DrawCanvas = ({
   const showElement = (ctx, coord, withBtn = true, border = null) => {
     const square = squareRef.current;
     if (!fixed) {
-      square.x = coord.x + square.offset.x;
-      square.y = coord.y + square.offset.y;
+      square.x = coord.x + offsetRef.current.x;
+      square.y = coord.y + offsetRef.current.y;
     }
-    square.color = drawingParams.current.color;
-    square.lineWidth = drawingParams.current.width;
 
     switch (square.type) {
       case DRAWING_MODES.SQUARE:
@@ -327,18 +327,24 @@ export const DrawCanvas = ({
         break;
       case DRAWING_MODES.CIRCLE:
         drawEllipse(ctx, square);
+
         break;
       case DRAWING_MODES.TEXT:
-        writeText(ctx, coord, withBtn, border);
+        if (!square.text || !square.text.text) return;
+        drawText(ctx, square);
+      // writeText(ctx, coord, withBtn, border);
     }
 
-    if (drawingParams.current.withBorder) {
-      drawBorder(ctx, square);
-    }
-    if (drawingParams.current.withText) {
-      // text inside the square
-      squareRef.current.withText = true;
-      writeText(ctx, coord, false);
+    if (square.type !== DRAWING_MODES.TEXT) {
+      if (drawingParams.current.shape.withBorder) {
+        drawBorder(ctx, square);
+      }
+      if (drawingParams.current.shape.withText) {
+        // text inside the square
+        squareRef.current.shape.withText = true;
+        // writeText(ctx, coord, false);
+        drawText(ctx, square);
+      }
     }
     if (withBtn) {
       drawButtons(ctx, square, border);
@@ -357,37 +363,7 @@ export const DrawCanvas = ({
 
     showElement(context, null, false);
   };
-  /**
-   * Function to write a text on the canvas
-   * @param {CanvasRenderingContext2D} ctx
-   */
-  const writeText = (ctx, coord, withBtn, border = null) => {
-    if (!drawingParams.current.text) return;
 
-    // const coord = setCoordinates(event, canvasRef.current);
-
-    if (!fixed) {
-      if (!squareRef.current) {
-        initShape(DRAWING_MODES.TEXT);
-      }
-      squareRef.current.x = coord.x + squareRef.current.offset.x;
-      squareRef.current.y = coord.y + squareRef.current.offset.y;
-    }
-    const tParam = squareRef.current.text;
-    const font = tParam.font;
-    const fontSize = tParam.fontSize;
-    const bold = tParam.bold;
-    const italic = tParam.italic;
-
-    squareRef.current.fontString = `${bold} ${
-      italic ? "italic" : ""
-    } ${fontSize}px ${font}`;
-
-    drawText(ctx, squareRef.current, withBtn);
-    if (withBtn) {
-      drawButtons(ctx, squareRef.current, border);
-    }
-  };
   /**
    * Function to show a circle on the canvas to highlight the cursor
    * @param {CanvasRenderingContext2D} ctxSouris
@@ -436,13 +412,16 @@ export const DrawCanvas = ({
   /**
    * Function to follow the cursor on the canvas
    * @param {Event} event
+   * @param {number} opacity
    */
   const followCursor = (event, opacity = null) => {
     const canvasOver = canvasOverRef.current;
     const context = setContext(canvasOver, opacity);
     if (!context || !drawingParams.current) {
       if (drawingParams.current === null) {
+        // initalisation at the first time
         drawingParams.current = getParams();
+        // console.log("Init Drawing Params: ", drawingParams.current);
         if (!historyRef.current || historyRef.current.length === 0) {
           // for undo record white canvas, first pic in history is white canvas
           savePics();
@@ -475,12 +454,7 @@ export const DrawCanvas = ({
             if (border) {
               cursorRef.current = mousePointer(border);
 
-              if (
-                border === BORDER.INSIDE ||
-                border === BORDER.ON_BUTTON ||
-                border === BORDER.ON_BUTTON_LEFT ||
-                border === BORDER.ON_BUTTON_RIGHT
-              ) {
+              if (isInside(border)) {
                 // show real color when mouse is inside the square
                 context.globalAlpha = drawingParams.current.opacity;
               }
@@ -556,16 +530,17 @@ export const DrawCanvas = ({
           drawingParams.current.mode === DRAWING_MODES.SQUARE ||
           drawingParams.current.mode === DRAWING_MODES.CIRCLE
         ) {
-          squareRef.current.filled = drawingParams.current.filled;
           squareRef.current.color = drawingParams.current.color;
+          squareRef.current.lineWidth = drawingParams.current.lineWidth;
           squareRef.current.opacity = drawingParams.current.opacity;
-          squareRef.current.radius = parseInt(drawingParams.current.radius);
-          squareRef.current.withBorder = drawingParams.current.withBorder;
-          if (drawingParams.current.withBorder) {
+
+          squareRef.current.shape = { ...drawingParams.current.shape };
+
+          if (drawingParams.current.shape.withBorder) {
             squareRef.current.border = { ...drawingParams.current.border };
           }
-          squareRef.current.withText = drawingParams.current.withText;
-          if (drawingParams.current.withText) {
+
+          if (drawingParams.current.shape.withText) {
             squareRef.current.text = { ...drawingParams.current.text };
           }
         } else if (drawingParams.current.mode == DRAWING_MODES.TEXT) {
