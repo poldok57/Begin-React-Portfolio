@@ -31,13 +31,18 @@ export const DrawControlText = ({
         >
           Font:
           <select
-            style={{ width: "120px" }}
+            className="w-32 rounded-md border-2 border-primary bg-paper p-2 focus:ring-blue-500"
             id="text-font-selector"
             defaultValue={drawingParams.text.font}
             onChange={(event) => handleText({ font: event.target.value })}
           >
             {fontOptions.map((font, index) => (
-              <option key={index} value={font} style={{ fontFamily: font }}>
+              <option
+                key={index}
+                value={font}
+                style={{ fontFamily: font }}
+                className="py-2"
+              >
                 {font}
               </option>
             ))}
@@ -95,7 +100,7 @@ export const DrawControlText = ({
           <input
             id="text"
             type="text"
-            className="rounded-md border-2 border-black bg-paper p-2"
+            className="rounded-md border-2 border-primary bg-paper p-2"
             defaultValue={drawingParams.text.text}
             onChange={(event) => handleText({ text: event.target.value })}
           />

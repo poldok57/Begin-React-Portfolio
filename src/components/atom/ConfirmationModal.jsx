@@ -17,17 +17,25 @@ export const ConfirmationModal = ({
       : null;
 
   let top = "20%",
-    left = "50%";
+    left = "50%",
+    transform = "translate(-50%, -50%)";
 
   if (rect) {
-    top = rect.top > 180 ? rect.top - 180 : rect.top + rect.height + 5;
+    if (rect.top > 200) {
+      // Modal over the referrer
+      transform = "translate(-50%, -100%)";
+      top = rect.top - 5;
+    } else {
+      // Modal under the referrer
+      transform = "translate(-50%, 0)";
+      top = rect.top + rect.height + 5;
+    }
+
     left = rect.left + rect.width / 2;
 
     left = `${Math.floor(left)}px`;
     top = `${Math.floor(top)}px`;
   }
-
-  const transform = rect ? "translate(-50%, 0)" : "translate(-50%, -50%)";
 
   return (
     <div

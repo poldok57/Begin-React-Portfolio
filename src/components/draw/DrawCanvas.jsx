@@ -468,7 +468,11 @@ export const DrawCanvas = ({
         break;
 
       case DRAWING_MODES.LINE:
-        if (getStartCoordinates() == null) return;
+        showCercle(context, coordinate);
+        if (getStartCoordinates() == null) {
+          basicLine(context, coordinate, coordinate);
+          return;
+        }
         basicLine(context, getStartCoordinates(), coordinate);
 
         break;
@@ -505,6 +509,7 @@ export const DrawCanvas = ({
 
       if (isDrawing.current) {
         draw(event);
+        followCursor(event, 0.4);
       } else if (
         isResizing.current &&
         (drawingParams.current.mode === DRAWING_MODES.SQUARE ||
@@ -512,7 +517,7 @@ export const DrawCanvas = ({
       ) {
         resizingSquare(event, canvasElement);
       } else {
-        followCursor(event, 0.3);
+        followCursor(event, 0.4);
       }
     };
     const hanldeKeyDown = (event) => {

@@ -134,14 +134,14 @@ export const DrawControl = ({
           }}
         >
           <div className="flex flex-row">
-            Do you want to reccord your pics ?
+            Do you want to reccord this image ?
           </div>
           <div className="flex flex-row">
             Name:
             <input
-              className="mx-2 h-8 w-28 rounded-md border-2 border-gray-500 bg-white px-2"
+              className="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
               type="text"
-              defaultValue="my-pics"
+              defaultValue="my image"
               ref={filenameRef}
             />
           </div>
