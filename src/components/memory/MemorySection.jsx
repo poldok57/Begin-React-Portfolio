@@ -12,7 +12,7 @@ export const MemorySection = () => {
             className="relative flex flex-col items-center gap-2 bg-background p-2 lg:absolute lg:left-1"
             title="Test your memory"
             titleBar="true"
-            titleHide="true"
+            titleHidden="true"
             titleClassName="bg-black text-white border-2 rounded border-primary"
             locked="true"
           />
@@ -22,7 +22,7 @@ export const MemorySection = () => {
             trace="false"
             close="false"
             titleBar="true"
-            titleHide="false"
+            titleHidden="false"
             title="Reset panel"
             titleHeight={30}
           />

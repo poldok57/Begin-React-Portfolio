@@ -48,7 +48,7 @@ export function withMousePosition(Component) {
    * @param {string} props.className  - the class name of the component
    * @param {boolean} props.locked - default true - if true, the component is locked
    * @param {boolean} props.titleBar - default false - if true, the component can be moved by the title bar
-   * @param {boolean} props.titleHide - default true - if true, the title bar is hidden
+   * @param {boolean} props.titleHidden - default true - if true, the title bar is hidden
    * @param {string} props.title - the title of the title bar
    * @param {string} props.titleClassName - the class name of the title bar
    * @param {number} props.titleHeight - the height of the title bar
@@ -60,7 +60,7 @@ export function withMousePosition(Component) {
     locked = true,
     resizeable = false,
     titleBar = false,
-    titleHide = true,
+    titleHidden = true,
     title = "",
     titleClassName = null,
     titleHeight = 30,
@@ -86,7 +86,7 @@ export function withMousePosition(Component) {
     let onBorderRef = useRef(BORDER.INSIDE);
 
     titleBar = titleBar === true || titleBar === "true" ? true : false;
-    titleHide = titleHide === true || titleHide === "true" ? true : false;
+    titleHidden = titleHidden === true || titleHidden === "true" ? true : false;
     resizeable = resizeable === true || resizeable === "true" ? true : false;
 
     const setCanMove = (value) => {
@@ -455,7 +455,7 @@ export function withMousePosition(Component) {
           <TitleBar
             ref={titleRef}
             style={{
-              top: titleHide ? 0 : -titleHeight,
+              top: titleHidden ? 0 : -titleHeight,
               height: titleHeight,
               position: "absolute",
               width: "100%",
@@ -463,9 +463,9 @@ export function withMousePosition(Component) {
             className={clsx("group-over:z-50", titleClassName, {
               "rounded border  border-gray-500 bg-primary text-secondary":
                 titleClassName === null,
-              "invisible group-hover:visible": titleHide,
-              "opacity-60": titleHide,
-              "opacity-5": isLocked && titleHide,
+              "invisible group-hover:visible": titleHidden,
+              "opacity-60": titleHidden,
+              "opacity-5": isLocked && titleHidden,
               "hover:cursor-move": !isLocked,
             })}
           >
@@ -474,7 +474,7 @@ export function withMousePosition(Component) {
         )}
         <div
           style={{
-            top: titleHide ? 2 : 2 - titleHeight,
+            top: titleHidden ? 2 : 2 - titleHeight,
             position: "absolute",
             width: "100%",
           }}

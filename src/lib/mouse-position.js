@@ -9,10 +9,10 @@ export const BORDER = {
     BOTTOM_LEFT: "crn-bottom-left",
     BOTTOM_RIGHT: "crn-bottom-right",
   },
-  ON_BUTTON: "on-button",
-  ON_MIDDLE_BUTTON: "on-button-middle",
-  ON_BUTTON_LEFT: "on-button-left",
-  ON_BUTTON_RIGHT: "on-button-right",
+  ON_BUTTON: "on-btn",
+  ON_MIDDLE_BUTTON: "on-btn-middle",
+  ON_BUTTON_LEFT: "on-turn-btn-left",
+  ON_BUTTON_RIGHT: "on-turn-btn-right",
   INSIDE: "inside",
 };
 
@@ -35,6 +35,10 @@ export const isCorner = (border) => {
 export const isOnButton = (border) => {
   // if border starts with "on-" return true
   return border && border.startsWith("on-");
+};
+export const isOnTurnButton = (border) => {
+  // if border is "on-btn-middle" return true
+  return border && border.startsWith("on-turn-btn");
 };
 export const isInside = (border) => {
   // if border is "inside" return true

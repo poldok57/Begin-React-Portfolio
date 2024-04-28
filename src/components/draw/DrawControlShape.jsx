@@ -69,6 +69,7 @@ export const DrawControlShape = ({
         >
           Radius
           <input
+            className="h-2 w-16 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="draw-radius-picker"
             type="range"
             defaultValue={drawingParams.shape.radius}
@@ -76,7 +77,6 @@ export const DrawControlShape = ({
             max="50"
             step="1"
             onChange={(event) => handleShape({ radius: event.target.value })}
-            style={{ width: "60px" }}
           />
         </label>
         <label
@@ -130,6 +130,7 @@ export const DrawControlShape = ({
         >
           size
           <input
+            className="h-2 w-12 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="border-size-picker"
             type="range"
             defaultValue={drawingParams.border.width}
@@ -146,6 +147,7 @@ export const DrawControlShape = ({
         >
           Interval
           <input
+            className="h-2 w-12 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="border-interval-picker"
             type="range"
             defaultValue={drawingParams.border.interval}

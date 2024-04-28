@@ -92,8 +92,6 @@ const ResizePicture = ({ children, ...props }) => {
   const { alertMessage } = useMessage();
   const { setWidthCards, getWidthCards } = useMemoryContext();
 
-  const size = [60, 70, 80, 100, 125, 150];
-
   const onChange = (e) => {
     setWidthCards(e.target.value);
     alertMessage(`Resize picture to ${e.target.value}`);
@@ -105,13 +103,16 @@ const ResizePicture = ({ children, ...props }) => {
       htmlFor={id}
     >
       {children} &nbsp;
-      <select onChange={onChange} value={getWidthCards()}>
-        {size.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+      <input
+        className="h-2 w-32 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+        id={id}
+        type="range"
+        min="50"
+        max="150"
+        step="25"
+        onChange={onChange}
+        defaultValue={getWidthCards()}
+      ></input>
     </label>
   );
 };
@@ -176,7 +177,7 @@ export const MemoryReset = () => {
           </div>
         </form>
         {inputType === "images" && (
-          <div className="flex w-full justify-center">
+          <div className="my-2 flex w-full justify-center">
             <ResizePicture id="resize" name="resize">
               Resize picture
             </ResizePicture>

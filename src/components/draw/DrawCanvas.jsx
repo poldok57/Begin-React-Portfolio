@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useMessage } from "../../context/MessageProvider";
+import { useHistory } from "./DrawHistory";
 import {
   BORDER,
   mousePointer,
   isBorder,
   isInside,
+  isOnTurnButton,
 } from "../../lib/mouse-position";
 import {
   basicLine,
@@ -22,26 +24,24 @@ import {
 
 import { DRAWING_MODES, ALL_DRAWING_MODES } from "./Draw";
 
-const MAX_UNDO = 20;
-
 // Draw on Canvas
-export const DrawCanvas = ({
-  canvas: canvasRef,
-  history: historyRef,
-  startCoordinate: startCoordinateRef,
-  getParams,
-}) => {
-  let fixed = false;
-  let lastCoordinate = null;
-  const isDrawing = useRef(false);
-  const isResizing = useRef(null);
+export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
+  let element = {
+    fixed: false,
+    isResizing: null,
+  };
+  let line = {
+    lastCoordinate: null,
+    isDrawing: false,
+  };
 
   const drawingParams = useRef(null);
   const canvasOverRef = useRef(null);
+  const startCoordinateRef = useRef(null);
   const cursorRef = useRef("default");
 
   const [WIDTH, HEIGHT] = [560, 315]; // 16:9 aspact ratio
-  const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 80];
+  const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
   const mouseCircle = useRef({
     color: "rgba(255, 255, 0, 0.5)",
@@ -52,7 +52,8 @@ export const DrawCanvas = ({
   const offsetRef = useRef({ x: -SQUARE_WIDTH / 2, y: -SQUARE_HEIGHT / 2 });
 
   const lineCap = useRef("round");
-
+  const { undoHistory, addHistoryItem, getCurrentHistory, getHistoryLength } =
+    useHistory();
   const { alertMessage } = useMessage();
 
   const initShape = (type = DRAWING_MODES.SQUARE) => {
@@ -70,7 +71,8 @@ export const DrawCanvas = ({
       border: { ...drawingParams.current.border },
       text: { ...drawingParams.current.text },
     };
-    fixed = false;
+    element.fixed = false;
+    offsetRef.current = { x: -SQUARE_WIDTH / 2, y: -SQUARE_HEIGHT / 2 };
   };
 
   /**
@@ -81,20 +83,35 @@ export const DrawCanvas = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    if (historyRef.current === null) {
-      historyRef.current = [];
-    }
-    const history = historyRef.current;
-    history.push({
+
+    const item = {
       image: ctx.getImageData(0, 0, canvas.width, canvas.height),
       startCoordinate: startCoordinateRef.current,
-    });
+    };
 
-    // Limit the number of saved states
-    if (history.length > MAX_UNDO) {
-      history.shift();
-    }
+    addHistoryItem(item);
   }
+
+  /**
+   * Function to get the last picture in the history
+   */
+  const previousPicture = () => {
+    if (canvasRef.current === null) {
+      return;
+    }
+    undoHistory();
+    const item = getCurrentHistory();
+
+    if (item === null || item.image === null || item.image === undefined) {
+      canvasRef.current
+        .getContext("2d")
+        .clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+      return;
+    }
+    canvasRef.current.getContext("2d").putImageData(item.image, 0, 0);
+    startCoordinateRef.current = item.startCoordinate;
+  };
 
   /**
    * Function to set the coordinates of the cursor on the canvas
@@ -109,7 +126,7 @@ export const DrawCanvas = ({
     const x = event.clientX - rect.left,
       y = event.clientY - rect.top;
 
-    return (lastCoordinate = { x, y });
+    return (line.lastCoordinate = { x, y });
   };
 
   const setStartCoordinates = (coordinate) => {
@@ -122,7 +139,7 @@ export const DrawCanvas = ({
     return startCoordinateRef.current;
   };
   const getCoordinates = () => {
-    return lastCoordinate;
+    return line.lastCoordinate;
   };
 
   /**
@@ -149,6 +166,44 @@ export const DrawCanvas = ({
   };
 
   /**
+   * Function to handle special cases for the border of the square
+   * @param {string} border
+   * @param {string} mode
+   * @param {object} square
+   */
+  const handleBorderSpecialCases = (border, mode, square) => {
+    if (mode === DRAWING_MODES.TEXT) {
+      if (isBorder(border)) {
+        // no resize for text
+        return BORDER.INSIDE;
+      }
+      return border;
+    }
+    if (
+      mode === DRAWING_MODES.CIRCLE &&
+      square.width === square.height &&
+      square.shape.withText === false &&
+      isOnTurnButton(border)
+    ) {
+      // no turning button for real circle without text
+      return BORDER.INSIDE;
+    }
+    return border;
+  };
+
+  /**
+   * Function to check if the mouse is on the border of the square
+   * @param {string} mode - drawing mode
+   * @param {object} square
+   */
+  const handleMouseOnElement = (mode, square) => {
+    const border = isOnSquareBorder(getCoordinates(), square, true);
+    if (!border) return false;
+
+    return handleBorderSpecialCases(border, mode, square);
+  };
+
+  /**
    * Function to start drawing on the canvas
    * @param {Event} event
    */
@@ -163,7 +218,7 @@ export const DrawCanvas = ({
 
     switch (drawingParams.current.mode) {
       case DRAWING_MODES.DRAW:
-        isDrawing.current = true;
+        line.isDrawing = true;
         eraseStartCoordinates();
         break;
 
@@ -175,25 +230,20 @@ export const DrawCanvas = ({
       case DRAWING_MODES.SQUARE:
       case DRAWING_MODES.CIRCLE:
         squareRef.current.shape = { ...drawingParams.current.shape };
-        if (fixed) {
+        if (element.fixed) {
           // isInsideSquare(getCoordinates(), squareRef.current, true);
-          const border = isOnSquareBorder(
-            getCoordinates(),
-            squareRef.current,
-            true
+          const border = handleMouseOnElement(
+            drawingParams.current.mode,
+            squareRef.current
           );
           if (border) {
-            if (
-              border === BORDER.INSIDE ||
-              (drawingParams.current.mode === DRAWING_MODES.TEXT &&
-                isBorder(border))
-            ) {
+            if (border === BORDER.INSIDE) {
               offsetRef.current = getSquareOffset(
                 getCoordinates(),
                 squareRef.current
               );
               canvasOverRef.current.style.cursor = "pointer";
-              fixed = false;
+              element.fixed = false;
             } else if (border === BORDER.ON_BUTTON) {
               canvasOverRef.current.style.cursor = "pointer";
               validDrawedElement();
@@ -207,7 +257,7 @@ export const DrawCanvas = ({
               squareRef.current.rotation += Math.PI / 16;
               followCursor(event);
             } else {
-              isResizing.current = border;
+              element.isResizing = border;
             }
           }
         }
@@ -229,14 +279,14 @@ export const DrawCanvas = ({
     if (!context) return;
 
     const coordinate = setCoordinates(event, canvas);
-    const border = isResizing.current;
+    const border = element.isResizing;
     if (border) {
       const { coord, newSquare } = resizeSquare(
         coordinate,
         squareRef.current,
         border
       );
-      // fixed = true;
+      // element.fixed = true;
       squareRef.current = { ...squareRef.current, ...newSquare };
 
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -247,8 +297,8 @@ export const DrawCanvas = ({
    * Function to stop drawing on the canvas
    */
   const stopDrawing = () => {
-    isDrawing.current = false;
-    lastCoordinate = null;
+    line.isDrawing = false;
+    line.lastCoordinate = null;
 
     switch (drawingParams.current.mode) {
       case DRAWING_MODES.DRAW:
@@ -258,8 +308,8 @@ export const DrawCanvas = ({
       case DRAWING_MODES.SQUARE:
       case DRAWING_MODES.CIRCLE:
       case DRAWING_MODES.TEXT:
-        fixed = true;
-        isResizing.current = null;
+        element.fixed = true;
+        element.isResizing = null;
         break;
     }
   };
@@ -269,7 +319,7 @@ export const DrawCanvas = ({
    * @param {Event} event
    */
   const draw = (event) => {
-    if (isDrawing.current) {
+    if (line.isDrawing) {
       const context = canvasRef.current.getContext("2d");
       if (!context) return;
 
@@ -316,7 +366,7 @@ export const DrawCanvas = ({
    */
   const showElement = (ctx, coord, withBtn = true, border = null) => {
     const square = squareRef.current;
-    if (!fixed) {
+    if (!element.fixed) {
       square.x = coord.x + offsetRef.current.x;
       square.y = coord.y + offsetRef.current.y;
     }
@@ -396,7 +446,7 @@ export const DrawCanvas = ({
       (drawingParams.current.mode === DRAWING_MODES.SQUARE ||
         drawingParams.current.mode === DRAWING_MODES.CIRCLE ||
         drawingParams.current.mode === DRAWING_MODES.TEXT) &&
-      fixed
+      element.fixed
     ) {
       return;
     }
@@ -421,9 +471,8 @@ export const DrawCanvas = ({
       if (drawingParams.current === null) {
         // initalisation at the first time
         drawingParams.current = getParams();
-        // console.log("Init Drawing Params: ", drawingParams.current);
-        if (!historyRef.current || historyRef.current.length === 0) {
-          // for undo record white canvas, first pic in history is white canvas
+
+        if (getHistoryLength() === 0) {
           savePics();
         }
       }
@@ -442,15 +491,12 @@ export const DrawCanvas = ({
       case DRAWING_MODES.TEXT:
         {
           let border = null;
-          if (fixed) {
-            border = isOnSquareBorder(coordinate, squareRef.current, true);
-            if (
-              drawingParams.current.mode === DRAWING_MODES.TEXT &&
-              isBorder(border)
-            ) {
-              cursorRef.current = "move";
-              border = BORDER.INSIDE;
-            }
+          if (element.fixed) {
+            border = handleMouseOnElement(
+              drawingParams.current.mode,
+              squareRef.current
+            );
+
             if (border) {
               cursorRef.current = mousePointer(border);
 
@@ -507,11 +553,11 @@ export const DrawCanvas = ({
         savePics();
       }
 
-      if (isDrawing.current) {
+      if (line.isDrawing) {
         draw(event);
         followCursor(event, 0.4);
       } else if (
-        isResizing.current &&
+        element.isResizing &&
         (drawingParams.current.mode === DRAWING_MODES.SQUARE ||
           drawingParams.current.mode === DRAWING_MODES.CIRCLE)
       ) {
@@ -521,12 +567,23 @@ export const DrawCanvas = ({
       }
     };
     const hanldeKeyDown = (event) => {
-      if (event.key === "Escape") {
-        eraseStartCoordinates();
-        // drawingParams.current.mode = DRAWING_MODES.DRAW;
-        alertMessage("Escape key pressed...");
+      switch (event.key) {
+        case "Escape":
+          eraseStartCoordinates();
+          // drawingParams.current.mode = DRAWING_MODES.DRAW;
+          alertMessage("Escape key pressed...");
+          break;
+
+        case "z":
+        case "Z": // Ctrl Z
+          if (event.ctrlKey) {
+            // undo
+            // console.log("Ctrl Z pressed...");
+            previousPicture();
+          }
       }
     };
+
     const handleModeChange = (event) => {
       const newMode = event.detail.mode;
       if (newMode === DRAWING_MODES.DRAWING_CHANGE) {
@@ -559,6 +616,8 @@ export const DrawCanvas = ({
         }
         drawingParams.current.mode = newMode;
         alertMessage(`Mode changed to ${newMode}`);
+      } else if (newMode === DRAWING_MODES.UNDO) {
+        previousPicture();
       }
 
       if (
@@ -576,12 +635,12 @@ export const DrawCanvas = ({
       }
     };
 
-    document.addEventListener("modeChanged", handleModeChange);
     canvasElement.addEventListener("mousedown", handleMouseDown);
     canvasElement.addEventListener("mousemove", handleMouseMove);
     canvasElement.addEventListener("mouseup", handleMouseUp);
     canvasElement.addEventListener("mouseleave", eraseCanvasOver);
     window.addEventListener("keydown", hanldeKeyDown);
+    document.addEventListener("modeChanged", handleModeChange);
 
     return () => {
       canvasElement.removeEventListener("mousedown", handleMouseDown);
@@ -589,6 +648,7 @@ export const DrawCanvas = ({
       canvasElement.removeEventListener("mouseup", handleMouseUp);
       canvasElement.removeEventListener("mouseleave", eraseCanvasOver);
       window.removeEventListener("keydown", hanldeKeyDown);
+      document.removeEventListener("modeChanged", handleModeChange);
     };
   }, [canvasRef, canvasOverRef]);
 

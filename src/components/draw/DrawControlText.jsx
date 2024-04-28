@@ -54,6 +54,7 @@ export const DrawControlText = ({
         >
           Font size :
           <input
+            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="text-size-picker"
             type="range"
             defaultValue={drawingParams.text.fontSize}
@@ -61,7 +62,6 @@ export const DrawControlText = ({
             max="64"
             step="2"
             onChange={(event) => handleText({ fontSize: event.target.value })}
-            style={{ width: "80px" }}
           />
         </label>
         <label
@@ -70,6 +70,7 @@ export const DrawControlText = ({
         >
           Bold :
           <input
+            className="h-2 w-12 bg-gray-300 opacity-50 outline-none transition-opacity hover:opacity-100"
             id="text-bold-picker"
             type="range"
             defaultValue={drawingParams.text.bold}
@@ -77,7 +78,6 @@ export const DrawControlText = ({
             max="900"
             step="100"
             onChange={(event) => handleText({ bold: event.target.value })}
-            style={{ width: "50px" }}
           />
         </label>
         <Button

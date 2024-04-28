@@ -35,7 +35,7 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
       >
         Line width
         <input
-          className="h-2 w-full bg-gray-300 opacity-75 outline-none transition-opacity hover:opacity-100"
+          className="h-2 w-24 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
           id="draw-size-picker"
           type="range"
           defaultValue={drawingParams.lineWidth}
@@ -43,7 +43,6 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
           max="32"
           step="2"
           onChange={handleSizeChange}
-          style={{ width: "100px" }}
         />
       </label>
       <label
@@ -52,6 +51,7 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
       >
         Opacity
         <input
+          className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
           id="draw-size-picker"
           type="range"
           defaultValue={drawingParams.opacity * 100}
@@ -59,7 +59,6 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
           max="100"
           step="5"
           onChange={handleOpacityChange}
-          style={{ width: "80px" }}
         />
       </label>
     </div>

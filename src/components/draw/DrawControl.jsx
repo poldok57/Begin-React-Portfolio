@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useMemo, useState } from "react";
+import { withMousePosition } from "../../context/withMousePosition";
 import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
@@ -8,6 +9,7 @@ import { DRAWING_MODES } from "./Draw";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
+import { useHistory } from "./DrawHistory";
 import { useMessage } from "../../context/MessageProvider";
 import { ConfirmationModal } from "../atom/ConfirmationModal";
 
@@ -29,11 +31,14 @@ export const DrawControl = ({
   const [isSaveModalOpen, setSaveModalOpen] = useState(false);
   const filenameRef = useRef(null);
 
+  const { eraseHistory } = useHistory();
+
   const handleConfirmErase = () => {
     alertMessage("action confirmed");
     changeMode(DRAWING_MODES.ERASE);
     setMode(DRAWING_MODES.DRAW);
     setResetModalOpen(false);
+    eraseHistory();
   };
 
   // const handleClose = () => {
@@ -55,98 +60,107 @@ export const DrawControl = ({
     addEventChangeMode(newMode);
   };
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-row gap-4">
-        <Button
-          selected={mode == DRAWING_MODES.DRAW}
-          onClick={() => handleModeChange(DRAWING_MODES.DRAW)}
-        >
-          Draw
-        </Button>
-        <Button
-          selected={mode == DRAWING_MODES.LINE}
-          onClick={() => handleModeChange(DRAWING_MODES.LINE)}
-        >
-          <MdTimeline />
-        </Button>
-        <Button
-          selected={mode == DRAWING_MODES.TEXT}
-          onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
-        >
-          Text
-        </Button>
-      </div>
-      <DrawControlLine
-        mode={mode}
-        handleParamChange={handleParamChange}
-        drawingParams={drawingParams}
-      />
-      <DrawControlShape
-        mode={mode}
-        drawingParams={drawingParams}
-        handleParamChange={handleParamChange}
-        handleModeChange={handleModeChange}
-        setWithText={setWithText}
-      />
-      <DrawControlText
-        mode={mode}
-        hidden={mode != DRAWING_MODES.TEXT && withText === false}
-        drawingParams={drawingParams}
-        handleTextParams={handleParamChange}
-      />
+  const handleUndo = (event) => {
+    event.preventDefault();
+    addEventChangeMode(DRAWING_MODES.UNDO);
+  };
 
-      <div className="relative m-auto flex gap-4">
-        <Button onClick={() => changeMode(DRAWING_MODES.UNDO)}>
-          <SlActionUndo />
-        </Button>
-        <Button
-          ref={resetButtonRef}
-          onClick={() => {
-            setResetModalOpen(true);
-          }}
-        >
-          Reset
-        </Button>
-        <ConfirmationModal
-          referrer={resetButtonRef}
-          isOpen={isResetModalOpen}
-          onClose={() => setResetModalOpen(false)}
-          onConfirm={handleConfirmErase}
-        >
-          Do you want to erase all your drawing ?
-        </ConfirmationModal>
-        <Button
-          ref={saveButtonRef}
-          onClick={() => {
-            setSaveModalOpen(true);
-          }}
-        >
-          Save my drawing
-        </Button>
-        <ConfirmationModal
-          referrer={saveButtonRef}
-          isOpen={isSaveModalOpen}
-          onClose={() => setSaveModalOpen(false)}
-          onConfirm={() => {
-            changeMode(DRAWING_MODES.SAVE, filenameRef.current.value);
-            setSaveModalOpen(false);
-          }}
-        >
-          <div className="flex flex-row">
-            Do you want to reccord this image ?
-          </div>
-          <div className="flex flex-row">
-            Name:
-            <input
-              className="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
-              type="text"
-              defaultValue="my image"
-              ref={filenameRef}
-            />
-          </div>
-        </ConfirmationModal>
+  return useMemo(() => {
+    return (
+      <div className="flex flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl">
+        <div className="flex flex-row gap-4">
+          <Button
+            selected={mode == DRAWING_MODES.DRAW}
+            onClick={() => handleModeChange(DRAWING_MODES.DRAW)}
+          >
+            Draw
+          </Button>
+          <Button
+            selected={mode == DRAWING_MODES.LINE}
+            onClick={() => handleModeChange(DRAWING_MODES.LINE)}
+          >
+            <MdTimeline />
+          </Button>
+          <Button
+            selected={mode == DRAWING_MODES.TEXT}
+            onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
+          >
+            Text
+          </Button>
+        </div>
+        <DrawControlLine
+          mode={mode}
+          handleParamChange={handleParamChange}
+          drawingParams={drawingParams}
+        />
+        <DrawControlShape
+          mode={mode}
+          drawingParams={drawingParams}
+          handleParamChange={handleParamChange}
+          handleModeChange={handleModeChange}
+          setWithText={setWithText}
+        />
+        <DrawControlText
+          mode={mode}
+          hidden={mode != DRAWING_MODES.TEXT && withText === false}
+          drawingParams={drawingParams}
+          handleTextParams={handleParamChange}
+        />
+
+        <div className="relative m-auto flex gap-4">
+          <Button onClick={(e) => handleUndo(e)}>
+            <SlActionUndo />
+          </Button>
+          <Button
+            ref={resetButtonRef}
+            onClick={() => {
+              setResetModalOpen(true);
+            }}
+          >
+            Reset
+          </Button>
+          <ConfirmationModal
+            referrer={resetButtonRef}
+            isOpen={isResetModalOpen}
+            onClose={() => setResetModalOpen(false)}
+            onConfirm={handleConfirmErase}
+          >
+            Do you want to erase all your drawing ?
+          </ConfirmationModal>
+          <Button
+            ref={saveButtonRef}
+            onClick={() => {
+              setSaveModalOpen(true);
+            }}
+          >
+            Save my drawing
+          </Button>
+          <ConfirmationModal
+            referrer={saveButtonRef}
+            isOpen={isSaveModalOpen}
+            onClose={() => setSaveModalOpen(false)}
+            onConfirm={() => {
+              changeMode(DRAWING_MODES.SAVE, filenameRef.current.value);
+              setSaveModalOpen(false);
+            }}
+          >
+            <div className="flex flex-row">
+              Do you want to reccord this image ?
+            </div>
+            <div className="flex flex-row">
+              Name:
+              <input
+                className="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
+                type="text"
+                defaultValue="my image"
+                ref={filenameRef}
+              />
+            </div>
+          </ConfirmationModal>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }, [mode, withText, drawingParams]);
 };
+
+export const DrawControlWP = withMousePosition(DrawControl);
