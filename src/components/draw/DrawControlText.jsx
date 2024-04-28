@@ -29,7 +29,7 @@ export const DrawControlText = ({
           htmlFor="text-font-selector"
           className="flex items-center justify-center gap-2"
         >
-          Font:
+          Font
           <select
             className="w-32 rounded-md border-2 border-primary bg-paper p-2 focus:ring-blue-500"
             id="text-font-selector"
@@ -52,7 +52,7 @@ export const DrawControlText = ({
           htmlFor="text-size-picker"
           className="flex items-center justify-center gap-2"
         >
-          Font size :
+          Size
           <input
             className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="text-size-picker"
@@ -68,7 +68,7 @@ export const DrawControlText = ({
           htmlFor="text-size-picker"
           className="flex items-center justify-center gap-2"
         >
-          Bold :
+          Bold
           <input
             className="h-2 w-12 bg-gray-300 opacity-50 outline-none transition-opacity hover:opacity-100"
             id="text-bold-picker"
@@ -96,7 +96,7 @@ export const DrawControlText = ({
           htmlFor="text"
           className="flex items-center justify-center gap-2"
         >
-          Text:
+          Text
           <input
             id="text"
             type="text"
@@ -109,7 +109,7 @@ export const DrawControlText = ({
           htmlFor="text-color-picker"
           className="flex items-center justify-center gap-4"
         >
-          Text color :
+          Text color
           <input
             id="text-color-picker"
             type="color"

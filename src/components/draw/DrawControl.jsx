@@ -67,7 +67,7 @@ export const DrawControl = ({
 
   return useMemo(() => {
     return (
-      <div className="flex flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl">
+      <div className="flex w-auto flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl">
         <div className="flex flex-row gap-4">
           <Button
             selected={mode == DRAWING_MODES.DRAW}
@@ -160,7 +160,7 @@ export const DrawControl = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams]);
+  }, [mode, withText, drawingParams, isResetModalOpen, isSaveModalOpen]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

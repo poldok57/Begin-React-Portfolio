@@ -37,6 +37,8 @@ export const ConfirmationModal = ({
     top = `${Math.floor(top)}px`;
   }
 
+  // console.log("ConfirmationModal", { top, left, transform });
+
   return (
     <div
       ref={ref}

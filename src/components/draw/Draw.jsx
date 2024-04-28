@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
-import { DrawControl, DrawControlWP } from "./DrawControl";
+import { DrawControlWP } from "./DrawControl";
 import { HistoryProvider } from "./DrawHistory";
 import { SHAPE_TYPE } from "../../lib/canvas-elements";
 
@@ -105,7 +105,7 @@ export const Draw = () => {
           getParams={getDrowingParams}
         />
         <DrawControlWP
-          style={{ position: "relative", top: "100px" }}
+          style={{ position: "relative", top: "30px" }}
           titleBar="true"
           title="Drawing Control"
           titleHidden="false"
