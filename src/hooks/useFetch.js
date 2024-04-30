@@ -32,7 +32,7 @@ export function fetchReducer(state, action) {
   }
 }
 
-export const useFetch = (url, config) => {
+export const useFetch = (url, config = null) => {
   const [{ isLoaded, status, error, data }, dispatch] = useReducer(
     fetchReducer,
     {
@@ -61,11 +61,11 @@ export const useFetch = (url, config) => {
         if (!isMounted()) return;
         dispatch({ type: "rejected", error });
       });
-  }, [url, config]);
+  }, [url]);
 
   useEffect(() => {
     run();
   }, [run]);
 
-  return { isLoaded, status, error, data };
+  return { isLoaded, status, error, data, run };
 };

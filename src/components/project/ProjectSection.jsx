@@ -12,7 +12,7 @@ export const ProjectSection = () => {
     data: projects,
   } = useFetch(getListOfUrlRepositoriesUrl(GITHUB_USERNAME));
 
-  console.log("response:", projects ?? "-", "status:", status);
+  console.log("response:", projects, "status:", status);
 
   if (error) {
     return (

@@ -3,7 +3,7 @@ import clsx from "clsx";
 /**
  * Typography is a component to harmonize the typography of the application.
  *
- * @param variant "h2" | "h3" | "body1" | "body2"
+ * @param variant "h1" | "h2" | "h3" | "body1" | "body2"
  * @param component Override the component to use
  * @param color "primary" | "secondary"
  * @param children Text to display

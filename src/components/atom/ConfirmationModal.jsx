@@ -1,11 +1,12 @@
 import { Button } from "./Button";
 import { useRef } from "react";
+import clsx from "clsx";
 
 export const ConfirmationModal = ({
   isOpen,
   onClose,
-  onConfirm,
-  referrer,
+  onConfirm = null,
+  referrer = null,
   children,
 }) => {
   const ref = useRef(null);
@@ -16,6 +17,7 @@ export const ConfirmationModal = ({
       ? referrer.current.getBoundingClientRect()
       : null;
 
+  // for unedfined referrer, modal will be in the center of the screen
   let top = "20%",
     left = "50%",
     transform = "translate(-50%, -50%)";
@@ -56,12 +58,19 @@ export const ConfirmationModal = ({
       <div className="mb-5 flex flex-col items-center gap-2 text-lg">
         {children}
       </div>
-      <div className="flex items-center justify-between">
-        <Button className="bg-green-500" onClick={onConfirm}>
-          Confirm
-        </Button>
+      <div
+        className={clsx("flex", {
+          "items-center justify-between": onConfirm !== null,
+          "justify-center": onConfirm === null,
+        })}
+      >
+        {onConfirm && (
+          <Button className="bg-green-500" onClick={onConfirm}>
+            Confirm
+          </Button>
+        )}
         <Button className="bg-red-500" onClick={onClose}>
-          Cancel
+          {onConfirm ? "Cancel" : "Close"}
         </Button>
       </div>
     </div>

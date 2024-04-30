@@ -9,7 +9,7 @@ export const MemorySection = () => {
       <MemoryProvider>
         <div className="relative flex min-h-screen w-full flex-col gap-4 border-dashed border-gray-800">
           <MemoryBoardWP
-            className="relative flex flex-col items-center gap-2 bg-background p-2 lg:absolute lg:left-1"
+            className="relative flex flex-col items-center gap-2 rounded-md border-2 border-secondary bg-background p-2 shadow-lg lg:absolute lg:left-1"
             title="Test your memory"
             titleBar="true"
             titleHidden="true"

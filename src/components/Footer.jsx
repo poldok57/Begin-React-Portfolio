@@ -20,7 +20,7 @@ export const Footer = () => {
       </div>
 
       <p>
-        Created for educational purpose for the{" "}
+        Thanks to Melvyn form{" "}
         <a href="https://codelynx.dev/beginreact">BeginReact.dev formation</a> !
       </p>
     </footer>

@@ -17,14 +17,14 @@ export const TextField = ({ label, component, ...props }) => {
   return (
     <div className="relative">
       <label
-        className="block text-xs md:text-sm font-medium text-skin-secondary"
+        className="block text-xs font-medium text-primary md:text-sm"
         htmlFor={id}
       >
         {label}
       </label>
 
       <Component
-        className="w-full p-3 mt-1 text-sm border-2 bg-transparent focus:border-opacity-100 border-opacity-50  border-primary rounded"
+        className="mt-1 w-full rounded border-2 border-primary border-opacity-50 bg-transparent p-3 text-sm focus:border-opacity-100 focus:bg-paper"
         id={id}
         {...props}
       />

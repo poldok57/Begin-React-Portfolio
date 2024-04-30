@@ -1,25 +1,104 @@
+import { useState, useRef } from "react";
+
 import { TextField } from "../atom/TextField";
 import { Button } from "../atom/Button";
+import { ErrorMessage } from "../atom/ErrorMessage";
+import { ConfirmationModal } from "../atom/ConfirmationModal";
 
-export const CommentForm = () => {
-  // Commentaire - Exercise
+import { commentsUrl } from "../../lib/api-url";
+
+export const CommentForm = ({ addComment }) => {
+  const errorMessage = useRef({
+    username: "",
+    comment: "",
+  });
+  const referrer = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [errorSending, setErrorSending] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const username = e.target.username.value;
+    const comment = e.target.comment.value;
+
+    errorMessage.current.comment = "";
+    errorMessage.current.username = "";
+
+    // if username is less than 3 characters return an error
+    if (username.length < 3) {
+      errorMessage.current.username = "Username must be at least 3 characters";
+    }
+
+    if (username.length > 20) {
+      errorMessage.current.username =
+        "Username must be less than 20 characters";
+    }
+
+    // if comment is less than 10 characters return an error
+    if (comment.length < 10) {
+      errorMessage.current.comment = "Comment must be at least 10 characters";
+    }
+    if (comment.length > 200) {
+      errorMessage.current.comment = "Comment must be less than 200 characters";
+    }
+
+    if (errorMessage.current.username || errorMessage.current.comment) {
+      setErrorSending("Please correct the error(s) below");
+      return false;
+    }
+
+    // send the form in POST request to the commentsUrl
+    addComment({ username, comment })
+      .then(() => {
+        setErrorSending(null);
+        e.target.reset();
+        setIsOpen(true);
+      })
+      .catch((error) => {
+        setErrorSending("Something wrong happend: " + error.error);
+      });
+  };
+
   return (
-    <form className="flex flex-col gap-4 w-full md:px-8">
+    // send the form in POST request to the commentsUrl
+
+    <form
+      action={commentsUrl}
+      id="commentForm"
+      method="POST"
+      className="flex w-full flex-col gap-4 md:px-8"
+      onSubmit={(e) => handleSubmit(e)}
+    >
+      {errorSending && <ErrorMessage> {errorSending} </ErrorMessage>}
       <TextField
-        label="Commentaire"
+        label="Username"
         id="username"
         type="text"
         placeholder="Username"
       />
-
+      {errorMessage.current.username && (
+        <ErrorMessage> {errorMessage.current.username} </ErrorMessage>
+      )}
       <TextField
-        label="Username"
+        label="Commentaire"
         id="comment"
         type="text"
-        placeholder="Username"
+        placeholder="Commentaire"
         component="textarea"
       />
-      <Button type="submit">Submit</Button>
+      {errorMessage.current.comment && (
+        <ErrorMessage> {errorMessage.current.comment} </ErrorMessage>
+      )}
+      <Button ref={referrer} type="submit">
+        Submit
+      </Button>
+      <ConfirmationModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        referrer={referrer}
+      >
+        Your comment has been sent !
+      </ConfirmationModal>
     </form>
   );
 };

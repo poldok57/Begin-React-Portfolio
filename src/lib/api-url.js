@@ -1,4 +1,5 @@
 /**
+ * Github API URL
  * To get all stargazed repositories of a user
  *
  * @param username string Your username
@@ -9,6 +10,7 @@ export const getListOfUrlRepositoriesUrl = (username) => {
 };
 
 /**
+ * Notion API URL
  * To get all comment use the "GET" method
  *
  * To add a new comment use the "POST" method with the following body:
