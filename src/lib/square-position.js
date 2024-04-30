@@ -36,7 +36,13 @@ export const getSquarePosition = (coord, offset) => {
   return { x: coord.x + offset.x, y: coord.y + offset.y };
 };
 
-export const isOnSquareBorder = (coord, square, withButton = false) => {
+export const isOnSquareBorder = ({
+  coord,
+  square,
+  withButton = true,
+  withResize = true,
+  withMiddleButton = true,
+}) => {
   const rect = {
     left: square.x,
     top: square.y,
@@ -50,7 +56,8 @@ export const isOnSquareBorder = (coord, square, withButton = false) => {
     if (mouseIsInsideRect(coord, badgePos)) {
       return BORDER.ON_BUTTON;
     }
-
+  }
+  if (withMiddleButton) {
     const middleButton = middleButtonPosition(rect);
     if (mouseIsInsideRect(coord, middleButton)) {
       if (coord.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
@@ -61,7 +68,12 @@ export const isOnSquareBorder = (coord, square, withButton = false) => {
 
   if (!mouseIsInsideRect(coord, rect)) return null;
 
-  return mouseIsOnBorderRect(coord, rect, withButton);
+  if (!withResize) {
+    // for text mode, no need to resize
+    return BORDER.INSIDE;
+  }
+
+  return mouseIsOnBorderRect(coord, rect);
 };
 
 export const resizeSquare = (coordinate, square, border) => {

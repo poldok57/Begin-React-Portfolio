@@ -34,9 +34,11 @@ export const Draw = () => {
   let drawingParamsRef = useRef({
     mode: DRAWING_MODES.INIT,
     fixed: false,
-    color: DEFAULT_COLOR,
-    lineWidth: DEFAULT_SIZE,
-    opacity: DEFAULT_OPACITY,
+    general: {
+      color: DEFAULT_COLOR,
+      lineWidth: DEFAULT_SIZE,
+      opacity: DEFAULT_OPACITY,
+    },
     shape: {
       filled: true,
       radius: 10,

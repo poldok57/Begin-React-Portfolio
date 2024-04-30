@@ -145,23 +145,10 @@ export const middleButtonPosition = (rect) => {
  * Return the border where the mouse is
  * @param {object} coord - mouse coordinates
  * @param {object} rect - rectangle coordinates
- * @param {boolean} withButton - if the button is on the rectangle
  * @returns {string} - border where the mouse is
  */
-export const mouseIsOnBorderRect = (coord, rect, withButton = false) => {
-  if (withButton) {
-    const middleButton = middleButtonPosition(rect);
-
-    if (
-      coord.x >= middleButton.left &&
-      coord.x <= middleButton.right &&
-      coord.y >= middleButton.top &&
-      coord.y <= middleButton.bottom
-    ) {
-      if (coord.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
-      if (coord.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
-    }
-  } else if (
+export const mouseIsOnBorderRect = (coord, rect) => {
+  if (
     coord.x >= rect.right - margin &&
     coord.x <= rect.right &&
     coord.y >= rect.top &&

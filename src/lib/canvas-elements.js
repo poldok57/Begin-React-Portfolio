@@ -11,20 +11,6 @@ export const SHAPE_TYPE = {
 };
 
 /**
- * Function to draw a basic line on the canvas
- * @param {CanvasRenderingContext2D} context
- * @param {object} start {x, y}
- * @param {object} end {x, y}
- */
-export const basicLine = (context, start, end) => {
-  context.beginPath();
-  context.moveTo(start.x, start.y);
-  context.lineTo(end.x, end.y);
-  context.stroke();
-  context.closePath();
-};
-
-/**
  * Function to draw a check mark
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x - x coordinate
@@ -238,7 +224,7 @@ export const drawSquare = (ctx, square) => {
   if (square.rotation !== 0) {
     rotateElement(ctx, square, square.rotation);
   }
-  ctx.fillStyle = square.color;
+  ctx.fillStyle = square.general.color;
 
   ctx.beginPath();
 
@@ -246,9 +232,9 @@ export const drawSquare = (ctx, square) => {
   const filled = square.shape.filled;
 
   if (!filled) {
-    ctx.strokeStyle = square.color;
-    ctx.lineWidth = square.lineWidth;
-    const lineWidth = square.lineWidth;
+    ctx.strokeStyle = square.general.color;
+    ctx.lineWidth = square.general.lineWidth;
+    const lineWidth = square.general.lineWidth;
     width -= lineWidth;
     height -= lineWidth;
     x += lineWidth / 2;
@@ -282,34 +268,41 @@ export const drawSquare = (ctx, square) => {
  */
 export const drawEllipse = (ctx, square) => {
   let { x, y, width, height } = square;
+  if (!height) {
+    height = width;
+  }
   if (square.rotation !== 0) {
     rotateElement(ctx, square, square.rotation);
   }
 
-  ctx.fillStyle = square.color;
+  ctx.fillStyle = square.general.color;
   ctx.beginPath();
 
   const filled = square.shape.filled;
 
   if (!filled) {
-    ctx.strokeStyle = square.color;
-    ctx.lineWidth = square.lineWidth;
-    const lineWidth = square.lineWidth || 1;
+    ctx.strokeStyle = square.general.color;
+    ctx.lineWidth = square.general.lineWidth;
+    const lineWidth = square.general.lineWidth || 1;
     width -= lineWidth;
     height -= lineWidth;
     x += lineWidth / 2;
     y += lineWidth / 2;
   }
 
-  ctx.ellipse(
-    x + width / 2,
-    y + height / 2,
-    width / 2,
-    height / 2,
-    0,
-    0,
-    2 * Math.PI
-  );
+  if (width === height) {
+    ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
+  } else {
+    ctx.ellipse(
+      x + width / 2,
+      y + height / 2,
+      width / 2,
+      height / 2,
+      0,
+      0,
+      2 * Math.PI
+    );
+  }
   if (filled) {
     ctx.fill();
   } else {
@@ -391,7 +384,7 @@ export const drawText = (ctx, square) => {
     // text with rectangle or ellipse
     paddingY = (square.height - h) / 2;
     paddingX = (square.width - w) / 2;
-    ctx.globalAlpha = square.opacity;
+    ctx.globalAlpha = square.general.opacity;
   }
   ctx.fillText(text, square.x + paddingX, square.y + h + paddingY);
 
@@ -441,19 +434,19 @@ export const drawButtons = (ctx, square, border) => {
   drawBadge(ctx, badgePos.centerX, badgePos.centerY, badgePos.radius, opacity);
   /**
    * draw the middle button used to rotate the shape
-   * only if the shape is not a circle without text
    */
   if (
-    square.type !== SHAPE_TYPE.CIRCLE ||
-    square.width !== square.height ||
-    square.shape.withText
+    square.type === SHAPE_TYPE.CIRCLE &&
+    square.width === square.height &&
+    !square.shape.withText
   ) {
+    // don't show the middle button if the shape is a circle without text
+    square.withMiddleButton = false;
+  } else {
+    square.withMiddleButton = true;
+
     const middleButton = middleButtonPosition(square);
 
-    const opacity2 =
-      border === BORDER.ON_BUTTON_LEFT || border === BORDER.ON_BUTTON_RIGHT
-        ? 1
-        : 0.4;
     drawCircularArrow(
       ctx,
       middleButton.axeX2,
@@ -463,7 +456,7 @@ export const drawButtons = (ctx, square, border) => {
       Math.PI * 1.75,
       true,
       "#101010",
-      opacity2
+      border === BORDER.ON_BUTTON_RIGHT ? 1 : 0.4
     );
     drawCircularArrow(
       ctx,
@@ -474,7 +467,7 @@ export const drawButtons = (ctx, square, border) => {
       -Math.PI * 0.75,
       false,
       "#101010",
-      opacity2
+      border === BORDER.ON_BUTTON_LEFT ? 1 : 0.4
     );
   }
 
@@ -515,4 +508,23 @@ export const drawButtons = (ctx, square, border) => {
   if (square.rotation !== 0) {
     ctx.restore();
   }
+};
+
+/**
+ * Function to show a circle on the canvas to highlight the cursor
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Array} coord [x, y]
+ * @param {object} element - {x, y, width, height, color, type, rotation}
+ */
+export const hightLightMouseCursor = (ctx, coord, element) => {
+  element.rotation = 0;
+  if (!element.height) {
+    element.height = element.width;
+  }
+  element.x = coord.x - element.width / 2;
+  element.y = coord.y - element.height / 2;
+  element.shape = { ...element.shape, filled: element.filled };
+  element.general = { ...element.general, color: element.color };
+
+  drawEllipse(ctx, element);
 };

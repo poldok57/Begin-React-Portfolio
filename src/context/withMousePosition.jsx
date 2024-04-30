@@ -87,29 +87,57 @@ export function withMousePosition(Component) {
         component.style.display = "none";
       }
     };
+
+    /**
+     * Creat a placeholder to keep the position of the component
+     * when the position is changed from relative to absolute
+     * @param {HTMLElement} component
+     */
+    const creatPlaceholder = (component) => {
+      // reccording the position of the component
+      const rect = component.getBoundingClientRect();
+      const backgroundColor =
+        window.getComputedStyle(component).backgroundColor;
+
+      // create a placeholder to keep the position
+      const placeholder = document.createElement("div");
+      placeholder.style.width = `${rect.width}px`;
+      placeholder.style.height = `${rect.height}px`;
+      placeholder.style.backgroundColor = backgroundColor;
+      placeholder.style.position = "relative";
+      placeholder.style.border = "1px dashed gray";
+      placeholder.style.boxSizing = "border-box"; // placeholder must have the same size as the component
+
+      // Insert the placeholder before the component
+      component.parentNode.insertBefore(placeholder, component);
+    };
     /**
      * Convert the relative position to absolute
      */
     const convertRelativeToAbsolute = () => {
       const { component } = selectComponent(titleBar);
-      if (component) {
-        newPosition.current = {
-          x: component.offsetLeft,
-          y: component.offsetTop,
-          position: POSITION.ABSOLUTE,
-        };
-        typePositionRef.current = POSITION.ABSOLUTE;
-        styleRef.current.position = POSITION.ABSOLUTE;
-
-        if (trace.current) {
-          console.log(
-            `[${Component.name}] pos: Relative to Absolute x:`,
-            component.offsetLeft,
-            " y:",
-            component.offsetTop
-          );
-        }
+      if (!component) {
+        return;
       }
+
+      component.style.width = window.getComputedStyle(component).width;
+      newPosition.current = {
+        x: component.offsetLeft,
+        y: component.offsetTop,
+        position: POSITION.ABSOLUTE,
+      };
+      typePositionRef.current = POSITION.ABSOLUTE;
+      styleRef.current.position = POSITION.ABSOLUTE;
+
+      if (trace.current) {
+        console.log(
+          `[${Component.name}] pos: Relative to Absolute x:`,
+          component.offsetLeft,
+          " y:",
+          component.offsetTop
+        );
+      }
+      creatPlaceholder(component);
     };
 
     /**

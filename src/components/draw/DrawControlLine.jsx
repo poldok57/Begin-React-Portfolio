@@ -1,14 +1,9 @@
 import clsx from "clsx";
 import { DRAWING_MODES } from "./Draw";
 export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
-  const handleColorChange = (event) => {
-    handleParamChange({ color: event.target.value });
-  };
-  const handleSizeChange = (event) => {
-    handleParamChange({ lineWidth: event.target.value });
-  };
-  const handleOpacityChange = (event) => {
-    handleParamChange({ opacity: event.target.value });
+  const handleGeneral = (param) => {
+    drawingParams.general = { ...drawingParams.general, ...param };
+    handleParamChange({ general: drawingParams.general });
   };
 
   return (
@@ -25,8 +20,8 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
         <input
           id="draw-color-picker"
           type="color"
-          defaultValue={drawingParams.color}
-          onChange={handleColorChange}
+          defaultValue={drawingParams.general.color}
+          onChange={(event) => handleGeneral({ color: event.target.value })}
         />
       </label>
       <label
@@ -38,11 +33,11 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
           className="h-2 w-24 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
           id="draw-size-picker"
           type="range"
-          defaultValue={drawingParams.lineWidth}
+          defaultValue={drawingParams.general.lineWidth}
           min="2"
           max="32"
           step="2"
-          onChange={handleSizeChange}
+          onChange={(event) => handleGeneral({ lineWidth: event.target.value })}
         />
       </label>
       <label
@@ -54,11 +49,13 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
           className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
           id="draw-size-picker"
           type="range"
-          defaultValue={drawingParams.opacity * 100}
+          defaultValue={drawingParams.general.opacity * 100}
           min="5"
           max="100"
           step="5"
-          onChange={handleOpacityChange}
+          onChange={(event) =>
+            handleGeneral({ opacity: parseInt(event.target.value) / 100 })
+          }
         />
       </label>
     </div>
