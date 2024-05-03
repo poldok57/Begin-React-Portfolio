@@ -7,12 +7,12 @@ import { GITHUB_USERNAME } from "../../lib/config";
 export const ProjectSection = () => {
   const {
     isLoaded,
-    status,
+    // status,
     error,
     data: projects,
   } = useFetch(getListOfUrlRepositoriesUrl(GITHUB_USERNAME));
 
-  console.log("response:", projects, "status:", status);
+  // console.log("response:", projects, "status:", status);
 
   if (error) {
     return (

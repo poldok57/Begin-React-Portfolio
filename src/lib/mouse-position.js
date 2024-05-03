@@ -62,7 +62,19 @@ export const mouseIsInsideRect = (coord, rect) => {
   ) {
     return true;
   }
-
+  return false;
+};
+/**
+ * Return true if the mouse is inside the component
+ * @param {object} event - mouse event
+ * @param {object} component - component to check
+ */
+export const mouseIsInsideComponent = (event, component) => {
+  if (component) {
+    const rect = component.getBoundingClientRect();
+    const coordinates = { x: event.clientX, y: event.clientY };
+    return mouseIsInsideRect(coordinates, rect);
+  }
   return false;
 };
 /**
@@ -99,9 +111,9 @@ export const mousePointer = (mouseOnBorder) => {
  * Return the position of the badge at top right of the rectangle
  * @param {object} rect - rectangle coordinates
  */
-export const badgePosition = (rect) => {
+export const badgePosition = (rect, maxWidth = 0) => {
   const x = rect.x ?? rect.left;
-  const y = rect.y ?? rect.top;
+  const y = Math.max(rect.y ?? rect.top, 0);
   const w = rect.width ?? rect.right - rect.left;
   // const h = rect.height ?? rect.bottom - rect.top;
   const badge = {
@@ -110,10 +122,14 @@ export const badgePosition = (rect) => {
     left: Math.max(x + w - BADGE_RADIUS * 2, x + 55),
     top: y,
     bottom: y + BADGE_RADIUS * 2,
-
     radius: BADGE_RADIUS,
   };
   badge.right = badge.left + badge.width;
+  if (maxWidth && badge.right > maxWidth) {
+    // stick to the right border
+    badge.left = maxWidth - badge.width;
+    badge.right = maxWidth;
+  }
   badge.centerX = badge.left + badge.width / 2;
   badge.centerY = badge.top + badge.height / 2;
   return badge;

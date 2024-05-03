@@ -1,8 +1,9 @@
 import React, { useRef, useMemo, useState } from "react";
-import { withMousePosition } from "../../context/withMousePosition";
+import { withMousePosition } from "../../hooks/withMousePosition";
 import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
+import { AiOutlineLoading } from "react-icons/ai";
 
 import { Button } from "../atom/Button";
 import { DRAWING_MODES } from "./Draw";
@@ -10,8 +11,8 @@ import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
 import { useHistory } from "./DrawHistory";
-import { useMessage } from "../../context/MessageProvider";
 import { ConfirmationModal } from "../atom/ConfirmationModal";
+import { alertMessage } from "../../hooks/alertMessage";
 
 // import clsx from "clsx";
 
@@ -24,7 +25,6 @@ export const DrawControl = ({
   const [mode, setMode] = useState(defaultMode);
   const [withText, setWithText] = useState(false);
 
-  const { alertMessage } = useMessage();
   const resetButtonRef = useRef(null);
   const [isResetModalOpen, setResetModalOpen] = useState(false);
   const saveButtonRef = useRef(null);
@@ -67,7 +67,11 @@ export const DrawControl = ({
 
   return useMemo(() => {
     return (
-      <div className="flex w-auto flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl">
+      <div
+        onMouseEnter={() => addEventChangeMode(DRAWING_MODES.CONTROL_PANEL.IN)}
+        onMouseLeave={() => addEventChangeMode(DRAWING_MODES.CONTROL_PANEL.OUT)}
+        className="flex w-auto flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl"
+      >
         <div className="flex flex-row gap-4">
           <Button
             selected={mode == DRAWING_MODES.DRAW}
@@ -80,6 +84,12 @@ export const DrawControl = ({
             onClick={() => handleModeChange(DRAWING_MODES.LINE)}
           >
             <MdTimeline />
+          </Button>
+          <Button
+            selected={mode == DRAWING_MODES.ARC}
+            onClick={() => handleModeChange(DRAWING_MODES.ARC)}
+          >
+            <AiOutlineLoading />
           </Button>
           <Button
             selected={mode == DRAWING_MODES.TEXT}

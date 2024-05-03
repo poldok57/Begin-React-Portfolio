@@ -42,6 +42,7 @@ export const isOnSquareBorder = ({
   withButton = true,
   withResize = true,
   withMiddleButton = true,
+  maxWidth = 0,
 }) => {
   const rect = {
     left: square.x,
@@ -51,7 +52,7 @@ export const isOnSquareBorder = ({
   };
 
   if (withButton) {
-    const badgePos = badgePosition(rect);
+    const badgePos = badgePosition(rect, maxWidth);
 
     if (mouseIsInsideRect(coord, badgePos)) {
       return BORDER.ON_BUTTON;

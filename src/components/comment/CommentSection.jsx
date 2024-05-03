@@ -19,8 +19,7 @@ export const CommentSection = () => {
     return addComment(commentsUrl, newComment, () => run());
   };
 
-  // console.log("allData", allData);
-  console.log("status:", status, " comments:", comments);
+  // console.log("status:", status, " comments:", comments);
 
   if (status === "rejected") {
     return (

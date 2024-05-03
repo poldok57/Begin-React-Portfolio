@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MdOutlineClose } from "react-icons/md";
+
 import { debounceLogs } from "../lib/debounce-logs";
-import { mouseIsInsideRect, BORDER } from "../lib/mouse-position";
+import {
+  mouseIsInsideComponent,
+  BORDER,
+  getRectOffset,
+} from "../lib/mouse-position";
+import { creatPlaceholder } from "../lib/component-move";
 import { ToggleSwitch } from "../components/atom/ToggleSwitch";
 import { TitleBar } from "../components/atom/TitleBar";
+import { CloseButton } from "../components/atom/CloseButton";
 import clsx from "clsx";
 
 const EVENT = {
@@ -17,15 +23,7 @@ const EVENT = {
 const POSITION = {
   RELATIVE: "relative",
   ABSOLUTE: "absolute",
-};
-
-export const mouseIsInsideComponent = (event, component) => {
-  if (component) {
-    const rect = component.getBoundingClientRect();
-    const coordinates = { x: event.clientX, y: event.clientY };
-    return mouseIsInsideRect(coordinates, rect);
-  }
-  return false;
+  STATIC: "static",
 };
 
 export function withMousePosition(Component) {
@@ -46,12 +44,11 @@ export function withMousePosition(Component) {
   return function WrappedComponent({
     style = {},
     className,
-    locked = true,
     titleBar = false,
     titleHidden = true,
     title = "",
     titleClassName = null,
-    titleHeight = 30,
+    titleHeight = 32,
     ...props
   }) {
     const [mousePosition, setMousePosition] = useState(null);
@@ -61,15 +58,18 @@ export function withMousePosition(Component) {
     const componentPos = useRef(null);
     // const componentRect = useRef(null);
 
-    const diffRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
-    const styleRef = useRef(style);
+    const offsetRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
+    const styleRef = useRef({ firstTime: true, position: null, ...style });
     const canMoveRef = useRef(false);
-    const trace = useRef(props.trace === "true" ? true : false);
-    const close = useRef(props.close === "true" ? true : false);
-    const typePositionRef = useRef("");
-    const newPosition = useRef(null);
+    const trace = useRef(
+      props.trace === true || props.trace === "true" ? true : false
+    );
+    const close = useRef(
+      props.close === true || props.close === "true" ? true : false
+    );
+
     const [isLocked, setLocked] = useState(
-      locked === true || locked == "true" ? true : false
+      props.locked === true || props.locked === "true" ? true : false
     );
     let onBorderRef = useRef(BORDER.INSIDE);
 
@@ -82,52 +82,30 @@ export function withMousePosition(Component) {
     const canMove = () => canMoveRef.current;
 
     const hideComponent = () => {
-      const { component } = selectComponent(titleBar);
+      const { component } = selectComponent();
       if (component) {
         component.style.display = "none";
       }
     };
 
     /**
-     * Creat a placeholder to keep the position of the component
-     * when the position is changed from relative to absolute
-     * @param {HTMLElement} component
-     */
-    const creatPlaceholder = (component) => {
-      // reccording the position of the component
-      const rect = component.getBoundingClientRect();
-      const backgroundColor =
-        window.getComputedStyle(component).backgroundColor;
-
-      // create a placeholder to keep the position
-      const placeholder = document.createElement("div");
-      placeholder.style.width = `${rect.width}px`;
-      placeholder.style.height = `${rect.height}px`;
-      placeholder.style.backgroundColor = backgroundColor;
-      placeholder.style.position = "relative";
-      placeholder.style.border = "1px dashed gray";
-      placeholder.style.boxSizing = "border-box"; // placeholder must have the same size as the component
-
-      // Insert the placeholder before the component
-      component.parentNode.insertBefore(placeholder, component);
-    };
-    /**
      * Convert the relative position to absolute
      */
     const convertRelativeToAbsolute = () => {
-      const { component } = selectComponent(titleBar);
+      const { component } = selectComponent();
       if (!component) {
         return;
       }
-
-      component.style.width = window.getComputedStyle(component).width;
-      newPosition.current = {
-        x: component.offsetLeft,
-        y: component.offsetTop,
-        position: POSITION.ABSOLUTE,
+      /**
+       * New position is set when the component is changed from relative to absolute
+       */
+      componentPos.current = {
+        left: component.offsetLeft,
+        top: component.offsetTop,
       };
-      typePositionRef.current = POSITION.ABSOLUTE;
+
       styleRef.current.position = POSITION.ABSOLUTE;
+      styleRef.current.width = window.getComputedStyle(component).width;
 
       if (trace.current) {
         console.log(
@@ -148,7 +126,7 @@ export function withMousePosition(Component) {
       if (trace.current) console.log(`[${Component.name}] toggleLocked`);
 
       if (
-        typePositionRef.current === POSITION.RELATIVE &&
+        styleRef.current.position === POSITION.RELATIVE &&
         !event.target.checked
       ) {
         convertRelativeToAbsolute();
@@ -157,7 +135,7 @@ export function withMousePosition(Component) {
       setLocked(event.target.checked);
     };
 
-    const selectComponent = (titleBar) => {
+    const selectComponent = (titleBar = null) => {
       // if there is a title bar, mouse apply only on the title bar
       if (titleBar) {
         return {
@@ -196,27 +174,31 @@ export function withMousePosition(Component) {
           console.log(`[${Component.name}] mouseEnter`);
         }
         /**
-         * test the kind of position
+         * test the kind of position of the component
          */
         const { component } = selectComponent(titleBar);
 
-        if (component && typePositionRef.current === "") {
+        if (component) {
           const style = getComputedStyle(component);
-          if (style.position) {
-            typePositionRef.current = style.position;
+          if (style.position && style.position !== POSITION.STATIC) {
+            styleRef.current.position = style.position;
+
             if (trace.current)
               console.log(
-                `[${Component.name}] copy position from computedStyle`,
-                typePositionRef.current
+                `[${Component.name}] copy position from computedStyle :`,
+                styleRef.current.position
               );
           } else {
-            typePositionRef.current = POSITION.RELATIVE;
+            styleRef.current.position = POSITION.RELATIVE;
             if (trace.current) {
               console.log(`[${Component.name}] default Relative`);
             }
           }
 
-          if (typePositionRef.current === POSITION.RELATIVE) {
+          if (
+            isLocked == false &&
+            styleRef.current.position == POSITION.RELATIVE
+          ) {
             setLocked(true);
           }
           component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
@@ -235,14 +217,16 @@ export function withMousePosition(Component) {
          */
         const { waitEvent, component } = selectComponent(titleBar);
         if (waitEvent && waitEvent.contains(event.target)) {
+          const coord = { x: event.clientX, y: event.clientY };
           setCanMove(true);
 
-          setMousePosition({ x: event.clientX, y: event.clientY });
+          setMousePosition(coord);
           // difference between the mouse and the component
-          diffRef.current = {
-            x: event.clientX - component.offsetLeft,
-            y: event.clientY - component.offsetTop,
+          const compPos = {
+            left: component.offsetLeft,
+            top: component.offsetTop,
           };
+          offsetRef.current = getRectOffset(coord, compPos);
 
           document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
           waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
@@ -258,12 +242,13 @@ export function withMousePosition(Component) {
       const mouseUp = (event) => {
         const { waitEvent, component } = selectComponent(titleBar);
         if (waitEvent && waitEvent.contains(event.target)) {
+          const coord = { x: event.clientX, y: event.clientY };
           setCanMove(false);
-          componentPos.current = {
-            x: component.offsetLeft,
-            y: component.offsetTop,
-          };
-          setMousePosition({ x: event.clientX, y: event.clientY });
+          // componentPos.current = {
+          //   left: component.offsetLeft,
+          //   top: component.offsetTop,
+          // };
+          setMousePosition(coord);
           document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
           waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
           if (isLocked) {
@@ -271,13 +256,6 @@ export function withMousePosition(Component) {
           } else {
             waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
           }
-
-          if (trace.current)
-            console.log(
-              `[${Component.name}] mouseUp`,
-              event.clientX,
-              event.clientY
-            );
         }
       };
       const handleMouseLeave = (event) => {
@@ -291,9 +269,9 @@ export function withMousePosition(Component) {
        */
       document.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
 
-      const { waitEvent, component: comp } = selectComponent(titleBar);
+      const { waitEvent, component } = selectComponent(titleBar);
 
-      if (comp) {
+      if (component && waitEvent) {
         if (canMove()) {
           waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
           waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
@@ -301,70 +279,66 @@ export function withMousePosition(Component) {
           // disable mouseDown when locked
           waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
         }
-        if (typePositionRef.current === "") {
-          comp.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
+        if (
+          !styleRef.current ||
+          !styleRef.current.position ||
+          styleRef.current.position === POSITION.RELATIVE
+        ) {
+          component.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
 
-        componentPos.current = { x: comp.offsetLeft, y: comp.offsetTop };
+        componentPos.current = {
+          left: component.offsetLeft,
+          top: component.offsetTop,
+        };
       }
 
       return () => {
         document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
 
-        if (waitEvent && comp) {
+        if (waitEvent && component) {
           waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
           waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
-          comp.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
+          component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
       };
     }, [isLocked, mousePosition, titleBar, onBorderRef.current]);
 
-    let newStyle = { ...styleRef.current };
+    let newStyle = {};
     if (canMove()) {
       /**
        * move the component
        */
-      newStyle.left = mousePosition ? mousePosition.x - diffRef.current.x : 0;
-      newStyle.top = mousePosition ? mousePosition.y - diffRef.current.y : 0;
-      newStyle.position = typePositionRef.current;
+      newStyle.left = mousePosition ? mousePosition.x + offsetRef.current.x : 0;
+      newStyle.top = mousePosition ? mousePosition.y + offsetRef.current.y : 0;
+
+      if (styleRef.current.firstTime) {
+        // delete margin if exists
+        if (styleRef.current.margin) delete styleRef.current.margin;
+        if (styleRef.current.marginTop) delete styleRef.current.marginTop;
+        if (styleRef.current.marginLeft) delete styleRef.current.marginLeft;
+        if (newStyle.left) styleRef.current.right = "auto";
+        if (newStyle.top) styleRef.current.bottom = "auto";
+        styleRef.current.firstTime = false;
+      }
+
+      newStyle = { ...styleRef.current, ...newStyle };
+    } else if (componentPos.current) {
+      // copy the position of the component after change from relative to absolute
+      newStyle = { ...styleRef.current, ...componentPos.current };
 
       if (trace.current) {
         debounceLogs(
-          "new position:",
-          newStyle.position,
+          `[${Component.name}] =>`,
+          styleRef.current.position,
+          ":",
           newStyle.left,
-          newStyle.top,
-          componentRef.current
+          newStyle.top
         );
       }
     } else {
-      if (componentPos.current) {
-        if (newPosition.current !== null) {
-          /**
-           * New position is set when the component is changed from relative to absolute
-           */
-          newStyle.left = newPosition.current.x;
-          newStyle.top = newPosition.current.y;
-          newStyle.position = newPosition.current.position;
-          newPosition.current = null;
-        } else {
-          newStyle.left = componentPos.current.x;
-          newStyle.top = componentPos.current.y;
-        }
-
-        if (trace.current) {
-          debounceLogs(
-            `[${Component.name}] =>`,
-            typePositionRef.current,
-            ":",
-            newStyle.left,
-            newStyle.top
-          );
-        }
-      }
+      newStyle = { ...styleRef.current };
     }
-    if (newStyle.top) newStyle.bottom = "auto";
-    if (newStyle.left) newStyle.right = "auto";
 
     return (
       <div
@@ -411,15 +385,10 @@ export function withMousePosition(Component) {
             onChange={toggleLocked}
             color="red"
             initialColor="green"
-            className="z-900 color-primary absolute left-2 opacity-0 group-hover:opacity-95"
+            className="color-primary absolute left-2 z-50 mt-1 opacity-0 group-hover:opacity-95"
           />
           {close.current && (
-            <button
-              className="z-900 color-primary absolute right-2 rounded border border-black bg-red-600 opacity-25 group-hover:opacity-95"
-              onClick={hideComponent}
-            >
-              <MdOutlineClose />
-            </button>
+            <CloseButton className="mt-1" onClick={hideComponent} />
           )}
         </div>
       </div>

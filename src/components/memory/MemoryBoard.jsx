@@ -4,14 +4,15 @@ import { MemoryCard } from "./MemoryCard";
 import { MemoryNbrTry } from "./MemoryNbrTry";
 import { useMemoryContext } from "./MemoryProvider";
 import { HightLightOnRender } from "../../context/HightLightOnRender";
-import { useMessage } from "../../context/MessageProvider";
-import { withMousePosition } from "../../context/withMousePosition";
+import { withMousePosition } from "../../hooks/withMousePosition";
+import { alertMessage } from "../../hooks/alertMessage";
+
 import clsx from "clsx";
 
 export const MemoryBoard = () => {
   // Memory Game - Exercise
   const { getCards, getSize, isGameFinished } = useMemoryContext();
-  const { alertMessage } = useMessage();
+
   const cards = getCards();
   const finisedRef = useRef(false);
 
@@ -36,7 +37,6 @@ export const MemoryBoard = () => {
   }
   const size = getSize();
 
-  // alertMessage(`reload, size: ${size.width}x${size.height}`);
   return (
     <>
       <MemoryNbrTry stop={finised} className="mt-6" />

@@ -7,7 +7,8 @@ import {
 } from "../../lib/memory";
 
 import { GAME_STATUS } from "../../lib/memory";
-import { useMessage } from "../../context/MessageProvider";
+import { alertMessage } from "../../hooks/alertMessage";
+
 const DEFAULT_WIDTH = 80;
 
 const MemoryContext = createContext({ startTime: 0, getNbrTry: () => 0 });
@@ -25,7 +26,6 @@ export const MemoryProvider = ({ children, ...props }) => {
   const startTimeRef = useRef(0);
   const firstCard = useRef();
   const timeoutRef = useRef(null);
-  const { alertMessage } = useMessage();
 
   const getCards = () => {
     return cards;

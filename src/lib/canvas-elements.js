@@ -224,24 +224,26 @@ export const drawSquare = (ctx, square) => {
   if (square.rotation !== 0) {
     rotateElement(ctx, square, square.rotation);
   }
-  ctx.fillStyle = square.general.color;
-
-  ctx.beginPath();
 
   const radius = square.shape.radius;
   const filled = square.shape.filled;
 
   if (!filled) {
-    ctx.strokeStyle = square.general.color;
-    ctx.lineWidth = square.general.lineWidth;
     const lineWidth = square.general.lineWidth;
     width -= lineWidth;
     height -= lineWidth;
     x += lineWidth / 2;
     y += lineWidth / 2;
+
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = square.general.color;
   }
 
+  ctx.beginPath();
+  ctx.fillStyle = square.general.color;
+
   if (!radius || radius < 1) {
+    ctx.lineJoin = "miter";
     ctx.rect(x, y, width, height);
   } else {
     drawRoundedRect(ctx, x, y, width, height, radius);
@@ -250,12 +252,8 @@ export const drawSquare = (ctx, square) => {
   if (filled) {
     ctx.fill();
   } else {
-    if (radius === 0) {
-      ctx.lineJoin = "miter";
-    }
     ctx.stroke();
   }
-  ctx.closePath();
 
   if (square.rotation !== 0) {
     ctx.restore();
@@ -275,8 +273,8 @@ export const drawEllipse = (ctx, square) => {
     rotateElement(ctx, square, square.rotation);
   }
 
-  ctx.fillStyle = square.general.color;
   ctx.beginPath();
+  ctx.fillStyle = square.general.color;
 
   const filled = square.shape.filled;
 
@@ -321,25 +319,23 @@ export const drawEllipse = (ctx, square) => {
  * @param {object} square - {x, y, width, height, color,  rotation}
  */
 export const drawBorder = (ctx, square) => {
-  const bWidth = parseFloat(square.border.width);
+  const bWidth = parseFloat(square.border.lineWidth);
   const bInterval = parseFloat(square.border.interval);
   let radius = parseInt(square.shape.radius);
   const borderShape = { ...square };
 
-  borderShape.lineWidth = bWidth;
-  borderShape.color = square.border.color;
+  // borderShape.general.lineWidth = bWidth;
+  // borderShape.general.color = square.border.color;
   borderShape.width += bWidth * 2 + bInterval * 2;
   borderShape.height += bWidth * 2 + bInterval * 2;
   borderShape.x -= bWidth + bInterval;
   borderShape.y -= bWidth + bInterval;
 
-  if (radius > 0) {
+  if (square.type == SHAPE_TYPE.SQUARE && radius > 0) {
     radius = radius + bWidth + bInterval;
-  } else {
-    ctx.lineJoin = "miter";
   }
-
-  borderShape.shape = { ...square.shape, radius: radius, filled: false };
+  borderShape.general = { ...square.border };
+  borderShape.shape = { radius: radius, filled: false };
 
   switch (square.type) {
     case SHAPE_TYPE.CIRCLE:
@@ -430,7 +426,7 @@ export const drawButtons = (ctx, square, border) => {
   }
 
   const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
-  const badgePos = badgePosition(square);
+  const badgePos = badgePosition(square, ctx.canvas.width);
   drawBadge(ctx, badgePos.centerX, badgePos.centerY, badgePos.radius, opacity);
   /**
    * draw the middle button used to rotate the shape

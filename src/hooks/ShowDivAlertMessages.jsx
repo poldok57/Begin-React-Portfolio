@@ -1,61 +1,8 @@
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
+
 import { Button } from "../components/atom/Button";
-import { withMousePosition } from "./withMousePosition";
 import { MdCopyAll } from "react-icons/md";
 import clsx from "clsx";
-
-const MessageContext = createContext({
-  alertMessage: () => {},
-  useMessageListener: () => {},
-});
-const MAX_MESSAGES = 10;
-const EVENT_NAME = "addMessage";
-
-const addEventMessage = (message) => {
-  const event = new CustomEvent(EVENT_NAME, { detail: { message } });
-  document.dispatchEvent(event);
-};
-
-const useMessageListener = () => {
-  const [newMessage, setNewMessage] = useState(null);
-
-  useEffect(() => {
-    const handleAddMessage = (event) => {
-      setNewMessage(event.detail.message);
-    };
-
-    document.addEventListener(EVENT_NAME, handleAddMessage);
-
-    return () => {
-      document.removeEventListener(EVENT_NAME, handleAddMessage);
-    };
-  }, []);
-  // console.log("useMessgeListener, message:", newMessage);
-  return newMessage;
-};
-
-export const MessageProvider = ({ children }) => {
-  const alertMessage = (message) => {
-    addEventMessage(message);
-  };
-
-  const values = {
-    alertMessage,
-    useMessageListener,
-  };
-
-  return (
-    <MessageContext.Provider value={values}>{children}</MessageContext.Provider>
-  );
-};
-
-export const useMessage = () => {
-  const context = useContext(MessageContext);
-  if (!context) {
-    throw new Error("useMessage must be used within a MessageProvider");
-  }
-  return context;
-};
 
 /**
  * ShowDivAlertMessages component to display messages in a div
@@ -66,7 +13,7 @@ export const useMessage = () => {
  * @param {array} props.messages - array of messages to display
  * @param {function} props.clearMessages - function to clear messages
  */
-const ShowDivAlertMessages = ({
+export const ShowDivAlertMessages = ({
   style,
   className,
   display,
@@ -147,43 +94,3 @@ const ShowDivAlertMessages = ({
     </div>
   );
 };
-
-/**
- * ShowAlertMessages component to display messages
- * @param {object} props
- * @param {boolean} props.display - display messages or not
- */
-export const ShowAlertMessages = ({ display = true, ...props }) => {
-  const [messages, setMessages] = useState([]);
-  const { useMessageListener } = useMessage();
-  const newMessage = useMessageListener();
-
-  const addMessage = (message) => {
-    setMessages((curr) => {
-      if (curr.length > MAX_MESSAGES) {
-        curr.shift();
-      }
-      return [...curr, message];
-    });
-  };
-
-  useEffect(() => {
-    if (!newMessage) return;
-
-    // console.log("alertMessage recue:", newMessage);
-    addMessage(newMessage);
-  }, [newMessage]);
-
-  return useMemo(() => {
-    return (
-      <ShowDivAlertMessages
-        display={display}
-        messages={messages}
-        clearMessages={() => setMessages([])}
-        {...props}
-      />
-    );
-  }, [messages, display]);
-};
-
-export const ShowAlertMessagesWP = withMousePosition(ShowAlertMessages);

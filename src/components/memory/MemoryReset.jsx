@@ -2,12 +2,11 @@ import React, { useMemo, useState, useRef, forwardRef } from "react";
 import { useMemoryContext } from "./MemoryProvider";
 import { Button } from "../atom/Button";
 
-import { useMessage } from "../../context/MessageProvider";
-import { withMousePosition } from "../../context/withMousePosition";
+import { withMousePosition } from "../../hooks/withMousePosition";
+import { alertMessage } from "../../hooks/alertMessage";
 
 const InputDimension = forwardRef(function InputDimension(props, ref) {
   const id = props.id || props.name;
-  const { alertMessage } = useMessage();
 
   // label with the same name as the input with first letter in uppercase
   const label = props.label || id.charAt(0).toUpperCase() + id.slice(1);
@@ -58,12 +57,6 @@ const InputDimension = forwardRef(function InputDimension(props, ref) {
 });
 
 const SelectType = forwardRef(function SelectType(props, ref) {
-  const onChange = (e) => {
-    const input = e.target;
-    const value = input.value;
-    ref.current = value;
-  };
-
   return (
     <div
       onChange={(e) => props.setType(e.target.value)}
@@ -89,7 +82,6 @@ const SelectType = forwardRef(function SelectType(props, ref) {
 
 const ResizePicture = ({ children, ...props }) => {
   const id = props.id || props.name;
-  const { alertMessage } = useMessage();
   const { setWidthCards, getWidthCards } = useMemoryContext();
 
   const onChange = (e) => {
@@ -123,7 +115,6 @@ export const MemoryReset = () => {
   const inputColsRef = useRef();
   const inputTypeRef = useRef("images");
   const [inputType, setInputType] = useState("images"); // ["emoji", "images"
-  const { alertMessage } = useMessage();
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -142,7 +133,6 @@ export const MemoryReset = () => {
   const size = getSize() ?? { width: 5, height: 5 };
 
   return useMemo(() => {
-    alertMessage(`MemoryReset size: ${size.width}x${size.height}`);
     return (
       <div className="rounded-md border border-secondary bg-paper shadow-lg">
         <form

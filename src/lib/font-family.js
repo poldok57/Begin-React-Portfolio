@@ -1,6 +1,5 @@
 export const fontOptions = [
   "Arial",
-  "Verdana",
   "Times New Roman",
   "Courier New",
   "Verdana",

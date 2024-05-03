@@ -9,7 +9,10 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
   return (
     <div
       className={clsx("flex flex-row gap-4 border border-secondary p-2", {
-        "bg-paper": mode === DRAWING_MODES.LINE || mode === DRAWING_MODES.DRAW,
+        "bg-paper":
+          mode === DRAWING_MODES.LINE ||
+          mode === DRAWING_MODES.DRAW ||
+          mode === DRAWING_MODES.ARC,
       })}
     >
       <label

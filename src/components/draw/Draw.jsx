@@ -7,16 +7,22 @@ import { SHAPE_TYPE } from "../../lib/canvas-elements";
 export const DRAWING_MODES = {
   DRAW: "draw",
   LINE: "line",
+  ARC: "arc",
   ERASE: "erase",
   UNDO: "undo",
   SAVE: "save",
   INIT: "init",
+  CONTROL_PANEL: {
+    IN: "in",
+    OUT: "out",
+  },
   DRAWING_CHANGE: "drawingChange",
   ...SHAPE_TYPE,
 };
 export const ALL_DRAWING_MODES = [
   DRAWING_MODES.DRAW,
   DRAWING_MODES.LINE,
+  DRAWING_MODES.ARC,
   DRAWING_MODES.SQUARE,
   DRAWING_MODES.CIRCLE,
   DRAWING_MODES.TEXT,
@@ -55,7 +61,8 @@ export const Draw = () => {
     },
     border: {
       color: "#a0a0a0",
-      width: 1,
+      lineWidth: 1,
+      opacity: 1,
       interval: 0,
     },
   });
@@ -107,11 +114,16 @@ export const Draw = () => {
           getParams={getDrowingParams}
         />
         <DrawControlWP
-          style={{ position: "relative", top: "30px" }}
+          trace={false}
+          style={{
+            top: "30px",
+            position: "relative",
+            marginTop: 10,
+          }}
           titleBar="true"
           title="Drawing Control"
           titleHidden="false"
-          locked="true"
+          locked={true}
           close="false"
           setParams={setDrawingParams}
           changeMode={changeMode}

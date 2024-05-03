@@ -95,7 +95,7 @@ export const DrawControlShape = ({
         </label>
       </div>
       <div
-        className={clsx("flex flex-row gap-4 p-2", {
+        className={clsx("flex flex-row gap-2 p-2", {
           hidden: mode != DRAWING_MODES.SQUARE && mode != DRAWING_MODES.CIRCLE,
         })}
       >
@@ -114,9 +114,9 @@ export const DrawControlShape = ({
         </label>
         <label
           htmlFor="border-color-picker"
-          className="flex items-center justify-center gap-4"
+          className="flex items-center justify-center gap-2"
         >
-          border color :
+          color
           <input
             id="border-color-picker"
             type="color"
@@ -126,35 +126,54 @@ export const DrawControlShape = ({
         </label>
         <label
           htmlFor="border-size-picker"
-          className="flex items-center justify-center gap-2"
+          className="flex items-center justify-center gap-1"
         >
-          size
+          width
           <input
-            className="h-2 w-12 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="h-2 w-10 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="border-size-picker"
             type="range"
-            defaultValue={drawingParams.border.width}
+            defaultValue={drawingParams.border.lineWidth}
             min="1"
             max="20"
             step="0.5"
-            onChange={(e) => handleBorder({ width: e.target.value })}
+            onChange={(e) => handleBorder({ lineWidth: e.target.value })}
             style={{ width: "50px" }}
           />
         </label>
         <label
           htmlFor="border-interval-picker"
-          className="flex items-center justify-center gap-2"
+          className="flex items-center justify-center gap-1"
         >
           Interval
           <input
-            className="h-2 w-12 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="h-2 w-10 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="border-interval-picker"
             type="range"
             defaultValue={drawingParams.border.interval}
             min="0"
-            max="30"
+            max="20"
             step="1"
             onChange={(e) => handleBorder({ interval: e.target.value })}
+            style={{ width: "50px" }}
+          />
+        </label>
+        <label
+          htmlFor="border-opacity-picker"
+          className="flex items-center justify-center gap-2"
+        >
+          Opacity
+          <input
+            className="h-2 w-8 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            id="border-opacity-picker"
+            type="range"
+            defaultValue={drawingParams.border.opacity * 100}
+            min="0"
+            max="100"
+            step="10"
+            onChange={(e) =>
+              handleBorder({ opacity: parseInt(e.target.value) / 100 })
+            }
             style={{ width: "50px" }}
           />
         </label>

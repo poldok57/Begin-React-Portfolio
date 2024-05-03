@@ -1,4 +1,4 @@
-import { withMousePosition } from "../../context/withMousePosition";
+import { withMousePosition } from "../../hooks/withMousePosition";
 
 export const TestImage = ({ image_width }) => {
   return (
