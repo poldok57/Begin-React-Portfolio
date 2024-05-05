@@ -6,7 +6,7 @@ export const CloseButton = ({ onClick, className, size, ...props }) => {
     <button
       {...props}
       className={clsx(
-        "color-primary  absolute right-2 z-50 rounded border border-black bg-red-600 text-lg text-white opacity-25 group-hover:opacity-95",
+        "z-50 rounded border border-black bg-red-600 text-lg text-white opacity-30 group-hover:opacity-95",
         {
           "text-2xl": size === "2xl",
           "text-xl": size === "xl",

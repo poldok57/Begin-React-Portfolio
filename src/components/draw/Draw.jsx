@@ -12,6 +12,7 @@ export const DRAWING_MODES = {
   UNDO: "undo",
   SAVE: "save",
   INIT: "init",
+  RESET: "reset",
   CONTROL_PANEL: {
     IN: "in",
     OUT: "out",
@@ -21,6 +22,7 @@ export const DRAWING_MODES = {
 };
 export const ALL_DRAWING_MODES = [
   DRAWING_MODES.DRAW,
+  DRAWING_MODES.ERASE,
   DRAWING_MODES.LINE,
   DRAWING_MODES.ARC,
   DRAWING_MODES.SQUARE,
@@ -81,7 +83,7 @@ export const Draw = () => {
     switch (mode) {
       case DRAWING_MODES.UNDO:
         break;
-      case DRAWING_MODES.ERASE:
+      case DRAWING_MODES.RESET:
         canvas.current
           .getContext("2d")
           .clearRect(0, 0, canvas.current.width, canvas.current.height);

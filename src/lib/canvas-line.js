@@ -10,12 +10,18 @@ export const basicLine = (context, start, end) => {
   context.moveTo(start.x, start.y);
   context.lineTo(end.x, end.y);
   context.stroke();
-  context.closePath();
 };
 
-export const drawPoint = (context, point) => {
-  if (!point) return;
-  basicLine(context, point, point);
+export const drawPoint = (context, coord, color = null) => {
+  if (!coord) return;
+  const width = context.lineWidth;
+
+  context.beginPath();
+  if (color) context.fillStyle = color;
+  else context.fillStyle = context.strokeStyle;
+  context.arc(coord.x, coord.y, width / 2, 0, Math.PI * 2);
+  context.fill();
+  // basicLine(context, coord, coord);
 };
 
 export const crossLine = (context, center, width) => {

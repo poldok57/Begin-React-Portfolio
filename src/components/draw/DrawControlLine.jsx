@@ -29,7 +29,7 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
       </label>
       <label
         htmlFor="draw-size-picker"
-        className="text-nowrap flex items-center justify-center gap-4"
+        className="flex items-center justify-center gap-4 whitespace-nowrap"
       >
         Line width
         <input

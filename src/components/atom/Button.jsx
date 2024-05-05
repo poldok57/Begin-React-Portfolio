@@ -19,7 +19,6 @@ export const Button = forwardRef(function Button(
       ref={ref}
       className={clsx(
         "inline-block rounded bg-primary px-8 py-3 text-sm font-medium text-white transition",
-
         "disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600",
         className,
         {

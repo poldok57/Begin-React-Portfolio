@@ -6,11 +6,7 @@ import { Footer } from "../src/components/Footer";
 import { Header } from "../src/components/Header";
 import { HeroSection } from "../src/components/hero";
 import { ProjectSection } from "../src/components/project";
-
-// dynamic import Memory Section
-const DynamicMemorySection = dynamic(() => import("../src/components/memory"), {
-  ssr: false,
-});
+import { GameSelector } from "../src/components/Games/GameSelector";
 
 const Home = () => {
   return (
@@ -22,7 +18,7 @@ const Home = () => {
         <Header />
         <HeroSection />
         <ProjectSection />
-        <DynamicMemorySection />
+        <GameSelector />
         <DrawSection />
         <CommentSection />
         <Footer />

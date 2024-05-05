@@ -13,7 +13,7 @@ import { ShowAlertMessages } from "../src/hooks/ShowAlertMessages";
 export const ShowAlertMessagesWP = withMousePosition(ShowAlertMessages);
 
 const MyApp = ({ Component, pageProps }) => {
-  console.log("redendering MyApp..");
+  // console.log("redendering MyApp..");
   return (
     <ThemeProvider>
       <div id="app">

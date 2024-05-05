@@ -49,7 +49,7 @@ export const ShowDivAlertMessages = ({
         "opacity-100": displayAlert,
       })}
     >
-      <div className="w-full rounded-md border shadow-lg">
+      <div className="z-40 w-full rounded-md border shadow-lg">
         <div className="flex flex-row justify-between rounded-lg bg-secondary">
           <div className="w-1/5 items-center p-2 text-xl hover:cursor-move">
             <MdCopyAll />

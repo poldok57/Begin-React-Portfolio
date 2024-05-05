@@ -1,5 +1,4 @@
 import { FULL_NAME } from "../../lib/config";
-import { HightLightOnRender } from "../../context/HightLightOnRender";
 import { withMousePosition } from "../../hooks/withMousePosition";
 
 const HeroLogo = () => {
@@ -36,7 +35,7 @@ const HeroPresentationWP = withMousePosition(HeroPresentation);
 
 export const HeroSection = () => {
   return (
-    <HightLightOnRender className="relative m-auto flex w-full max-w-4xl flex-col">
+    <div className="relative m-auto flex w-full max-w-4xl flex-col">
       <HeroLogoWP className="top-0 right-0 md:absolute" />
       <HeroPresentationWP
         trace="false"
@@ -45,6 +44,6 @@ export const HeroSection = () => {
         titleBar="true"
         title="Welcome to the React Factory !"
       />
-    </HightLightOnRender>
+    </div>
   );
 };

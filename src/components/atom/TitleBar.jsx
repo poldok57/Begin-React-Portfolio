@@ -8,7 +8,7 @@ import clsx from "clsx";
  */
 export const TitleBar = forwardRef(function TitleBar(
   { children, className, ...props },
-  ref
+  ref = null
 ) {
   return (
     <div

@@ -6,7 +6,6 @@ import { CARD_STATE } from "../../lib/memory";
 import { useTheme } from "../../context/ThemeProvider";
 import { useMemoryContext } from "./MemoryProvider";
 
-const DEFAULT_WIDTH = 80;
 export const MemoryCard = ({ card, idx }) => {
   // const [showLayer, setShowLayer] = useState(false);
   const timerRef = useRef();

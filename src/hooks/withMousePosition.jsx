@@ -59,7 +59,7 @@ export function withMousePosition(Component) {
     // const componentRect = useRef(null);
 
     const offsetRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
-    const styleRef = useRef({ firstTime: true, position: null, ...style });
+    const styleRef = useRef({ position: null, ...style });
     const canMoveRef = useRef(false);
     const trace = useRef(
       props.trace === true || props.trace === "true" ? true : false
@@ -71,7 +71,6 @@ export function withMousePosition(Component) {
     const [isLocked, setLocked] = useState(
       props.locked === true || props.locked === "true" ? true : false
     );
-    let onBorderRef = useRef(BORDER.INSIDE);
 
     titleBar = titleBar === true || titleBar === "true" ? true : false;
     titleHidden = titleHidden === true || titleHidden === "true" ? true : false;
@@ -240,15 +239,11 @@ export function withMousePosition(Component) {
        * @param {MouseEvent} event
        */
       const mouseUp = (event) => {
-        const { waitEvent, component } = selectComponent(titleBar);
+        const { waitEvent } = selectComponent(titleBar);
         if (waitEvent && waitEvent.contains(event.target)) {
-          const coord = { x: event.clientX, y: event.clientY };
           setCanMove(false);
-          // componentPos.current = {
-          //   left: component.offsetLeft,
-          //   top: component.offsetTop,
-          // };
-          setMousePosition(coord);
+          setMousePosition({ x: event.clientX, y: event.clientY });
+
           document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
           waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
           if (isLocked) {
@@ -302,7 +297,7 @@ export function withMousePosition(Component) {
           component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
       };
-    }, [isLocked, mousePosition, titleBar, onBorderRef.current]);
+    }, [isLocked, mousePosition, titleBar]);
 
     let newStyle = {};
     if (canMove()) {
@@ -312,15 +307,12 @@ export function withMousePosition(Component) {
       newStyle.left = mousePosition ? mousePosition.x + offsetRef.current.x : 0;
       newStyle.top = mousePosition ? mousePosition.y + offsetRef.current.y : 0;
 
-      if (styleRef.current.firstTime) {
-        // delete margin if exists
-        if (styleRef.current.margin) delete styleRef.current.margin;
-        if (styleRef.current.marginTop) delete styleRef.current.marginTop;
-        if (styleRef.current.marginLeft) delete styleRef.current.marginLeft;
-        if (newStyle.left) styleRef.current.right = "auto";
-        if (newStyle.top) styleRef.current.bottom = "auto";
-        styleRef.current.firstTime = false;
-      }
+      // delete margin if exists
+      if (styleRef.current.margin) delete styleRef.current.margin;
+      if (styleRef.current.marginTop) delete styleRef.current.marginTop;
+      if (styleRef.current.marginLeft) delete styleRef.current.marginLeft;
+      if (newStyle.left) styleRef.current.right = "auto";
+      if (newStyle.top) styleRef.current.bottom = "auto";
 
       newStyle = { ...styleRef.current, ...newStyle };
     } else if (componentPos.current) {
@@ -388,7 +380,10 @@ export function withMousePosition(Component) {
             className="color-primary absolute left-2 z-50 mt-1 opacity-0 group-hover:opacity-95"
           />
           {close.current && (
-            <CloseButton className="mt-1" onClick={hideComponent} />
+            <CloseButton
+              className="absolute right-2 mt-1"
+              onClick={hideComponent}
+            />
           )}
         </div>
       </div>

@@ -36,7 +36,7 @@ const InputDimension = forwardRef(function InputDimension(props, ref) {
   return (
     <div>
       <label
-        className="rounded-md border-2 border-primary bg-background p-2"
+        className="flex-nowrap whitespace-nowrap rounded-md border-2 border-primary bg-background p-2"
         htmlFor={id}
       >
         {label} &nbsp;:
@@ -91,7 +91,7 @@ const ResizePicture = ({ children, ...props }) => {
 
   return (
     <label
-      className="rounded-md border-2 border-primary bg-background p-2"
+      className="whitespace-nowrap rounded-md border-2 border-primary bg-background p-2"
       htmlFor={id}
     >
       {children} &nbsp;
@@ -109,7 +109,7 @@ const ResizePicture = ({ children, ...props }) => {
   );
 };
 
-export const MemoryReset = () => {
+export const MemoryControl = () => {
   const { resetGame, getSize } = useMemoryContext();
   const inputRowsRef = useRef();
   const inputColsRef = useRef();
@@ -135,15 +135,12 @@ export const MemoryReset = () => {
   return useMemo(() => {
     return (
       <div className="rounded-md border border-secondary bg-paper shadow-lg">
-        <form
-          onSubmit={handleReset}
-          className="m-auto flex justify-between p-2"
-        >
-          <div className="mx-1">
+        <form onSubmit={handleReset} className="flex justify-between p-2">
+          <div className="mx-1 w-full ">
             <div className="flex w-full justify-center">
               <SelectType ref={inputTypeRef} setType={setInputType} />
             </div>
-            <div className="flex w-full items-center justify-between gap-2 pt-2">
+            <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap pt-2">
               <InputDimension
                 ref={inputColsRef}
                 name="width"
@@ -178,4 +175,4 @@ export const MemoryReset = () => {
   }, [size.width, size.height, inputType]);
 };
 
-export const MemoryResetWP = withMousePosition(MemoryReset);
+export const MemoryControlWP = withMousePosition(MemoryControl);

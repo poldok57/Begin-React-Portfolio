@@ -4,6 +4,7 @@ import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
 import { AiOutlineLoading } from "react-icons/ai";
+import { CiEraser } from "react-icons/ci";
 
 import { Button } from "../atom/Button";
 import { DRAWING_MODES } from "./Draw";
@@ -35,7 +36,7 @@ export const DrawControl = ({
 
   const handleConfirmErase = () => {
     alertMessage("action confirmed");
-    changeMode(DRAWING_MODES.ERASE);
+    changeMode(DRAWING_MODES.RESET);
     setMode(DRAWING_MODES.DRAW);
     setResetModalOpen(false);
     eraseHistory();
@@ -96,6 +97,14 @@ export const DrawControl = ({
             onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
           >
             Text
+          </Button>
+          <Button
+            className="bg-paper"
+            size="sm"
+            selected={mode == DRAWING_MODES.ERASE}
+            onClick={() => handleModeChange(DRAWING_MODES.ERASE)}
+          >
+            <CiEraser />
           </Button>
         </div>
         <DrawControlLine

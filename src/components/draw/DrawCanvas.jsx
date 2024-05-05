@@ -1,11 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useHistory } from "./DrawHistory";
-import {
-  BORDER,
-  mousePointer,
-  isInside,
-  mouseIsInsideComponent,
-} from "../../lib/mouse-position";
+import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
 import { basicLine, CanvasLine, drawPoint } from "../../lib/canvas-line";
 import {
   drawSquare,
@@ -161,8 +156,16 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         followCursor(event);
         break;
       case DRAWING_MODES.DRAW:
+      case DRAWING_MODES.ERASE:
         line.eraseStartCoordinates();
         break;
+    }
+    const context = canvasRef.current.getContext("2d");
+
+    if (newMode === DRAWING_MODES.ERASE) {
+      context.globalCompositeOperation = "destination-out";
+    } else {
+      context.globalCompositeOperation = "source-over";
     }
   };
 
@@ -221,8 +224,10 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * @param {Event} event
    */
   const actionMouseDown = (event) => {
+    const canvas = canvasOverRef.current;
+    canvas.contains(event.target);
     // we can validate the drawing if the mouse is outside the canvas
-    if (!mouseIsInsideComponent(event, canvasRef.current)) {
+    if (!canvas.contains(event.target)) {
       if (mouseOnCtrlPanel.current) {
         // alertMessage("Mouse on Control Panel, action refused ");
         return;
@@ -232,6 +237,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         case DRAWING_MODES.SQUARE:
         case DRAWING_MODES.CIRCLE:
         case DRAWING_MODES.TEXT:
+        case DRAWING_MODES.ERASE:
           return;
         case DRAWING_MODES.LINE:
         case DRAWING_MODES.ARC:
@@ -251,6 +257,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
 
     switch (drawingParams.current.mode) {
       case DRAWING_MODES.DRAW:
+      case DRAWING_MODES.ERASE:
         line.setDrawing(true);
         break;
 
@@ -344,6 +351,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
 
     switch (drawingParams.current.mode) {
       case DRAWING_MODES.DRAW:
+      case DRAWING_MODES.ERASE:
         savePicture(canvasRef.current);
         break;
       case DRAWING_MODES.SQUARE:
@@ -517,8 +525,16 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         basicLine(context, line.getStartCoordinates(), coordinate);
         break;
       case DRAWING_MODES.DRAW:
-        basicLine(context, coordinate, coordinate);
         hightLightMouseCursor(context, coordinate, mouseCircle);
+        drawPoint(context, coordinate);
+        break;
+      case DRAWING_MODES.ERASE:
+        hightLightMouseCursor(context, coordinate, {
+          ...mouseCircle,
+          color: "pink",
+        });
+        context.globalAlpha = 0.9;
+        drawPoint(context, coordinate, "#ccc");
         break;
     }
     canvasOverRef.current.style.cursor = cursorType;
