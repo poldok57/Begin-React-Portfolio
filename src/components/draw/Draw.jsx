@@ -2,72 +2,15 @@ import { useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
 import { HistoryProvider } from "./DrawHistory";
-import { SHAPE_TYPE } from "../../lib/canvas-elements";
+import { DRAWING_MODES, DEFAULT_PARAMS } from "../../lib/canvas/canvas-defines";
 
-export const DRAWING_MODES = {
-  DRAW: "draw",
-  LINE: "line",
-  ARC: "arc",
-  ERASE: "erase",
-  UNDO: "undo",
-  SAVE: "save",
-  INIT: "init",
-  RESET: "reset",
-  CONTROL_PANEL: {
-    IN: "in",
-    OUT: "out",
-  },
-  DRAWING_CHANGE: "drawingChange",
-  ...SHAPE_TYPE,
-};
-export const ALL_DRAWING_MODES = [
-  DRAWING_MODES.DRAW,
-  DRAWING_MODES.ERASE,
-  DRAWING_MODES.LINE,
-  DRAWING_MODES.ARC,
-  DRAWING_MODES.SQUARE,
-  DRAWING_MODES.CIRCLE,
-  DRAWING_MODES.TEXT,
-];
-
-const DEFAULT_COLOR = "#ff0000";
-const DEFAULT_SIZE = 4;
-const DEFAULT_OPACITY = 1;
 const MAX_HISTORY = 20;
 
 export const Draw = () => {
   const canvas = useRef(null);
   const startCoordinate = useRef(null);
 
-  let drawingParamsRef = useRef({
-    mode: DRAWING_MODES.INIT,
-    fixed: false,
-    general: {
-      color: DEFAULT_COLOR,
-      lineWidth: DEFAULT_SIZE,
-      opacity: DEFAULT_OPACITY,
-    },
-    shape: {
-      filled: true,
-      radius: 10,
-      withText: false,
-      withBorder: false,
-    },
-    text: {
-      text: "",
-      color: "#404080",
-      font: "Arial",
-      bold: 100,
-      italic: false,
-      fontSize: 20,
-    },
-    border: {
-      color: "#a0a0a0",
-      lineWidth: 1,
-      opacity: 1,
-      interval: 0,
-    },
-  });
+  let drawingParamsRef = useRef(DEFAULT_PARAMS);
 
   const getDrowingParams = () => {
     return drawingParamsRef.current;
@@ -89,6 +32,8 @@ export const Draw = () => {
           .clearRect(0, 0, canvas.current.width, canvas.current.height);
         startCoordinate.current = null;
         drawingParamsRef.current.mode = DRAWING_MODES.INIT;
+        drawingParamsRef.current.rotation = 0;
+
         break;
       case DRAWING_MODES.SAVE:
         if (canvas.current) {

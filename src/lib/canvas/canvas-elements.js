@@ -1,14 +1,9 @@
-import { BORDER } from "./mouse-position";
-import { badgePosition, middleButtonPosition } from "./mouse-position";
+import { BORDER, badgePosition, middleButtonPosition } from "../mouse-position";
+import { resizeSquare } from "../../lib/square-position";
+import { SHAPE_TYPE } from "./canvas-defines";
 
-const CIRCLE_COLOR = "#e0e0e0"; // color of the circle
+const CIRCLE_COLOR = "#e0e0e0"; // color of the circle around control buttons
 const TEXT_PADDING = 20;
-
-export const SHAPE_TYPE = {
-  SQUARE: "square",
-  CIRCLE: "circle",
-  TEXT: "text",
-};
 
 /**
  * Function to draw a check mark
@@ -352,9 +347,9 @@ export const drawBorder = (ctx, square) => {
  */
 export const drawText = (ctx, square) => {
   let w, h, paddingX, paddingY;
-
-  if (square.rotation !== 0) {
-    rotateElement(ctx, square, square.rotation);
+  const rotation = square.rotation + square.text.rotation;
+  if (rotation !== 0) {
+    rotateElement(ctx, square, rotation);
   }
 
   const paramsText = square.text;
@@ -384,29 +379,8 @@ export const drawText = (ctx, square) => {
   }
   ctx.fillText(text, square.x + paddingX, square.y + h + paddingY);
 
-  if (square.rotation !== 0) {
+  if (rotation !== 0) {
     ctx.restore();
-  }
-};
-/**
- * Function to show a square, an ellipse or a text on the canvas
- * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, type, rotation}
- * @param {boolean} withBtn - if the button should be displayed
- */
-export const drawElement = (ctx, square, withBtn, border) => {
-  switch (square.type) {
-    case SHAPE_TYPE.TEXT:
-      drawText(ctx, square);
-      break;
-    case SHAPE_TYPE.CIRCLE:
-      drawEllipse(ctx, square);
-      break;
-    default: // square
-      drawSquare(ctx, square);
-  }
-  if (withBtn) {
-    drawButtons(ctx, square, border);
   }
 };
 
@@ -432,9 +406,10 @@ export const drawButtons = (ctx, square, border) => {
    * draw the middle button used to rotate the shape
    */
   if (
-    square.type === SHAPE_TYPE.CIRCLE &&
-    square.width === square.height &&
-    !square.shape.withText
+    square.type === SHAPE_TYPE.TEXT ||
+    (square.type === SHAPE_TYPE.CIRCLE &&
+      square.width === square.height &&
+      !square.shape.withText)
   ) {
     // don't show the middle button if the shape is a circle without text
     square.withMiddleButton = false;
@@ -467,7 +442,10 @@ export const drawButtons = (ctx, square, border) => {
     );
   }
 
-  if (square.rotation !== 0) {
+  const rotation =
+    square.rotation +
+    (square.type === SHAPE_TYPE.TEXT ? square.text.rotation : 0);
+  if (rotation !== 0) {
     rotateElement(ctx, square, square.rotation);
   }
   switch (square.type) {
@@ -501,11 +479,68 @@ export const drawButtons = (ctx, square, border) => {
       break;
   }
 
-  if (square.rotation !== 0) {
+  if (rotation !== 0) {
     ctx.restore();
   }
 };
 
+/**
+ * Function to show a element (square, ellipse or text) on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} square - {x, y, width, height, rotation, type, text}
+ * @param {boolean} withBtn - show button to resize the square
+ * @param {string} mouseOnShape - border where the mouse is
+ */
+export const showElement = (
+  ctx,
+  square,
+  withBtn = true,
+  mouseOnShape = null
+) => {
+  switch (square.type) {
+    case SHAPE_TYPE.SQUARE:
+      drawSquare(ctx, square);
+      break;
+    case SHAPE_TYPE.CIRCLE:
+      drawEllipse(ctx, square);
+      break;
+    case SHAPE_TYPE.TEXT:
+      if (!square.text || !square.text.text) return;
+      drawText(ctx, square);
+  }
+
+  if (square.type !== SHAPE_TYPE.TEXT) {
+    if (square.shape.withBorder) {
+      if (!withBtn) {
+        ctx.globalAlpha = square.border.opacity;
+      }
+      drawBorder(ctx, square);
+    }
+    if (square.shape.withText) {
+      // text inside the square
+      drawText(ctx, square);
+    }
+  }
+  if (withBtn) {
+    drawButtons(ctx, square, mouseOnShape);
+  }
+};
+/**
+ * Function to resize the element on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} square - {x, y, width, height, rotation, type, text}
+ * @param {object} coordinate - {x, y}
+ * @param {string} mouseOnShape - border or button where the mouse is
+ */
+export const resizingElement = (ctx, square, coordinate, mouseOnShape) => {
+  if (mouseOnShape) {
+    const { newSquare } = resizeSquare(coordinate, square, mouseOnShape);
+
+    showElement(ctx, { ...square, ...newSquare });
+    return newSquare;
+  }
+  return null;
+};
 /**
  * Function to show a circle on the canvas to highlight the cursor
  * @param {CanvasRenderingContext2D} ctx
@@ -514,11 +549,10 @@ export const drawButtons = (ctx, square, border) => {
  */
 export const hightLightMouseCursor = (ctx, coord, element) => {
   element.rotation = 0;
-  if (!element.height) {
-    element.height = element.width;
-  }
+  const eHeight = element.height ?? element.width;
+
   element.x = coord.x - element.width / 2;
-  element.y = coord.y - element.height / 2;
+  element.y = coord.y - eHeight / 2;
   element.shape = { ...element.shape, filled: element.filled };
   element.general = { ...element.general, color: element.color };
 

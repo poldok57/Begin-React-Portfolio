@@ -3,7 +3,7 @@ import { MdRadioButtonUnchecked } from "react-icons/md";
 import { BiSquare } from "react-icons/bi";
 import { Button } from "../atom/Button";
 import ToggleSwitch from "../atom/ToggleSwitch";
-import { DRAWING_MODES } from "./Draw";
+import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 
 export const DrawControlShape = ({
@@ -35,12 +35,14 @@ export const DrawControlShape = ({
     >
       <div className="flex flex-row gap-4">
         <Button
+          className="px-5"
           selected={mode == DRAWING_MODES.CIRCLE}
           onClick={() => handleModeChange(DRAWING_MODES.CIRCLE)}
         >
           <MdRadioButtonUnchecked />
         </Button>
         <Button
+          className="px-5"
           selected={mode == DRAWING_MODES.SQUARE}
           onClick={() => handleModeChange(DRAWING_MODES.SQUARE)}
         >

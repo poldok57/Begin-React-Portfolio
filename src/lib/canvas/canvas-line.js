@@ -12,18 +12,82 @@ export const basicLine = (context, start, end) => {
   context.stroke();
 };
 
-export const drawPoint = (context, coord, color = null) => {
+export const drawPoint = (context, coord, color = null, borderColor = null) => {
   if (!coord) return;
   const width = context.lineWidth;
 
   context.beginPath();
-  if (color) context.fillStyle = color;
-  else context.fillStyle = context.strokeStyle;
+  if (color) {
+    context.fillStyle = color;
+    if (borderColor) {
+      context.strokeStyle = borderColor;
+      context.lineWidth = 0.5;
+    }
+  } else context.fillStyle = context.strokeStyle;
   context.arc(coord.x, coord.y, width / 2, 0, Math.PI * 2);
   context.fill();
-  // basicLine(context, coord, coord);
+  if (borderColor) context.stroke();
+  context.lineWidth = width;
 };
+/**
+ * Function to draw a hatched circle on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} coord {x, y} - center of the circle
+ * @param {string} color - color of the circle
+ * @param {string} borderColor - color of the border
+ */
+export const hatchedCircle = (ctx, coord, color = null, borderColor) => {
+  const width = ctx.lineWidth;
 
+  if (width < 10) {
+    drawPoint(ctx, coord, color, borderColor);
+    return;
+  }
+  const radius = width / 2;
+  ctx.lineWidth = Math.max(0.1, radius / 50);
+  // Dessiner un cercle
+  ctx.beginPath();
+  ctx.arc(coord.x, coord.y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = color; // Couleur de remplissage
+  ctx.fill();
+  ctx.strokeStyle = borderColor;
+  ctx.stroke();
+
+  const hatchSpacing = radius > 12 ? Math.PI / 8 : Math.PI / 6;
+
+  let startX, startY, endX, endY;
+  for (let angle = 0; angle < Math.PI * 2; angle += hatchSpacing) {
+    startX = coord.x + Math.cos(angle) * radius;
+    startY = coord.y + Math.sin(angle) * radius;
+    endX = coord.x - Math.sin(angle) * radius;
+    endY = coord.y - Math.cos(angle) * radius;
+
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+
+    if (radius > 10) {
+      // draw hatch on the over diagonal
+      startX = coord.x - Math.cos(angle) * radius;
+      startY = coord.y + Math.sin(angle) * radius;
+      endX = coord.x + Math.sin(angle) * radius;
+      endY = coord.y - Math.cos(angle) * radius;
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+    }
+  }
+
+  ctx.strokeStyle = borderColor; // Couleur des lignes
+  ctx.stroke();
+
+  // ctx.restore();
+  ctx.lineWidth = width;
+};
+/**
+ * Function to draw a cross on the canvas
+ * @param {CanvasRenderingContext2D} context
+ * @param {object} center {x, y}
+ * @param {number} width - width of the cross
+ */
 export const crossLine = (context, center, width) => {
   if (!center) return;
 
@@ -120,13 +184,13 @@ export class CanvasLine {
    * @param {MouseEvent} event
    * @param {HTMLCanvasElement} canvas
    */
-  drawLine(event, context = null) {
+  drawLine(context = null) {
     if (context === null) {
       context = this.context;
     }
 
     let start = this.getStartCoordinates();
-    const end = this.setCoordinates(event); // start for next segment
+    const end = this.currentCoordinate; // start for next segment
     this.setStartCoordinates(end);
     if (start !== null) {
       basicLine(context, start, end);
@@ -170,7 +234,7 @@ export class CanvasLine {
       const SIZE_CROSS = 16;
       crossLine(context, start, SIZE_CROSS);
       crossLine(context, end, SIZE_CROSS);
-      crossLine(context, current, SIZE_CROSS);
+      // crossLine(context, current, SIZE_CROSS);
       context.lineWidth = lineWidth;
       context.strokeStyle = color;
     }

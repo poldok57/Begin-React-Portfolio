@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import { DRAWING_MODES } from "./Draw";
+
+import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
   const handleGeneral = (param) => {
     drawingParams.general = { ...drawingParams.general, ...param };

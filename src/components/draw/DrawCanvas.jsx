@@ -1,24 +1,31 @@
 import { useEffect, useRef } from "react";
 import { useHistory } from "./DrawHistory";
 import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
-import { basicLine, CanvasLine, drawPoint } from "../../lib/canvas-line";
 import {
-  drawSquare,
-  drawEllipse,
+  basicLine,
+  drawPoint,
+  hatchedCircle,
+  CanvasLine,
+} from "../../lib/canvas/canvas-line";
+import {
   drawText,
-  drawBorder,
-  drawButtons,
+  showElement,
+  resizingElement,
   hightLightMouseCursor,
-} from "../../lib/canvas-elements";
+} from "../../lib/canvas/canvas-elements";
 import {
   isOnSquareBorder,
-  resizeSquare,
+  // resizeSquare,
   getSquareOffset,
 } from "../../lib/square-position";
 
-import { DRAWING_MODES, ALL_DRAWING_MODES } from "./Draw";
-import { alertMessage } from "../../hooks/alertMessage";
+import {
+  DRAWING_MODES,
+  isDrawingMode,
+  isDrawingShape,
+} from "../../lib/canvas/canvas-defines";
 
+import { alertMessage } from "../../hooks/alertMessage";
 // Draw on Canvas
 export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   let element = {
@@ -39,7 +46,6 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     type: "circle",
     color: "rgba(255, 255, 0,0.8)",
     width: 80,
-    height: 80,
     filled: true,
   };
   const squareRef = useRef(null);
@@ -127,22 +133,26 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         }
         // clear the temporary canvas
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        showElement(ctx, line.getCoordinates(), false);
+        showElement(ctx, squareRef.current, false);
         break;
       case DRAWING_MODES.TEXT:
         squareRef.current.text = { ...drawingParams.current.text };
-        // showElement(canvasOverRef.current, line.getCoordinates(), false);
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         drawText(ctx, squareRef.current);
     }
   };
 
-  const actionModeChange = (newMode, event) => {
+  /**
+   * Function to change the drawing mode
+   * @param {string} newMode - new drawing mode
+   */
+  const actionModeChange = (newMode) => {
     if (drawingParams.current === null) {
       drawingParams.current = getParams();
       setContext(canvasOverRef.current);
     }
-    drawingParams.current.mode = newMode;
+
+    // drawingParams.current.mode = newMode;
     switch (newMode) {
       case DRAWING_MODES.SQUARE:
       case DRAWING_MODES.CIRCLE:
@@ -153,7 +163,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           squareRef.current.type = newMode;
         }
         line.eraseStartCoordinates();
-        followCursor(event);
+        followCursor();
         break;
       case DRAWING_MODES.DRAW:
       case DRAWING_MODES.ERASE:
@@ -162,11 +172,8 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     }
     const context = canvasRef.current.getContext("2d");
 
-    if (newMode === DRAWING_MODES.ERASE) {
-      context.globalCompositeOperation = "destination-out";
-    } else {
-      context.globalCompositeOperation = "source-over";
-    }
+    context.globalCompositeOperation =
+      newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
   };
 
   const handleSpecialEvent = (eventMode) => {
@@ -233,18 +240,15 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         return;
       }
       switch (drawingParams.current.mode) {
-        case DRAWING_MODES.DRAW:
-        case DRAWING_MODES.SQUARE:
-        case DRAWING_MODES.CIRCLE:
-        case DRAWING_MODES.TEXT:
-        case DRAWING_MODES.ERASE:
-          return;
         case DRAWING_MODES.LINE:
         case DRAWING_MODES.ARC:
           // if the first point is outside the canvas, we can't draw the line
           if (line.getStartCoordinates() == null) {
             return;
           }
+          break;
+        default:
+          return;
       }
     }
 
@@ -262,7 +266,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         break;
 
       case DRAWING_MODES.LINE:
-        if (line.drawLine(event)) {
+        if (line.drawLine()) {
           savePicture(canvasElement);
         }
         break;
@@ -280,33 +284,33 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         // squareRef.current.shape = { ...drawingParams.current.shape };
         if (element.fixed) {
           // isInsideSquare(getCoordinates(), squareRef.current, true);
-          const border = handleMouseOnElement(
+          const mouseOnShape = handleMouseOnElement(
             drawingParams.current.mode,
             line.getCoordinates(),
             squareRef.current
           );
-          if (border) {
-            if (border === BORDER.INSIDE) {
+          if (mouseOnShape) {
+            if (mouseOnShape === BORDER.INSIDE) {
               offsetRef.current = getSquareOffset(
                 line.getCoordinates(),
                 squareRef.current
               );
               canvasOverRef.current.style.cursor = "pointer";
               element.fixed = false;
-            } else if (border === BORDER.ON_BUTTON) {
+            } else if (mouseOnShape === BORDER.ON_BUTTON) {
               canvasOverRef.current.style.cursor = "pointer";
               validDrawedElement();
               // init for next shape
               initShape(drawingParams.current.mode);
               drawingParams.current.mode = DRAWING_MODES.DRAW;
-            } else if (border === BORDER.ON_BUTTON_LEFT) {
+            } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
               squareRef.current.rotation -= Math.PI / 16;
-              followCursor(event);
-            } else if (border === BORDER.ON_BUTTON_RIGHT) {
+              followCursor();
+            } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
               squareRef.current.rotation += Math.PI / 16;
-              followCursor(event);
+              followCursor();
             } else {
-              element.isResizing = border;
+              element.isResizing = mouseOnShape;
             }
           }
         }
@@ -323,24 +327,19 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * @param {Event} event
    * @param {HTMLCanvasElement} canvas
    */
-  const resizingSquare = (event, canvas) => {
+  const resizingSquare = (canvas) => {
     const context = setContext(canvas);
     if (!context) return;
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-    const coordinate = line.setCoordinates(event);
-    const border = element.isResizing;
-    if (border) {
-      const { coord, newSquare } = resizeSquare(
-        coordinate,
-        squareRef.current,
-        border
-      );
-      // element.fixed = true;
-      squareRef.current = { ...squareRef.current, ...newSquare };
+    const newCoord = resizingElement(
+      context,
+      squareRef.current,
+      line.getCoordinates(),
+      element.isResizing
+    );
 
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      showElement(context, coord);
-    }
+    if (newCoord) squareRef.current = { ...squareRef.current, ...newCoord };
   };
   /**
    * Function to stop drawing on the canvas
@@ -352,6 +351,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     switch (drawingParams.current.mode) {
       case DRAWING_MODES.DRAW:
       case DRAWING_MODES.ERASE:
+        line.eraseStartCoordinates();
         savePicture(canvasRef.current);
         break;
       case DRAWING_MODES.SQUARE:
@@ -367,60 +367,69 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * Function to freehand draw on the canvas
    * @param {Event} event
    */
-  const draw = (event) => {
+  const draw = () => {
     if (line.isDrawing()) {
-      const context = canvasRef.current.getContext("2d");
-      if (!context) return;
-
-      basicLine(context, line.getCoordinates(), line.setCoordinates(event));
+      line.drawLine();
     }
   };
 
   /**
    * Function to show a element (square, ellipse or text) on the canvas
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array} coord [x, y]
    * @param {boolean} withBtn - show button to resize the square
-   * @param {string} border - border where the mouse is
+   * @param {string} mouseOnShape - border where the mouse is
    */
-  const showElement = (ctx, coord, withBtn = true, border = null) => {
+  // const showElement = (ctx, square, withBtn = true, mouseOnShape = null) => {
+  //   switch (square.type) {
+  //     case DRAWING_MODES.SQUARE:
+  //       drawSquare(ctx, square);
+  //       break;
+  //     case DRAWING_MODES.CIRCLE:
+  //       drawEllipse(ctx, square);
+
+  //       break;
+  //     case DRAWING_MODES.TEXT:
+  //       if (!square.text || !square.text.text) return;
+  //       drawText(ctx, square);
+  //     // writeText(ctx, coord, withBtn, mouseOnShape);
+  //   }
+
+  //   if (square.type !== DRAWING_MODES.TEXT) {
+  //     if (drawingParams.current.shape.withBorder) {
+  //       if (!withBtn) {
+  //         ctx.globalAlpha = square.border.opacity;
+  //       }
+  //       drawBorder(ctx, square);
+  //     }
+  //     if (drawingParams.current.shape.withText) {
+  //       // text inside the square
+  //       square.shape.withText = true;
+  //       // writeText(ctx, coord, false);
+  //       drawText(ctx, square);
+  //     }
+  //   }
+  //   if (withBtn) {
+  //     drawButtons(ctx, square, mouseOnShape);
+  //   }
+  // };
+
+  /**
+   * Function to move an element on the canvas
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {object} coord - {x, y}
+   * @param {string} mouseOnShape - border or button where the mouse is
+   */
+  const moveElement = (ctx, coord, mouseOnShape = null) => {
     const square = squareRef.current;
+    const oldX = square.x,
+      oldY = square.y;
     if (!element.fixed) {
       square.x = coord.x + offsetRef.current.x;
       square.y = coord.y + offsetRef.current.y;
     }
-
-    switch (square.type) {
-      case DRAWING_MODES.SQUARE:
-        drawSquare(ctx, square);
-        break;
-      case DRAWING_MODES.CIRCLE:
-        drawEllipse(ctx, square);
-
-        break;
-      case DRAWING_MODES.TEXT:
-        if (!square.text || !square.text.text) return;
-        drawText(ctx, square);
-      // writeText(ctx, coord, withBtn, border);
-    }
-
-    if (square.type !== DRAWING_MODES.TEXT) {
-      if (drawingParams.current.shape.withBorder) {
-        if (!withBtn) {
-          ctx.globalAlpha = square.border.opacity;
-        }
-        drawBorder(ctx, square);
-      }
-      if (drawingParams.current.shape.withText) {
-        // text inside the square
-        squareRef.current.shape.withText = true;
-        // writeText(ctx, coord, false);
-        drawText(ctx, square);
-      }
-    }
-    if (withBtn) {
-      drawButtons(ctx, square, border);
-    }
+    // if element didn't move don't show the buttons
+    const withBtn = oldX === square.x && oldY === square.y;
+    showElement(ctx, squareRef.current, withBtn, mouseOnShape);
   };
 
   /**
@@ -433,26 +442,20 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       return;
     }
 
-    showElement(context, null, false);
+    showElement(context, squareRef.current, false);
   };
 
   /**
    * erase canavasOver (temporary canvas) when mouse leave the canvas
    */
-  const eraseCanvasOver = () => {
+  const onMouseLeave = () => {
     const context = canvasOverRef.current.getContext("2d");
     if (!context || !drawingParams.current) {
       return;
     }
     const mode = drawingParams.current.mode;
     // dont erase the fixed element (square, circle or text)
-    if (
-      mode === DRAWING_MODES.ARC ||
-      ((mode === DRAWING_MODES.SQUARE ||
-        mode === DRAWING_MODES.CIRCLE ||
-        mode === DRAWING_MODES.TEXT) &&
-        element.fixed)
-    ) {
+    if (mode === DRAWING_MODES.ARC || (isDrawingShape(mode) && element.fixed)) {
       return;
     }
     context.clearRect(
@@ -461,18 +464,20 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       canvasOverRef.current.width,
       canvasOverRef.current.height
     );
-    return;
+    if (mode === DRAWING_MODES.DRAW) {
+      line.setDrawing(false);
+      line.eraseStartCoordinates();
+    }
   };
 
   /**
    * Function to follow the cursor on the canvas
-   * @param {Event} event
    * @param {number} opacity
    */
-  const followCursor = (event, opacity = null) => {
+  const followCursor = (opacity = null) => {
     const canvasOver = canvasOverRef.current;
-    // const context = setContext(canvasOver, opacity);
-    const context = canvasOver.getContext("2d");
+    const context = setContext(canvasOver, opacity);
+    // const context = canvasOver.getContext("2d");
     context.globalAlpha = opacity ?? drawingParams.current.general.opacity;
 
     if (!context) return;
@@ -481,25 +486,25 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     context.clearRect(0, 0, canvasOver.width, canvasOver.height);
 
     let cursorType = "default";
-    let coordinate = line.setCoordinates(event);
+    let coordinate = line.getCoordinates();
 
     switch (drawingParams.current.mode) {
       case DRAWING_MODES.SQUARE:
       case DRAWING_MODES.CIRCLE:
       case DRAWING_MODES.TEXT:
         {
-          let border = null;
+          let mouseOnShape = null;
           if (element.fixed) {
-            border = handleMouseOnElement(
+            mouseOnShape = handleMouseOnElement(
               drawingParams.current.mode,
-              line.getCoordinates(),
+              coordinate,
               squareRef.current
             );
 
-            if (border) {
-              cursorType = mousePointer(border);
+            if (mouseOnShape) {
+              cursorType = mousePointer(mouseOnShape);
 
-              if (isInside(border)) {
+              if (isInside(mouseOnShape)) {
                 // show real color when mouse is inside the square
                 context.globalAlpha = drawingParams.current.general.opacity;
               }
@@ -508,20 +513,21 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
             cursorType = "pointer";
           }
 
-          showElement(context, coordinate, true, border);
+          moveElement(context, coordinate, mouseOnShape);
         }
         break;
       case DRAWING_MODES.ARC:
         hightLightMouseCursor(context, coordinate, mouseCircle);
         line.showArc(context, true);
+        cursorType = "crosshair";
         break;
       case DRAWING_MODES.LINE:
         hightLightMouseCursor(context, coordinate, mouseCircle);
+        cursorType = "crosshair";
         if (line.getStartCoordinates() == null) {
           drawPoint(context, coordinate);
-          return;
+          break;
         }
-        // line.drawLine(event,context);
         basicLine(context, line.getStartCoordinates(), coordinate);
         break;
       case DRAWING_MODES.DRAW:
@@ -532,9 +538,11 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         hightLightMouseCursor(context, coordinate, {
           ...mouseCircle,
           color: "pink",
+          width: 50,
         });
         context.globalAlpha = 0.9;
-        drawPoint(context, coordinate, "#ccc");
+        hatchedCircle(context, coordinate, "#eee", "#303030");
+        cursorType = "none";
         break;
     }
     canvasOverRef.current.style.cursor = cursorType;
@@ -563,19 +571,20 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         console.log("Init Drawing...");
       }
 
+      line.setCoordinates(event);
       if (line.isDrawing()) {
-        draw(event);
-        followCursor(event, 0.4);
+        draw();
+        followCursor(0.4);
       } else if (
         element.isResizing &&
         (drawingParams.current.mode === DRAWING_MODES.SQUARE ||
           drawingParams.current.mode === DRAWING_MODES.CIRCLE)
       ) {
-        resizingSquare(event, canvasElement);
+        resizingSquare(canvasElement);
       } else if (mouseOnCtrlPanel.current) {
         return;
       } else {
-        followCursor(event, 0.4);
+        followCursor(0.4);
       }
     };
     const hanldeKeyDown = (event) => {
@@ -597,9 +606,8 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       const newMode = event.detail.mode;
       if (newMode === DRAWING_MODES.DRAWING_CHANGE) {
         drawingParamChanged();
-        // followCursor(event);
-      } else if (ALL_DRAWING_MODES.includes(newMode)) {
-        actionModeChange(newMode, event);
+      } else if (isDrawingMode(newMode)) {
+        actionModeChange(newMode);
       } else if (newMode === DRAWING_MODES.UNDO) {
         previousPicture(canvasRef.current);
       } else {
@@ -610,7 +618,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     document.addEventListener("mousedown", handleMouseDown);
     document.addEventListener("mousemove", handleMouseMove);
     canvasElement.addEventListener("mouseup", handleMouseUp);
-    canvasElement.addEventListener("mouseleave", eraseCanvasOver);
+    canvasElement.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("keydown", hanldeKeyDown);
     document.addEventListener("modeChanged", handleModeChange);
 
@@ -618,7 +626,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       document.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("mousemove", handleMouseMove);
       canvasElement.removeEventListener("mouseup", handleMouseUp);
-      canvasElement.removeEventListener("mouseleave", eraseCanvasOver);
+      canvasElement.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("keydown", hanldeKeyDown);
       document.removeEventListener("modeChanged", handleModeChange);
     };

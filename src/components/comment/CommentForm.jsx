@@ -1,9 +1,9 @@
 import { useState, useRef } from "react";
 
 import { TextField } from "../atom/TextField";
-import { Button } from "../atom/Button";
+
 import { ErrorMessage } from "../atom/ErrorMessage";
-import { ConfirmationModal } from "../atom/ConfirmationModal";
+import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 
 import { commentsUrl } from "../../lib/api-url";
 
@@ -12,8 +12,6 @@ export const CommentForm = ({ addComment }) => {
     username: "",
     comment: "",
   });
-  const referrer = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
   const [errorSending, setErrorSending] = useState(false);
 
   const handleSubmit = (e) => {
@@ -52,7 +50,6 @@ export const CommentForm = ({ addComment }) => {
       .then(() => {
         setErrorSending(null);
         e.target.reset();
-        setIsOpen(true);
       })
       .catch((error) => {
         setErrorSending("Something wrong happend: " + error.error);
@@ -89,16 +86,9 @@ export const CommentForm = ({ addComment }) => {
       {errorMessage.current.comment && (
         <ErrorMessage> {errorMessage.current.comment} </ErrorMessage>
       )}
-      <Button ref={referrer} type="submit">
-        Submit
-      </Button>
-      <ConfirmationModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        referrer={referrer}
-      >
+      <ButtonConfirmModal value="Submit" type="submit">
         Your comment has been sent !
-      </ConfirmationModal>
+      </ButtonConfirmModal>
     </form>
   );
 };

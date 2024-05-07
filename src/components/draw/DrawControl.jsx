@@ -7,13 +7,14 @@ import { AiOutlineLoading } from "react-icons/ai";
 import { CiEraser } from "react-icons/ci";
 
 import { Button } from "../atom/Button";
-import { DRAWING_MODES } from "./Draw";
+import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
 import { useHistory } from "./DrawHistory";
-import { ConfirmationModal } from "../atom/ConfirmationModal";
+
 import { alertMessage } from "../../hooks/alertMessage";
+import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 
 // import clsx from "clsx";
 
@@ -26,11 +27,8 @@ export const DrawControl = ({
   const [mode, setMode] = useState(defaultMode);
   const [withText, setWithText] = useState(false);
 
-  const resetButtonRef = useRef(null);
-  const [isResetModalOpen, setResetModalOpen] = useState(false);
-  const saveButtonRef = useRef(null);
-  const [isSaveModalOpen, setSaveModalOpen] = useState(false);
   const filenameRef = useRef(null);
+  const defaultFilename = useRef("my-drawing");
 
   const { eraseHistory } = useHistory();
 
@@ -38,7 +36,6 @@ export const DrawControl = ({
     alertMessage("action confirmed");
     changeMode(DRAWING_MODES.RESET);
     setMode(DRAWING_MODES.DRAW);
-    setResetModalOpen(false);
     eraseHistory();
   };
 
@@ -99,8 +96,7 @@ export const DrawControl = ({
             Text
           </Button>
           <Button
-            className="bg-paper"
-            size="sm"
+            className="bg-pink-500"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => handleModeChange(DRAWING_MODES.ERASE)}
           >
@@ -127,40 +123,22 @@ export const DrawControl = ({
         />
 
         <div className="relative m-auto flex gap-4">
-          <Button onClick={(e) => handleUndo(e)}>
+          <Button className="bg-pink-500" onClick={(e) => handleUndo(e)}>
             <SlActionUndo />
           </Button>
-          <Button
-            ref={resetButtonRef}
-            onClick={() => {
-              setResetModalOpen(true);
-            }}
-          >
-            Reset
-          </Button>
-          <ConfirmationModal
-            referrer={resetButtonRef}
-            isOpen={isResetModalOpen}
-            onClose={() => setResetModalOpen(false)}
+          <ButtonConfirmModal
+            className="bg-red-500"
+            value="Reset"
             onConfirm={handleConfirmErase}
           >
             Do you want to erase all your drawing ?
-          </ConfirmationModal>
-          <Button
-            ref={saveButtonRef}
-            onClick={() => {
-              setSaveModalOpen(true);
-            }}
-          >
-            Save my drawing
-          </Button>
-          <ConfirmationModal
-            referrer={saveButtonRef}
-            isOpen={isSaveModalOpen}
-            onClose={() => setSaveModalOpen(false)}
+          </ButtonConfirmModal>
+          <ButtonConfirmModal
+            className="bg-blue-500"
+            value=" Save my drawing"
             onConfirm={() => {
               changeMode(DRAWING_MODES.SAVE, filenameRef.current.value);
-              setSaveModalOpen(false);
+              defaultFilename.current = filenameRef.current.value;
             }}
           >
             <div className="flex flex-row">
@@ -171,15 +149,15 @@ export const DrawControl = ({
               <input
                 className="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
                 type="text"
-                defaultValue="my image"
+                defaultValue={defaultFilename.current}
                 ref={filenameRef}
               />
             </div>
-          </ConfirmationModal>
+          </ButtonConfirmModal>
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, isResetModalOpen, isSaveModalOpen]);
+  }, [mode, withText, drawingParams]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "../atom/Button";
-import { fontOptions } from "../../lib/font-family";
-import { DRAWING_MODES } from "./Draw";
+import { TbRotate2 } from "react-icons/tb";
+import { TbRotateClockwise2 } from "react-icons/tb";
+
+import { fontOptions } from "../../lib/canvas/font-family";
+import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 
 export const DrawControlText = ({
@@ -15,6 +18,15 @@ export const DrawControlText = ({
   const handleText = (param) => {
     drawingParams.text = { ...drawingParams.text, ...param };
     handleTextParams({ text: drawingParams.text });
+  };
+
+  /**
+   *  Handle the text rotation
+   * @param {number} angle - The angle to rotate the text in grad
+   */
+  const handleTextRotation = (angle) => {
+    const newAngle = drawingParams.text.rotation + (angle * Math.PI) / 200;
+    handleText({ rotation: newAngle });
   };
 
   return (
@@ -81,6 +93,7 @@ export const DrawControlText = ({
           />
         </label>
         <Button
+          className="px-2"
           selected={italic}
           onClick={() => {
             const i = !italic;
@@ -109,7 +122,7 @@ export const DrawControlText = ({
           htmlFor="text-color-picker"
           className="flex items-center justify-center gap-4"
         >
-          Text color
+          Color
           <input
             id="text-color-picker"
             type="color"
@@ -117,6 +130,12 @@ export const DrawControlText = ({
             onChange={(e) => handleText({ color: e.target.value })}
           />
         </label>
+        <Button className="px-3" onClick={() => handleTextRotation(-25)}>
+          <TbRotate2 />
+        </Button>
+        <Button className="px-3" onClick={() => handleTextRotation(25)}>
+          <TbRotateClockwise2 />
+        </Button>
       </div>
     </div>
   );
