@@ -68,6 +68,7 @@ const SelectType = forwardRef(function SelectType(props, ref) {
       </label>
       <label>
         <input
+          ref={ref}
           type="radio"
           value="images"
           name="type"

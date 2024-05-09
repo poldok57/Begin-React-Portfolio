@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
-import { HistoryProvider } from "./DrawHistory";
 import { DRAWING_MODES, DEFAULT_PARAMS } from "../../lib/canvas/canvas-defines";
+import { saveCanvas } from "../../lib/canvas/canvas-size";
+import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 40;
 
 export const Draw = () => {
   const canvas = useRef(null);
@@ -40,43 +41,42 @@ export const Draw = () => {
           if (option == null) {
             option = "my-drawing";
           }
-          const dataURL = canvas.current.toDataURL();
-          const link = document.createElement("a");
-          link.href = dataURL;
-          link.download = option + ".png";
-          link.click();
+          let area = null;
+          if (drawingParamsRef.current.mode === DRAWING_MODES.SELECT) {
+            area = drawingParamsRef.current.selectedArea;
+          }
+          console.log("saveCanvas", area);
+          saveCanvas(canvas.current, option, area);
         }
         break;
       default:
         drawingParamsRef.current.mode = mode;
     }
   };
-
+  setHistoryMaxLen(MAX_HISTORY);
   return (
-    <HistoryProvider maxLen={MAX_HISTORY}>
-      <div className="relative block gap-8">
-        <DrawCanvas
-          canvas={canvas}
-          startCoordinate={startCoordinate}
-          getParams={getDrowingParams}
-        />
-        <DrawControlWP
-          trace={false}
-          style={{
-            top: "30px",
-            position: "relative",
-            marginTop: 10,
-          }}
-          titleBar="true"
-          title="Drawing Control"
-          titleHidden="false"
-          locked={true}
-          close="false"
-          setParams={setDrawingParams}
-          changeMode={changeMode}
-          drawingParams={drawingParamsRef.current}
-        />
-      </div>
-    </HistoryProvider>
+    <div className="relative block gap-8">
+      <DrawCanvas
+        canvas={canvas}
+        startCoordinate={startCoordinate}
+        getParams={getDrowingParams}
+      />
+      <DrawControlWP
+        trace={false}
+        style={{
+          top: "30px",
+          position: "relative",
+          marginTop: 10,
+        }}
+        titleBar="true"
+        title="Drawing Control"
+        titleHidden="false"
+        locked={true}
+        close="false"
+        setParams={setDrawingParams}
+        changeMode={changeMode}
+        drawingParams={drawingParamsRef.current}
+      />
+    </div>
   );
 };

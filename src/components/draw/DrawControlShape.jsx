@@ -1,9 +1,11 @@
 import { MdRadioButtonUnchecked } from "react-icons/md";
-
 import { BiSquare } from "react-icons/bi";
+import { AiOutlineRadiusUpright } from "react-icons/ai";
+import { AiOutlineRadiusBottomright } from "react-icons/ai";
+import { WiMoonFirstQuarter } from "react-icons/wi";
 import { Button } from "../atom/Button";
 import ToggleSwitch from "../atom/ToggleSwitch";
-import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
+import { DRAWING_MODES, isDrawingShape } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 
 export const DrawControlShape = ({
@@ -29,76 +31,102 @@ export const DrawControlShape = ({
   return (
     <div
       className={clsx("flex flex-col border-2 border-secondary p-2", {
-        "bg-paper":
-          mode === DRAWING_MODES.CIRCLE || mode === DRAWING_MODES.SQUARE,
+        "bg-paper": isDrawingShape(mode),
       })}
     >
-      <div className="flex flex-row gap-4">
-        <Button
-          className="px-5"
-          selected={mode == DRAWING_MODES.CIRCLE}
-          onClick={() => handleModeChange(DRAWING_MODES.CIRCLE)}
-        >
-          <MdRadioButtonUnchecked />
-        </Button>
-        <Button
-          className="px-5"
-          selected={mode == DRAWING_MODES.SQUARE}
-          onClick={() => handleModeChange(DRAWING_MODES.SQUARE)}
-        >
-          <BiSquare />
-        </Button>
-
-        <label
-          htmlFor="toggle-filled"
-          className={clsx("flex items-center justify-center gap-2", {
-            hidden:
-              mode != DRAWING_MODES.SQUARE && mode != DRAWING_MODES.CIRCLE,
-          })}
-        >
-          <ToggleSwitch
-            id="toggle-filled"
-            defaultChecked={drawingParams.shape.filled}
-            onChange={(event) => handleShape({ filled: event.target.checked })}
-          />
-          Filled
-        </label>
-        <label
-          htmlFor="draw-radius-picker"
-          className={clsx("flex items-center justify-center gap-2", {
-            hidden: mode != DRAWING_MODES.SQUARE,
-          })}
-        >
-          Radius
-          <input
-            className="h-2 w-16 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
-            id="draw-radius-picker"
-            type="range"
-            defaultValue={drawingParams.shape.radius}
-            min="0"
-            max="50"
-            step="1"
-            onChange={(event) => handleShape({ radius: event.target.value })}
-          />
-        </label>
-        <label
-          htmlFor="toggle-text"
-          className={clsx("flex items-center justify-center gap-2", {
-            hidden:
-              mode != DRAWING_MODES.SQUARE && mode != DRAWING_MODES.CIRCLE,
-          })}
-        >
-          <ToggleSwitch
-            id="toggle-text"
-            defaultChecked={drawingParams.shape.withText}
-            onChange={(event) => handleWithText(event)}
-          />
-          With Text
-        </label>
+      <div className="flex flex-row gap-3">
+        <div className="flex flex-row gap-1">
+          <Button
+            className="px-2 py-1"
+            selected={mode == DRAWING_MODES.CIRCLE}
+            onClick={() => handleModeChange(DRAWING_MODES.CIRCLE)}
+          >
+            <MdRadioButtonUnchecked size="20px" />
+          </Button>
+          <Button
+            className="px-2 py-1"
+            selected={mode == DRAWING_MODES.SQUARE}
+            onClick={() => handleModeChange(DRAWING_MODES.SQUARE)}
+          >
+            <BiSquare size="20px" />
+          </Button>
+          <Button
+            className="px-2 py-1"
+            selected={mode == DRAWING_MODES.ONE_RADIUS_T}
+            onClick={() => handleModeChange(DRAWING_MODES.ONE_RADIUS_T)}
+          >
+            <AiOutlineRadiusUpright size="20px" />
+          </Button>
+          <Button
+            className="px-2 py-1"
+            selected={mode == DRAWING_MODES.ONE_RADIUS_B}
+            onClick={() => handleModeChange(DRAWING_MODES.ONE_RADIUS_B)}
+          >
+            <AiOutlineRadiusBottomright size="20px" />
+          </Button>
+          <Button
+            className="px-2 py-1"
+            selected={mode == DRAWING_MODES.TWO_RADIUS}
+            onClick={() => handleModeChange(DRAWING_MODES.TWO_RADIUS)}
+          >
+            <WiMoonFirstQuarter size="20px" />
+          </Button>
+        </div>
+        <div className="flex flex-row gap-3">
+          <label
+            htmlFor="toggle-filled"
+            className={clsx("flex items-center justify-center gap-1", {
+              hidden: !isDrawingShape(mode),
+            })}
+          >
+            <ToggleSwitch
+              id="toggle-filled"
+              defaultChecked={drawingParams.shape.filled}
+              onChange={(event) =>
+                handleShape({ filled: event.target.checked })
+              }
+            />
+            Filled
+          </label>
+          <label
+            htmlFor="draw-radius-picker"
+            className={clsx("flex items-center justify-center gap-1", {
+              hidden: mode === DRAWING_MODES.CIRCLE,
+            })}
+          >
+            Radius
+            <input
+              className="h-2 w-12 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+              id="draw-radius-picker"
+              type="range"
+              defaultValue={drawingParams.shape.radius}
+              min="0"
+              max="50"
+              step="1"
+              onChange={(event) => handleShape({ radius: event.target.value })}
+            />
+          </label>
+          <label
+            htmlFor="toggle-text"
+            className={clsx(
+              "flex items-center justify-center gap-2 font-bold",
+              {
+                hidden: !isDrawingShape(mode),
+              }
+            )}
+          >
+            <ToggleSwitch
+              id="toggle-text"
+              defaultChecked={drawingParams.shape.withText}
+              onChange={(event) => handleWithText(event)}
+            />
+            With Text
+          </label>
+        </div>
       </div>
       <div
         className={clsx("flex flex-row gap-2 p-2", {
-          hidden: mode != DRAWING_MODES.SQUARE && mode != DRAWING_MODES.CIRCLE,
+          hidden: !isDrawingShape(mode),
         })}
       >
         <label

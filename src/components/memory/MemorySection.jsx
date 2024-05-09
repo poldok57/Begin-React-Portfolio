@@ -7,14 +7,14 @@ export const MemorySection = () => {
     <MemoryProvider>
       <div className="relative flex h-fit w-full flex-col items-start justify-around gap-4 border-dashed border-gray-800 lg:flex-row">
         <MemoryBoardWP
-          className="relative flex w-fit flex-col items-center gap-2 rounded-md border-2 border-secondary bg-background p-2 shadow-lg"
+          className="absolute left-10 flex w-fit flex-col items-center gap-2 rounded-md border-2 border-secondary bg-background p-2 shadow-lg"
           titleBar="false"
           titleClassName="bg-black text-white border-2 rounded border-primary"
           locked="true"
         />
 
         <MemoryControlWP
-          className="relative top-10 bg-background"
+          className="absolute right-10 top-10 bg-background"
           trace={false}
           close="false"
           titleBar="true"

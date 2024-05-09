@@ -1,3 +1,6 @@
+import { getCoordinates } from "./canvas-tools";
+
+const SIZE_CROSS_MIN = 16;
 /**
  * Function to draw a basic line on the canvas
  * @param {CanvasRenderingContext2D} context
@@ -12,9 +15,15 @@ export const basicLine = (context, start, end) => {
   context.stroke();
 };
 
-export const drawPoint = (context, coord, color = null, borderColor = null) => {
+export const drawPoint = (
+  context,
+  coord,
+  color = null,
+  borderColor = null,
+  width = 0
+) => {
   if (!coord) return;
-  const width = context.lineWidth;
+  if (width <= 0) width = context.lineWidth;
 
   context.beginPath();
   if (color) {
@@ -35,17 +44,28 @@ export const drawPoint = (context, coord, color = null, borderColor = null) => {
  * @param {object} coord {x, y} - center of the circle
  * @param {string} color - color of the circle
  * @param {string} borderColor - color of the border
+ * @param {number} width - width of the circle
  */
-export const hatchedCircle = (ctx, coord, color = null, borderColor) => {
-  const width = ctx.lineWidth;
+export const hatchedCircle = (
+  ctx,
+  coord,
+  color = null,
+  borderColor = null,
+  width = 0
+) => {
+  const lineWidth = ctx.lineWidth;
+  if (width <= 0) width = lineWidth;
+  const radius = width / 2;
 
-  if (width < 10) {
-    drawPoint(ctx, coord, color, borderColor);
+  if (radius <= 5) {
+    drawPoint(ctx, coord, color, borderColor, width);
     return;
   }
-  const radius = width / 2;
+
   ctx.lineWidth = Math.max(0.1, radius / 50);
   // Dessiner un cercle
+  ctx.setLineDash([2, 2]);
+
   ctx.beginPath();
   ctx.arc(coord.x, coord.y, radius, 0, Math.PI * 2);
   ctx.fillStyle = color; // Couleur de remplissage
@@ -76,11 +96,11 @@ export const hatchedCircle = (ctx, coord, color = null, borderColor) => {
     }
   }
 
-  ctx.strokeStyle = borderColor; // Couleur des lignes
+  ctx.strokeStyle = borderColor ?? "black"; // Couleur des lignes
   ctx.stroke();
+  ctx.setLineDash([]);
 
-  // ctx.restore();
-  ctx.lineWidth = width;
+  ctx.lineWidth = lineWidth;
 };
 /**
  * Function to draw a cross on the canvas
@@ -88,19 +108,22 @@ export const hatchedCircle = (ctx, coord, color = null, borderColor) => {
  * @param {object} center {x, y}
  * @param {number} width - width of the cross
  */
-export const crossLine = (context, center, width) => {
+export const crossLine = (ctx, center, width) => {
   if (!center) return;
 
-  context.beginPath();
+  width = Math.max(SIZE_CROSS_MIN, width);
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
   // fine and black lines
-  context.lineWidth = 1;
-  context.strokeStyle = "black";
-  context.moveTo(center.x, center.y - width / 2);
-  context.lineTo(center.x, center.y + width / 2);
-  context.moveTo(center.x - width / 2, center.y);
-  context.lineTo(center.x + width / 2, center.y);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "black";
+  ctx.moveTo(center.x, center.y - width / 2);
+  ctx.lineTo(center.x, center.y + width / 2);
+  ctx.moveTo(center.x - width / 2, center.y);
+  ctx.lineTo(center.x + width / 2, center.y);
 
-  context.stroke();
+  ctx.stroke();
+  ctx.setLineDash([]);
 };
 
 export class CanvasLine {
@@ -109,9 +132,9 @@ export class CanvasLine {
     if (!canvas) return;
     this.context = canvas.getContext("2d");
 
-    this.currentCoordinate = { x: 0, y: 0 };
-    this.startCoordinate = null;
-    this.endCoordinate = null;
+    this.currentCoordinates = { x: 0, y: 0 };
+    this.startCoordinates = null;
+    this.endCoordinates = null;
     this.drawing = false;
   }
 
@@ -119,54 +142,50 @@ export class CanvasLine {
 
   setCoordinates(event, canvas = null) {
     if (!event) return { x: 0, y: 0 };
-
     if (!canvas) canvas = this.mCanvas;
 
-    let rect = canvas.getBoundingClientRect();
-
-    let x = event.clientX - rect.left,
-      y = event.clientY - rect.top;
-
-    return (this.currentCoordinate = { x, y });
+    this.currentCoordinates = getCoordinates(event, canvas);
+    return this.currentCoordinates;
   }
 
   setCanvas(canvas) {
+    if (!canvas) return;
     this.mCanvas = canvas;
     this.context = canvas.getContext("2d");
   }
 
   getCoordinates() {
-    return this.currentCoordinate;
+    return this.currentCoordinates;
   }
   eraseCoordinate() {
-    this.currentCoordinate = null;
+    this.currentCoordinates = null;
   }
 
-  setStartCoordinates(coordinate = null) {
-    this.startCoordinate = coordinate || this.currentCoordinate;
+  setStartCoordinates(coord = null) {
+    this.startCoordinates = coord || this.currentCoordinates;
   }
 
   getStartCoordinates() {
-    return this.startCoordinate;
+    return this.startCoordinates;
   }
   eraseStartCoordinates() {
-    this.startCoordinate = null;
-    this.endCoordinate = null;
+    this.startCoordinates = null;
+    this.endCoordinates = null;
   }
 
   eraseLastCoordinates() {
-    if (this.endCoordinate) {
-      this.endCoordinate = null;
+    if (this.endCoordinates) {
+      this.endCoordinates = null;
       return;
     }
-    this.startCoordinate = null;
+    this.startCoordinates = null;
   }
 
-  setEndCoordinates(coordinate = null) {
-    this.endCoordinate = coordinate || this.currentCoordinate;
+  setEndCoordinates(coord = null) {
+    this.endCoordinates = coord || this.currentCoordinates;
   }
   getEndCoordinates() {
-    return this.endCoordinate;
+    return this.endCoordinates;
   }
   setDrawing(drawing) {
     this.drawing = drawing;
@@ -175,8 +194,18 @@ export class CanvasLine {
     return this.drawing;
   }
   setStartFromEnd() {
-    this.startCoordinate = this.endCoordinate;
-    this.endCoordinate = null;
+    this.startCoordinates = this.endCoordinates;
+    this.endCoordinates = null;
+  }
+
+  setGlobalAlpha(alpha) {
+    this.globalAlpha = alpha;
+  }
+  setLineWidth(width) {
+    this.lineWidth = width;
+  }
+  setStrokeStyle(color) {
+    this.strokeStyle = color;
   }
 
   /**
@@ -189,14 +218,29 @@ export class CanvasLine {
       context = this.context;
     }
 
-    let start = this.getStartCoordinates();
-    const end = this.currentCoordinate; // start for next segment
+    let start = this.startCoordinates;
+    const end = this.currentCoordinates; // start for next segment
     this.setStartCoordinates(end);
     if (start !== null) {
       basicLine(context, start, end);
       return true;
     }
     return false;
+  }
+
+  showLine(context) {
+    if (context === null) {
+      context = this.context;
+    }
+    if (!this.startCoordinates || !this.currentCoordinates) return false;
+
+    if (this.strokeStyle) {
+      context.strokeStyle = this.strokeStyle;
+    }
+    if (this.lineWidth) {
+      context.lineWidth = this.lineWidth;
+    }
+    basicLine(context, this.startCoordinates, this.currentCoordinates);
   }
 
   drawArc(context = null) {
@@ -227,27 +271,34 @@ export class CanvasLine {
     const current = this.getCoordinates();
     const start = this.getStartCoordinates();
     const end = this.getEndCoordinates();
+    let complete = false;
+    if (start && end) {
+      if (this.strokeStyle) {
+        context.strokeStyle = this.strokeStyle;
+      }
+      if (this.lineWidth) {
+        context.lineWidth = this.lineWidth;
+      }
+      // draw the arc between the start and end coordinates passing through current coordinate
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.quadraticCurveTo(current.x, current.y, end.x, end.y);
+      context.stroke();
+      context.closePath();
+      complete = true;
+    }
 
     if (withCross) {
       const lineWidth = context.lineWidth;
-      const color = context.strokeStyle;
-      const SIZE_CROSS = 16;
-      crossLine(context, start, SIZE_CROSS);
-      crossLine(context, end, SIZE_CROSS);
+      const strokeStyle = context.strokeStyle;
+
+      crossLine(context, start, lineWidth * 1.8);
+      crossLine(context, end, lineWidth * 1.8);
       // crossLine(context, current, SIZE_CROSS);
       context.lineWidth = lineWidth;
-      context.strokeStyle = color;
+      context.strokeStyle = strokeStyle;
     }
 
-    if (!start || !end) return false;
-
-    // draw the arc between the start and end coordinates passing through current coordinate
-    context.beginPath();
-    context.moveTo(start.x, start.y);
-    context.quadraticCurveTo(current.x, current.y, end.x, end.y);
-    context.stroke();
-    context.closePath();
-
-    return true;
+    return complete;
   }
 }

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-import { useMessageStore } from "../lib/messages/useMessageStore";
+import { useMessageStore } from "../lib/stores/useMessageStore";
 import { ShowDivAlertMessages } from "./ShowDivAlertMessages";
 
 export const ShowAlertMessages = ({ display = true, ...props }) => {

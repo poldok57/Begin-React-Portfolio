@@ -1,6 +1,10 @@
 export const SHAPE_TYPE = {
   SQUARE: "square",
   CIRCLE: "circle",
+  ONE_RADIUS_T: "radiusTop",
+  ONE_RADIUS_B: "radiusBottom",
+  TWO_RADIUS: "radiusHalf",
+  SELECT: "select-auto",
   TEXT: "text",
 };
 
@@ -20,28 +24,39 @@ export const DRAWING_MODES = {
   DRAWING_CHANGE: "drawingChange",
   ...SHAPE_TYPE,
 };
-const ALL_DRAWING_MODES = [
-  DRAWING_MODES.DRAW,
-  DRAWING_MODES.ERASE,
-  DRAWING_MODES.LINE,
-  DRAWING_MODES.ARC,
-  DRAWING_MODES.SQUARE,
-  DRAWING_MODES.CIRCLE,
-  DRAWING_MODES.TEXT,
-];
 
-const LINE_MODES = [DRAWING_MODES.DRAW, DRAWING_MODES.LINE, DRAWING_MODES.ARC];
-
+const LINE_MODES = [DRAWING_MODES.LINE, DRAWING_MODES.ARC];
+const FREEHAND_MODES = [DRAWING_MODES.DRAW, DRAWING_MODES.ERASE];
 const SHAPE_MODES = [
   DRAWING_MODES.SQUARE,
   DRAWING_MODES.CIRCLE,
+  DRAWING_MODES.ONE_RADIUS_T,
+  DRAWING_MODES.ONE_RADIUS_B,
+  DRAWING_MODES.TWO_RADIUS,
+  DRAWING_MODES.SELECT,
+];
+
+const ALL_DRAWING_MODES = [
+  ...LINE_MODES,
+  ...FREEHAND_MODES,
+  ...SHAPE_MODES,
   DRAWING_MODES.TEXT,
 ];
 export const isDrawingMode = (mode) => ALL_DRAWING_MODES.includes(mode);
-export const isDrowingLine = (mode) => LINE_MODES.includes(mode);
 export const isDrawingShape = (mode) => SHAPE_MODES.includes(mode);
+export const isDrawingLine = (mode) => LINE_MODES.includes(mode);
+export const isDrawingFreehand = (mode) => FREEHAND_MODES.includes(mode);
+export const isDrawingAllLines = (mode) =>
+  LINE_MODES.includes(mode) || FREEHAND_MODES.includes(mode);
 
 const DEFAULT = { COLOR: "#ff0000", SIZE: 4, OPACITY: 1 };
+
+export const mouseCircle = {
+  type: "circle",
+  color: "rgba(255, 255, 0,0.8)",
+  width: 80,
+  filled: true,
+};
 
 export const DEFAULT_PARAMS = {
   mode: DRAWING_MODES.INIT,
@@ -72,4 +87,5 @@ export const DEFAULT_PARAMS = {
     opacity: 1,
     interval: 0,
   },
+  selectedArea: null,
 };

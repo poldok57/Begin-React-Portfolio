@@ -194,9 +194,47 @@ const drawRoundedRect = (ctx, x, y, width, height, radius) => {
 };
 
 /**
- * rotation for an element
+ * Function to draw a rounded rectangle
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x - x coordinate
+ * @param {number} y - y coordinate
+ * @param {number} width - width of the rectangle
+ * @param {number} height - height of the rectangle
+ * @param {number} radius  - radius of the rectangle
  */
-export const rotateElement = (ctx, square, angle) => {
+const drawRectWithRoundedCorner = (ctx, x, y, width, height, radius, type) => {
+  ctx.beginPath();
+
+  radius = Math.min(parseInt(radius), width / 2, height / 2);
+
+  // type can be: ONE_RADIUS_T, ONE_RADIUS_B, TWO_RADIUS
+  const radiusTop = type === SHAPE_TYPE.ONE_RADIUS_B ? radius : height / 2;
+  const radiusBottom = type === SHAPE_TYPE.ONE_RADIUS_T ? radius : height / 2;
+
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(Math.max(x + width - radiusTop, x + radius), y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radiusTop);
+  if (type !== SHAPE_TYPE.TWO_RADIUS)
+    ctx.lineTo(x + width, y + height - radiusBottom);
+  ctx.quadraticCurveTo(
+    x + width,
+    y + height,
+    Math.max(x + width - radiusBottom, x + radius),
+    y + height
+  );
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+};
+/**
+ * rotation for an element
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} square - {x, y, width, height, color, type, rotation}
+ * @param {number} angle - angle of rotation in radian
+ */
+const rotateElement = (ctx, square, angle) => {
   if (angle === 0) {
     return;
   }
@@ -209,27 +247,34 @@ export const rotateElement = (ctx, square, angle) => {
   );
 };
 
-/**
- * Function to show a square or an ellipse on the canvas
- * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
- */
-export const drawSquare = (ctx, square) => {
+const getShapeData = (square) => {
   let { x, y, width, height } = square;
-  if (square.rotation !== 0) {
-    rotateElement(ctx, square, square.rotation);
-  }
-
-  const radius = square.shape.radius;
+  const lineWidth = square.general.lineWidth;
   const filled = square.shape.filled;
+  const radius = square.shape.radius;
 
   if (!filled) {
-    const lineWidth = square.general.lineWidth;
     width -= lineWidth;
     height -= lineWidth;
     x += lineWidth / 2;
     y += lineWidth / 2;
+  }
+  return { x, y, width, height, filled, radius, lineWidth };
+};
 
+/**
+ * Function to show a square on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ */
+export const drawSquare = (ctx, square) => {
+  if (square.rotation !== 0) {
+    rotateElement(ctx, square, square.rotation);
+  }
+
+  let { x, y, width, height, filled, radius, lineWidth } = getShapeData(square);
+
+  if (!filled) {
     ctx.lineWidth = lineWidth;
     ctx.strokeStyle = square.general.color;
   }
@@ -255,32 +300,60 @@ export const drawSquare = (ctx, square) => {
   }
 };
 /**
- * Function to show a square or an ellipse on the canvas
+ * Function to show a square with one rounded angle
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, type, rotation}
+ * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
  */
-export const drawEllipse = (ctx, square) => {
-  let { x, y, width, height } = square;
-  if (!height) {
-    height = width;
-  }
+export const drawSquareWithRoundedCorner = (ctx, square) => {
   if (square.rotation !== 0) {
     rotateElement(ctx, square, square.rotation);
+  }
+
+  let { x, y, width, height, filled, radius, lineWidth } = getShapeData(square);
+
+  if (!filled) {
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = square.general.color;
   }
 
   ctx.beginPath();
   ctx.fillStyle = square.general.color;
 
-  const filled = square.shape.filled;
+  if (!radius || radius < 1) {
+    ctx.lineJoin = "miter";
+  }
+  drawRectWithRoundedCorner(ctx, x, y, width, height, radius, square.type);
+
+  if (filled) {
+    ctx.fill();
+  } else {
+    ctx.stroke();
+  }
+
+  if (square.rotation !== 0) {
+    ctx.restore();
+  }
+};
+/**
+ * Function to show an ellipse on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} square - {x, y, width, height, color, type, rotation}
+ */
+export const drawEllipse = (ctx, square) => {
+  if (square.rotation !== 0) {
+    rotateElement(ctx, square, square.rotation);
+  }
+
+  let { x, y, width, height, filled, lineWidth } = getShapeData(square);
+  if (!height) {
+    height = width;
+  }
+  ctx.beginPath();
+  ctx.fillStyle = square.general.color;
 
   if (!filled) {
     ctx.strokeStyle = square.general.color;
-    ctx.lineWidth = square.general.lineWidth;
-    const lineWidth = square.general.lineWidth || 1;
-    width -= lineWidth;
-    height -= lineWidth;
-    x += lineWidth / 2;
-    y += lineWidth / 2;
+    ctx.lineWidth = lineWidth;
   }
 
   if (width === height) {
@@ -309,6 +382,25 @@ export const drawEllipse = (ctx, square) => {
 };
 
 /**
+ * Function to draw a dashed rectangle on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} bounds - {left, top, right, bottom}
+ */
+export const drawDashedRectangle = (ctx, bounds) => {
+  ctx.beginPath();
+  ctx.setLineDash([5, 5]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
+  ctx.strokeStyle = "#202020";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(
+    Math.max(bounds.x - 1, 0),
+    Math.max(bounds.y - 1, 0),
+    bounds.width + 2,
+    bounds.height + 2
+  );
+  ctx.setLineDash([]); // Resets to a solid line for other drawings
+};
+
+/**
  * Function to show a border around a square or an ellipse on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color,  rotation}
@@ -319,14 +411,12 @@ export const drawBorder = (ctx, square) => {
   let radius = parseInt(square.shape.radius);
   const borderShape = { ...square };
 
-  // borderShape.general.lineWidth = bWidth;
-  // borderShape.general.color = square.border.color;
   borderShape.width += bWidth * 2 + bInterval * 2;
   borderShape.height += bWidth * 2 + bInterval * 2;
   borderShape.x -= bWidth + bInterval;
   borderShape.y -= bWidth + bInterval;
 
-  if (square.type == SHAPE_TYPE.SQUARE && radius > 0) {
+  if (square.type !== SHAPE_TYPE.CIRCLE && radius > 0) {
     radius = radius + bWidth + bInterval;
   }
   borderShape.general = { ...square.border };
@@ -336,8 +426,11 @@ export const drawBorder = (ctx, square) => {
     case SHAPE_TYPE.CIRCLE:
       drawEllipse(ctx, borderShape);
       break;
-    default:
+    case SHAPE_TYPE.SQUARE:
       drawSquare(ctx, borderShape);
+      break;
+    default:
+      drawSquareWithRoundedCorner(ctx, borderShape);
   }
 };
 /**
@@ -507,6 +600,14 @@ export const showElement = (
     case SHAPE_TYPE.TEXT:
       if (!square.text || !square.text.text) return;
       drawText(ctx, square);
+      break;
+    case SHAPE_TYPE.SELECT:
+      drawDashedRectangle(ctx, square);
+      return;
+
+    default:
+      drawSquareWithRoundedCorner(ctx, square);
+      break;
   }
 
   if (square.type !== SHAPE_TYPE.TEXT) {

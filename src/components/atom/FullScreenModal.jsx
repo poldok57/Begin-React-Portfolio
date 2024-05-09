@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import { CloseButton } from "./CloseButton";
 import { TitleBar } from "./TitleBar";
 import { ToggleMinimize } from "./ToggleMinimize";
@@ -72,6 +72,7 @@ export const FullScreenModal = forwardRef(function FullScreenModal(
   const frameMinimize = (minimize) => {
     toggleMinimize(minimize, ref);
   };
+  const titleBarRef = useRef(null);
   const mStyle = {
     position: "fixed",
     overflow: "auto",
@@ -102,7 +103,7 @@ export const FullScreenModal = forwardRef(function FullScreenModal(
           "rounded border border-gray-500  bg-primary text-lg text-paper":
             title,
         })}
-        // ref={titleBarRef}
+        ref={titleBarRef}
         style={{
           top: 0,
           left: 0,

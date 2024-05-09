@@ -1,35 +1,43 @@
 import { useEffect, useRef } from "react";
+import { useHistory } from "./DrawHistory";
 import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
 import {
-  undoHistory,
-  addPictureToHistory,
-  getCurrentHistory,
-} from "../../lib/canvas/canvas-history";
+  basicLine,
+  drawPoint,
+  hatchedCircle,
+  CanvasLine,
+} from "../../lib/canvas/canvas-line";
 import {
-  clearCanvasByCtx,
-  getCoordinates,
-} from "../../lib/canvas/canvas-tools";
-
-import { showElement, resizingElement } from "../../lib/canvas/canvas-elements";
-import { isOnSquareBorder, getSquareOffset } from "../../lib/square-position";
+  clearContext,
+  showElement,
+  resizingElement,
+  hightLightMouseCursor,
+} from "../../lib/canvas/canvas-elements";
+import {
+  isOnSquareBorder,
+  // resizeSquare,
+  getSquareOffset,
+} from "../../lib/square-position";
 
 import {
   DRAWING_MODES,
-  isDrawingAllLines,
   isDrawingFreehand,
   isDrawingMode,
   isDrawingShape,
-  isDrawingLine,
+  isDrowingLine,
 } from "../../lib/canvas/canvas-defines";
 
 import { alertMessage } from "../../hooks/alertMessage";
 import { imageSize } from "../../lib/canvas/canvas-size";
-import { DrawLine } from "./DrawLine";
-
-const TEMPORTY_OPACITY = 0.6;
 // Draw on Canvas
 export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
-  const drawLine = new DrawLine(canvasRef.current);
+  let element = {
+    fixed: false,
+    isResizing: null,
+  };
+
+  const line = new CanvasLine(canvasRef.current);
+  const drawLine = new CanvasLine(canvasRef.current);
 
   const drawingParams = useRef(null);
   const canvasMouseRef = useRef(null);
@@ -39,14 +47,16 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   const [WIDTH, HEIGHT] = [560, 315]; // 16:9 aspact ratio
   const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
+  const mouseCircle = {
+    type: "circle",
+    color: "rgba(255, 255, 0,0.8)",
+    width: 80,
+    filled: true,
+  };
   const squareRef = useRef(null);
   const offsetRef = useRef({ x: -SQUARE_WIDTH / 2, y: -SQUARE_HEIGHT / 2 });
 
-  let element = {
-    fixed: false,
-    isResizing: null,
-    coordinates: null,
-  };
+  const { undoHistory, addHistoryItem, getCurrentHistory } = useHistory();
 
   const initShape = (type = DRAWING_MODES.SQUARE) => {
     squareRef.current = {
@@ -73,11 +83,14 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   function savePicture(canvas) {
     // Save the current state of the canvas
     if (!canvas) return;
-    // console.log("add picture to histo");
-    addPictureToHistory({
-      canvas,
-      coordinate: drawLine.getStartCoordinates(),
-    });
+    const ctx = canvas.getContext("2d");
+
+    const item = {
+      image: ctx.getImageData(0, 0, canvas.width, canvas.height),
+      startCoordinate: line.getStartCoordinates(),
+    };
+
+    addHistoryItem(item);
   }
 
   /**
@@ -91,89 +104,16 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     const item = getCurrentHistory();
     const ctx = canvas.getContext("2d");
 
-    if (!item || item.image === null || item.image === undefined) {
-      clearCanvasByCtx(ctx);
-      drawLine.eraseStartCoordinates();
+    if (item === null || item.image === null || item.image === undefined) {
+      clearContext(ctx);
+      line.eraseStartCoordinates();
 
       return;
     }
     ctx.putImageData(item.image, 0, 0);
-    drawLine.setStartCoordinates(item.coordinate);
+    line.setStartCoordinates(item.startCoordinate);
   };
 
-  const generalInitialisation = () => {
-    // Initialize canvas
-    drawingParams.current = getParams();
-    drawingParams.current.mode = DRAWING_MODES.DRAW;
-    initShape();
-    // record
-    // savePicture(canvasRef.current);
-    // initialise the mouse canvas
-    setContext(canvasMouseRef.current);
-    setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
-
-    // set the canvas for the drawLine
-    drawLine.setCanvas(canvasRef.current);
-    drawLine.setMouseCanvas(canvasMouseRef.current);
-    drawLine.setTemporyCanvas(canvasTemporyRef.current);
-    drawLine.setLineWidth(drawingParams.current.general.lineWidth);
-    drawLine.setStrokeStyle(drawingParams.current.general.color);
-  };
-
-  const handleMouseUpExtend = (event) => {
-    // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target)) {
-      return;
-    }
-    if (!isDrawingLine(drawingParams.current.mode)) return;
-    drawLine.actionMouseUp(drawingParams.current.mode);
-  };
-  const handleMouseDownExtend = (event) => {
-    // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target)) {
-      console.log("Mouse Down event on the canvas");
-      return;
-    }
-    if (
-      !isDrawingLine(drawingParams.current.mode) ||
-      mouseOnCtrlPanel.current ||
-      drawLine.getStartCoordinates() == null
-    ) {
-      return;
-    }
-
-    const toContinue = drawLine.actionMouseDown(
-      drawingParams.current.mode,
-      event
-    );
-    if (!toContinue) {
-      stopExtendMouseEvent();
-    }
-  };
-  const handleMouseMoveExtend = (event) => {
-    // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target)) {
-      return;
-    }
-    drawLine.actionMouseMove(drawingParams.current.mode, event);
-  };
-  /**
-   * Extend mouse event to the document
-   */
-  const extendMouseEvent = () => {
-    if (drawLine.isExtendedMouseArea()) return;
-    drawLine.setExtendedMouseArea(true);
-    document.addEventListener("mousedown", handleMouseDownExtend);
-    document.addEventListener("mousemove", handleMouseMoveExtend);
-    document.addEventListener("mouseup", handleMouseUpExtend);
-  };
-  const stopExtendMouseEvent = () => {
-    if (!drawLine.isExtendedMouseArea()) return;
-    drawLine.setExtendedMouseArea(false);
-    document.removeEventListener("mousedown", handleMouseDownExtend);
-    document.removeEventListener("mousemove", handleMouseMoveExtend);
-    document.removeEventListener("mouseup", handleMouseUpExtend);
-  };
   /**
    * Function to mémorize the selected zone
    * @param {object} area - {x, y, width, height} of the selected zone
@@ -194,8 +134,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    */
   const drawingParamChanged = () => {
     drawingParams.current = getParams();
-    const mode = drawingParams.current.mode;
-    if (isDrawingShape(mode)) {
+    if (isDrawingShape(drawingParams.current.mode)) {
       squareRef.current.general = { ...drawingParams.current.general };
       squareRef.current.shape = { ...drawingParams.current.shape };
 
@@ -207,15 +146,9 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       }
       // clear the temporary canvas and show the element
       refreshElement();
-    } else if (mode === DRAWING_MODES.TEXT) {
+    } else if (drawingParams.current.mode === DRAWING_MODES.TEXT) {
       squareRef.current.text = { ...drawingParams.current.text };
       refreshElement();
-    } else if (isDrawingAllLines(mode)) {
-      drawLine.setLineWidth(drawingParams.current.general.lineWidth);
-      drawLine.setStrokeStyle(drawingParams.current.general.color);
-      if (isDrawingLine(mode)) {
-        drawLine.showTemporyLine(mode, drawingParams.current.general.opacity);
-      }
     }
   };
 
@@ -226,7 +159,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   const actionChangeMode = (newMode) => {
     if (drawingParams.current === null) {
       drawingParams.current = getParams();
-      // setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
+      setContext(canvasTemporyRef.current);
     }
     if (drawingParams.current.mode !== newMode) {
       console.log("error changing mode: ", newMode);
@@ -249,15 +182,13 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       } else {
         squareRef.current.type = newMode;
       }
-      drawLine.eraseStartCoordinates();
+      line.eraseStartCoordinates();
 
       refreshElement();
     } else if (isDrawingFreehand(newMode)) {
-      drawLine.eraseStartCoordinates();
+      line.eraseStartCoordinates();
     }
     const context = canvasRef.current.getContext("2d");
-
-    stopExtendMouseEvent();
 
     context.globalCompositeOperation =
       newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
@@ -267,7 +198,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     switch (eventMode) {
       case DRAWING_MODES.CONTROL_PANEL.IN:
         mouseOnCtrlPanel.current = true;
-        drawLine.isDrawing(false);
+        line.isDrawing(false);
         break;
       case DRAWING_MODES.CONTROL_PANEL.OUT:
         mouseOnCtrlPanel.current = false;
@@ -299,7 +230,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    */
   const clearTemporyCanvas = () => {
     const context = canvasTemporyRef.current.getContext("2d");
-    clearCanvasByCtx(context);
+    clearContext(context);
   };
 
   /**
@@ -325,57 +256,81 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * @param {Event} event
    */
   const actionMouseDown = (event) => {
-    // color and width painting
-    drawingParams.current = getParams();
-    setContext(canvasRef.current);
-
-    if (isDrawingAllLines(drawingParams.current.mode)) {
-      const toContinue = drawLine.actionMouseDown(
-        drawingParams.current.mode,
-        event
-      );
-      if (toContinue) {
-        extendMouseEvent();
-      } else {
-        stopExtendMouseEvent();
-      }
-    } else if (isDrawingShape(drawingParams.current.mode)) {
+    // we can validate draw line if the mouse is outside the canvas
+    if (!canvasMouseRef.current.contains(event.target)) {
       if (
-        !isDrawingShape(drawingParams.current.mode) &&
-        drawingParams.current.mode !== DRAWING_MODES.TEXT
+        !isDrowingLine(drawingParams.current.mode) ||
+        mouseOnCtrlPanel.current || // Mouse on Control Panel, action refused
+        line.getStartCoordinates() == null // dont start drawing if the mouse is outside the canvas
       ) {
         return;
       }
-      if (element.fixed) {
-        const mouseOnShape = handleMouseOnElement(
-          drawingParams.current.mode,
-          element.coordinates,
-          squareRef.current
-        );
-        if (mouseOnShape) {
-          // Clic on the shape --------
-          if (mouseOnShape === BORDER.INSIDE) {
-            offsetRef.current = getSquareOffset(
-              element.coordinates,
-              squareRef.current
-            );
-            canvasMouseRef.current.style.cursor = "pointer";
-            element.fixed = false;
-          } else if (mouseOnShape === BORDER.ON_BUTTON) {
-            canvasMouseRef.current.style.cursor = "pointer";
-            validDrawedElement();
-          } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
-            squareRef.current.rotation -= Math.PI / 16;
-            refreshElement();
-          } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
-            squareRef.current.rotation += Math.PI / 16;
-            refreshElement();
-          } else {
-            element.isResizing = mouseOnShape;
-            console.log("resizing element: ", mouseOnShape);
+    }
+
+    // color and width painting
+    drawingParams.current = getParams();
+    const canvasElement = canvasRef.current;
+
+    const context = setContext(canvasElement);
+    line.setCoordinates(event);
+
+    switch (drawingParams.current.mode) {
+      case DRAWING_MODES.DRAW:
+      case DRAWING_MODES.ERASE:
+        line.setDrawing(true);
+        break;
+
+      case DRAWING_MODES.LINE:
+        if (line.drawLine()) {
+          savePicture(canvasElement);
+        }
+        break;
+      case DRAWING_MODES.ARC:
+        if (line.drawArc(context, true)) {
+          line.showArc(context, false);
+          line.setStartFromEnd();
+          savePicture(canvasElement);
+        }
+        break;
+
+      default:
+        if (
+          !isDrawingShape(drawingParams.current.mode) &&
+          drawingParams.current.mode !== DRAWING_MODES.TEXT
+        ) {
+          return;
+        }
+        if (element.fixed) {
+          const mouseOnShape = handleMouseOnElement(
+            drawingParams.current.mode,
+            line.getCoordinates(),
+            squareRef.current
+          );
+          if (mouseOnShape) {
+            // Clic on the shape --------
+            if (mouseOnShape === BORDER.INSIDE) {
+              offsetRef.current = getSquareOffset(
+                line.getCoordinates(),
+                squareRef.current
+              );
+              canvasMouseRef.current.style.cursor = "pointer";
+              element.fixed = false;
+            } else if (mouseOnShape === BORDER.ON_BUTTON) {
+              canvasMouseRef.current.style.cursor = "pointer";
+              validDrawedElement();
+            } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
+              squareRef.current.rotation -= Math.PI / 16;
+              refreshElement();
+            } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
+              squareRef.current.rotation += Math.PI / 16;
+              refreshElement();
+            } else {
+              element.isResizing = mouseOnShape;
+              console.log("resizing element: ", mouseOnShape);
+            }
           }
         }
-      }
+        break;
     }
 
     alertMessage(
@@ -392,12 +347,12 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     const context = setContext(canvas);
     if (!context) return;
 
-    clearCanvasByCtx(context);
+    clearContext(context);
 
     const newCoord = resizingElement(
       context,
       squareRef.current,
-      element.coordinates,
+      line.getCoordinates(),
       element.isResizing
     );
 
@@ -408,16 +363,22 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   /**
    * Function to stop drawing on the canvas
    */
-  const actionMouseUp = (mode) => {
-    if (isDrawingAllLines(mode)) {
-      drawLine.actionMouseUp(mode);
+  const onMouseUp = (mode) => {
+    line.eraseCoordinate();
+
+    if (isDrawingFreehand(mode)) {
+      if (line.isDrawing()) {
+        line.setDrawing(false);
+        line.eraseStartCoordinates();
+        savePicture(canvasRef.current);
+      }
       return;
     }
     if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {
       element.fixed = true;
       element.isResizing = null;
-      // element.coordinates = null;
     }
+    return;
   };
 
   /**
@@ -429,18 +390,14 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   const moveElement = (ctx, coord, mouseOnShape = null) => {
     const square = squareRef.current;
     const oldX = square.x,
-      oldY = square.y,
-      oldRotation = square.rotation;
+      oldY = square.y;
     if (!element.fixed) {
       square.x = coord.x + offsetRef.current.x;
       square.y = coord.y + offsetRef.current.y;
     }
     // if element didn't move don't show the buttons
-    const withBtn =
-      oldX === square.x && oldY === square.y && oldRotation === square.rotation;
-
+    const withBtn = oldX === square.x && oldY === square.y;
     showElement(ctx, squareRef.current, withBtn, mouseOnShape);
-    console.log("move element: with Btn: ", withBtn);
   };
   /**
    * Function to refresh the element on the tempory canvas
@@ -450,7 +407,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     if (!context) {
       return;
     }
-    clearCanvasByCtx(context);
+    clearContext(context);
     showElement(context, squareRef.current, true);
   };
   /**
@@ -464,8 +421,6 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     }
 
     showElement(context, squareRef.current, false);
-
-    savePicture(canvas);
 
     // init for next shape
     initShape(drawingParams.current.mode);
@@ -487,11 +442,12 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       return;
     }
 
-    clearCanvasByCtx(context);
-    clearCanvasByCtx(canvasMouseRef.current.getContext("2d"));
+    clearContext(context);
+    clearContext(canvasMouseRef.current.getContext("2d"));
 
     if (isDrawingFreehand(mode)) {
-      drawLine.actionMouseLeave(mode);
+      line.setDrawing(false);
+      line.eraseStartCoordinates();
     }
   };
 
@@ -505,47 +461,96 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     if (!ctxMouse || !context) return;
 
     // clear the mouse canvas
-    clearCanvasByCtx(ctxMouse);
+    clearContext(ctxMouse);
 
     let cursorType = "default";
+    let coordinate = line.getCoordinates();
 
-    // console.log("follow cursor: ", coordinate);
-
-    if (isDrawingAllLines(drawingParams.current.mode)) {
-      console.log("error follow cursor general for lines ");
-    } else if (
-      isDrawingShape(drawingParams.current.mode) ||
-      drawingParams.current.mode === DRAWING_MODES.TEXT
-    ) {
-      let coordinate = element.coordinates;
-      let mouseOnShape = null;
-      if (element.fixed) {
-        mouseOnShape = handleMouseOnElement(
-          drawingParams.current.mode,
-          coordinate,
-          squareRef.current
-        );
-
-        if (mouseOnShape) {
-          cursorType = mousePointer(mouseOnShape);
-
-          if (isInside(mouseOnShape)) {
-            // show real color when mouse is inside the square
-            context.globalAlpha = drawingParams.current.general.opacity;
-          }
+    switch (drawingParams.current.mode) {
+      case DRAWING_MODES.ARC:
+        hightLightMouseCursor(ctxMouse, coordinate, mouseCircle);
+        clearContext(context);
+        line.showArc(context, true);
+        cursorType = "crosshair";
+        break;
+      case DRAWING_MODES.LINE:
+        hightLightMouseCursor(ctxMouse, coordinate, mouseCircle);
+        cursorType = "crosshair";
+        if (line.getStartCoordinates() == null) {
+          drawPoint(
+            ctxMouse,
+            coordinate,
+            drawingParams.current.general.color,
+            null,
+            drawingParams.current.general.lineWidth
+          );
+          break;
         }
-      } else {
-        cursorType = "pointer";
-      }
-      clearCanvasByCtx(context);
-      moveElement(context, coordinate, mouseOnShape);
+        clearContext(context);
+        basicLine(context, line.getStartCoordinates(), coordinate);
+        break;
+      case DRAWING_MODES.DRAW:
+        ctxMouse.globalAlpha = 0.4;
+        hightLightMouseCursor(ctxMouse, coordinate, mouseCircle);
+        drawPoint(
+          ctxMouse,
+          coordinate,
+          drawingParams.current.general.color,
+          null,
+          drawingParams.current.general.lineWidth
+        );
+        break;
+      case DRAWING_MODES.ERASE:
+        ctxMouse.globalAlpha = 0.9;
+        hightLightMouseCursor(ctxMouse, coordinate, {
+          ...mouseCircle,
+          color: "pink",
+          width: 50,
+        });
+        hatchedCircle(
+          ctxMouse,
+          coordinate,
+          "#eee",
+          "#303030",
+          drawingParams.current.general.lineWidth
+        );
+        cursorType = "none";
+        break;
+      default:
+        if (
+          isDrawingShape(drawingParams.current.mode) ||
+          drawingParams.current.mode === DRAWING_MODES.TEXT
+        ) {
+          let mouseOnShape = null;
+          if (element.fixed) {
+            mouseOnShape = handleMouseOnElement(
+              drawingParams.current.mode,
+              coordinate,
+              squareRef.current
+            );
+
+            if (mouseOnShape) {
+              cursorType = mousePointer(mouseOnShape);
+
+              if (isInside(mouseOnShape)) {
+                // show real color when mouse is inside the square
+                context.globalAlpha = drawingParams.current.general.opacity;
+              }
+            }
+          } else {
+            cursorType = "pointer";
+          }
+          clearContext(context);
+          moveElement(context, coordinate, mouseOnShape);
+        }
+        break;
     }
     canvasMouseRef.current.style.cursor = cursorType;
   };
 
   useEffect(() => {
     const handleMouseUp = () => {
-      actionMouseUp(drawingParams.current.mode);
+      onMouseUp(drawingParams.current.mode);
     };
     const handleMouseDown = (event) => {
       actionMouseDown(event);
@@ -555,22 +560,25 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         !drawingParams.current ||
         drawingParams.current.mode === DRAWING_MODES.INIT
       ) {
-        generalInitialisation();
+        // Initialize canvas
+        drawingParams.current = getParams();
+        drawingParams.current.mode = DRAWING_MODES.DRAW;
+        initShape();
+        savePicture(canvasRef.current);
+        line.setCanvas(canvasRef.current);
       }
       const mode = drawingParams.current.mode;
 
-      if (isDrawingAllLines(mode)) {
-        // setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
-        drawLine.actionMouseMove(mode, event);
+      line.setCoordinates(event);
+      if (line.isDrawing()) {
+        line.drawLine();
+        followCursor(0.4);
+      } else if (element.isResizing && isDrawingShape(mode)) {
+        resizingSquare(canvasTemporyRef.current);
+      } else if (mouseOnCtrlPanel.current) {
+        return;
       } else {
-        element.coordinates = getCoordinates(event, canvasRef.current);
-        if (element.isResizing && isDrawingShape(mode)) {
-          resizingSquare(canvasTemporyRef.current);
-        } else if (mouseOnCtrlPanel.current) {
-          return;
-        } else {
-          followCursor(0.4);
-        }
+        followCursor(0.4);
       }
       if (mode === DRAWING_MODES.SELECT) {
         memorizeSelectedZone();
@@ -580,7 +588,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       switch (event.key) {
         case "Escape":
           clearTemporyCanvas();
-          drawLine.eraseLastCoordinates();
+          line.eraseLastCoordinates();
           break;
 
         case "Enter":
@@ -614,28 +622,20 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
 
     const canvasMouse = canvasMouseRef.current;
 
-    const mouseEffect = canvasMouse;
-
-    mouseEffect.addEventListener("mousedown", handleMouseDown);
-    mouseEffect.addEventListener("mousemove", handleMouseMove);
-    mouseEffect.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
     canvasMouse.addEventListener("mouseleave", onMouseLeave);
-    document.addEventListener("keydown", hanldeKeyDown);
+    window.addEventListener("keydown", hanldeKeyDown);
     document.addEventListener("modeChanged", handleChangeMode);
 
     return () => {
-      // mouse controls can be applied to the document
-      canvasMouse.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("mousedown", handleMouseDown);
-      canvasMouse.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mousemove", handleMouseMove);
-      canvasMouse.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("mouseup", handleMouseUp);
-
       canvasMouse.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("keydown", hanldeKeyDown);
       document.removeEventListener("modeChanged", handleChangeMode);
-      drawingParams.current.mode = DRAWING_MODES.INIT;
     };
   }, []);
 

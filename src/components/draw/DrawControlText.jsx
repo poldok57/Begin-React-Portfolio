@@ -130,11 +130,11 @@ export const DrawControlText = ({
             onChange={(e) => handleText({ color: e.target.value })}
           />
         </label>
-        <Button className="px-3" onClick={() => handleTextRotation(-25)}>
-          <TbRotate2 />
+        <Button className="px-3 py-1" onClick={() => handleTextRotation(-25)}>
+          <TbRotate2 size="20px" />
         </Button>
-        <Button className="px-3" onClick={() => handleTextRotation(25)}>
-          <TbRotateClockwise2 />
+        <Button className="px-3 py-1" onClick={() => handleTextRotation(25)}>
+          <TbRotateClockwise2 size="20px" />
         </Button>
       </div>
     </div>

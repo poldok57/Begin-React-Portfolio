@@ -5,13 +5,14 @@ import { MdTimeline } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
 import { AiOutlineLoading } from "react-icons/ai";
 import { CiEraser } from "react-icons/ci";
+import { PiSelectionPlusLight } from "react-icons/pi";
 
 import { Button } from "../atom/Button";
 import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
-import { useHistory } from "./DrawHistory";
+import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../../hooks/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
@@ -29,8 +30,6 @@ export const DrawControl = ({
 
   const filenameRef = useRef(null);
   const defaultFilename = useRef("my-drawing");
-
-  const { eraseHistory } = useHistory();
 
   const handleConfirmErase = () => {
     alertMessage("action confirmed");
@@ -72,35 +71,46 @@ export const DrawControl = ({
       >
         <div className="flex flex-row gap-4">
           <Button
+            className="px-5"
             selected={mode == DRAWING_MODES.DRAW}
             onClick={() => handleModeChange(DRAWING_MODES.DRAW)}
           >
             Draw
           </Button>
           <Button
+            className="px-5 py-1"
             selected={mode == DRAWING_MODES.LINE}
             onClick={() => handleModeChange(DRAWING_MODES.LINE)}
           >
-            <MdTimeline />
+            <MdTimeline size="28px" />
           </Button>
           <Button
+            className="px-5 py-1"
             selected={mode == DRAWING_MODES.ARC}
             onClick={() => handleModeChange(DRAWING_MODES.ARC)}
           >
-            <AiOutlineLoading />
+            <AiOutlineLoading size="28px" />
           </Button>
           <Button
+            className="px-5"
             selected={mode == DRAWING_MODES.TEXT}
             onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
           >
             Text
           </Button>
           <Button
-            className="bg-pink-500"
+            className="bg-pink-500 px-5"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => handleModeChange(DRAWING_MODES.ERASE)}
           >
-            <CiEraser />
+            <CiEraser size="20px" />
+          </Button>
+          <Button
+            className="bg-blue-500 px-5"
+            selected={mode == DRAWING_MODES.SELECT}
+            onClick={() => handleModeChange(DRAWING_MODES.SELECT)}
+          >
+            <PiSelectionPlusLight size="20px" />
           </Button>
         </div>
         <DrawControlLine
@@ -124,7 +134,7 @@ export const DrawControl = ({
 
         <div className="relative m-auto flex gap-4">
           <Button className="bg-pink-500" onClick={(e) => handleUndo(e)}>
-            <SlActionUndo />
+            <SlActionUndo size="20px" />
           </Button>
           <ButtonConfirmModal
             className="bg-red-500"
