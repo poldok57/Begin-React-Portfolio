@@ -9,9 +9,10 @@ const MAX_HISTORY = 40;
 
 export const Draw = () => {
   const canvas = useRef(null);
-  const startCoordinate = useRef(null);
 
   let drawingParamsRef = useRef(DEFAULT_PARAMS);
+
+  setHistoryMaxLen(MAX_HISTORY);
 
   const getDrowingParams = () => {
     return drawingParamsRef.current;
@@ -19,22 +20,11 @@ export const Draw = () => {
 
   const setDrawingParams = (props) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
-
-    if (drawingParamsRef.current.opacity > 1)
-      drawingParamsRef.current.opacity /= 100;
   };
+
   const changeMode = (mode, option = null) => {
     switch (mode) {
       case DRAWING_MODES.UNDO:
-        break;
-      case DRAWING_MODES.RESET:
-        canvas.current
-          .getContext("2d")
-          .clearRect(0, 0, canvas.current.width, canvas.current.height);
-        startCoordinate.current = null;
-        drawingParamsRef.current.mode = DRAWING_MODES.INIT;
-        drawingParamsRef.current.rotation = 0;
-
         break;
       case DRAWING_MODES.SAVE:
         if (canvas.current) {
@@ -53,14 +43,10 @@ export const Draw = () => {
         drawingParamsRef.current.mode = mode;
     }
   };
-  setHistoryMaxLen(MAX_HISTORY);
+
   return (
     <div className="relative block gap-8">
-      <DrawCanvas
-        canvas={canvas}
-        startCoordinate={startCoordinate}
-        getParams={getDrowingParams}
-      />
+      <DrawCanvas canvas={canvas} getParams={getDrowingParams} />
       <DrawControlWP
         trace={false}
         style={{

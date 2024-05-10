@@ -11,7 +11,7 @@ import {
   mouseCircle,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
-import { hightLightMouseCursor } from "../../lib/canvas/canvas-elements";
+import { hightLightMouseCursor } from "../../lib/canvas/canvas-line";
 import { addPictureToHistory } from "../../lib/canvas/canvas-history";
 
 /**
@@ -23,6 +23,7 @@ export class DrawLine extends CanvasLine {
     this.ctxMouse = null;
     this.ctxTempory = null;
     this.extendedMouseArea = false;
+    this.type = DRAWING_MODES.DRAW;
   }
 
   setMouseCanvas(canvas) {
@@ -70,6 +71,12 @@ export class DrawLine extends CanvasLine {
         break;
     }
     this.ctxTempory.globalAlpha = oldOpacity;
+  }
+
+  refreshDrawing(opacity) {
+    if (isDrawingLine(this.type)) {
+      this.showTemporyLine(this.type, opacity);
+    }
   }
   /**
    * Function follow the cursor on the canvas
@@ -121,7 +128,8 @@ export class DrawLine extends CanvasLine {
         break;
     }
 
-    ctxMouse.canvas.style.cursor = cursorType;
+    // ctxMouse.canvas.style.cursor = cursorType;
+    return cursorType;
   }
   /**
    * Function who recieve the mouse move event
@@ -131,7 +139,7 @@ export class DrawLine extends CanvasLine {
     if (this.isDrawing()) {
       this.drawLine();
     }
-    this.followCursor(mode);
+    return this.followCursor(mode);
   }
 
   /**
@@ -187,9 +195,24 @@ export class DrawLine extends CanvasLine {
   }
 
   actionMouseLeave(mode) {
+    if (mode === DRAWING_MODES.ARC) {
+      return;
+    }
+
+    clearCanvasByCtx(this.ctxTempory);
+    clearCanvasByCtx(this.ctxMouse);
+
     if (isDrawingFreehand(mode)) {
       this.setDrawing(false);
       this.eraseStartCoordinates();
+    }
+  }
+  actionKeyDown(event) {
+    switch (event.key) {
+      case "Escape":
+        clearCanvasByCtx(this.ctxTempory);
+        this.eraseLastCoordinates();
+        break;
     }
   }
 }

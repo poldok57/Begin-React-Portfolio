@@ -16,7 +16,6 @@ export const DRAWING_MODES = {
   UNDO: "undo",
   SAVE: "save",
   INIT: "init",
-  RESET: "reset",
   CONTROL_PANEL: {
     IN: "in",
     OUT: "out",
@@ -52,10 +51,10 @@ export const isDrawingAllLines = (mode) =>
 const DEFAULT = { COLOR: "#ff0000", SIZE: 4, OPACITY: 1 };
 
 export const mouseCircle = {
-  type: "circle",
   color: "rgba(255, 255, 0,0.8)",
   width: 80,
   filled: true,
+  lineWidth: 25,
 };
 
 export const DEFAULT_PARAMS = {

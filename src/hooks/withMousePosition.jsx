@@ -43,6 +43,7 @@ export function withMousePosition(Component) {
    */
   return function WrappedComponent({
     style = {},
+    trace,
     className,
     titleBar = false,
     titleHidden = true,
@@ -61,9 +62,9 @@ export function withMousePosition(Component) {
     const offsetRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
     const styleRef = useRef({ position: null, ...style });
     const canMoveRef = useRef(false);
-    const trace = useRef(
-      props.trace === true || props.trace === "true" ? true : false
-    );
+
+    trace = trace === true || trace === "true" ? true : false;
+
     const close = useRef(
       props.close === true || props.close === "true" ? true : false
     );
@@ -106,7 +107,7 @@ export function withMousePosition(Component) {
       styleRef.current.position = POSITION.ABSOLUTE;
       styleRef.current.width = window.getComputedStyle(component).width;
 
-      if (trace.current) {
+      if (trace) {
         console.log(
           `[${Component.name}] pos: Relative to Absolute x:`,
           component.offsetLeft,
@@ -122,7 +123,7 @@ export function withMousePosition(Component) {
      * @param {Event} event
      */
     const toggleLocked = (event) => {
-      if (trace.current) console.log(`[${Component.name}] toggleLocked`);
+      if (trace) console.log(`[${Component.name}] toggleLocked`);
 
       if (
         styleRef.current.position === POSITION.RELATIVE &&
@@ -163,13 +164,12 @@ export function withMousePosition(Component) {
             x: event.clientX,
             y: event.clientY,
           });
-          if (trace.current)
-            debounceLogs("move:", event.clientX, event.clientY);
+          if (trace) debounceLogs("move:", event.clientX, event.clientY);
         }
       };
 
       const onMouseEnter = () => {
-        if (trace.current) {
+        if (trace) {
           console.log(`[${Component.name}] mouseEnter`);
         }
         /**
@@ -182,14 +182,14 @@ export function withMousePosition(Component) {
           if (style.position && style.position !== POSITION.STATIC) {
             styleRef.current.position = style.position;
 
-            if (trace.current)
+            if (trace)
               console.log(
                 `[${Component.name}] copy position from computedStyle :`,
                 styleRef.current.position
               );
           } else {
             styleRef.current.position = POSITION.RELATIVE;
-            if (trace.current) {
+            if (trace) {
               console.log(`[${Component.name}] default Relative`);
             }
           }
@@ -254,7 +254,7 @@ export function withMousePosition(Component) {
         }
       };
       const handleMouseLeave = (event) => {
-        if (trace.current) console.log(`[${Component.name}] mouseLeave`);
+        if (trace) console.log(`[${Component.name}] mouseLeave`);
         if (canMove()) {
           mouseUp(event);
         }
@@ -319,7 +319,7 @@ export function withMousePosition(Component) {
       // copy the position of the component after change from relative to absolute
       newStyle = { ...styleRef.current, ...componentPos.current };
 
-      if (trace.current) {
+      if (trace) {
         debounceLogs(
           `[${Component.name}] =>`,
           styleRef.current.position,
@@ -342,7 +342,7 @@ export function withMousePosition(Component) {
           "hover:cursor-move": !(isLocked || titleBar),
         })}
       >
-        <Component {...props} />
+        <Component trace={trace} {...props} />
 
         {titleBar && (
           <TitleBar

@@ -17,6 +17,7 @@ export const ShowDivAlertMessages = ({
   style,
   className,
   display,
+  trace,
   messages,
   clearMessages,
   ...props
@@ -38,8 +39,7 @@ export const ShowDivAlertMessages = ({
       }, 100);
     }
   }
-  if (props?.trace)
-    console.log("render [ShowDivAlertMessages], display:", display);
+  if (trace) console.log("render [ShowDivAlertMessages], display:", display);
 
   return (
     <div

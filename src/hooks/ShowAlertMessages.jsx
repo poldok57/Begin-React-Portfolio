@@ -3,7 +3,11 @@ import React, { useMemo } from "react";
 import { useMessageStore } from "../lib/stores/useMessageStore";
 import { ShowDivAlertMessages } from "./ShowDivAlertMessages";
 
-export const ShowAlertMessages = ({ display = true, ...props }) => {
+export const ShowAlertMessages = ({
+  display = true,
+  trace = false,
+  ...props
+}) => {
   const { messages, clearMessages } = useMessageStore((state) => ({
     messages: state.messages,
     addMessage: state.addMessage,
@@ -17,6 +21,7 @@ export const ShowAlertMessages = ({ display = true, ...props }) => {
         display={display}
         messages={messages}
         clearMessages={clearMessages}
+        trace={Boolean(trace)}
         {...props}
       />
     );

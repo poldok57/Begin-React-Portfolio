@@ -14,7 +14,14 @@ export const basicLine = (context, start, end) => {
   context.lineTo(end.x, end.y);
   context.stroke();
 };
-
+/**
+ * Function to draw a point on the canvas
+ * @param {CanvasRenderingContext2D} context
+ * @param {object} coord {x, y}
+ * @param {string} color - color of the point
+ * @param {string} borderColor - color of the border
+ * @param {number} width - width of the point
+ */
 export const drawPoint = (
   context,
   coord,
@@ -37,6 +44,26 @@ export const drawPoint = (
   context.fill();
   if (borderColor) context.stroke();
   context.lineWidth = width;
+};
+/**
+ * Function to show a circle on the canvas to highlight the cursor
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Array} coord [x, y]
+ * @param {object} element - {width, color, lineWidth, filled}
+ */
+export const hightLightMouseCursor = (ctx, coord, element) => {
+  ctx.beginPath();
+
+  if (element.filled) {
+    ctx.fillStyle = element.color;
+    ctx.arc(coord.x, coord.y, element.width / 2, 0, 2 * Math.PI);
+    ctx.fill();
+  } else {
+    ctx.lineWidth = element.lineWidth;
+    ctx.strokeStyle = element.color;
+    ctx.arc(coord.x, coord.y, element.width / 2, 0, 2 * Math.PI);
+    ctx.stroke();
+  }
 };
 /**
  * Function to draw a hatched circle on the canvas

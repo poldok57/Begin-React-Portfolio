@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState } from "react";
 import { withMousePosition } from "../../hooks/withMousePosition";
 import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
@@ -31,21 +31,19 @@ export const DrawControl = ({
   const filenameRef = useRef(null);
   const defaultFilename = useRef("my-drawing");
 
-  const handleConfirmErase = () => {
-    alertMessage("action confirmed");
-    changeMode(DRAWING_MODES.RESET);
-    setMode(DRAWING_MODES.DRAW);
-    eraseHistory();
-  };
-
-  // const handleClose = () => {
-  //   setModalOpen(false);
-  // };
-
   const addEventChangeMode = (mode) => {
     const event = new CustomEvent("modeChanged", { detail: { mode } });
     document.dispatchEvent(event);
   };
+
+  const handleConfirmReset = () => {
+    alertMessage("Reset confirmed");
+    changeMode(DRAWING_MODES.INIT);
+    addEventChangeMode(DRAWING_MODES.INIT);
+    setMode(DRAWING_MODES.DRAW);
+    eraseHistory();
+  };
+
   const handleParamChange = (newParams) => {
     setParams(newParams);
     addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
@@ -139,13 +137,13 @@ export const DrawControl = ({
           <ButtonConfirmModal
             className="bg-red-500"
             value="Reset"
-            onConfirm={handleConfirmErase}
+            onConfirm={handleConfirmReset}
           >
             Do you want to erase all your drawing ?
           </ButtonConfirmModal>
           <ButtonConfirmModal
             className="bg-blue-500"
-            value=" Save my drawing"
+            value="Save my drawing"
             onConfirm={() => {
               changeMode(DRAWING_MODES.SAVE, filenameRef.current.value);
               defaultFilename.current = filenameRef.current.value;
@@ -167,7 +165,7 @@ export const DrawControl = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams]);
+  }, [mode, withText, drawingParams, changeMode]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

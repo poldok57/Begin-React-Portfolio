@@ -27,12 +27,11 @@ const MyApp = ({ Component, pageProps }) => {
           style={{ position: "fixed", right: 20, bottom: 60 }}
           locked="false"
         />
-
         <TestImageWP
           className="absolute rounded-md border-double border-primary"
           locked="false"
           close="true"
-          trace="false"
+          trace={false}
           resizeable="true"
           style={{
             left: "50px",

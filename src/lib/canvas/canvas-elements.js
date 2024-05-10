@@ -374,7 +374,6 @@ export const drawEllipse = (ctx, square) => {
   } else {
     ctx.stroke();
   }
-  ctx.closePath();
 
   if (square.rotation !== 0) {
     ctx.restore();
@@ -389,8 +388,8 @@ export const drawEllipse = (ctx, square) => {
 export const drawDashedRectangle = (ctx, bounds) => {
   ctx.beginPath();
   ctx.setLineDash([5, 5]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
-  ctx.strokeStyle = "#202020";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#201010";
+  ctx.lineWidth = 0.5;
   ctx.strokeRect(
     Math.max(bounds.x - 1, 0),
     Math.max(bounds.y - 1, 0),
@@ -641,21 +640,4 @@ export const resizingElement = (ctx, square, coordinate, mouseOnShape) => {
     return newSquare;
   }
   return null;
-};
-/**
- * Function to show a circle on the canvas to highlight the cursor
- * @param {CanvasRenderingContext2D} ctx
- * @param {Array} coord [x, y]
- * @param {object} element - {x, y, width, height, color, type, rotation}
- */
-export const hightLightMouseCursor = (ctx, coord, element) => {
-  element.rotation = 0;
-  const eHeight = element.height ?? element.width;
-
-  element.x = coord.x - element.width / 2;
-  element.y = coord.y - eHeight / 2;
-  element.shape = { ...element.shape, filled: element.filled };
-  element.general = { ...element.general, color: element.color };
-
-  drawEllipse(ctx, element);
 };
