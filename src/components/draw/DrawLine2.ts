@@ -1,9 +1,12 @@
 import {
+  coordinate,
+  drawingCircle,
   drawPoint,
   hatchedCircle,
   hightLightMouseCursor,
 } from "../../lib/canvas/canvas-basic";
-import { CanvasLine } from "../../lib/canvas/canvas-line";
+import { CanvasLine } from "../../lib/canvas/CanvasLine";
+import { DrawingHandler } from "../../lib/canvas/DrawingHandler";
 
 import {
   DRAWING_MODES,
@@ -12,31 +15,58 @@ import {
   mouseCircle,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
-import { addPictureToHistory } from "../../lib/canvas/canvas-history";
+import {
+  addPictureToHistory,
+  saveCanvasPicture,
+} from "../../lib/canvas/canvas-history";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
-export class DrawLine extends CanvasLine {
-  constructor(canvas) {
+export class DrawLine2 extends DrawingHandler {
+  private line: CanvasLine;
+  private drawing: boolean;
+
+  constructor(canvas: HTMLCanvasElement) {
     super(canvas);
+    this.line = new CanvasLine(canvas);
     this.ctxMouse = null;
     this.ctxTempory = null;
     this.extendedMouseArea = false;
     this.type = DRAWING_MODES.DRAW;
   }
 
+  setCoordinates(event: MouseEvent) {
+    if (this.mCanvas !== null) {
+      this.line.setCoordinates(event, this.mCanvas);
+    }
+  }
+
+  getCoordinates() {
+    return this.line.getCoordinates() as coordinate;
+  }
+
   setDataGeneral(data) {
     this.lineWidth = data.lineWidth;
+    this.line.setLineWidth(data.lineWidth);
     this.strokeStyle = data.strokeStyle;
+    this.line.setStrokeStyle(data.color);
     this.opacity = data.opacity;
   }
-  setDrawing(drawing) {
+
+  setDrawing(drawing: boolean) {
     this.drawing = drawing;
   }
   isDrawing() {
     return this.drawing;
   }
+
+  setCanvas(canvas: HTMLCanvasElement) {
+    this.mCanvas = canvas;
+    this.context = canvas.getContext("2d");
+    this.line.setCanvas(canvas);
+  }
+
   setMouseCanvas(canvas) {
     this.ctxMouse = canvas.getContext("2d");
   }
@@ -46,10 +76,12 @@ export class DrawLine extends CanvasLine {
   }
 
   saveCanvasPicture() {
-    addPictureToHistory({
+    const savePicture = {
       canvas: this.mCanvas,
-      coordinates: this.getCoordinates(),
-    });
+      coordinates: this.line.getCoordinates() as coordinate,
+      image: null,
+    };
+    addPictureToHistory(savePicture as saveCanvasPicture);
   }
 
   isExtendedMouseArea() {
@@ -64,8 +96,8 @@ export class DrawLine extends CanvasLine {
    * @param {CanvasRenderingContext2D} ctx
    * @param {number} opacity - opacity of the line
    */
-  showTemporyLine(mode, opacity = 0) {
-    if (this.startCoordinates == null || !isDrawingLine(mode)) {
+  showTemporyLine(mode: string, opacity = 0) {
+    if (this.ctxTempory === null || !isDrawingLine(mode)) {
       return;
     }
     const oldOpacity = this.ctxTempory.globalAlpha;
@@ -75,16 +107,16 @@ export class DrawLine extends CanvasLine {
     clearCanvasByCtx(this.ctxTempory);
     switch (mode) {
       case DRAWING_MODES.LINE:
-        this.showLine(this.ctxTempory);
+        this.line.showLine(this.ctxTempory);
         break;
       case DRAWING_MODES.ARC:
-        this.showArc(this.ctxTempory, true);
+        this.line.showArc(this.ctxTempory, true);
         break;
     }
     this.ctxTempory.globalAlpha = oldOpacity;
   }
 
-  refreshDrawing(opacity) {
+  refreshDrawing(opacity: number) {
     if (isDrawingLine(this.type)) {
       this.showTemporyLine(this.type, opacity);
     }
@@ -93,69 +125,77 @@ export class DrawLine extends CanvasLine {
    * Function follow the cursor on the canvas
    * @param {DRAWING_MODES} mode
    */
-  followCursor(mode) {
+  followCursor() {
     const ctxMouse = this.ctxMouse;
-    // console.log("followCursor", mode, this.coordinates);
+    if (ctxMouse === null) {
+      console.error("ctxMouse is null");
+      return;
+    }
 
     clearCanvasByCtx(ctxMouse);
     ctxMouse.globalAlpha = 0.4;
 
     let cursorType = "default";
+    const coord = this.line.getCoordinates() as coordinate;
 
-    switch (mode) {
+    switch (this.type) {
       case DRAWING_MODES.ARC:
-        hightLightMouseCursor(ctxMouse, this.coordinates, mouseCircle);
+        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
         clearCanvasByCtx(this.ctxTempory);
-        this.showArc(this.ctxTempory, true);
+        this.line.showArc(this.ctxTempory, true);
         cursorType = "crosshair";
         break;
       case DRAWING_MODES.LINE:
-        hightLightMouseCursor(ctxMouse, this.coordinates, mouseCircle);
+        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
         cursorType = "crosshair";
-        if (this.startCoordinates == null) {
-          drawPoint({ context: ctxMouse, coordinate: this.coordinates });
+        if (this.line.getStartCoordinates() == null) {
+          drawPoint({
+            context: ctxMouse,
+            coordinate: this.line.getCoordinates() as coordinate,
+          } as drawingCircle);
+
           break;
         }
         clearCanvasByCtx(this.ctxTempory);
-        this.showLine(this.ctxTempory);
+        this.line.showLine(this.ctxTempory);
         break;
       case DRAWING_MODES.DRAW:
-        hightLightMouseCursor(ctxMouse, this.coordinates, mouseCircle);
+        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
         ctxMouse.lineWidth = this.lineWidth;
         ctxMouse.strokeStyle = this.strokeStyle;
-        drawPoint({ context: ctxMouse, coordinate: this.coordinates });
+        drawPoint({ context: ctxMouse, coordinate: coord } as drawingCircle);
         break;
       case DRAWING_MODES.ERASE:
         ctxMouse.globalAlpha = 0.9;
         ctxMouse.lineWidth = this.lineWidth;
         ctxMouse.strokeStyle = this.strokeStyle;
-        hightLightMouseCursor(ctxMouse, this.coordinates, {
+        hightLightMouseCursor(ctxMouse, coord, {
           ...mouseCircle,
           color: "pink",
           width: 50,
         });
         hatchedCircle({
           context: ctxMouse,
-          coordinate: this.coordinates,
+          coordinate: coord,
           color: "#eee",
           borderColor: "#303030",
-        });
+        } as drawingCircle);
         cursorType = "none";
         break;
     }
 
     // ctxMouse.canvas.style.cursor = cursorType;
-    return cursorType;
+    return cursorType as string;
   }
   /**
    * Function who recieve the mouse move event
    */
-  actionMouseMove(mode, event) {
-    this.setCoordinates(event);
+  actionMouseMove(event: MouseEvent) {
+    this.line.setCoordinates(event);
     if (this.isDrawing()) {
-      this.drawLine();
+      this.line.drawLine();
     }
-    return this.followCursor(mode);
+    return this.followCursor() as string;
   }
 
   /**
@@ -165,11 +205,12 @@ export class DrawLine extends CanvasLine {
    * @param {MouseEvent} event
    * @returns {boolean} to continue or not
    */
-  actionMouseDown(mode, event) {
+  actionMouseDown(mode: string, event: MouseEvent) {
     // color and width painting
     this.setCoordinates(event);
-    this.type = mode;
     let toContinue = false;
+
+    this.type = mode;
 
     switch (mode) {
       case DRAWING_MODES.DRAW:
@@ -178,16 +219,16 @@ export class DrawLine extends CanvasLine {
         break;
 
       case DRAWING_MODES.LINE:
-        if (this.drawLine()) {
+        if (this.line.drawLine()) {
           this.saveCanvasPicture();
           break;
         }
         toContinue = true;
         break;
       case DRAWING_MODES.ARC:
-        if (this.drawArc()) {
-          this.showArc(null, false);
-          this.setStartFromEnd();
+        if (this.line.drawArc()) {
+          this.line.showArc(null, false);
+          this.line.setStartFromEnd();
           this.saveCanvasPicture();
           break;
         }
@@ -199,36 +240,36 @@ export class DrawLine extends CanvasLine {
   /**
    * Function to stop drawing on the canvas
    */
-  actionMouseUp(mode) {
-    this.eraseCoordinate();
+  actionMouseUp() {
+    this.line.eraseCoordinate();
 
-    if (isDrawingFreehand(mode)) {
+    if (isDrawingFreehand(this.type)) {
       if (this.isDrawing()) {
         this.setDrawing(false);
-        this.eraseStartCoordinates();
+        this.line.eraseStartCoordinates();
         this.saveCanvasPicture();
       }
     }
   }
 
-  actionMouseLeave(mode) {
-    if (mode === DRAWING_MODES.ARC) {
+  actionMouseLeave() {
+    if (this.type === DRAWING_MODES.ARC) {
       return;
     }
 
     clearCanvasByCtx(this.ctxTempory);
     clearCanvasByCtx(this.ctxMouse);
 
-    if (isDrawingFreehand(mode)) {
+    if (isDrawingFreehand(this.type)) {
       this.setDrawing(false);
-      this.eraseStartCoordinates();
+      this.line.eraseStartCoordinates();
     }
   }
-  actionKeyDown(event) {
+  actionKeyDown(event: KeyboardEvent) {
     switch (event.key) {
       case "Escape":
         clearCanvasByCtx(this.ctxTempory);
-        this.eraseLastCoordinates();
+        this.line.eraseLastCoordinates();
         break;
     }
   }
@@ -236,7 +277,7 @@ export class DrawLine extends CanvasLine {
     if (isDrawingFreehand(this.type)) {
       this.setDrawing(false);
     } else if (!isDrawingLine(this.type)) {
-      this.eraseStartCoordinates();
+      this.line.eraseStartCoordinates();
     }
   }
 }

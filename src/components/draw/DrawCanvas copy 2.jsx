@@ -406,7 +406,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    */
   const actionMouseUp = (mode) => {
     if (isDrawingAllLines(mode)) {
-      drawLine.actionMouseUp(mode);
+      drawLine.actionMouseUp();
       return;
     }
     if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {

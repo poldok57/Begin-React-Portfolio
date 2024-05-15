@@ -8,7 +8,6 @@ import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   isDrawingAllLines,
-  isDrawingFreehand,
   isDrawingMode,
   isDrawingShape,
 } from "../../lib/canvas/canvas-defines";
@@ -16,6 +15,7 @@ import {
 import { alertMessage } from "../../hooks/alertMessage";
 import { imageSize } from "../../lib/canvas/canvas-size";
 import { DrawLine } from "./DrawLine";
+import { DrawLine2 } from "./DrawLine2";
 import { DrawElement } from "./DrawElement";
 
 const TEMPORTY_OPACITY = 0.6;
@@ -29,7 +29,8 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   const [WIDTH, HEIGHT] = [560, 315]; // 16:9 aspact ratio
   const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
-  const drawLine = new DrawLine(canvasRef.current);
+  // const drawLine = new DrawLine(canvasRef.current);
+  const drawLine = new DrawLine2(canvasRef.current);
   const drawElement = new DrawElement(canvasRef.current);
 
   const initShape = (type = DRAWING_MODES.SQUARE) => {
@@ -84,11 +85,15 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
 
     // set the canvas for the drawLine
-    drawLine.setCanvas(canvasRef.current);
+    if (canvasRef.current === null) {
+      console.log("canvasRef is null");
+    } else {
+      drawLine.setCanvas(canvasRef.current);
+    }
     drawLine.setMouseCanvas(canvasMouseRef.current);
     drawLine.setTemporyCanvas(canvasTemporyRef.current);
-    drawLine.setLineWidth(drawingParams.current.general.lineWidth);
-    drawLine.setStrokeStyle(drawingParams.current.general.color);
+
+    drawLine.setDataGeneral(drawingParams.current.general);
 
     drawElement.setCanvas(canvasRef.current);
     drawElement.setMouseCanvas(canvasMouseRef.current);
@@ -100,7 +105,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     if (canvasMouseRef.current.contains(event.target)) {
       return;
     }
-    drawLine.actionMouseUp(drawingParams.current.mode);
+    drawLine.actionMouseUp();
   };
   const handleMouseDownExtend = (event) => {
     // the event is inside the canvas, let event on the canvas to be handled
@@ -126,7 +131,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     if (canvasMouseRef.current.contains(event.target)) {
       return;
     }
-    drawLine.actionMouseMove(drawingParams.current.mode, event);
+    drawLine.actionMouseMove(event);
   };
   /**
    * Extend mouse event to the document
@@ -169,8 +174,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
 
       drawElement.refreshDrawing();
     } else if (isDrawingAllLines(mode)) {
-      drawLine.setLineWidth(drawingParams.current.general.lineWidth);
-      drawLine.setStrokeStyle(drawingParams.current.general.color);
+      drawLine.setDataGeneral(drawingParams.current.general);
 
       drawLine.refreshDrawing(drawingParams.current.general.opacity);
     }
@@ -199,15 +203,15 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       }
       drawElement.refreshDrawing();
     }
+    // end previous action then changing mode
+    drawLine.endAction();
+    drawLine.setType(newMode);
 
     // drawingParams.current.mode = newMode;
     if (isDrawingShape(newMode) || newMode === DRAWING_MODES.TEXT) {
       drawElement.setType(newMode);
-      drawLine.eraseStartCoordinates();
 
       drawElement.refreshDrawing();
-    } else if (isDrawingFreehand(newMode)) {
-      drawLine.eraseStartCoordinates();
     }
     stopExtendMouseEvent();
     const context = canvasRef.current.getContext("2d");
@@ -219,7 +223,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     switch (eventMode) {
       case DRAWING_MODES.CONTROL_PANEL.IN:
         mouseOnCtrlPanel.current = true;
-        drawLine.isDrawing(false);
+        drawLine.setDrawing(false);
         break;
       case DRAWING_MODES.CONTROL_PANEL.OUT:
         mouseOnCtrlPanel.current = false;
@@ -313,7 +317,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   const onMouseLeave = () => {
     const mode = drawingParams.current.mode;
     if (isDrawingAllLines(mode)) {
-      drawLine.actionMouseLeave(mode);
+      drawLine.actionMouseLeave();
       return;
     }
     drawElement.actionMouseLeave();
@@ -337,7 +341,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       let pointer = null;
 
       if (isDrawingAllLines(mode)) {
-        pointer = drawLine.actionMouseMove(mode, event);
+        pointer = drawLine.actionMouseMove(event);
       } else {
         pointer = drawElement.actionMouseMouve(
           mode,
@@ -349,7 +353,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         canvasMouseRef.current.style.cursor = pointer;
       }
       if (mode === DRAWING_MODES.SELECT) {
-        DrawElement.memorizeSelectedZone(null);
+        drawElement.memorizeSelectedZone(null);
       }
     };
     const hanldeKeyDown = (event) => {
