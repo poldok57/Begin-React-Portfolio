@@ -153,20 +153,22 @@ export class CanvasLine {
     const start = this.getStartCoordinates();
     const end = this.getEndCoordinates();
 
-    if (!context || !current || !start || !end) return false;
+    if (!context || !current) return false;
 
-    if (this.strokeStyle) {
-      context.strokeStyle = this.strokeStyle;
+    if (start && end && current) {
+      if (this.strokeStyle) {
+        context.strokeStyle = this.strokeStyle;
+      }
+      if (this.lineWidth) {
+        context.lineWidth = this.lineWidth;
+      }
+      // draw the arc between the start and end coordinates passing through current coordinate
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.quadraticCurveTo(current.x, current.y, end.x, end.y);
+      context.stroke();
+      context.closePath();
     }
-    if (this.lineWidth) {
-      context.lineWidth = this.lineWidth;
-    }
-    // draw the arc between the start and end coordinates passing through current coordinate
-    context.beginPath();
-    context.moveTo(start.x, start.y);
-    context.quadraticCurveTo(current.x, current.y, end.x, end.y);
-    context.stroke();
-    context.closePath();
 
     if (withCross) {
       const lineWidth = context.lineWidth;

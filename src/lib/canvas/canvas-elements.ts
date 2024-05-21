@@ -1,6 +1,13 @@
 import { BORDER, badgePosition, middleButtonPosition } from "../mouse-position";
-import { resizeSquare } from "../../lib/square-position";
-import { SHAPE_TYPE } from "./canvas-defines";
+import { resizeSquare } from "../square-position";
+import { coordinate } from "./canvas-basic";
+import {
+  SHAPE_TYPE,
+  isDrawingShape,
+  shapeDefinition,
+  paramsGeneral,
+  Area,
+} from "./canvas-defines";
 
 const CIRCLE_COLOR = "#e0e0e0"; // color of the circle around control buttons
 const TEXT_PADDING = 20;
@@ -12,7 +19,13 @@ const TEXT_PADDING = 20;
  * @param {number} y  - y coordinate
  * @param {number} size - size of the check mark
  */
-export const drawCheckMark = (ctx, x, y, size, opacity = 1) => {
+export const drawCheckMark = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  opacity: number = 1
+) => {
   ctx.beginPath();
   ctx.moveTo(x, y);
   ctx.lineTo(x + size / 4, y + size / 4);
@@ -31,7 +44,14 @@ export const drawCheckMark = (ctx, x, y, size, opacity = 1) => {
  * @param {number} radius - radius of the circle
  * @param {string} color - color of the circle
  */
-export const drawCircle = (ctx, x, y, radius, color, opacity = 1) => {
+export const drawCircle = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  color: string,
+  opacity: number = 1
+) => {
   // cercle parameters
   // draw the circle
   ctx.beginPath();
@@ -41,7 +61,13 @@ export const drawCircle = (ctx, x, y, radius, color, opacity = 1) => {
   ctx.fill();
 };
 
-export const drawBadge = (ctx, x, y, radius, opacity) => {
+export const drawBadge = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  opacity: number
+) => {
   // cercle parameters
 
   drawCircle(ctx, x, y, radius, CIRCLE_COLOR, opacity);
@@ -58,7 +84,13 @@ export const drawBadge = (ctx, x, y, radius, opacity) => {
  * @param {number} size - size of the arrow
  * @param {string} direction - direction of the arrow ('right' or 'left')
  */
-export const drawArrow = (ctx, x, y, size, direction) => {
+export const drawArrow = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  direction: string
+) => {
   ctx.beginPath();
   // Taille de la tige de la flèche
   const shaftLength = size * 0.6;
@@ -108,15 +140,15 @@ export const drawArrow = (ctx, x, y, size, direction) => {
  * @param {string} color - color of the arrow
  */
 function drawCircularArrow(
-  ctx,
-  x,
-  y,
-  radius,
-  startAngle,
-  endAngle,
-  clockwise,
-  color,
-  opacity = 1
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+  clockwise: boolean,
+  color: string,
+  opacity: number = 1
 ) {
   drawCircle(ctx, x, y, radius, CIRCLE_COLOR, opacity);
 
@@ -176,10 +208,17 @@ function drawCircularArrow(
  * @param {number} height
  * @param {number} radius
  */
-const drawRoundedRect = (ctx, x, y, width, height, radius) => {
+const drawRoundedRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) => {
   ctx.beginPath();
 
-  radius = Math.min(parseInt(radius), width / 2, height / 2);
+  radius = Math.min(radius, width / 2, height / 2);
 
   ctx.moveTo(x + radius, y);
   ctx.lineTo(x + width - radius, y);
@@ -202,10 +241,18 @@ const drawRoundedRect = (ctx, x, y, width, height, radius) => {
  * @param {number} height - height of the rectangle
  * @param {number} radius  - radius of the rectangle
  */
-const drawRectWithRoundedCorner = (ctx, x, y, width, height, radius, type) => {
+const drawRectWithRoundedCorner = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+  type: string
+) => {
   ctx.beginPath();
 
-  radius = Math.min(parseInt(radius), width / 2, height / 2);
+  radius = Math.min(radius, width / 2, height / 2);
 
   // type can be: ONE_RADIUS_T, ONE_RADIUS_B, TWO_RADIUS
   const radiusTop = type === SHAPE_TYPE.ONE_RADIUS_B ? radius : height / 2;
@@ -234,53 +281,55 @@ const drawRectWithRoundedCorner = (ctx, x, y, width, height, radius, type) => {
  * @param {object} square - {x, y, width, height, color, type, rotation}
  * @param {number} angle - angle of rotation in radian
  */
-const rotateElement = (ctx, square, angle) => {
+const rotateElement = (
+  ctx: CanvasRenderingContext2D,
+  sSize: Area,
+  angle: number
+) => {
   if (angle === 0) {
     return;
   }
   ctx.save();
-  ctx.translate(square.x + square.width / 2, square.y + square.height / 2);
+  ctx.translate(sSize.x + sSize.width / 2, sSize.y + sSize.height / 2);
   ctx.rotate(angle);
-  ctx.translate(
-    -(square.x + square.width / 2),
-    -(square.y + square.height / 2)
-  );
+  ctx.translate(-(sSize.x + sSize.width / 2), -(sSize.y + sSize.height / 2));
 };
 
-const getShapeData = (square) => {
+/**
+ * calculate the size and position of the shape then the shape is not filled
+ * @param square
+ * @param lineWidth
+ * @returns
+ */
+const getShapeSize = (square: Area, lineWidth: number = 0) => {
   let { x, y, width, height } = square;
-  const lineWidth = square.general.lineWidth;
-  const filled = square.shape.filled;
-  const radius = square.shape.radius;
 
-  if (!filled) {
+  if (lineWidth > 0) {
+    lineWidth -= 2;
     width -= lineWidth;
     height -= lineWidth;
     x += lineWidth / 2;
     y += lineWidth / 2;
   }
-  return { x, y, width, height, filled, radius, lineWidth };
+  return { x, y, width, height };
 };
 
 /**
  * Function to show a square on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
+ * @param {object} squareSize: Area - {x, y, width, height}
+ * @param {number} lineWidth - width of the line
+ * @param {number} radius - radius of the square
  */
-export const drawSquare = (ctx, square) => {
-  if (square.rotation !== 0) {
-    rotateElement(ctx, square, square.rotation);
-  }
-
-  let { x, y, width, height, filled, radius, lineWidth } = getShapeData(square);
-
-  if (!filled) {
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = square.general.color;
-  }
+const drawSquare = (
+  ctx: CanvasRenderingContext2D,
+  squareSize: Area,
+  lineWidth: number,
+  radius: number
+) => {
+  let { x, y, width, height } = getShapeSize(squareSize, lineWidth);
 
   ctx.beginPath();
-  ctx.fillStyle = square.general.color;
 
   if (!radius || radius < 1) {
     ctx.lineJoin = "miter";
@@ -288,73 +337,38 @@ export const drawSquare = (ctx, square) => {
   } else {
     drawRoundedRect(ctx, x, y, width, height, radius);
   }
-
-  if (filled) {
-    ctx.fill();
-  } else {
-    ctx.stroke();
-  }
-
-  if (square.rotation !== 0) {
-    ctx.restore();
-  }
 };
 /**
  * Function to show a square with one rounded angle
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
  */
-export const drawSquareWithRoundedCorner = (ctx, square) => {
-  if (square.rotation !== 0) {
-    rotateElement(ctx, square, square.rotation);
-  }
-
-  let { x, y, width, height, filled, radius, lineWidth } = getShapeData(square);
-
-  if (!filled) {
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = square.general.color;
-  }
-
-  ctx.beginPath();
-  ctx.fillStyle = square.general.color;
+const drawSquareWithRoundedCorner = (
+  ctx: CanvasRenderingContext2D,
+  squareSize: Area,
+  lineWidth: number,
+  radius: number,
+  shapeType: string
+) => {
+  let { x, y, width, height } = getShapeSize(squareSize, lineWidth);
 
   if (!radius || radius < 1) {
     ctx.lineJoin = "miter";
   }
-  drawRectWithRoundedCorner(ctx, x, y, width, height, radius, square.type);
-
-  if (filled) {
-    ctx.fill();
-  } else {
-    ctx.stroke();
-  }
-
-  if (square.rotation !== 0) {
-    ctx.restore();
-  }
+  drawRectWithRoundedCorner(ctx, x, y, width, height, radius, shapeType);
 };
 /**
  * Function to show an ellipse on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
  */
-export const drawEllipse = (ctx, square) => {
-  if (square.rotation !== 0) {
-    rotateElement(ctx, square, square.rotation);
-  }
-
-  let { x, y, width, height, filled, lineWidth } = getShapeData(square);
-  if (!height) {
-    height = width;
-  }
-  ctx.beginPath();
-  ctx.fillStyle = square.general.color;
-
-  if (!filled) {
-    ctx.strokeStyle = square.general.color;
-    ctx.lineWidth = lineWidth;
-  }
+const drawEllipse = (
+  ctx: CanvasRenderingContext2D,
+  squareSize: Area,
+  lineWidth: number,
+  radius: number
+) => {
+  let { x, y, width, height } = getShapeSize(squareSize, lineWidth);
 
   if (width === height) {
     ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
@@ -369,15 +383,6 @@ export const drawEllipse = (ctx, square) => {
       2 * Math.PI
     );
   }
-  if (filled) {
-    ctx.fill();
-  } else {
-    ctx.stroke();
-  }
-
-  if (square.rotation !== 0) {
-    ctx.restore();
-  }
 };
 
 /**
@@ -385,7 +390,13 @@ export const drawEllipse = (ctx, square) => {
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} bounds - {left, top, right, bottom}
  */
-export const drawDashedRectangle = (ctx, bounds) => {
+export const drawDashedRectangle = (
+  ctx: CanvasRenderingContext2D,
+  bounds: Area
+) => {
+  if (!bounds) return;
+  const alpha = ctx.globalAlpha;
+  ctx.globalAlpha = 0.8;
   ctx.beginPath();
   ctx.setLineDash([5, 5]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
   ctx.strokeStyle = "#201010";
@@ -397,51 +408,93 @@ export const drawDashedRectangle = (ctx, bounds) => {
     bounds.height + 2
   );
   ctx.setLineDash([]); // Resets to a solid line for other drawings
+  ctx.globalAlpha = alpha;
+};
+
+/**
+ * Function to show a square on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} squareSize: Area - {x, y, width, height}
+ * @param {ImageData} data - image data to show on the canvas
+ */
+const drawImage = (
+  ctx: CanvasRenderingContext2D,
+  squareSize: Area,
+  rotation: number,
+  virtualCanval: HTMLCanvasElement
+) => {
+  if (rotation !== 0) {
+    rotateElement(ctx, squareSize, rotation);
+  }
+  let { x, y, width, height } = squareSize;
+
+  ctx.drawImage(
+    virtualCanval,
+    0,
+    0,
+    virtualCanval.width,
+    virtualCanval.height,
+    x,
+    y,
+    width,
+    height
+  );
+  if (rotation !== 0) {
+    ctx.restore();
+  }
 };
 
 /**
  * Function to show a border around a square or an ellipse on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color,  rotation}
+ * @param {object} squareBorder - {color, lineWidth, opacity, interval}
+ * @param {number} radius - radius of the shape
+ * @param {string} shapeType - type of the shape
+ * @param {Function} drawingFunction - function to draw the shape
  */
-export const drawBorder = (ctx, square) => {
-  const bWidth = parseFloat(square.border.lineWidth);
-  const bInterval = parseFloat(square.border.interval);
-  let radius = parseInt(square.shape.radius);
-  const borderShape = { ...square };
+const drawBorder = (
+  ctx: CanvasRenderingContext2D,
+  squareBorder: paramsGeneral,
+  squareSize: Area,
+  radius: number,
+  shapeType: string,
+  drawingFunction: Function
+) => {
+  const bWidth = squareBorder.lineWidth;
+  const bInterval = squareBorder.interval ?? 0;
 
-  borderShape.width += bWidth * 2 + bInterval * 2;
-  borderShape.height += bWidth * 2 + bInterval * 2;
-  borderShape.x -= bWidth + bInterval;
-  borderShape.y -= bWidth + bInterval;
+  const bSize: Area = { ...squareSize };
 
-  if (square.type !== SHAPE_TYPE.CIRCLE && radius > 0) {
-    radius = radius + bWidth + bInterval;
+  bSize.width += bWidth * 2 + bInterval * 2;
+  bSize.height += bWidth * 2 + bInterval * 2;
+  bSize.x -= bWidth + bInterval;
+  bSize.y -= bWidth + bInterval;
+
+  let radiusB: number = radius;
+  if (radius > 0) {
+    radiusB += 2 * (bWidth + bInterval);
   }
-  borderShape.general = { ...square.border };
-  borderShape.shape = { radius: radius, filled: false };
 
-  switch (square.type) {
-    case SHAPE_TYPE.CIRCLE:
-      drawEllipse(ctx, borderShape);
-      break;
-    case SHAPE_TYPE.SQUARE:
-      drawSquare(ctx, borderShape);
-      break;
-    default:
-      drawSquareWithRoundedCorner(ctx, borderShape);
-  }
+  ctx.beginPath();
+  ctx.globalAlpha = squareBorder.opacity;
+  ctx.strokeStyle = squareBorder.color;
+  ctx.lineWidth = bWidth;
+
+  drawingFunction(ctx, bSize, bWidth, radiusB, shapeType);
+
+  ctx.stroke();
 };
 /**
  * Function to show a text on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
  */
-export const drawText = (ctx, square) => {
-  let w, h, paddingX, paddingY;
-  const rotation = square.rotation + square.text.rotation;
+const drawText = (ctx: CanvasRenderingContext2D, square: shapeDefinition) => {
+  let w: number, h: number, paddingX: number, paddingY: number;
+  const rotation: number = square.rotation + square.text.rotation;
   if (rotation !== 0) {
-    rotateElement(ctx, square, rotation);
+    rotateElement(ctx, square.size, rotation);
   }
 
   const paramsText = square.text;
@@ -461,15 +514,15 @@ export const drawText = (ctx, square) => {
     // text alone
     paddingY = paddingX = Math.min(TEXT_PADDING, h);
 
-    square.width = w + 2 * paddingX;
-    square.height = h + 2 * paddingY;
+    square.size.width = w + 2 * paddingX;
+    square.size.height = h + 2 * paddingY;
   } else {
     // text with rectangle or ellipse
-    paddingY = (square.height - h) / 2;
-    paddingX = (square.width - w) / 2;
+    paddingY = (square.size.height - h) / 2;
+    paddingX = (square.size.width - w) / 2;
     ctx.globalAlpha = square.general.opacity;
   }
-  ctx.fillText(text, square.x + paddingX, square.y + h + paddingY);
+  ctx.fillText(text, square.size.x + paddingX, square.size.y + h + paddingY);
 
   if (rotation !== 0) {
     ctx.restore();
@@ -482,33 +535,31 @@ export const drawText = (ctx, square) => {
  * @param {object} square - {x, y, width, height, color, type, rotation}
  * @param {string} border - border where the mouse is
  */
-export const drawButtons = (ctx, square, border) => {
+export const drawButtons = (
+  ctx: CanvasRenderingContext2D,
+  square: shapeDefinition,
+  border: string | null
+) => {
+  const sSize: Area = square.size;
   if (square.rotation !== 0 || square.type === SHAPE_TYPE.CIRCLE) {
+    const alpha: number = ctx.globalAlpha;
+    ctx.globalAlpha = 0.8;
     ctx.beginPath();
     ctx.strokeStyle = "silver";
     ctx.lineWidth = 1;
-    ctx.rect(square.x, square.y, square.width, square.height);
+    ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
     ctx.stroke();
+    ctx.globalAlpha = alpha;
   }
 
   const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
-  const badgePos = badgePosition(square, ctx.canvas.width);
+  const badgePos = badgePosition(square.size, ctx.canvas.width);
   drawBadge(ctx, badgePos.centerX, badgePos.centerY, badgePos.radius, opacity);
   /**
    * draw the middle button used to rotate the shape
    */
-  if (
-    square.type === SHAPE_TYPE.TEXT ||
-    (square.type === SHAPE_TYPE.CIRCLE &&
-      square.width === square.height &&
-      !square.shape.withText)
-  ) {
-    // don't show the middle button if the shape is a circle without text
-    square.withMiddleButton = false;
-  } else {
-    square.withMiddleButton = true;
-
-    const middleButton = middleButtonPosition(square);
+  if (square.withMiddleButton) {
+    const middleButton = middleButtonPosition(square.size);
 
     drawCircularArrow(
       ctx,
@@ -538,7 +589,7 @@ export const drawButtons = (ctx, square, border) => {
     square.rotation +
     (square.type === SHAPE_TYPE.TEXT ? square.text.rotation : 0);
   if (rotation !== 0) {
-    rotateElement(ctx, square, square.rotation);
+    rotateElement(ctx, square.size, square.rotation);
   }
   switch (square.type) {
     case SHAPE_TYPE.TEXT:
@@ -547,25 +598,25 @@ export const drawButtons = (ctx, square, border) => {
         ctx.strokeStyle = "grey";
         ctx.lineWidth = 1;
 
-        ctx.rect(square.x, square.y, square.width, square.height);
+        ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
         ctx.stroke();
       }
       break;
 
     case SHAPE_TYPE.CIRCLE:
       // show the rectangle around the ellipse
-      if (square.rotation !== 0 && square.width != square.height) {
+      if (square.rotation !== 0 && sSize.width != sSize.height) {
         ctx.lineWidth = 0.5;
-        ctx.rect(square.x, square.y, square.width, square.height);
+        ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
         ctx.stroke();
       }
       break;
 
     default:
       // show the rectangle around the shape
-      if (square.radius > 10 && square.shape.withBorder === false) {
+      if (square.shape.radius > 10 && square.shape.withBorder === false) {
         ctx.lineWidth = 0.5;
-        ctx.rect(square.x, square.y, square.width, square.height);
+        ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
         ctx.stroke();
       }
       break;
@@ -577,6 +628,60 @@ export const drawButtons = (ctx, square, border) => {
 };
 
 /**
+ * function to shapDraw a shape on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} square - {x, y, width, height, color, type, rotation}
+ * @param {Function} drawingFunction - function to draw the shape
+ */
+const shapeDrawing = (
+  ctx: CanvasRenderingContext2D,
+  square: shapeDefinition,
+  withBtn: boolean,
+  drawingFunction: Function
+) => {
+  if (square.rotation !== 0) {
+    rotateElement(ctx, square.size, square.rotation);
+  }
+
+  let { radius = 0, filled } = square.shape;
+  let { lineWidth, color } = square.general;
+
+  ctx.fillStyle = color;
+  if (!filled) {
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+  } else {
+    lineWidth = 0;
+  }
+  ctx.beginPath();
+  drawingFunction(ctx, square.size, lineWidth, radius, square.type);
+
+  if (filled) {
+    ctx.fill();
+  } else {
+    ctx.stroke();
+  }
+
+  // Draw the border if needed
+  if (square.shape.withBorder) {
+    if (!withBtn) {
+      ctx.globalAlpha = square.border.opacity;
+    }
+    drawBorder(
+      ctx,
+      square.border,
+      square.size,
+      radius,
+      square.type,
+      drawingFunction
+    );
+  }
+
+  if (square.rotation !== 0) {
+    ctx.restore();
+  }
+};
+/**
  * Function to show a element (square, ellipse or text) on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, rotation, type, text}
@@ -584,43 +689,44 @@ export const drawButtons = (ctx, square, border) => {
  * @param {string} mouseOnShape - border where the mouse is
  */
 export const showElement = (
-  ctx,
-  square,
-  withBtn = true,
-  mouseOnShape = null
+  ctx: CanvasRenderingContext2D,
+  square: shapeDefinition,
+  withBtn: boolean = true,
+  mouseOnShape: string | null = null
 ) => {
+  // console.log("show", square.type, square.size);
   switch (square.type) {
-    case SHAPE_TYPE.SQUARE:
-      drawSquare(ctx, square);
-      break;
-    case SHAPE_TYPE.CIRCLE:
-      drawEllipse(ctx, square);
-      break;
     case SHAPE_TYPE.TEXT:
       if (!square.text || !square.text.text) return;
       drawText(ctx, square);
       break;
     case SHAPE_TYPE.SELECT:
-      drawDashedRectangle(ctx, square);
+      drawDashedRectangle(ctx, square.size);
       return;
+    case SHAPE_TYPE.IMAGE:
+      drawImage(ctx, square.size, square.rotation, square.canvasImage);
+      break;
+    case SHAPE_TYPE.SQUARE:
+      // drawSquare(ctx, square);
+      shapeDrawing(ctx, square, withBtn, drawSquare);
+      break;
+    case SHAPE_TYPE.CIRCLE:
+      shapeDrawing(ctx, square, withBtn, drawEllipse);
+      break;
 
     default:
-      drawSquareWithRoundedCorner(ctx, square);
+      shapeDrawing(ctx, square, withBtn, drawSquareWithRoundedCorner);
+      // drawSquareWithRoundedCorner(ctx, square);
       break;
   }
 
-  if (square.type !== SHAPE_TYPE.TEXT) {
-    if (square.shape.withBorder) {
-      if (!withBtn) {
-        ctx.globalAlpha = square.border.opacity;
-      }
-      drawBorder(ctx, square);
-    }
+  if (isDrawingShape(square.type)) {
     if (square.shape.withText) {
       // text inside the square
       drawText(ctx, square);
     }
   }
+
   if (withBtn) {
     drawButtons(ctx, square, mouseOnShape);
   }
@@ -632,9 +738,14 @@ export const showElement = (
  * @param {object} coordinate - {x, y}
  * @param {string} mouseOnShape - border or button where the mouse is
  */
-export const resizingElement = (ctx, square, coordinate, mouseOnShape) => {
+export const resizingElement = (
+  ctx: CanvasRenderingContext2D,
+  square: shapeDefinition,
+  coordinate: coordinate,
+  mouseOnShape: string | null
+) => {
   if (mouseOnShape) {
-    const { newSquare } = resizeSquare(coordinate, square, mouseOnShape);
+    const { newSquare } = resizeSquare(coordinate, square.size, mouseOnShape);
 
     showElement(ctx, { ...square, ...newSquare });
     return newSquare;

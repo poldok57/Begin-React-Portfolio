@@ -1,6 +1,13 @@
 import { coordinate } from "./canvas-basic";
-import { DRAWING_MODES } from "./canvas-defines";
+import { getCoordinates, clearCanvasByCtx } from "./canvas-tools";
+import { DRAWING_MODES, paramsAll } from "./canvas-defines";
+import { isOnSquareBorder } from "../square-position";
 
+export type returnMouseDown = {
+  toContinue: boolean;
+  toReset: boolean;
+  pointer: string | null;
+};
 export abstract class DrawingHandler {
   protected mCanvas: HTMLCanvasElement | null = null;
 
@@ -20,6 +27,7 @@ export abstract class DrawingHandler {
 
   constructor(canvas: HTMLCanvasElement) {
     if (canvas) this.setCanvas(canvas);
+    this.extendedMouseArea = false;
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
@@ -37,21 +45,29 @@ export abstract class DrawingHandler {
     ) as CanvasRenderingContext2D | null;
   }
 
+  clearTemporyCanvas() {
+    if (!this.ctxTempory) return;
+    clearCanvasByCtx(this.ctxTempory);
+  }
+
   setDataGeneral(data: any) {
     this.lineWidth = data.lineWidth;
     this.strokeStyle = data.strokeStyle;
     this.opacity = data.opacity;
   }
 
-  isExtendedMouseArea() {
+  isExtendedMouseArea(): boolean {
     return this.extendedMouseArea;
   }
   setExtendedMouseArea(value: boolean) {
     this.extendedMouseArea = value;
   }
 
-  setCoordinates(coordinates: coordinate) {
-    this.coordinates = coordinates;
+  setCoordinates(event: MouseEvent) {
+    if (!event || !this.mCanvas) return { x: 0, y: 0 };
+
+    this.coordinates = getCoordinates(event, this.mCanvas);
+    return this.coordinates;
   }
 
   getCoordinates() {
@@ -65,13 +81,39 @@ export abstract class DrawingHandler {
     return this.type;
   }
 
-  abstract actionMouseDown(mode: string, event: MouseEvent): boolean;
+  /**
+   * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
+   * handle special cases for the border of the square
+   * @param {object} param0 - {coordinate, area, withResize, withMiddleButton}
+   * @returns {string} - border or button where the mouse is
+   */
+  handleMouseOnShape({
+    coordinate,
+    area,
+    withResize,
+    withMiddleButton,
+  }: any): string | null {
+    if (this.mCanvas === null || !coordinate) return null;
+
+    return isOnSquareBorder({
+      coord: coordinate,
+      area,
+      withButton: true,
+      withResize,
+      withMiddleButton: withMiddleButton,
+      maxWidth: this.mCanvas.width,
+    });
+  }
+  startAction(): void {}
+  abstract endAction(): void;
+  abstract changeData(data: paramsAll): void;
+  abstract initData(data: paramsAll): void;
+
+  abstract actionMouseDown(mode: string, event: MouseEvent): returnMouseDown;
+  abstract actionMouseMove(event: MouseEvent): string | null;
   abstract actionMouseUp(): void;
-  abstract actionMouseMove(event: MouseEvent): string;
   abstract actionMouseLeave(): void;
   abstract actionKeyDown(event: KeyboardEvent): void;
 
   abstract refreshDrawing(opacity: number): void;
-
-  abstract endAction(): void;
 }

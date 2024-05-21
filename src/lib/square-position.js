@@ -38,17 +38,17 @@ export const getSquarePosition = (coord, offset) => {
 
 export const isOnSquareBorder = ({
   coord,
-  square,
+  area,
   withButton = true,
   withResize = true,
   withMiddleButton = true,
   maxWidth = 0,
 }) => {
   const rect = {
-    left: square.x,
-    top: square.y,
-    right: square.x + square.width,
-    bottom: square.y + square.height,
+    left: area.x,
+    top: area.y,
+    right: area.x + area.width,
+    bottom: area.y + area.height,
   };
 
   if (withButton) {
@@ -77,15 +77,15 @@ export const isOnSquareBorder = ({
   return mouseIsOnBorderRect(coord, rect);
 };
 
-export const resizeSquare = (coordinate, square, border) => {
+export const resizeSquare = (coordinate, area, border) => {
   const coord = { ...coordinate };
   const rect = {
-    left: square.x,
-    top: square.y,
-    right: square.x + square.width,
-    bottom: square.y + square.height,
-    width: square.width,
-    height: square.height,
+    left: area.x,
+    top: area.y,
+    right: area.x + area.width,
+    bottom: area.y + area.height,
+    width: area.width,
+    height: area.height,
   };
 
   const newSquare = resizeRect(coord, rect, border);

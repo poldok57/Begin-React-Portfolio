@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
 import { DRAWING_MODES, DEFAULT_PARAMS } from "../../lib/canvas/canvas-defines";
-import { saveCanvas } from "../../lib/canvas/canvas-size";
+// import { saveCanvas } from "../../lib/canvas/canvas-size";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 
 const MAX_HISTORY = 40;
@@ -22,22 +22,10 @@ export const Draw = () => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
   };
 
-  const changeMode = (mode, option = null) => {
+  const changeMode = (mode) => {
     switch (mode) {
       case DRAWING_MODES.UNDO:
-        break;
       case DRAWING_MODES.SAVE:
-        if (canvas.current) {
-          if (option == null) {
-            option = "my-drawing";
-          }
-          let area = null;
-          if (drawingParamsRef.current.mode === DRAWING_MODES.SELECT) {
-            area = drawingParamsRef.current.selectedArea;
-          }
-          console.log("saveCanvas", area);
-          saveCanvas(canvas.current, option, area);
-        }
         break;
       default:
         drawingParamsRef.current.mode = mode;

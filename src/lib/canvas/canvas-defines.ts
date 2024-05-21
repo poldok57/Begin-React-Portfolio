@@ -5,6 +5,7 @@ export const SHAPE_TYPE = {
   ONE_RADIUS_B: "radiusBottom",
   TWO_RADIUS: "radiusHalf",
   SELECT: "select-auto",
+  IMAGE: "image",
   TEXT: "text",
 };
 
@@ -16,6 +17,8 @@ export const DRAWING_MODES = {
   UNDO: "undo",
   SAVE: "save",
   INIT: "init",
+  COPY: "copy",
+  PASTE: "paste",
   CONTROL_PANEL: {
     IN: "in",
     OUT: "out",
@@ -32,21 +35,22 @@ const SHAPE_MODES = [
   DRAWING_MODES.ONE_RADIUS_T,
   DRAWING_MODES.ONE_RADIUS_B,
   DRAWING_MODES.TWO_RADIUS,
-  DRAWING_MODES.SELECT,
 ];
+const SELECT_MODES = [DRAWING_MODES.SELECT, DRAWING_MODES.IMAGE];
 
 const ALL_DRAWING_MODES = [
   ...LINE_MODES,
   ...FREEHAND_MODES,
   ...SHAPE_MODES,
+  ...SELECT_MODES,
   DRAWING_MODES.TEXT,
 ];
-export const isDrawingMode = (mode) => ALL_DRAWING_MODES.includes(mode);
-export const isDrawingShape = (mode) => SHAPE_MODES.includes(mode);
-export const isDrawingLine = (mode) => LINE_MODES.includes(mode);
-export const isDrawingFreehand = (mode) => FREEHAND_MODES.includes(mode);
-export const isDrawingAllLines = (mode) =>
-  LINE_MODES.includes(mode) || FREEHAND_MODES.includes(mode);
+export const isDrawingMode = (mode: string) => ALL_DRAWING_MODES.includes(mode);
+export const isDrawingShape = (mode: string) => SHAPE_MODES.includes(mode);
+export const isDrawingLine = (mode: string) => LINE_MODES.includes(mode);
+export const isDrawingFreehand = (mode: string) =>
+  FREEHAND_MODES.includes(mode);
+export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
 
 const DEFAULT = { COLOR: "#ff0000", SIZE: 4, OPACITY: 1 };
 
@@ -57,7 +61,56 @@ export const mouseCircle = {
   lineWidth: 25,
 };
 
-export const DEFAULT_PARAMS = {
+export type paramsGeneral = {
+  color: string;
+  lineWidth: number;
+  opacity: number;
+  interval?: number;
+};
+export type paramsShape = {
+  filled: boolean;
+  radius: number;
+  withText: boolean;
+  withBorder: boolean;
+};
+export type paramsText = {
+  text: string;
+  color: string;
+  font: string;
+  bold: number;
+  italic: boolean;
+  fontSize: number;
+  rotation: number;
+};
+export type paramsAll = {
+  mode: string;
+  fixed: boolean;
+  general: paramsGeneral;
+  shape: paramsShape;
+  text: paramsText;
+  border: paramsGeneral;
+};
+
+export type Area = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type shapeDefinition = {
+  type: string;
+  rotation: number;
+  size: Area;
+  canvasImage: HTMLCanvasElement;
+  general: paramsGeneral;
+  shape: paramsShape;
+  border: paramsGeneral;
+  text: paramsText;
+  withMiddleButton: boolean;
+};
+
+export const DEFAULT_PARAMS: paramsAll = {
   mode: DRAWING_MODES.INIT,
   fixed: false,
   general: {
@@ -86,5 +139,4 @@ export const DEFAULT_PARAMS = {
     opacity: 1,
     interval: 0,
   },
-  selectedArea: null,
 };

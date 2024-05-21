@@ -6,9 +6,13 @@ import { SlActionUndo } from "react-icons/sl";
 import { AiOutlineLoading } from "react-icons/ai";
 import { CiEraser } from "react-icons/ci";
 import { PiSelectionPlusLight } from "react-icons/pi";
+import clsx from "clsx";
 
 import { Button } from "../atom/Button";
-import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
+import {
+  DRAWING_MODES,
+  isDrawingSelect,
+} from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
@@ -31,9 +35,15 @@ export const DrawControl = ({
   const filenameRef = useRef(null);
   const defaultFilename = useRef("my-drawing");
 
-  const addEventChangeMode = (mode) => {
-    const event = new CustomEvent("modeChanged", { detail: { mode } });
+  const addEvent = (detail) => {
+    const event = new CustomEvent("modeChanged", detail);
     document.dispatchEvent(event);
+  };
+  const addEventChangeMode = (mode) => {
+    addEvent({ detail: { mode } });
+  };
+  const addEventSaveFile = (filename) => {
+    addEvent({ detail: { mode: DRAWING_MODES.SAVE, filename } });
   };
 
   const handleConfirmReset = () => {
@@ -55,8 +65,13 @@ export const DrawControl = ({
     addEventChangeMode(newMode);
   };
 
-  const handleUndo = (event) => {
-    event.preventDefault();
+  const handleImage = (value) => {
+    setMode(DRAWING_MODES.SELECT);
+    changeMode(DRAWING_MODES.IMAGE);
+    addEventChangeMode(value);
+  };
+
+  const handleUndo = () => {
     addEventChangeMode(DRAWING_MODES.UNDO);
   };
 
@@ -111,6 +126,33 @@ export const DrawControl = ({
             <PiSelectionPlusLight size="20px" />
           </Button>
         </div>
+        <div
+          className={clsx("flex flex-col border-2 border-secondary p-2", {
+            "bg-paper": isDrawingSelect(mode),
+            hidden: !isDrawingSelect(mode),
+          })}
+        >
+          <div className="flex flex-row gap-3">
+            <div className="flex flex-row gap-1">
+              <Button
+                className="px-2 py-1"
+                selected={mode === DRAWING_MODES.COPY}
+                onClick={() => handleImage(DRAWING_MODES.COPY)}
+              >
+                Copy
+              </Button>
+            </div>
+            <div className="flex flex-row gap-1">
+              <Button
+                className="px-2 py-1"
+                selected={mode === DRAWING_MODES.PASTE}
+                onClick={() => handleImage(DRAWING_MODES.PASTE)}
+              >
+                Paste
+              </Button>
+            </div>
+          </div>
+        </div>
         <DrawControlLine
           mode={mode}
           handleParamChange={handleParamChange}
@@ -131,7 +173,7 @@ export const DrawControl = ({
         />
 
         <div className="relative m-auto flex gap-4">
-          <Button className="bg-pink-500" onClick={(e) => handleUndo(e)}>
+          <Button className="bg-pink-500" onClick={() => handleUndo()}>
             <SlActionUndo size="20px" />
           </Button>
           <ButtonConfirmModal
@@ -145,7 +187,7 @@ export const DrawControl = ({
             className="bg-blue-500"
             value="Save my drawing"
             onConfirm={() => {
-              changeMode(DRAWING_MODES.SAVE, filenameRef.current.value);
+              addEventSaveFile(filenameRef.current.value);
               defaultFilename.current = filenameRef.current.value;
             }}
           >

@@ -1,16 +1,10 @@
 import { coordinate } from "./canvas-basic";
-export type saveCanvasPicture = {
+import { DRAWING_MODES } from "./canvas-defines";
+export type canvasPicture = {
+  type: string;
   canvas: HTMLCanvasElement;
   coordinates: coordinate | null;
   image: ImageData | null;
-};
-
-export const TYPES = {
-  IMAGE: "image",
-  TEXT: "text",
-  SHAPE: "shape",
-  LINE: "line",
-  ARC: "arc",
 };
 
 // Import the store
@@ -43,8 +37,8 @@ export const eraseHistory = () => {
 };
 
 export const addPictureToHistory: (
-  saveCanvasPicture: saveCanvasPicture
-) => void = ({ canvas, image = null, coordinates = null }) => {
+  saveCanvasPicture: canvasPicture
+) => void = ({ type = null, canvas, image = null, coordinates = null }) => {
   if (!image) {
     if (canvas === null) {
       throw new Error("history: Canvas and image are not defined");
@@ -55,7 +49,7 @@ export const addPictureToHistory: (
     }
     image = ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
-  const type = TYPES.IMAGE;
+  type = type ?? DRAWING_MODES.DRAW;
   // console.log("addPictureToHistory", image, coordonates);
   addItemToHistory({ type, image, coordinates });
 };

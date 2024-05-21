@@ -1,94 +1,108 @@
+import { mouseIsInsideComponent } from "../../lib/mouse-position";
+
 import {
   coordinate,
   drawingCircle,
   drawPoint,
-  hatchedCircle,
   hightLightMouseCursor,
 } from "../../lib/canvas/canvas-basic";
 import { CanvasLine } from "../../lib/canvas/CanvasLine";
-import { DrawingHandler } from "../../lib/canvas/DrawingHandler";
+import {
+  DrawingHandler,
+  returnMouseDown,
+} from "../../lib/canvas/DrawingHandler";
 
 import {
   DRAWING_MODES,
-  isDrawingFreehand,
-  isDrawingLine,
   mouseCircle,
+  paramsGeneral,
+  paramsAll,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
 import {
   addPictureToHistory,
-  saveCanvasPicture,
+  canvasPicture,
 } from "../../lib/canvas/canvas-history";
+import { clear } from "console";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
-export class DrawLine2 extends DrawingHandler {
+export class DrawLine extends DrawingHandler {
   private line: CanvasLine;
-  private drawing: boolean;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
     this.line = new CanvasLine(canvas);
     this.ctxMouse = null;
     this.ctxTempory = null;
-    this.extendedMouseArea = false;
-    this.type = DRAWING_MODES.DRAW;
+
+    this.type = DRAWING_MODES.LINE;
   }
 
   setCoordinates(event: MouseEvent) {
     if (this.mCanvas !== null) {
       this.line.setCoordinates(event, this.mCanvas);
     }
+    return this.line.getCoordinates() as coordinate;
   }
 
   getCoordinates() {
     return this.line.getCoordinates() as coordinate;
   }
 
-  setDataGeneral(data) {
-    this.lineWidth = data.lineWidth;
+  setDataGeneral(data: paramsGeneral) {
     this.line.setLineWidth(data.lineWidth);
-    this.strokeStyle = data.strokeStyle;
     this.line.setStrokeStyle(data.color);
-    this.opacity = data.opacity;
   }
 
-  setDrawing(drawing: boolean) {
-    this.drawing = drawing;
+  initData(initData: paramsAll) {
+    this.type = initData.mode;
+    this.setDataGeneral(initData.general);
   }
-  isDrawing() {
-    return this.drawing;
+  changeData(data: paramsAll) {
+    this.setDataGeneral(data.general);
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
+    if (!canvas) return;
     this.mCanvas = canvas;
     this.context = canvas.getContext("2d");
-    this.line.setCanvas(canvas);
+    if (this.line) this.line.setCanvas(canvas);
   }
 
-  setMouseCanvas(canvas) {
+  setMouseCanvas(canvas: HTMLCanvasElement) {
+    if (canvas === null) {
+      console.error("setMouseCanvas canvas is null");
+      return;
+    }
     this.ctxMouse = canvas.getContext("2d");
   }
 
-  setTemporyCanvas(canvas) {
+  setTemporyCanvas(canvas: HTMLCanvasElement) {
+    if (canvas === null) {
+      console.error("setTemporyCanvas canvas is null");
+      return;
+    }
     this.ctxTempory = canvas.getContext("2d");
   }
 
   saveCanvasPicture() {
     const savePicture = {
+      type: this.type,
       canvas: this.mCanvas,
       coordinates: this.line.getCoordinates() as coordinate,
       image: null,
     };
-    addPictureToHistory(savePicture as saveCanvasPicture);
+    addPictureToHistory(savePicture as canvasPicture);
   }
 
-  isExtendedMouseArea() {
-    return this.extendedMouseArea;
-  }
-  setExtendedMouseArea(value) {
-    this.extendedMouseArea = Boolean(value);
+  setStartCoordinates(coord: coordinate = null) {
+    if (coord === null) {
+      this.line.eraseStartCoordinates();
+      return;
+    }
+    this.line.setStartCoordinates(coord);
   }
 
   /**
@@ -96,8 +110,8 @@ export class DrawLine2 extends DrawingHandler {
    * @param {CanvasRenderingContext2D} ctx
    * @param {number} opacity - opacity of the line
    */
-  showTemporyLine(mode: string, opacity = 0) {
-    if (this.ctxTempory === null || !isDrawingLine(mode)) {
+  showTemporyLine(mode: string, opacity: number = 0) {
+    if (this.ctxTempory === null) {
       return;
     }
     const oldOpacity = this.ctxTempory.globalAlpha;
@@ -117,9 +131,7 @@ export class DrawLine2 extends DrawingHandler {
   }
 
   refreshDrawing(opacity: number) {
-    if (isDrawingLine(this.type)) {
-      this.showTemporyLine(this.type, opacity);
-    }
+    this.showTemporyLine(this.type, opacity);
   }
   /**
    * Function follow the cursor on the canvas
@@ -159,29 +171,6 @@ export class DrawLine2 extends DrawingHandler {
         clearCanvasByCtx(this.ctxTempory);
         this.line.showLine(this.ctxTempory);
         break;
-      case DRAWING_MODES.DRAW:
-        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        ctxMouse.lineWidth = this.lineWidth;
-        ctxMouse.strokeStyle = this.strokeStyle;
-        drawPoint({ context: ctxMouse, coordinate: coord } as drawingCircle);
-        break;
-      case DRAWING_MODES.ERASE:
-        ctxMouse.globalAlpha = 0.9;
-        ctxMouse.lineWidth = this.lineWidth;
-        ctxMouse.strokeStyle = this.strokeStyle;
-        hightLightMouseCursor(ctxMouse, coord, {
-          ...mouseCircle,
-          color: "pink",
-          width: 50,
-        });
-        hatchedCircle({
-          context: ctxMouse,
-          coordinate: coord,
-          color: "#eee",
-          borderColor: "#303030",
-        } as drawingCircle);
-        cursorType = "none";
-        break;
     }
 
     // ctxMouse.canvas.style.cursor = cursorType;
@@ -192,9 +181,7 @@ export class DrawLine2 extends DrawingHandler {
    */
   actionMouseMove(event: MouseEvent) {
     this.line.setCoordinates(event);
-    if (this.isDrawing()) {
-      this.line.drawLine();
-    }
+
     return this.followCursor() as string;
   }
 
@@ -205,23 +192,25 @@ export class DrawLine2 extends DrawingHandler {
    * @param {MouseEvent} event
    * @returns {boolean} to continue or not
    */
-  actionMouseDown(mode: string, event: MouseEvent) {
+  actionMouseDown(mode: string, event: MouseEvent): returnMouseDown {
+    // first point must be inside the canvas
+    if (
+      !mouseIsInsideComponent(event, this.mCanvas) &&
+      this.line.getStartCoordinates() == null
+    ) {
+      return { toContinue: false, toReset: false, pointer: "default" };
+    }
     // color and width painting
     this.setCoordinates(event);
     let toContinue = false;
+    const pointer = "none";
 
     this.type = mode;
 
     switch (mode) {
-      case DRAWING_MODES.DRAW:
-      case DRAWING_MODES.ERASE:
-        this.setDrawing(true);
-        break;
-
       case DRAWING_MODES.LINE:
         if (this.line.drawLine()) {
           this.saveCanvasPicture();
-          break;
         }
         toContinue = true;
         break;
@@ -230,41 +219,21 @@ export class DrawLine2 extends DrawingHandler {
           this.line.showArc(null, false);
           this.line.setStartFromEnd();
           this.saveCanvasPicture();
-          break;
         }
         toContinue = true;
         break;
     }
-    return toContinue;
+    return { toContinue, toReset: false, pointer } as returnMouseDown;
   }
   /**
    * Function to stop drawing on the canvas
    */
   actionMouseUp() {
     this.line.eraseCoordinate();
-
-    if (isDrawingFreehand(this.type)) {
-      if (this.isDrawing()) {
-        this.setDrawing(false);
-        this.line.eraseStartCoordinates();
-        this.saveCanvasPicture();
-      }
-    }
   }
 
-  actionMouseLeave() {
-    if (this.type === DRAWING_MODES.ARC) {
-      return;
-    }
+  actionMouseLeave() {}
 
-    clearCanvasByCtx(this.ctxTempory);
-    clearCanvasByCtx(this.ctxMouse);
-
-    if (isDrawingFreehand(this.type)) {
-      this.setDrawing(false);
-      this.line.eraseStartCoordinates();
-    }
-  }
   actionKeyDown(event: KeyboardEvent) {
     switch (event.key) {
       case "Escape":
@@ -274,10 +243,6 @@ export class DrawLine2 extends DrawingHandler {
     }
   }
   endAction() {
-    if (isDrawingFreehand(this.type)) {
-      this.setDrawing(false);
-    } else if (!isDrawingLine(this.type)) {
-      this.line.eraseStartCoordinates();
-    }
+    clearCanvasByCtx(this.ctxMouse);
   }
 }

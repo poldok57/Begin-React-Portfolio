@@ -103,7 +103,9 @@ export const DrawControlShape = ({
               min="0"
               max="50"
               step="1"
-              onChange={(event) => handleShape({ radius: event.target.value })}
+              onChange={(event) =>
+                handleShape({ radius: parseInt(event.target.value) })
+              }
             />
           </label>
           <label
@@ -167,7 +169,9 @@ export const DrawControlShape = ({
             min="1"
             max="20"
             step="0.5"
-            onChange={(e) => handleBorder({ lineWidth: e.target.value })}
+            onChange={(e) =>
+              handleBorder({ lineWidth: parseFloat(e.target.value) })
+            }
             style={{ width: "50px" }}
           />
         </label>
@@ -184,7 +188,9 @@ export const DrawControlShape = ({
             min="0"
             max="20"
             step="1"
-            onChange={(e) => handleBorder({ interval: e.target.value })}
+            onChange={(e) =>
+              handleBorder({ interval: parseInt(e.target.value) })
+            }
             style={{ width: "50px" }}
           />
         </label>

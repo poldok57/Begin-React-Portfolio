@@ -31,7 +31,12 @@ export const basicLine = (
 /**
  * Function to draw a basic cercle on the canvas
  */
-export const basicCircle = (context, coord, diameter) => {
+export const basicCircle = (
+  context: CanvasRenderingContext2D,
+  coord: coordinate,
+  diameter: number
+) => {
+  if (!coord) return;
   context.arc(coord.x, coord.y, diameter / 2, 0, Math.PI * 2);
 };
 /**
@@ -85,12 +90,12 @@ export const hightLightMouseCursor = (ctx, coord, element) => {
  * Function to draw a hatched circle on the canvas
  * @param {drawingCircle} drawingCircle
  */
-export const hatchedCircle: (drawingCircle) => void = ({
+export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
   context,
   coordinate,
-  color,
-  borderColor,
-  diameter,
+  color = null,
+  borderColor = null,
+  diameter = 0,
 }: drawingCircle) => {
   const lineWidth = context.lineWidth;
   if (diameter <= 0) diameter = lineWidth;
@@ -102,7 +107,7 @@ export const hatchedCircle: (drawingCircle) => void = ({
       coordinate,
       color,
       borderColor,
-      diameter: diameter,
+      diameter,
     } as drawingCircle);
     return;
   }
