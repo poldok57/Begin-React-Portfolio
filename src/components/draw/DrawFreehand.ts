@@ -17,6 +17,7 @@ import {
   paramsAll,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
+
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
@@ -31,12 +32,15 @@ export class DrawFreehand extends DrawingHandler {
     this.setType(DRAWING_MODES.DRAW);
   }
 
-  initData(initData: paramsAll) {
+  initData(initData: paramsAll): void {
     this.setType(initData.mode);
-    this.setDataGeneral(initData.general);
+    this.changeData(initData);
   }
-  changeData(data: paramsAll) {
+  changeData(data: paramsAll): void {
     this.setDataGeneral(data.general);
+    if (this.ctxMouse === null) return;
+    this.ctxMouse.lineWidth = data.general.lineWidth;
+    this.ctxMouse.strokeStyle = data.general.color;
   }
 
   setDrawing(drawing: boolean) {
@@ -99,19 +103,17 @@ export class DrawFreehand extends DrawingHandler {
     switch (this.getType()) {
       case DRAWING_MODES.DRAW:
         hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        ctxMouse.lineWidth = this.data.general.lineWidth;
-        ctxMouse.strokeStyle = this.data.general.color;
+        // ctxMouse.lineWidth = this.data.general.lineWidth;
+        // ctxMouse.strokeStyle = this.data.general.color;
         drawPoint({
           context: ctxMouse,
           coordinate: coord,
-          color: this.data.general.color,
-          diameter: this.data.general.lineWidth,
         } as drawingCircle);
         break;
       case DRAWING_MODES.ERASE:
         ctxMouse.globalAlpha = 0.7;
-        ctxMouse.lineWidth = this.data.general.lineWidth;
-        ctxMouse.strokeStyle = this.data.general.color;
+        // ctxMouse.lineWidth = this.data.general.lineWidth;
+        // ctxMouse.strokeStyle = this.data.general.color;
         hightLightMouseCursor(ctxMouse, coord, {
           ...mouseCircle,
           color: "pink",

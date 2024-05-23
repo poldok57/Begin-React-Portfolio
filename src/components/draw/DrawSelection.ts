@@ -106,8 +106,7 @@ export class DrawSelection extends DrawingHandler {
   }
   changeData(data: paramsAll) {
     this.setDataGeneral(data.general);
-    // this.data.type = data.mode;
-    console.log("changeData: type is:", this.data.type);
+
     this.data.lockRatio = data.lockRatio;
   }
 

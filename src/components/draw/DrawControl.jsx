@@ -49,17 +49,6 @@ export const DrawControl = ({
     addEvent({ detail: { mode, filename, name } });
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // const name = file.name;
-      const url = URL.createObjectURL(file);
-      // console.log("file", file, "url", url);
-
-      addEventSaveFile(DRAWING_MODES.LOAD, url, file.name);
-    }
-  };
-
   const handleConfirmReset = () => {
     alertMessage("Reset confirmed");
     changeMode(DRAWING_MODES.INIT);
@@ -72,12 +61,9 @@ export const DrawControl = ({
     setParams(newParams);
     addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
   };
-  const handleChangeRatio = (ratio) => {
-    alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
-    drawingParams.ratio = ratio;
-    setParams({ lockRatio: ratio });
-    setLockRatio(ratio);
-    addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
+  const handleOpacity = (value) => {
+    drawingParams.general.opacity = value / 100;
+    handleParamChange({ general: drawingParams.general });
   };
 
   const handleModeChange = (newMode) => {
@@ -94,6 +80,22 @@ export const DrawControl = ({
 
   const handleUndo = () => {
     addEventChangeMode(DRAWING_MODES.UNDO);
+  };
+
+  const handleChangeRatio = (ratio) => {
+    alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
+    drawingParams.ratio = ratio;
+    setParams({ lockRatio: ratio });
+    setLockRatio(ratio);
+    addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
+  };
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      addEventSaveFile(DRAWING_MODES.LOAD, url, file.name);
+      handleChangeRatio(true);
+    }
   };
 
   return useMemo(() => {
@@ -135,14 +137,20 @@ export const DrawControl = ({
           <Button
             className="bg-pink-500 px-5"
             selected={mode == DRAWING_MODES.ERASE}
-            onClick={() => handleModeChange(DRAWING_MODES.ERASE)}
+            onClick={() => {
+              handleModeChange(DRAWING_MODES.ERASE);
+              handleOpacity(100);
+            }}
           >
             <CiEraser size="20px" />
           </Button>
           <Button
             className="bg-blue-500 px-5"
             selected={mode == DRAWING_MODES.SELECT}
-            onClick={() => handleModeChange(DRAWING_MODES.SELECT)}
+            onClick={() => {
+              handleModeChange(DRAWING_MODES.SELECT);
+              handleChangeRatio(false);
+            }}
           >
             <PiSelectionPlusLight size="20px" />
           </Button>
@@ -261,7 +269,7 @@ export const DrawControl = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, changeMode, lockRatio]);
+  }, [mode, withText, drawingParams, changeMode, lockRatio, handleOpacity]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

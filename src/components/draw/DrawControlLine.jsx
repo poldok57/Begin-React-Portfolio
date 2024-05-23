@@ -1,6 +1,6 @@
 import clsx from "clsx";
+import { isDrawingAllLines } from "../../lib/canvas/canvas-defines";
 
-import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
   const handleGeneral = (param) => {
     drawingParams.general = { ...drawingParams.general, ...param };
@@ -10,10 +10,7 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
   return (
     <div
       className={clsx("flex flex-row gap-4 border border-secondary p-2", {
-        "bg-paper":
-          mode === DRAWING_MODES.LINE ||
-          mode === DRAWING_MODES.DRAW ||
-          mode === DRAWING_MODES.ARC,
+        "bg-paper": isDrawingAllLines(mode),
       })}
     >
       <label

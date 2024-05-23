@@ -34,6 +34,7 @@ export abstract class DrawingHandler {
   protected data: ThingsToDraw | ShapeDefinition = {
     type: DRAWING_MODES.DRAW,
     rotation: 0,
+    lockRatio: false,
     withMiddleButtons: false,
     withCornerButton: false,
     withResize: true,
@@ -43,7 +44,7 @@ export abstract class DrawingHandler {
       lineWidth: 1,
       opacity: 1,
     },
-  };
+  } as ThingsToDraw;
 
   protected coordinates: Coordinate | null = { x: 0, y: 0 };
 
@@ -69,20 +70,20 @@ export abstract class DrawingHandler {
     ) as CanvasRenderingContext2D | null;
   }
 
-  clearTemporyCanvas() {
+  clearTemporyCanvas(): void {
     if (!this.ctxTempory) return;
     clearCanvasByCtx(this.ctxTempory);
   }
-  setDataSize(data: Area) {
+  setDataSize(data: Area): void {
     this.data.size = { ...data };
   }
-  setDataGeneral(data: paramsGeneral) {
+  setDataGeneral(data: paramsGeneral): void {
     this.data.general = { ...data };
   }
-  changeRotation(rotation: number) {
+  changeRotation(rotation: number): void {
     this.data.rotation += rotation;
   }
-  setRotation(rotation: number) {
+  setRotation(rotation: number): void {
     this.data.rotation = rotation;
   }
 

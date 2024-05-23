@@ -48,6 +48,14 @@ export class DrawLine extends DrawingHandler {
   setDataGeneral(data: paramsGeneral) {
     this.line.setLineWidth(data.lineWidth);
     this.line.setStrokeStyle(data.color);
+    if (this.ctxMouse !== null) {
+      this.ctxMouse.lineWidth = data.lineWidth;
+      this.ctxMouse.strokeStyle = data.color;
+    }
+    if (this.ctxTempory !== null) {
+      this.ctxTempory.lineWidth = data.lineWidth;
+      this.ctxTempory.strokeStyle = data.color;
+    }
   }
 
   initData(initData: paramsAll) {

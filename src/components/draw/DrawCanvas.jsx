@@ -104,7 +104,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     drawingParams.current = getParams();
     drawingParams.current.mode = DRAWING_MODES.DRAW;
 
-    // initialise the mouse canvas
+    // initialise mouse and tempory canvas
     setContext(canvasMouseRef.current);
     setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
 
@@ -177,6 +177,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     drawingParams.current = getParams();
 
     drawing.changeData(drawingParams.current);
+
     drawing.refreshDrawing(drawingParams.current.general.opacity);
   };
 
@@ -204,6 +205,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     // set the new drawing mode
     drawing = selectDrawingHandler(newMode);
     drawing.setType(newMode);
+    drawing.changeData(drawingParams.current);
 
     drawing.startAction();
 

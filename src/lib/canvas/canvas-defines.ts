@@ -55,6 +55,8 @@ export const isDrawingShape = (mode: string) => SHAPE_MODES.includes(mode);
 export const isDrawingLine = (mode: string) => LINE_MODES.includes(mode);
 export const isDrawingFreehand = (mode: string) =>
   FREEHAND_MODES.includes(mode);
+export const isDrawingAllLines = (mode: string) =>
+  isDrawingLine(mode) || isDrawingFreehand(mode);
 export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
 
 const DEFAULT = { COLOR: "#ff0000", SIZE: 4, OPACITY: 1 };
