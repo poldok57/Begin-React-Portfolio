@@ -6,7 +6,7 @@ import {
   mouseIsOnBorderRect,
   getRectOffset,
   resizeRect,
-} from "./mouse-position.js";
+} from "./mouse-position";
 
 /**
  * is the mouse inside the square
@@ -37,11 +37,11 @@ export const getSquarePosition = (coord, offset) => {
 };
 
 export const isOnSquareBorder = ({
-  coord,
+  coordinate,
   area,
   withButton = true,
   withResize = true,
-  withMiddleButton = true,
+  withMiddleButtons = true,
   maxWidth = 0,
 }) => {
   const rect = {
@@ -54,27 +54,27 @@ export const isOnSquareBorder = ({
   if (withButton) {
     const badgePos = badgePosition(rect, maxWidth);
 
-    if (mouseIsInsideRect(coord, badgePos)) {
+    if (mouseIsInsideRect(coordinate, badgePos)) {
       return BORDER.ON_BUTTON;
     }
   }
-  if (withMiddleButton) {
+  if (withMiddleButtons) {
     const middleButton = middleButtonPosition(rect);
-    if (mouseIsInsideRect(coord, middleButton)) {
-      if (coord.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
-      if (coord.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
+    if (mouseIsInsideRect(coordinate, middleButton)) {
+      if (coordinate.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
+      if (coordinate.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
       return BORDER.INSIDE;
     }
   }
 
-  if (!mouseIsInsideRect(coord, rect)) return null;
+  if (!mouseIsInsideRect(coordinate, rect)) return null;
 
   if (!withResize) {
     // for text mode, no need to resize
     return BORDER.INSIDE;
   }
 
-  return mouseIsOnBorderRect(coord, rect);
+  return mouseIsOnBorderRect(coordinate, rect);
 };
 
 export const resizeSquare = (coordinate, area, border) => {
@@ -93,8 +93,8 @@ export const resizeSquare = (coordinate, area, border) => {
   newSquare.y = newSquare.top;
 
   // coordinates of the center of the square
-  // coord.x = newSquare.x + newSquare.width / 2;
-  // coord.y = newSquare.y + newSquare.height / 2;
+  // coordinate.x = newSquare.x + newSquare.width / 2;
+  // coordinate.y = newSquare.y + newSquare.height / 2;
   coord.x = newSquare.x;
   coord.y = newSquare.y;
 

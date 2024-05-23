@@ -42,8 +42,19 @@ export const DrawControl = ({
   const addEventChangeMode = (mode) => {
     addEvent({ detail: { mode } });
   };
-  const addEventSaveFile = (filename) => {
-    addEvent({ detail: { mode: DRAWING_MODES.SAVE, filename } });
+  const addEventSaveFile = (mode, filename) => {
+    addEvent({ detail: { mode: mode, filename } });
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // const name = file.name;
+      const url = URL.createObjectURL(file);
+      console.log("file", file, "url", url);
+
+      addEventSaveFile(DRAWING_MODES.LOAD, url);
+    }
   };
 
   const handleConfirmReset = () => {
@@ -133,24 +144,33 @@ export const DrawControl = ({
           })}
         >
           <div className="flex flex-row gap-3">
-            <div className="flex flex-row gap-1">
-              <Button
-                className="px-2 py-1"
-                selected={mode === DRAWING_MODES.COPY}
-                onClick={() => handleImage(DRAWING_MODES.COPY)}
-              >
-                Copy
-              </Button>
-            </div>
-            <div className="flex flex-row gap-1">
-              <Button
-                className="px-2 py-1"
-                selected={mode === DRAWING_MODES.PASTE}
-                onClick={() => handleImage(DRAWING_MODES.PASTE)}
-              >
-                Paste
-              </Button>
-            </div>
+            <Button
+              className="px-2 py-1"
+              selected={mode === DRAWING_MODES.COPY}
+              onClick={() => handleImage(DRAWING_MODES.COPY)}
+            >
+              Copy
+            </Button>
+            <Button
+              className="px-2 py-1"
+              selected={mode === DRAWING_MODES.PASTE}
+              onClick={() => handleImage(DRAWING_MODES.PASTE)}
+            >
+              Paste
+            </Button>
+            <ButtonConfirmModal
+              className="bg-blue-500"
+              value="Upload image"
+              width="380px"
+              showUnder={true}
+            >
+              <div className="flex flex-row">Select a file to upload :</div>
+              <input
+                XclassName="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
+                type="file"
+                onChange={handleFileChange}
+              />
+            </ButtonConfirmModal>
           </div>
         </div>
         <DrawControlLine
@@ -187,7 +207,7 @@ export const DrawControl = ({
             className="bg-blue-500"
             value="Save my drawing"
             onConfirm={() => {
-              addEventSaveFile(filenameRef.current.value);
+              addEventSaveFile(DRAWING_MODES.SAVE, filenameRef.current.value);
               defaultFilename.current = filenameRef.current.value;
             }}
           >

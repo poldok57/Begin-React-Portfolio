@@ -1,7 +1,6 @@
 import { mouseIsInsideComponent } from "../../lib/mouse-position";
-
+import { Coordinate } from "../../lib/types";
 import {
-  coordinate,
   drawingCircle,
   drawPoint,
   hightLightMouseCursor,
@@ -23,7 +22,6 @@ import {
   addPictureToHistory,
   canvasPicture,
 } from "../../lib/canvas/canvas-history";
-import { clear } from "console";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -37,18 +35,18 @@ export class DrawLine extends DrawingHandler {
     this.ctxMouse = null;
     this.ctxTempory = null;
 
-    this.type = DRAWING_MODES.LINE;
+    this.setType(DRAWING_MODES.LINE);
   }
 
   setCoordinates(event: MouseEvent) {
     if (this.mCanvas !== null) {
       this.line.setCoordinates(event, this.mCanvas);
     }
-    return this.line.getCoordinates() as coordinate;
+    return this.line.getCoordinates() as Coordinate;
   }
 
   getCoordinates() {
-    return this.line.getCoordinates() as coordinate;
+    return this.line.getCoordinates() as Coordinate;
   }
 
   setDataGeneral(data: paramsGeneral) {
@@ -57,7 +55,7 @@ export class DrawLine extends DrawingHandler {
   }
 
   initData(initData: paramsAll) {
-    this.type = initData.mode;
+    this.setType(initData.mode);
     this.setDataGeneral(initData.general);
   }
   changeData(data: paramsAll) {
@@ -89,15 +87,15 @@ export class DrawLine extends DrawingHandler {
 
   saveCanvasPicture() {
     const savePicture = {
-      type: this.type,
+      type: this.getType(),
       canvas: this.mCanvas,
-      coordinates: this.line.getCoordinates() as coordinate,
+      coordinates: this.line.getCoordinates() as Coordinate,
       image: null,
     };
     addPictureToHistory(savePicture as canvasPicture);
   }
 
-  setStartCoordinates(coord: coordinate = null) {
+  setStartCoordinates(coord: Coordinate | null = null) {
     if (coord === null) {
       this.line.eraseStartCoordinates();
       return;
@@ -107,7 +105,7 @@ export class DrawLine extends DrawingHandler {
 
   /**
    * Function to show the line on the tempory canvas
-   * @param {CanvasRenderingContext2D} ctx
+   * @param {DRAWING_MODES} mode - mode of the drawing
    * @param {number} opacity - opacity of the line
    */
   showTemporyLine(mode: string, opacity: number = 0) {
@@ -131,7 +129,7 @@ export class DrawLine extends DrawingHandler {
   }
 
   refreshDrawing(opacity: number) {
-    this.showTemporyLine(this.type, opacity);
+    this.showTemporyLine(this.getType(), opacity);
   }
   /**
    * Function follow the cursor on the canvas
@@ -148,9 +146,9 @@ export class DrawLine extends DrawingHandler {
     ctxMouse.globalAlpha = 0.4;
 
     let cursorType = "default";
-    const coord = this.line.getCoordinates() as coordinate;
+    const coord = this.line.getCoordinates() as Coordinate;
 
-    switch (this.type) {
+    switch (this.getType()) {
       case DRAWING_MODES.ARC:
         hightLightMouseCursor(ctxMouse, coord, mouseCircle);
         clearCanvasByCtx(this.ctxTempory);
@@ -163,7 +161,7 @@ export class DrawLine extends DrawingHandler {
         if (this.line.getStartCoordinates() == null) {
           drawPoint({
             context: ctxMouse,
-            coordinate: this.line.getCoordinates() as coordinate,
+            coordinate: this.line.getCoordinates() as Coordinate,
           } as drawingCircle);
 
           break;
@@ -205,7 +203,7 @@ export class DrawLine extends DrawingHandler {
     let toContinue = false;
     const pointer = "none";
 
-    this.type = mode;
+    this.setType(mode);
 
     switch (mode) {
       case DRAWING_MODES.LINE:
@@ -232,7 +230,9 @@ export class DrawLine extends DrawingHandler {
     this.line.eraseCoordinate();
   }
 
-  actionMouseLeave() {}
+  actionMouseLeave() {
+    clearCanvasByCtx(this.ctxMouse);
+  }
 
   actionKeyDown(event: KeyboardEvent) {
     switch (event.key) {

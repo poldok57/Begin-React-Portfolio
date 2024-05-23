@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import { debounceLogs } from "../lib/debounce-logs";
-import {
-  mouseIsInsideComponent,
-  BORDER,
-  getRectOffset,
-} from "../lib/mouse-position";
+import { mouseIsInsideComponent, getRectOffset } from "../lib/mouse-position";
 import { creatPlaceholder } from "../lib/component-move";
 import { ToggleSwitch } from "../components/atom/ToggleSwitch";
 import { TitleBar } from "../components/atom/TitleBar";

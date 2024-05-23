@@ -7,6 +7,9 @@ export const ConfirmationModal = ({
   onClose,
   onConfirm = null,
   referrer = null,
+  className = null,
+  showUnder = false,
+  width = "280px",
   children,
 }) => {
   const ref = useRef(null);
@@ -23,14 +26,14 @@ export const ConfirmationModal = ({
     transform = "translate(-50%, -50%)";
 
   if (rect) {
-    if (rect.top > 200) {
-      // Modal over the referrer
-      transform = "translate(-50%, -100%)";
-      top = rect.top - 5;
-    } else {
+    if (rect.top <= 200 || showUnder) {
       // Modal under the referrer
       transform = "translate(-50%, 0)";
       top = rect.top + rect.height + 5;
+    } else {
+      // Modal over the referrer
+      transform = "translate(-50%, -100%)";
+      top = rect.top - 5;
     }
 
     left = rect.left + rect.width / 2;
@@ -44,12 +47,15 @@ export const ConfirmationModal = ({
   return (
     <div
       ref={ref}
-      className="z-50 gap-3 rounded-lg border-2 border-red-700 bg-paper p-4 shadow-xl"
+      className={clsx(
+        "z-50 gap-3 rounded-lg border-2 border-red-700 bg-paper p-4 shadow-xl",
+        className
+      )}
       style={{
         position: "fixed",
         left: left,
         top: top,
-        width: "280px",
+        width: width,
         height: "fit-content",
         maxHeight: "200px",
         transform: transform,

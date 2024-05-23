@@ -1,3 +1,4 @@
+import { Area, ArgsMouseOnShape } from "../../lib/types";
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
@@ -5,12 +6,11 @@ import {
   paramsGeneral,
   paramsShape,
   paramsText,
-  Area,
-  shapeDefinition,
+  ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
 import { resizingElement, showElement } from "../../lib/canvas/canvas-elements";
-import { coordinate } from "../../lib/canvas/canvas-basic";
+import { Coordinate } from "../../lib/types";
 import {
   addPictureToHistory,
   canvasPicture,
@@ -27,8 +27,8 @@ const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 export class DrawElement extends DrawingHandler {
   private fixed: boolean = false;
   private resizing: string | null = null;
-  private offset: coordinate | null = null;
-  private data: shapeDefinition;
+  private offset: Coordinate | null = null;
+  protected data: ShapeDefinition;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
@@ -43,7 +43,8 @@ export class DrawElement extends DrawingHandler {
     this.data = {
       ...this.data,
       ...{
-        withMiddleButton: false,
+        withMiddleButtons: false,
+        withCornerButton: true,
         type: DRAWING_MODES.SQUARE,
         rotation: 0,
       },
@@ -95,18 +96,9 @@ export class DrawElement extends DrawingHandler {
       y: this.data.size.y - this.coordinates.y,
     };
   }
-  getOffset() {
-    return this.offset;
-  }
-  changeRotation(rotation: number) {
-    this.data.rotation += rotation;
-  }
 
   addData(data: any) {
     this.data = { ...this.data, ...data };
-  }
-  setDataGeneral(data: paramsGeneral) {
-    this.data.general = { ...data };
   }
   setDataBorder(data: paramsGeneral) {
     this.data.border = { ...data };
@@ -116,9 +108,6 @@ export class DrawElement extends DrawingHandler {
   }
   setDataText(data: paramsText) {
     this.data.text = { ...data };
-  }
-  setDataSize(data: Area) {
-    this.data.size = { ...data };
   }
   initData(initData: paramsAll) {
     this.data = { ...this.data, ...initData };
@@ -140,7 +129,7 @@ export class DrawElement extends DrawingHandler {
     this.setDataText(data.text);
 
     this.data.type = data.mode;
-    this.setWithMiddleButton();
+    this.setWithMiddleButtons();
   }
 
   getData() {
@@ -148,17 +137,18 @@ export class DrawElement extends DrawingHandler {
   }
 
   setType(type: string) {
-    this.type = type;
     this.data.type = type;
-  }
-  getType() {
-    return this.data.type;
+    if (type === DRAWING_MODES.TEXT) {
+      this.setWithResize(false);
+    } else {
+      this.setWithResize(true);
+    }
   }
 
   /**
    * Function to set the value of the middle button
    */
-  setWithMiddleButton() {
+  setWithMiddleButtons() {
     const square = this.data;
     const sSize = square.size;
     // don't show the middle button if the shape is a circle without text
@@ -168,13 +158,10 @@ export class DrawElement extends DrawingHandler {
         sSize.width === sSize.height &&
         !square.shape.withText)
     ) {
-      this.data.withMiddleButton = false;
+      this.data.withMiddleButtons = false;
       return;
     }
-    this.data.withMiddleButton = true;
-  }
-  hasMiddleButton() {
-    return this.data.withMiddleButton;
+    this.data.withMiddleButtons = true;
   }
 
   /**
@@ -197,20 +184,22 @@ export class DrawElement extends DrawingHandler {
     if (newCoord) {
       // this.addData(newCoord);
       this.setDataSize(newCoord);
-      this.setWithMiddleButton();
+      this.setWithMiddleButtons();
     }
   }
 
   /**
    * Function to refresh the element on the tempory canvas
    */
-  refreshDrawing() {
+  refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
     this.clearTemporyCanvas();
     if (!this.ctxTempory) {
       console.error("ctxTempory is null");
       return;
     }
-    showElement(this.ctxTempory, this.data, true);
+    if (opacity > 0) this.ctxTempory.globalAlpha = opacity;
+    showElement(this.ctxTempory, this.data, true, mouseOnShape);
+    this.lastMouseOnShape = mouseOnShape;
   }
 
   /**
@@ -228,28 +217,10 @@ export class DrawElement extends DrawingHandler {
   }
 
   /**
-   * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
-   * handle special cases for the border of the square
+   * Function to handle the mouse down event
    * @param {string} mode - drawing mode
-   * @param {object} coord - {x, y}
-   * @param {object} square
+   * @param {MouseEvent} event - mouse event
    */
-  handleMouseOnElement(
-    mode: string,
-    coord: coordinate,
-    square: shapeDefinition
-  ) {
-    if (this.mCanvas === null || !coord) return null;
-    return isOnSquareBorder({
-      coord,
-      area: square.size,
-      withButton: true,
-      withResize: mode !== DRAWING_MODES.TEXT,
-      withMiddleButton: square.withMiddleButton,
-      maxWidth: this.mCanvas.width,
-    });
-  }
-
   actionMouseDown(mode: string, event: MouseEvent) {
     // if (!this.isFixed()) {
     //   return false;
@@ -258,12 +229,7 @@ export class DrawElement extends DrawingHandler {
     let pointer: string | null = null;
     this.setCoordinates(event);
     this.setType(mode);
-    const mouseOnShape = this.handleMouseOnShape({
-      coordinate: this.coordinates,
-      area: this.data.size,
-      withResize: mode !== DRAWING_MODES.TEXT,
-      withMiddleButton: this.data.withMiddleButton,
-    });
+    const mouseOnShape = this.handleMouseOnShape();
     if (mouseOnShape) {
       // console.log("mode", mode, "mouseOnShape: ", mouseOnShape);
       // Clic on the shape --------
@@ -277,10 +243,10 @@ export class DrawElement extends DrawingHandler {
         toReset = true;
       } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
         this.changeRotation(-Math.PI / 16);
-        this.refreshDrawing();
+        this.refreshDrawing(0, mouseOnShape);
       } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
         this.changeRotation(Math.PI / 16);
-        this.refreshDrawing();
+        this.refreshDrawing(0, mouseOnShape);
       } else {
         alertMessage("resizing: " + mouseOnShape);
         this.setResizing(mouseOnShape);
@@ -290,39 +256,13 @@ export class DrawElement extends DrawingHandler {
     }
     return { toReset, toContinue: false, pointer } as returnMouseDown;
   }
+
   /**
-   * Function to follow the cursor on the canvas
-   * @param {string} mode - drawing mode
-   * @param {number} opacity - opacity of the element
+   * Function to handle the mouse move event
+   * @param {MouseEvent} event - mouse event
+   * @returns {string | null} - cursor type
    */
-  followCursor(mode: string, opacity: number) {
-    let mouseOnShape: string | null = null;
-    let cursorType = "default";
-
-    if (!this.ctxTempory || !this.coordinates) return cursorType;
-
-    mouseOnShape = this.handleMouseOnShape({
-      coordinate: this.coordinates,
-      area: this.data.size,
-      withResize: mode !== DRAWING_MODES.TEXT,
-      withMiddleButton: this.data.withMiddleButton,
-    });
-
-    if (mouseOnShape) {
-      cursorType = mousePointer(mouseOnShape);
-
-      if (isInside(mouseOnShape)) {
-        // show real color when mouse is inside the square
-        this.ctxTempory.globalAlpha = opacity;
-      }
-    }
-
-    this.clearTemporyCanvas();
-    showElement(this.ctxTempory, this.data, true, mouseOnShape);
-    return cursorType;
-  }
-
-  actionMouseMove(event: MouseEvent) {
+  actionMouseMove(event: MouseEvent): string | null {
     this.setCoordinates(event);
     if (this.resizing !== null) {
       this.resizingSquare(this.resizing);
@@ -334,7 +274,7 @@ export class DrawElement extends DrawingHandler {
       return "pointer";
     }
 
-    return this.followCursor(this.getType(), this.data.general.opacity);
+    return this.followCursorOnElement(this.data.general.opacity);
   }
 
   actionMouseUp() {

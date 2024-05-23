@@ -8,14 +8,22 @@ import { ConfirmationModal } from "./ConfirmationModal";
  * @param {string} props.value - The value of the button
  * @param {string} props.className - The class name of the button
  * @param {function} props.onConfirm - The function to be called when the confirmation is confirmed
+ * @param {function} props.onClose - The function to be called when the confirmation is closed
+ * @param {function} props.onOpen - The function to be called when the confirmation is opened
  * @param {object} props.children - The children of the confirmation modal
+ * @param {string} props.width - The width of the confirmation modal
+ * @param {boolean} props.showUnder - The boolean to show the modal under the button
  * @returns The ButtonConfirmModal component
  */
 export const ButtonConfirmModal = ({
   children,
   onConfirm,
+  onClose,
+  onOpen,
   value,
   className,
+  width,
+  showUnder = false,
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,13 +33,21 @@ export const ButtonConfirmModal = ({
     onConfirm?.();
     setIsOpen(false);
   };
+  const handleClose = () => {
+    onClose?.();
+    setIsOpen(false);
+  };
+  const handleOpen = () => {
+    onOpen?.();
+    setIsOpen(true);
+  };
 
   return (
     <>
       <Button
         ref={ref}
         className={className}
-        onClick={() => setIsOpen(true)}
+        onClick={() => handleOpen()}
         {...props}
       >
         {value}
@@ -39,8 +55,10 @@ export const ButtonConfirmModal = ({
       <ConfirmationModal
         referrer={ref}
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => handleClose()}
         onConfirm={onConfirm ? handleConfirm : undefined}
+        width={width}
+        showUnder={showUnder}
       >
         {children}
       </ConfirmationModal>

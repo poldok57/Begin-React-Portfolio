@@ -1,6 +1,15 @@
-import { coordinate } from "./canvas-basic";
+import { Coordinate, Area, ArgsMouseOnShape } from "../types";
 import { getCoordinates, clearCanvasByCtx } from "./canvas-tools";
-import { DRAWING_MODES, paramsAll } from "./canvas-defines";
+import { showElement } from "./canvas-elements";
+import { mousePointer, isInside } from "../mouse-position";
+
+import {
+  DRAWING_MODES,
+  ThingsToDraw,
+  ShapeDefinition,
+  paramsAll,
+  paramsGeneral,
+} from "./canvas-defines";
 import { isOnSquareBorder } from "../square-position";
 
 export type returnMouseDown = {
@@ -8,20 +17,30 @@ export type returnMouseDown = {
   toReset: boolean;
   pointer: string | null;
 };
+
 export abstract class DrawingHandler {
   protected mCanvas: HTMLCanvasElement | null = null;
 
   protected context: CanvasRenderingContext2D | null = null;
   protected ctxMouse: CanvasRenderingContext2D | null = null;
   protected ctxTempory: CanvasRenderingContext2D | null = null;
+  protected lastMouseOnShape: string | null = null;
 
-  protected lineWidth: number = 1;
-  protected strokeStyle: string = "#000000";
-  protected opacity: number = 1;
+  protected data: ThingsToDraw | ShapeDefinition = {
+    type: DRAWING_MODES.DRAW,
+    rotation: 0,
+    withMiddleButtons: false,
+    withCornerButton: false,
+    withResize: true,
+    size: { x: 0, y: 0, width: 0, height: 0 },
+    general: {
+      color: "#000000",
+      lineWidth: 1,
+      opacity: 1,
+    },
+  };
 
-  protected type: string = DRAWING_MODES.DRAW;
-
-  protected coordinates: coordinate = { x: 0, y: 0 };
+  protected coordinates: Coordinate | null = { x: 0, y: 0 };
 
   protected extendedMouseArea: boolean = false;
 
@@ -49,11 +68,17 @@ export abstract class DrawingHandler {
     if (!this.ctxTempory) return;
     clearCanvasByCtx(this.ctxTempory);
   }
-
-  setDataGeneral(data: any) {
-    this.lineWidth = data.lineWidth;
-    this.strokeStyle = data.strokeStyle;
-    this.opacity = data.opacity;
+  setDataSize(data: Area) {
+    this.data.size = { ...data };
+  }
+  setDataGeneral(data: paramsGeneral) {
+    this.data.general = { ...data };
+  }
+  changeRotation(rotation: number) {
+    this.data.rotation += rotation;
+  }
+  setRotation(rotation: number) {
+    this.data.rotation = rotation;
   }
 
   isExtendedMouseArea(): boolean {
@@ -75,35 +100,71 @@ export abstract class DrawingHandler {
   }
 
   setType(type: string) {
-    this.type = type;
+    this.data.type = type;
   }
   getType() {
-    return this.type;
+    return this.data.type;
   }
-
+  setWithMiddleButtons(value: boolean) {
+    this.data.withMiddleButtons = value;
+  }
+  setWithCornerButton(value: boolean) {
+    this.data.withCornerButton = value;
+  }
+  setWithResize(value: boolean) {
+    this.data.withResize = value;
+  }
   /**
    * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
    * handle special cases for the border of the square
-   * @param {object} param0 - {coordinate, area, withResize, withMiddleButton}
-   * @returns {string} - border or button where the mouse is
    */
-  handleMouseOnShape({
-    coordinate,
-    area,
-    withResize,
-    withMiddleButton,
-  }: any): string | null {
-    if (this.mCanvas === null || !coordinate) return null;
+  handleMouseOnShape(): string | null {
+    if (this.mCanvas === null || !this.coordinates) return null;
 
-    return isOnSquareBorder({
-      coord: coordinate,
-      area,
-      withButton: true,
-      withResize,
-      withMiddleButton: withMiddleButton,
+    const argsMouseOnShape: ArgsMouseOnShape = {
+      coordinate: this.coordinates,
+      area: this.data.size,
+      withResize: this.data.withResize,
+      withCornerButton: this.data.withCornerButton,
+      withMiddleButtons: this.data.withMiddleButtons,
       maxWidth: this.mCanvas.width,
-    });
+    };
+
+    return isOnSquareBorder(argsMouseOnShape);
   }
+  /**
+   * Function to follow the cursor on the canvas
+   * @param {number} opacity - opacity of the element
+   */
+  followCursorOnElement(opacity: number) {
+    let cursorType = "default";
+
+    if (!this.ctxTempory || !this.coordinates) return cursorType;
+
+    const mouseOnShape = this.handleMouseOnShape();
+
+    if (mouseOnShape) {
+      cursorType = mousePointer(mouseOnShape);
+
+      if (isInside(mouseOnShape)) {
+        // show real color when mouse is inside the square
+        this.ctxTempory.globalAlpha = opacity;
+      }
+    }
+    if (mouseOnShape !== this.lastMouseOnShape) {
+      this.clearTemporyCanvas();
+      showElement(
+        this.ctxTempory,
+        this.data as ShapeDefinition,
+        true,
+        mouseOnShape
+      );
+      this.lastMouseOnShape = mouseOnShape;
+    }
+
+    return cursorType;
+  }
+
   startAction(): void {}
   abstract endAction(): void;
   abstract changeData(data: paramsAll): void;
@@ -115,5 +176,5 @@ export abstract class DrawingHandler {
   abstract actionMouseLeave(): void;
   abstract actionKeyDown(event: KeyboardEvent): void;
 
-  abstract refreshDrawing(opacity: number): void;
+  abstract refreshDrawing(opacity: number, mouseOnShape: string | null): void;
 }

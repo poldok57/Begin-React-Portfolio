@@ -1,12 +1,11 @@
 import { BORDER, badgePosition, middleButtonPosition } from "../mouse-position";
 import { resizeSquare } from "../square-position";
-import { coordinate } from "./canvas-basic";
+import { Coordinate, Area } from "../types";
 import {
   SHAPE_TYPE,
   isDrawingShape,
-  shapeDefinition,
+  ShapeDefinition,
   paramsGeneral,
-  Area,
 } from "./canvas-defines";
 
 const CIRCLE_COLOR = "#e0e0e0"; // color of the circle around control buttons
@@ -305,7 +304,6 @@ const getShapeSize = (square: Area, lineWidth: number = 0) => {
   let { x, y, width, height } = square;
 
   if (lineWidth > 0) {
-    lineWidth -= 2;
     width -= lineWidth;
     height -= lineWidth;
     x += lineWidth / 2;
@@ -396,18 +394,46 @@ export const drawDashedRectangle = (
 ) => {
   if (!bounds) return;
   const alpha = ctx.globalAlpha;
+  const interval = 5;
   ctx.globalAlpha = 0.8;
   ctx.beginPath();
-  ctx.setLineDash([5, 5]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
   ctx.strokeStyle = "#201010";
   ctx.lineWidth = 0.5;
-  ctx.strokeRect(
-    Math.max(bounds.x - 1, 0),
-    Math.max(bounds.y - 1, 0),
-    bounds.width + 2,
-    bounds.height + 2
-  );
+  let { x, y, width, height } = bounds;
+
+  const overage = interval * 1.6;
+
+  ctx.setLineDash([interval, (interval * 2) / 3]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
+
+  ctx.fillStyle = "rgba(70, 70, 70, 0.20)";
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.fill();
+  ctx.beginPath();
+
+  x -= 1;
+  y -= 1;
+  width += 2;
+  height += 2;
+  ctx.moveTo(x - overage, y);
+  ctx.lineTo(x + width + overage, y);
+  ctx.moveTo(x, y - overage);
+  ctx.lineTo(x, y + height + overage);
+  ctx.moveTo(x + width, y - overage);
+  ctx.lineTo(x + width, y + height + overage);
+  ctx.moveTo(x - overage, y + height);
+  ctx.lineTo(x + width + overage, y + height);
+  ctx.stroke();
   ctx.setLineDash([]); // Resets to a solid line for other drawings
+
+  // show circles at the corners
+  for (let w = 0; w <= width; w += width) {
+    for (let h = 0; h <= height; h += height) {
+      ctx.beginPath();
+      ctx.arc(x + w, y + h, 4, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+  }
   ctx.globalAlpha = alpha;
 };
 
@@ -465,15 +491,15 @@ const drawBorder = (
   const bInterval = squareBorder.interval ?? 0;
 
   const bSize: Area = { ...squareSize };
-
-  bSize.width += bWidth * 2 + bInterval * 2;
-  bSize.height += bWidth * 2 + bInterval * 2;
+  const addRadius = bWidth + bInterval;
+  bSize.width += addRadius * 2;
+  bSize.height += addRadius * 2;
   bSize.x -= bWidth + bInterval;
   bSize.y -= bWidth + bInterval;
 
   let radiusB: number = radius;
   if (radius > 0) {
-    radiusB += 2 * (bWidth + bInterval);
+    radiusB += addRadius;
   }
 
   ctx.beginPath();
@@ -490,7 +516,7 @@ const drawBorder = (
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
  */
-const drawText = (ctx: CanvasRenderingContext2D, square: shapeDefinition) => {
+const drawText = (ctx: CanvasRenderingContext2D, square: ShapeDefinition) => {
   let w: number, h: number, paddingX: number, paddingY: number;
   const rotation: number = square.rotation + square.text.rotation;
   if (rotation !== 0) {
@@ -537,7 +563,7 @@ const drawText = (ctx: CanvasRenderingContext2D, square: shapeDefinition) => {
  */
 export const drawButtons = (
   ctx: CanvasRenderingContext2D,
-  square: shapeDefinition,
+  square: ShapeDefinition,
   border: string | null
 ) => {
   const sSize: Area = square.size;
@@ -552,13 +578,15 @@ export const drawButtons = (
     ctx.globalAlpha = alpha;
   }
 
-  const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
-  const badgePos = badgePosition(square.size, ctx.canvas.width);
-  drawBadge(ctx, badgePos.centerX, badgePos.centerY, badgePos.radius, opacity);
+  if (square.withCornerButton) {
+    const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
+    const bPos = badgePosition(square.size, ctx.canvas.width);
+    drawBadge(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
+  }
   /**
    * draw the middle button used to rotate the shape
    */
-  if (square.withMiddleButton) {
+  if (square.withMiddleButtons) {
     const middleButton = middleButtonPosition(square.size);
 
     drawCircularArrow(
@@ -592,15 +620,25 @@ export const drawButtons = (
     rotateElement(ctx, square.size, square.rotation);
   }
   switch (square.type) {
-    case SHAPE_TYPE.TEXT:
-      {
-        ctx.beginPath();
-        ctx.strokeStyle = "grey";
-        ctx.lineWidth = 1;
+    case SHAPE_TYPE.IMAGE:
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(49,130,236,0.6)";
+      ctx.lineWidth = 4;
 
-        ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
-        ctx.stroke();
-      }
+      ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(50, 50, 50, 0.20)";
+      ctx.beginPath();
+      ctx.rect(sSize.x + 1, sSize.y + 1, sSize.width - 2, sSize.height - 2);
+      ctx.fill();
+      break;
+    case SHAPE_TYPE.TEXT:
+      ctx.beginPath();
+      ctx.strokeStyle = "grey";
+      ctx.lineWidth = 1;
+
+      ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
+      ctx.stroke();
       break;
 
     case SHAPE_TYPE.CIRCLE:
@@ -614,7 +652,11 @@ export const drawButtons = (
 
     default:
       // show the rectangle around the shape
-      if (square.shape.radius > 10 && square.shape.withBorder === false) {
+      if (
+        square.shape &&
+        square.shape.radius > 10 &&
+        square.shape.withBorder === false
+      ) {
         ctx.lineWidth = 0.5;
         ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
         ctx.stroke();
@@ -635,7 +677,7 @@ export const drawButtons = (
  */
 const shapeDrawing = (
   ctx: CanvasRenderingContext2D,
-  square: shapeDefinition,
+  square: ShapeDefinition,
   withBtn: boolean,
   drawingFunction: Function
 ) => {
@@ -690,7 +732,7 @@ const shapeDrawing = (
  */
 export const showElement = (
   ctx: CanvasRenderingContext2D,
-  square: shapeDefinition,
+  square: ShapeDefinition,
   withBtn: boolean = true,
   mouseOnShape: string | null = null
 ) => {
@@ -735,20 +777,20 @@ export const showElement = (
  * Function to resize the element on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, rotation, type, text}
- * @param {object} coordinate - {x, y}
+ * @param {object} coordinate - {Coordinate}
  * @param {string} mouseOnShape - border or button where the mouse is
  */
 export const resizingElement = (
   ctx: CanvasRenderingContext2D,
-  square: shapeDefinition,
-  coordinate: coordinate,
+  square: ShapeDefinition,
+  coordinate: Coordinate,
   mouseOnShape: string | null
 ) => {
   if (mouseOnShape) {
-    const { newSquare } = resizeSquare(coordinate, square.size, mouseOnShape);
+    const { coord } = resizeSquare(coordinate, square.size, mouseOnShape);
 
-    showElement(ctx, { ...square, ...newSquare });
-    return newSquare;
+    showElement(ctx, { ...square, ...coord });
+    return coord;
   }
   return null;
 };

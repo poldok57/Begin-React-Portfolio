@@ -1,3 +1,5 @@
+import { Area } from "../types";
+
 export const SHAPE_TYPE = {
   SQUARE: "square",
   CIRCLE: "circle",
@@ -16,6 +18,7 @@ export const DRAWING_MODES = {
   ERASE: "erase",
   UNDO: "undo",
   SAVE: "save",
+  LOAD: "load",
   INIT: "init",
   COPY: "copy",
   PASTE: "paste",
@@ -91,14 +94,16 @@ export type paramsAll = {
   border: paramsGeneral;
 };
 
-export type Area = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export type ThingsToDraw = {
+  type: string;
+  rotation: number;
+  size: Area;
+  general: paramsGeneral;
+  withMiddleButtons: boolean;
+  withCornerButton: boolean;
+  withResize: boolean;
 };
-
-export type shapeDefinition = {
+export type ShapeDefinition = {
   type: string;
   rotation: number;
   size: Area;
@@ -107,7 +112,9 @@ export type shapeDefinition = {
   shape: paramsShape;
   border: paramsGeneral;
   text: paramsText;
-  withMiddleButton: boolean;
+  withMiddleButtons: boolean;
+  withCornerButton: boolean;
+  withResize: boolean;
 };
 
 export const DEFAULT_PARAMS: paramsAll = {

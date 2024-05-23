@@ -228,6 +228,13 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         }
         drawSelection.saveCanvas(filename);
         break;
+      case DRAWING_MODES.LOAD:
+        alertMessage("Load: (" + eventMode + ") " + filename);
+        if (drawSelection === null) {
+          selectDrawingHandler(DRAWING_MODES.IMAGE);
+        }
+        drawSelection.loadCanvas(filename);
+        break;
       case DRAWING_MODES.COPY:
         if (drawSelection === null) {
           console.log("drawSelection is null");
@@ -323,9 +330,13 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       drawing.actionMouseUp();
     };
     const handleMouseDown = (event) => {
+      if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
+
       actionMouseDown(event);
     };
     const handleMouseMove = (event) => {
+      if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
+
       if (!drawingParams.current) {
         console.log("drawingParams.current is null");
         return;

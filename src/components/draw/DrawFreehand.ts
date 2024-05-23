@@ -1,12 +1,11 @@
+import { Coordinate } from "../../lib/types";
 import {
-  coordinate,
   basicLine,
   drawingCircle,
   drawPoint,
   hatchedCircle,
   hightLightMouseCursor,
 } from "../../lib/canvas/canvas-basic";
-import { CanvasLine } from "../../lib/canvas/CanvasLine";
 import {
   DrawingHandler,
   returnMouseDown,
@@ -35,17 +34,11 @@ export class DrawFreehand extends DrawingHandler {
     this.ctxMouse = null;
     this.ctxTempory = null;
     this.extendedMouseArea = false;
-    this.type = DRAWING_MODES.DRAW;
-  }
-
-  setDataGeneral(data: paramsGeneral) {
-    this.lineWidth = data.lineWidth;
-    this.strokeStyle = data.color;
-    this.opacity = data.opacity;
+    this.setType(DRAWING_MODES.DRAW);
   }
 
   initData(initData: paramsAll) {
-    this.type = initData.mode;
+    this.setType(initData.mode);
     this.setDataGeneral(initData.general);
   }
   changeData(data: paramsAll) {
@@ -83,15 +76,15 @@ export class DrawFreehand extends DrawingHandler {
 
   saveCanvasPicture() {
     const savePicture = {
-      type: this.type,
+      type: this.getType(),
       canvas: this.mCanvas,
-      coordinates: this.getCoordinates() as coordinate,
+      coordinates: this.getCoordinates() as Coordinate,
       image: null,
     };
     addPictureToHistory(savePicture as canvasPicture);
   }
 
-  setStartCoordinates(coord: coordinate = null) {}
+  setStartCoordinates(coord: Coordinate | null = null) {}
 
   isExtendedMouseArea() {
     return this.extendedMouseArea;
@@ -117,24 +110,24 @@ export class DrawFreehand extends DrawingHandler {
     ctxMouse.globalAlpha = 0.4;
 
     let cursorType = "none";
-    const coord = this.getCoordinates() as coordinate;
+    const coord = this.getCoordinates() as Coordinate;
 
-    switch (this.type) {
+    switch (this.getType()) {
       case DRAWING_MODES.DRAW:
         hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        ctxMouse.lineWidth = this.lineWidth;
-        ctxMouse.strokeStyle = this.strokeStyle;
+        ctxMouse.lineWidth = this.data.general.lineWidth;
+        ctxMouse.strokeStyle = this.data.general.color;
         drawPoint({
           context: ctxMouse,
           coordinate: coord,
-          color: this.strokeStyle,
-          diameter: this.lineWidth,
+          color: this.data.general.color,
+          diameter: this.data.general.lineWidth,
         } as drawingCircle);
         break;
       case DRAWING_MODES.ERASE:
         ctxMouse.globalAlpha = 0.7;
-        ctxMouse.lineWidth = this.lineWidth;
-        ctxMouse.strokeStyle = this.strokeStyle;
+        ctxMouse.lineWidth = this.data.general.lineWidth;
+        ctxMouse.strokeStyle = this.data.general.color;
         hightLightMouseCursor(ctxMouse, coord, {
           ...mouseCircle,
           color: "pink",
@@ -157,14 +150,13 @@ export class DrawFreehand extends DrawingHandler {
    * Function who recieve the mouse move event
    */
   actionMouseMove(event: MouseEvent): string | null {
-    const start: coordinate | null = this.coordinates;
+    const start: Coordinate | null = this.coordinates;
     this.setCoordinates(event);
     if (this.isDrawing()) {
-      if (this.coordinates === null) return null;
       basicLine(
         this.context as CanvasRenderingContext2D,
         start,
-        this.coordinates as coordinate
+        this.coordinates as Coordinate
       );
     }
     return this.followCursor() as string;
@@ -181,7 +173,7 @@ export class DrawFreehand extends DrawingHandler {
     // color and width painting
     this.setCoordinates(event);
 
-    this.type = mode;
+    this.setType(mode);
 
     this.setDrawing(true);
 

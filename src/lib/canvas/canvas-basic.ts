@@ -1,11 +1,8 @@
 const SIZE_CROSS_MIN = 16;
-export type coordinate = {
-  x: number;
-  y: number;
-} | null;
+import { Coordinate } from "../types";
 export type drawingCircle = {
   context: CanvasRenderingContext2D;
-  coordinate: coordinate;
+  coordinate: Coordinate | null;
   color: string | null;
   borderColor: string | null;
   diameter: number;
@@ -19,8 +16,8 @@ export type drawingCircle = {
  */
 export const basicLine = (
   context: CanvasRenderingContext2D,
-  start: coordinate,
-  end: coordinate
+  start: Coordinate | null,
+  end: Coordinate | null
 ) => {
   if (!start || !end) return;
   context.beginPath();
@@ -33,7 +30,7 @@ export const basicLine = (
  */
 export const basicCircle = (
   context: CanvasRenderingContext2D,
-  coord: coordinate,
+  coord: Coordinate,
   diameter: number
 ) => {
   if (!coord) return;
@@ -45,7 +42,7 @@ export const basicCircle = (
  */
 export const drawPoint: (drawingCircle: drawingCircle) => void = ({
   context,
-  coordinate: coordinate,
+  coordinate,
   color = null,
   borderColor = null,
   diameter = 0,
@@ -164,7 +161,7 @@ export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
  */
 export const crossLine = (
   ctx: CanvasRenderingContext2D,
-  center: coordinate,
+  center: Coordinate,
   width: number
 ) => {
   if (!center) return;

@@ -1,11 +1,11 @@
+import { Area, ArgsMouseOnShape, Coordinate } from "../../lib/types";
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   paramsAll,
   paramsGeneral,
   paramsShape,
-  Area,
-  shapeDefinition,
+  ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
 import {
@@ -13,7 +13,6 @@ import {
   showElement,
   // drawDashedRectangle,
 } from "../../lib/canvas/canvas-elements";
-import { coordinate } from "../../lib/canvas/canvas-basic";
 import {
   addPictureToHistory,
   canvasPicture,
@@ -30,8 +29,8 @@ const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 export class DrawSelection extends DrawingHandler {
   private fixed: boolean = false;
   private resizing: string | null = null;
-  private offset: coordinate | null = null;
-  private data: shapeDefinition;
+  private offset: Coordinate | null = null;
+  protected data: ShapeDefinition;
   private selectedArea: Area | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -47,7 +46,8 @@ export class DrawSelection extends DrawingHandler {
     this.data = {
       ...this.data,
       ...{
-        withMiddleButton: false,
+        withMiddleButtons: false,
+        withCornerButton: false,
         type: DRAWING_MODES.SQUARE,
         rotation: 0,
       },
@@ -99,26 +99,13 @@ export class DrawSelection extends DrawingHandler {
       y: this.data.size.y - this.coordinates.y,
     };
   }
-  getOffset() {
-    return this.offset;
-  }
-  changeRotation(rotation: number) {
-    this.data.rotation += rotation;
-  }
 
   addData(data: any) {
     this.data = { ...this.data, ...data };
   }
-  setDataGeneral(data: paramsGeneral) {
-    this.data.general = { ...data };
-  }
-  setDataShape(data: paramsShape) {
-    this.data.shape = { ...data };
-  }
-
-  setDataSize(data: Area) {
-    this.data.size = { ...data };
-  }
+  // setDataShape(data: paramsShape) {
+  //   this.data.shape = { ...data };
+  // }
   initData(initData: paramsAll) {
     this.data = { ...this.data, ...initData };
     this.changeData(initData);
@@ -131,7 +118,7 @@ export class DrawSelection extends DrawingHandler {
       });
     this.data.rotation = 0;
     this.fixed = false;
-    this.setWithMiddleButton(true);
+    this.setWithMiddleButtons(true);
   }
   changeData(data: paramsAll) {
     this.setDataGeneral(data.general);
@@ -141,22 +128,16 @@ export class DrawSelection extends DrawingHandler {
   getData() {
     return this.data;
   }
-
   setType(type: string) {
-    this.type = type;
     this.data.type = type;
+    if (type === DRAWING_MODES.SELECT) {
+      this.setWithMiddleButtons(false);
+      this.setWithCornerButton(false);
+    } else {
+      this.setWithMiddleButtons(true);
+      this.setWithCornerButton(true);
+    }
   }
-  getType() {
-    return this.data.type;
-  }
-
-  setWithMiddleButton(value: boolean) {
-    this.data.withMiddleButton = value;
-  }
-  hasMiddleButton() {
-    return this.data.withMiddleButton;
-  }
-
   /**
    * Function to resize the square on the canvas
    */
@@ -181,14 +162,13 @@ export class DrawSelection extends DrawingHandler {
   /**
    * Function to refresh the element on the tempory canvas
    */
-  refreshDrawing() {
+  refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
     if (!this.ctxTempory) {
-      console.error("ctxTempory is null");
       return;
     }
     this.clearTemporyCanvas();
-    showElement(this.ctxTempory, this.data, false);
-    // drawDashedRectangle(this.ctxTempory, this.data.size);
+    showElement(this.ctxTempory, this.data, true, mouseOnShape);
+    this.lastMouseOnShape = mouseOnShape;
   }
 
   /**
@@ -239,12 +219,7 @@ export class DrawSelection extends DrawingHandler {
     let pointer: string | null = null;
     this.setCoordinates(event);
 
-    const mouseOnShape = this.handleMouseOnShape({
-      coordinate: this.coordinates,
-      area: this.data.size,
-      withResize: true,
-      withMiddleButton: this.data.withMiddleButton,
-    });
+    const mouseOnShape = this.handleMouseOnShape();
 
     if (mouseOnShape) {
       // console.log("mode", mode, "mouseOnShape: ", mouseOnShape);
@@ -259,10 +234,10 @@ export class DrawSelection extends DrawingHandler {
         toReset = true;
       } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
         this.changeRotation(-Math.PI / 16);
-        this.refreshDrawing();
+        this.refreshDrawing(0, mouseOnShape);
       } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
         this.changeRotation(Math.PI / 16);
-        this.refreshDrawing();
+        this.refreshDrawing(0, mouseOnShape);
       } else {
         alertMessage("resizing: " + mouseOnShape);
         this.setResizing(mouseOnShape);
@@ -271,38 +246,6 @@ export class DrawSelection extends DrawingHandler {
       }
     }
     return { toReset, toContinue: false, pointer } as returnMouseDown;
-  }
-  /**
-   * Function to follow the cursor on the canvas
-   * @param {string} mode - drawing mode
-   * @param {number} opacity - opacity of the element
-   */
-  followCursor(mode: string, opacity: number) {
-    let mouseOnShape: string | null = null;
-    let cursorType = "default";
-
-    if (!this.ctxTempory || !this.coordinates) return cursorType;
-
-    mouseOnShape = this.handleMouseOnShape({
-      coordinate: this.coordinates,
-      area: this.data.size,
-      withResize: true,
-      withMiddleButton: this.data.withMiddleButton,
-    });
-
-    if (mouseOnShape) {
-      cursorType = mousePointer(mouseOnShape);
-
-      if (isInside(mouseOnShape)) {
-        // show real color when mouse is inside the square
-        this.ctxTempory.globalAlpha = opacity;
-      }
-    }
-
-    this.clearTemporyCanvas();
-    // drawDashedRectangle(this.ctxTempory, this.data.size);
-    showElement(this.ctxTempory, this.data, true);
-    return cursorType;
   }
 
   actionMouseMove(event: MouseEvent) {
@@ -322,7 +265,8 @@ export class DrawSelection extends DrawingHandler {
       }
       return "pointer";
     }
-    return this.followCursor(this.getType(), this.data.general.opacity);
+
+    return this.followCursorOnElement(this.data.general.opacity);
   }
 
   actionMouseUp() {
@@ -343,7 +287,6 @@ export class DrawSelection extends DrawingHandler {
       case "C":
         if (event.ctrlKey) {
           this.copySelection();
-          this.setType(DRAWING_MODES.IMAGE);
         }
         break;
       // ctrl + v
@@ -394,6 +337,9 @@ export class DrawSelection extends DrawingHandler {
     if (area === null) return;
     this.data.canvasImage = this.copyInVirtualCanvas(area);
     this.setType(DRAWING_MODES.IMAGE);
+    this.setRotation(0);
+    console.log("copySelection: refreshDrawing");
+    this.refreshDrawing(1, BORDER.INSIDE);
   }
   /**
    * Function to paste the selected zone in the MAIN canvas
@@ -410,13 +356,13 @@ export class DrawSelection extends DrawingHandler {
         // Zone selection
         const rect = imageSize(this.mCanvas);
         const area = this.memorizeSelectedArea(rect);
+
+        this.setWithMiddleButtons(false);
+        this.setWithCornerButton(false);
         break;
-      // case DRAWING_MODES.COPY:
-      //   this.copySelection();
-      //   break;
-      // case DRAWING_MODES.PASTE:
-      //   this.pasteSelection();
-      //   break;
+      case DRAWING_MODES.IMAGE:
+        this.setWithMiddleButtons(true);
+        this.setWithCornerButton(true);
     }
   }
 
@@ -425,5 +371,31 @@ export class DrawSelection extends DrawingHandler {
     const area = this.getSelectedArea();
 
     saveCanvas(this.mCanvas, filename, area);
+  }
+  loadCanvas(filename: string) {
+    const virtualCanvas = document.createElement("canvas");
+    const ctx = virtualCanvas.getContext("2d");
+    if (!ctx) return;
+    const img = new Image();
+    img.src = filename;
+    img.onload = () => {
+      virtualCanvas.width = img.width;
+      virtualCanvas.height = img.height;
+      const ratio = img.width / img.height;
+      ctx.drawImage(img, 0, 0);
+      this.data.canvasImage = virtualCanvas;
+      this.data.size.ratio = ratio;
+      if (this.data.size.width > this.data.size.height) {
+        this.data.size.height = this.data.size.width / ratio;
+      } else {
+        this.data.size.width = this.data.size.height * ratio;
+      }
+
+      this.setType(DRAWING_MODES.IMAGE);
+      this.refreshDrawing(0, BORDER.INSIDE);
+    };
+    img.onerror = () => {
+      alertMessage("Error loading the file");
+    };
   }
 }
