@@ -229,15 +229,17 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         drawSelection.saveCanvas(filename);
         break;
       case DRAWING_MODES.LOAD:
-        alertMessage("Load: (" + eventMode + ") " + filename);
-        if (drawSelection === null) {
-          selectDrawingHandler(DRAWING_MODES.IMAGE);
+        {
+          const name = event.detail.name || "your file";
+
+          if (drawSelection === null) {
+            selectDrawingHandler(DRAWING_MODES.IMAGE);
+          }
+          drawSelection.loadCanvas(filename, name);
         }
-        drawSelection.loadCanvas(filename);
         break;
       case DRAWING_MODES.COPY:
         if (drawSelection === null) {
-          console.log("drawSelection is null");
           return;
         }
         alertMessage("Copy the selection");
@@ -245,11 +247,25 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         break;
       case DRAWING_MODES.PASTE:
         if (drawSelection === null) {
-          console.log("drawSelection is null");
           return;
         }
         alertMessage("Paste the selection");
         drawSelection.pasteSelection();
+        break;
+      case DRAWING_MODES.DELETE:
+        if (drawSelection === null) {
+          return;
+        }
+        alertMessage("Delete the selection");
+        drawSelection.deleteSelection();
+        break;
+      case DRAWING_MODES.CUT:
+        if (drawSelection === null) {
+          console.log("drawSelection is null");
+          return;
+        }
+        alertMessage("Cut the selection");
+        drawSelection.cutSelection();
         break;
     }
   };
@@ -300,6 +316,8 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       stopExtendMouseEvent();
     }
     if (toReset) {
+      drawing.endAction();
+      // restart with basic drawing mode
       const chgtMode = DRAWING_MODES.DRAW;
       drawing.initData(drawingParams.current);
       drawingParams.current.mode = chgtMode;

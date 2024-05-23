@@ -6,12 +6,14 @@ import { SlActionUndo } from "react-icons/sl";
 import { AiOutlineLoading } from "react-icons/ai";
 import { CiEraser } from "react-icons/ci";
 import { PiSelectionPlusLight } from "react-icons/pi";
+import { MdAspectRatio } from "react-icons/md";
 import clsx from "clsx";
 
 import { Button } from "../atom/Button";
 import {
   DRAWING_MODES,
   isDrawingSelect,
+  isDrawingShape,
 } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
@@ -31,6 +33,7 @@ export const DrawControl = ({
 }) => {
   const [mode, setMode] = useState(defaultMode);
   const [withText, setWithText] = useState(false);
+  const [lockRatio, setLockRatio] = useState(false);
 
   const filenameRef = useRef(null);
   const defaultFilename = useRef("my-drawing");
@@ -42,8 +45,8 @@ export const DrawControl = ({
   const addEventChangeMode = (mode) => {
     addEvent({ detail: { mode } });
   };
-  const addEventSaveFile = (mode, filename) => {
-    addEvent({ detail: { mode: mode, filename } });
+  const addEventSaveFile = (mode, filename, name = null) => {
+    addEvent({ detail: { mode, filename, name } });
   };
 
   const handleFileChange = (event) => {
@@ -51,9 +54,9 @@ export const DrawControl = ({
     if (file) {
       // const name = file.name;
       const url = URL.createObjectURL(file);
-      console.log("file", file, "url", url);
+      // console.log("file", file, "url", url);
 
-      addEventSaveFile(DRAWING_MODES.LOAD, url);
+      addEventSaveFile(DRAWING_MODES.LOAD, url, file.name);
     }
   };
 
@@ -67,6 +70,13 @@ export const DrawControl = ({
 
   const handleParamChange = (newParams) => {
     setParams(newParams);
+    addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
+  };
+  const handleChangeRatio = (ratio) => {
+    alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
+    drawingParams.ratio = ratio;
+    setParams({ lockRatio: ratio });
+    setLockRatio(ratio);
     addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
   };
 
@@ -136,6 +146,17 @@ export const DrawControl = ({
           >
             <PiSelectionPlusLight size="20px" />
           </Button>
+          <Button
+            className={clsx("px-5", {
+              hidden: !(isDrawingShape(mode) || isDrawingSelect(mode)),
+              "bg-green-600": !lockRatio,
+              "bg-red-600": lockRatio,
+            })}
+            selected={lockRatio}
+            onClick={() => handleChangeRatio(!lockRatio)}
+          >
+            <MdAspectRatio size="20px" />
+          </Button>
         </div>
         <div
           className={clsx("flex flex-col border-2 border-secondary p-2", {
@@ -146,6 +167,7 @@ export const DrawControl = ({
           <div className="flex flex-row gap-3">
             <Button
               className="px-2 py-1"
+              title="Ctrl+C"
               selected={mode === DRAWING_MODES.COPY}
               onClick={() => handleImage(DRAWING_MODES.COPY)}
             >
@@ -153,10 +175,18 @@ export const DrawControl = ({
             </Button>
             <Button
               className="px-2 py-1"
+              title="Ctrl+V"
               selected={mode === DRAWING_MODES.PASTE}
               onClick={() => handleImage(DRAWING_MODES.PASTE)}
             >
               Paste
+            </Button>
+            <Button
+              className="px-2 py-1"
+              title="Ctrl+X"
+              onClick={() => handleImage(DRAWING_MODES.CUT)}
+            >
+              Cut
             </Button>
             <ButtonConfirmModal
               className="bg-blue-500"
@@ -193,7 +223,11 @@ export const DrawControl = ({
         />
 
         <div className="relative m-auto flex gap-4">
-          <Button className="bg-pink-500" onClick={() => handleUndo()}>
+          <Button
+            className="bg-pink-500"
+            title="Ctrl-Z"
+            onClick={() => handleUndo()}
+          >
             <SlActionUndo size="20px" />
           </Button>
           <ButtonConfirmModal
@@ -227,7 +261,7 @@ export const DrawControl = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, changeMode]);
+  }, [mode, withText, drawingParams, changeMode, lockRatio]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

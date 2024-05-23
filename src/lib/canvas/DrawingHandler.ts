@@ -2,6 +2,10 @@ import { Coordinate, Area, ArgsMouseOnShape } from "../types";
 import { getCoordinates, clearCanvasByCtx } from "./canvas-tools";
 import { showElement } from "./canvas-elements";
 import { mousePointer, isInside } from "../mouse-position";
+import {
+  addPictureToHistory,
+  canvasPicture,
+} from "../../lib/canvas/canvas-history";
 
 import {
   DRAWING_MODES,
@@ -9,6 +13,7 @@ import {
   ShapeDefinition,
   paramsAll,
   paramsGeneral,
+  isDrawingLine,
 } from "./canvas-defines";
 import { isOnSquareBorder } from "../square-position";
 
@@ -113,6 +118,22 @@ export abstract class DrawingHandler {
   }
   setWithResize(value: boolean) {
     this.data.withResize = value;
+  }
+  /**
+   * Function to save the picture in the history
+   */
+  saveCanvasPicture() {
+    const type = this.getType();
+    const coord: Coordinate | null = isDrawingLine(type)
+      ? (this.getCoordinates() as Coordinate)
+      : null;
+    const savePicture = {
+      type: this.getType(),
+      canvas: this.mCanvas,
+      coordinates: coord,
+      image: null,
+    };
+    addPictureToHistory(savePicture as canvasPicture);
   }
   /**
    * Function to check if the mouse is on the border of the square or on a button inside or outside the square.

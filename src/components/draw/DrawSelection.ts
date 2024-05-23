@@ -1,22 +1,17 @@
-import { Area, ArgsMouseOnShape, Coordinate } from "../../lib/types";
+import { Area, Surface, Coordinate } from "../../lib/types";
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   paramsAll,
-  paramsGeneral,
-  paramsShape,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
-import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
+import { BORDER } from "../../lib/mouse-position";
+import { resizingElement, showElement } from "../../lib/canvas/canvas-elements";
 import {
-  resizingElement,
-  showElement,
-  // drawDashedRectangle,
-} from "../../lib/canvas/canvas-elements";
-import {
-  addPictureToHistory,
-  canvasPicture,
-} from "../../lib/canvas/canvas-history";
+  copyInVirtualCanvas,
+  calculateSize,
+} from "../../lib/canvas/canvas-images";
+
 import {
   DrawingHandler,
   returnMouseDown,
@@ -69,15 +64,6 @@ export class DrawSelection extends DrawingHandler {
     return this.coordinates;
   }
 
-  saveCanvasPicture() {
-    if (!this.mCanvas) return;
-    addPictureToHistory({
-      type: this.getType(),
-      canvas: this.mCanvas,
-      coordinates: null,
-    } as canvasPicture);
-  }
-
   setResizing(value: string | null) {
     this.resizing = value;
   }
@@ -103,9 +89,7 @@ export class DrawSelection extends DrawingHandler {
   addData(data: any) {
     this.data = { ...this.data, ...data };
   }
-  // setDataShape(data: paramsShape) {
-  //   this.data.shape = { ...data };
-  // }
+
   initData(initData: paramsAll) {
     this.data = { ...this.data, ...initData };
     this.changeData(initData);
@@ -122,7 +106,9 @@ export class DrawSelection extends DrawingHandler {
   }
   changeData(data: paramsAll) {
     this.setDataGeneral(data.general);
-    this.data.type = data.mode;
+    // this.data.type = data.mode;
+    console.log("changeData: type is:", this.data.type);
+    this.data.lockRatio = data.lockRatio;
   }
 
   getData() {
@@ -167,6 +153,7 @@ export class DrawSelection extends DrawingHandler {
       return;
     }
     this.clearTemporyCanvas();
+    if (opacity > 0) this.ctxTempory.globalAlpha = opacity;
     showElement(this.ctxTempory, this.data, true, mouseOnShape);
     this.lastMouseOnShape = mouseOnShape;
   }
@@ -281,6 +268,7 @@ export class DrawSelection extends DrawingHandler {
       case "Escape":
         this.eraseSelectedArea();
         this.setType(DRAWING_MODES.SELECT);
+        this.refreshDrawing(1, BORDER.INSIDE);
         break;
       // ctrl + c
       case "c":
@@ -294,6 +282,13 @@ export class DrawSelection extends DrawingHandler {
       case "V":
         if (event.ctrlKey) {
           this.pasteSelection();
+        }
+        break;
+      // Ctrl X
+      case "x":
+      case "X":
+        if (event.ctrlKey) {
+          this.cutSelection();
         }
         break;
     }
@@ -310,43 +305,43 @@ export class DrawSelection extends DrawingHandler {
 
   /**
    * Function to copy the selected zone in a virtual canvas
-   * @param {object} area - {x, y, width, height} of the selected zone
-   * @return {object} canvas - new canvas with the selected zone
-   */
-  copyInVirtualCanvas(area: Area): HTMLCanvasElement {
-    const imageData = this.context?.getImageData(
-      area.x,
-      area.y,
-      area.width,
-      area.height
-    );
-    const canvas = document.createElement("canvas");
-    canvas.width = area.width;
-    canvas.height = area.height;
-    const ctx = canvas.getContext("2d");
-    if (ctx && imageData) {
-      ctx.putImageData(imageData, 0, 0);
-    }
-    return canvas;
-  }
-  /**
-   * Function to copy the selected zone in a virtual canvas
    */
   copySelection(): void {
     const area = this.getSelectedArea();
-    if (area === null) return;
-    this.data.canvasImage = this.copyInVirtualCanvas(area);
+    if (area === null || this.context === null) return;
+    this.data.canvasImage = copyInVirtualCanvas(this.context, area);
     this.setType(DRAWING_MODES.IMAGE);
     this.setRotation(0);
     console.log("copySelection: refreshDrawing");
     this.refreshDrawing(1, BORDER.INSIDE);
   }
+  deleteSelection() {
+    const area = this.getSelectedArea();
+    if (area === null) return;
+    this.context?.clearRect(area.x, area.y, area.width, area.height);
+    this.saveCanvasPicture();
+    this.setType(DRAWING_MODES.SELECT);
+    this.setRotation(0);
+    this.refreshDrawing(1, BORDER.INSIDE);
+  }
+  cutSelection() {
+    const area = this.getSelectedArea();
+    if (area === null || this.context === null) return;
+    this.data.canvasImage = copyInVirtualCanvas(this.context, area);
+    this.context?.clearRect(area.x, area.y, area.width, area.height);
+    this.saveCanvasPicture();
+    this.setType(DRAWING_MODES.IMAGE);
+    this.setRotation(0);
+    this.refreshDrawing(1, BORDER.INSIDE);
+  }
+
   /**
    * Function to paste the selected zone in the MAIN canvas
    */
   pasteSelection(): void {
     this.validDrawedElement();
     this.setType(DRAWING_MODES.IMAGE);
+    this.refreshDrawing(1, BORDER.INSIDE);
   }
 
   startAction(): void {
@@ -365,31 +360,48 @@ export class DrawSelection extends DrawingHandler {
         this.setWithCornerButton(true);
     }
   }
-
+  /**
+   * Function to save the canvas in a file
+   * @param {string} filename - name of the file to save
+   */
   saveCanvas(filename: string) {
     if (!this.mCanvas) return;
     const area = this.getSelectedArea();
 
     saveCanvas(this.mCanvas, filename, area);
   }
-  loadCanvas(filename: string) {
+
+  /**
+   * Function to load an image in the canvas
+   * @param {string} filename - name of the file to load
+   */
+  loadCanvas(filename: string, name: string) {
     const virtualCanvas = document.createElement("canvas");
     const ctx = virtualCanvas.getContext("2d");
     if (!ctx) return;
     const img = new Image();
     img.src = filename;
     img.onload = () => {
+      const MAX_PC = 0.9;
+      const maxSize: Surface = {
+        width: MAX_PC * (this.mCanvas?.width || SQUARE_WIDTH),
+        height: MAX_PC * (this.mCanvas?.height || SQUARE_HEIGHT),
+      };
+
       virtualCanvas.width = img.width;
       virtualCanvas.height = img.height;
       const ratio = img.width / img.height;
       ctx.drawImage(img, 0, 0);
       this.data.canvasImage = virtualCanvas;
-      this.data.size.ratio = ratio;
-      if (this.data.size.width > this.data.size.height) {
-        this.data.size.height = this.data.size.width / ratio;
-      } else {
-        this.data.size.width = this.data.size.height * ratio;
-      }
+
+      alertMessage(
+        "Image '" + name + "' loaded w:" + img.width + " h:" + img.height
+      );
+
+      const area: Area = calculateSize(img as Surface, maxSize);
+      area.ratio = ratio;
+      this.setDataSize(area);
+      this.setRotation(0);
 
       this.setType(DRAWING_MODES.IMAGE);
       this.refreshDrawing(0, BORDER.INSIDE);

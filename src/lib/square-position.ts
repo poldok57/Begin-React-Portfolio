@@ -26,7 +26,7 @@ export const isInsideSquare = (coord: Coordinate | Area, square: Area) => {
 };
 
 export const getSquareOffset = (coord, square) => {
-  const rect = {
+  const rect: Rect = {
     left: square.x,
     top: square.y,
   } as Rect;
@@ -79,8 +79,8 @@ export const isOnSquareBorder = ({
 };
 
 export const resizeSquare = (coordinate, area, border) => {
-  const coord = { ...coordinate };
-  const rect = {
+  const newArea: Area = { ...coordinate };
+  const rect: Rect = {
     left: area.x,
     top: area.y,
     right: area.x + area.width,
@@ -89,12 +89,12 @@ export const resizeSquare = (coordinate, area, border) => {
     height: area.height,
   };
 
-  const newSquare = resizeRect(coord, rect, border);
+  const newSquare = resizeRect(newArea, rect, border);
 
-  coord.x = newSquare.left;
-  coord.y = newSquare.top;
-  coord.width = newSquare.width;
-  coord.height = newSquare.height;
+  newArea.x = newSquare.left;
+  newArea.y = newSquare.top;
+  newArea.width = newSquare.width;
+  newArea.height = newSquare.height;
 
-  return { coord, newSquare };
+  return { newArea, newSquare };
 };

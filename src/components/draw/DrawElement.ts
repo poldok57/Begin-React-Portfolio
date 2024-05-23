@@ -1,4 +1,3 @@
-import { Area, ArgsMouseOnShape } from "../../lib/types";
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
@@ -8,14 +7,10 @@ import {
   paramsText,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
-import { BORDER, mousePointer, isInside } from "../../lib/mouse-position";
+import { BORDER } from "../../lib/mouse-position";
 import { resizingElement, showElement } from "../../lib/canvas/canvas-elements";
 import { Coordinate } from "../../lib/types";
-import {
-  addPictureToHistory,
-  canvasPicture,
-} from "../../lib/canvas/canvas-history";
-import { isOnSquareBorder } from "../../lib/square-position";
+
 import {
   DrawingHandler,
   returnMouseDown,
@@ -66,15 +61,6 @@ export class DrawElement extends DrawingHandler {
     return this.coordinates;
   }
 
-  saveCanvasPicture() {
-    if (!this.mCanvas) return;
-    addPictureToHistory({
-      type: this.getType(),
-      canvas: this.mCanvas,
-      coordinates: null,
-    } as canvasPicture);
-  }
-
   setResizing(value: string | null) {
     this.resizing = value;
   }
@@ -120,23 +106,26 @@ export class DrawElement extends DrawingHandler {
         height: SQUARE_HEIGHT,
       });
     this.data.rotation = 0;
+    this.data.size.ratio = 0;
     this.fixed = false;
   }
-  changeData(data: paramsAll) {
-    this.setDataGeneral(data.general);
-    this.setDataBorder(data.border);
-    this.setDataShape(data.shape);
-    this.setDataText(data.text);
+  changeData(param: paramsAll) {
+    this.setDataGeneral(param.general);
+    this.setDataBorder(param.border);
+    this.setDataShape(param.shape);
+    this.setDataText(param.text);
 
-    this.data.type = data.mode;
+    this.data.type = param.mode;
+    this.data.lockRatio = param.lockRatio;
+
     this.setWithMiddleButtons();
   }
 
-  getData() {
+  getData(): ShapeDefinition {
     return this.data;
   }
 
-  setType(type: string) {
+  setType(type: string): void {
     this.data.type = type;
     if (type === DRAWING_MODES.TEXT) {
       this.setWithResize(false);
@@ -148,7 +137,7 @@ export class DrawElement extends DrawingHandler {
   /**
    * Function to set the value of the middle button
    */
-  setWithMiddleButtons() {
+  setWithMiddleButtons(): void {
     const square = this.data;
     const sSize = square.size;
     // don't show the middle button if the shape is a circle without text
@@ -169,7 +158,7 @@ export class DrawElement extends DrawingHandler {
    * @param {Event} event
    * @param {HTMLCanvasElement} canvas
    */
-  resizingSquare(witchBorder: string) {
+  resizingSquare(witchBorder: string): void {
     this.clearTemporyCanvas();
 
     if (!this.coordinates || !this.ctxTempory) return;
@@ -301,5 +290,6 @@ export class DrawElement extends DrawingHandler {
     this.setFixed(true);
     this.setResizing(null);
     this.clearTemporyCanvas();
+    this.eraseOffset();
   }
 }

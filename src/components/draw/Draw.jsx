@@ -14,7 +14,7 @@ export const Draw = () => {
 
   setHistoryMaxLen(MAX_HISTORY);
 
-  const getDrowingParams = () => {
+  const getDrawingParams = () => {
     return drawingParamsRef.current;
   };
 
@@ -34,7 +34,7 @@ export const Draw = () => {
 
   return (
     <div className="relative block gap-8">
-      <DrawCanvas canvas={canvas} getParams={getDrowingParams} />
+      <DrawCanvas canvas={canvas} getParams={getDrawingParams} />
       <DrawControlWP
         trace={false}
         style={{

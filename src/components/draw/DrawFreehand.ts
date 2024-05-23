@@ -14,15 +14,9 @@ import {
 import {
   DRAWING_MODES,
   mouseCircle,
-  paramsGeneral,
   paramsAll,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
-import {
-  addPictureToHistory,
-  canvasPicture,
-} from "../../lib/canvas/canvas-history";
-
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
@@ -72,16 +66,6 @@ export class DrawFreehand extends DrawingHandler {
       return;
     }
     this.ctxTempory = canvas.getContext("2d");
-  }
-
-  saveCanvasPicture() {
-    const savePicture = {
-      type: this.getType(),
-      canvas: this.mCanvas,
-      coordinates: this.getCoordinates() as Coordinate,
-      image: null,
-    };
-    addPictureToHistory(savePicture as canvasPicture);
   }
 
   setStartCoordinates(coord: Coordinate | null = null) {}

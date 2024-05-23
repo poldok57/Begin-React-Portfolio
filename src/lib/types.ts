@@ -3,6 +3,10 @@ export type Coordinate = {
   y: number;
 };
 
+export type Surface = {
+  width: number;
+  height: number;
+};
 export type Area = {
   x: number;
   y: number;

@@ -22,6 +22,8 @@ export const DRAWING_MODES = {
   INIT: "init",
   COPY: "copy",
   PASTE: "paste",
+  DELETE: "delete",
+  CUT: "cut",
   CONTROL_PANEL: {
     IN: "in",
     OUT: "out",
@@ -88,6 +90,7 @@ export type paramsText = {
 export type paramsAll = {
   mode: string;
   fixed: boolean;
+  lockRatio: boolean;
   general: paramsGeneral;
   shape: paramsShape;
   text: paramsText;
@@ -97,6 +100,7 @@ export type paramsAll = {
 export type ThingsToDraw = {
   type: string;
   rotation: number;
+  lockRatio: boolean;
   size: Area;
   general: paramsGeneral;
   withMiddleButtons: boolean;
@@ -106,6 +110,7 @@ export type ThingsToDraw = {
 export type ShapeDefinition = {
   type: string;
   rotation: number;
+  lockRatio: boolean;
   size: Area;
   canvasImage: HTMLCanvasElement;
   general: paramsGeneral;
@@ -120,6 +125,7 @@ export type ShapeDefinition = {
 export const DEFAULT_PARAMS: paramsAll = {
   mode: DRAWING_MODES.INIT,
   fixed: false,
+  lockRatio: false,
   general: {
     color: DEFAULT.COLOR,
     lineWidth: DEFAULT.SIZE,

@@ -449,6 +449,9 @@ const drawImage = (
   rotation: number,
   virtualCanval: HTMLCanvasElement
 ) => {
+  if (!virtualCanval || !virtualCanval.width || !virtualCanval.height) {
+    return;
+  }
   if (rotation !== 0) {
     rotateElement(ctx, squareSize, rotation);
   }
@@ -773,6 +776,21 @@ export const showElement = (
     drawButtons(ctx, square, mouseOnShape);
   }
 };
+
+const calculateRatio = (area: Area, ratio: number, mouseOnShape: string) => {
+  const newArea: Area = { ...area };
+  switch (mouseOnShape) {
+    case BORDER.TOP:
+    case BORDER.BOTTOM:
+      newArea.width = area.height * ratio;
+      break;
+    default:
+      newArea.height = area.width / ratio;
+      break;
+  }
+  return newArea;
+};
+
 /**
  * Function to resize the element on the canvas
  * @param {CanvasRenderingContext2D} ctx
@@ -786,11 +804,19 @@ export const resizingElement = (
   coordinate: Coordinate,
   mouseOnShape: string | null
 ) => {
+  if (square.lockRatio && !square.size.ratio) {
+    square.size.ratio = square.size.width / square.size.height;
+  } else {
+    square.size.ratio = 0;
+  }
   if (mouseOnShape) {
-    const { coord } = resizeSquare(coordinate, square.size, mouseOnShape);
+    let { newArea } = resizeSquare(coordinate, square.size, mouseOnShape);
+    if (square.lockRatio && square.size.ratio) {
+      newArea = calculateRatio(newArea, square.size.ratio, mouseOnShape);
+    }
 
-    showElement(ctx, { ...square, ...coord });
-    return coord;
+    showElement(ctx, { ...square, ...newArea });
+    return newArea;
   }
   return null;
 };
