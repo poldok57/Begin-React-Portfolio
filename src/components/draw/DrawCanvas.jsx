@@ -59,6 +59,25 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   };
 
   /**
+   * Function to set the context of the canvas
+   * @param {HTMLCanvasElement} canvas
+   * @param {number} opacity
+   */
+  const setContext = (canvas, opacity = null) => {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    if (drawingParams.current) {
+      ctx.strokeStyle = drawingParams.current.general.color;
+      ctx.lineWidth = drawingParams.current.general.lineWidth;
+    }
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalAlpha = opacity ?? drawingParams.current.general.opacity;
+    return ctx;
+  };
+  /**
    * select the drawing handler according to the mode
    * @param {string} mode
    * @returns {DrawingHandler} the drawing handler
@@ -196,7 +215,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       return;
     }
     // end previous action then changing mode
-    if (drawing) drawing.endAction();
+    if (drawing) drawing.endAction(newMode);
     stopExtendMouseEvent();
     const context = canvasRef.current.getContext("2d");
     context.globalCompositeOperation =
@@ -271,25 +290,6 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         break;
     }
   };
-  /**
-   * Function to set the context of the canvas
-   * @param {HTMLCanvasElement} canvas
-   * @param {number} opacity
-   */
-  const setContext = (canvas, opacity = null) => {
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
-    if (drawingParams.current) {
-      ctx.strokeStyle = drawingParams.current.general.color;
-      ctx.lineWidth = drawingParams.current.general.lineWidth;
-    }
-
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.globalAlpha = opacity ?? drawingParams.current.general.opacity;
-    return ctx;
-  };
 
   /**
    * Function to clear the temporary canvas
@@ -324,7 +324,6 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       drawing.initData(drawingParams.current);
       drawingParams.current.mode = chgtMode;
       drawing = selectDrawingHandler(chgtMode);
-      drawing.setType(chgtMode);
     }
     if (pointer !== null) {
       canvasMouseRef.current.style.cursor = pointer;

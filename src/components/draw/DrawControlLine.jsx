@@ -1,12 +1,17 @@
 import clsx from "clsx";
 import { isDrawingAllLines } from "../../lib/canvas/canvas-defines";
 
-export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
+export const DrawControlLine = ({
+  mode,
+  handleParamChange,
+  drawingParams,
+  opacity,
+  setOpacity,
+}) => {
   const handleGeneral = (param) => {
     drawingParams.general = { ...drawingParams.general, ...param };
     handleParamChange({ general: drawingParams.general });
   };
-
   return (
     <div
       className={clsx("flex flex-row gap-4 border border-secondary p-2", {
@@ -50,13 +55,11 @@ export const DrawControlLine = ({ mode, handleParamChange, drawingParams }) => {
           className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
           id="draw-size-picker"
           type="range"
-          defaultValue={drawingParams.general.opacity * 100}
+          value={opacity}
           min="5"
           max="100"
           step="5"
-          onChange={(event) =>
-            handleGeneral({ opacity: parseInt(event.target.value) / 100 })
-          }
+          onChange={(event) => setOpacity(event.target.value)}
         />
       </label>
     </div>

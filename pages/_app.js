@@ -31,7 +31,7 @@ const MyApp = ({ Component, pageProps }) => {
           className="absolute rounded-md border-double border-primary"
           locked="false"
           close="true"
-          trace={false}
+          trace={true}
           resizeable="true"
           style={{
             left: "50px",

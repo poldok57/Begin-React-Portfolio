@@ -8,7 +8,9 @@ import {
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER } from "../../lib/mouse-position";
-import { resizingElement, showElement } from "../../lib/canvas/canvas-elements";
+import { showElement } from "../../lib/canvas/canvas-elements";
+import { resizingElement } from "../../lib/canvas/canvas-resize";
+
 import { Coordinate } from "../../lib/types";
 
 import {

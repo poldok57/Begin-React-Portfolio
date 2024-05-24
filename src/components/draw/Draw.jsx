@@ -2,7 +2,6 @@ import { useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
 import { DRAWING_MODES, DEFAULT_PARAMS } from "../../lib/canvas/canvas-defines";
-// import { saveCanvas } from "../../lib/canvas/canvas-size";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 
 const MAX_HISTORY = 40;

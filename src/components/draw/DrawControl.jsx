@@ -34,6 +34,7 @@ export const DrawControl = ({
   const [mode, setMode] = useState(defaultMode);
   const [withText, setWithText] = useState(false);
   const [lockRatio, setLockRatio] = useState(false);
+  const [opacity, setOpacity] = useState(drawingParams.general.opacity * 100);
 
   const filenameRef = useRef(null);
   const defaultFilename = useRef("my-drawing");
@@ -62,6 +63,7 @@ export const DrawControl = ({
     addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
   };
   const handleOpacity = (value) => {
+    setOpacity(value);
     drawingParams.general.opacity = value / 100;
     handleParamChange({ general: drawingParams.general });
   };
@@ -215,6 +217,8 @@ export const DrawControl = ({
           mode={mode}
           handleParamChange={handleParamChange}
           drawingParams={drawingParams}
+          opacity={opacity}
+          setOpacity={handleOpacity}
         />
         <DrawControlShape
           mode={mode}
@@ -269,7 +273,7 @@ export const DrawControl = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, changeMode, lockRatio, handleOpacity]);
+  }, [mode, withText, drawingParams, changeMode, lockRatio, opacity]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

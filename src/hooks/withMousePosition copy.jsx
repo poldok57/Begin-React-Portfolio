@@ -48,13 +48,17 @@ export function withMousePosition(Component) {
     titleHeight = 32,
     ...props
   }) {
+    const [mousePosition, setMousePosition] = useState(null);
+
     const titleRef = useRef(null);
     const componentRef = useRef(null);
+    const componentPos = useRef(null);
+    // const componentRect = useRef(null);
 
     const offsetRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
-    const styleRef = useRef({ ...style });
+    const styleRef = useRef({ position: null, ...style });
     const canMoveRef = useRef(false);
-    const mouseCoordinatesRef = useRef({ x: 0, y: 0 });
+    const mouseCoordinates = { x: 0, y: 0 };
 
     trace = trace === true || trace === "true" ? true : false;
 
@@ -70,29 +74,13 @@ export function withMousePosition(Component) {
     titleHidden = titleHidden === true || titleHidden === "true" ? true : false;
 
     const setMouseCoordinates = (x, y) => {
-      mouseCoordinatesRef.current.x = x;
-      mouseCoordinatesRef.current.y = y;
+      mouseCoordinates.x = x;
+      mouseCoordinates.y = y;
     };
-    const getMouseCoordinates = () => mouseCoordinatesRef.current;
-
     const setCanMove = (value) => {
       canMoveRef.current = value;
     };
     const canMove = () => canMoveRef.current;
-
-    const selectComponent = (titleBar = null) => {
-      // if there is a title bar, mouse apply only on the title bar
-      if (titleBar) {
-        return {
-          waitEvent: titleRef.current,
-          component: componentRef.current,
-        };
-      }
-      return {
-        waitEvent: componentRef.current,
-        component: componentRef.current,
-      };
-    };
 
     const hideComponent = () => {
       const { component } = selectComponent();
@@ -112,20 +100,13 @@ export function withMousePosition(Component) {
       /**
        * New position is set when the component is changed from relative to absolute
        */
-      const left = component.offsetLeft,
-        top = component.offsetTop,
-        width = window.getComputedStyle(component).width;
+      componentPos.current = {
+        left: component.offsetLeft,
+        top: component.offsetTop,
+      };
 
       styleRef.current.position = POSITION.ABSOLUTE;
-      styleRef.current.width = width;
-
-      component.style.position = POSITION.ABSOLUTE;
-      component.style.width = width;
-      component.style.left = left + "px";
-      component.style.top = top + "px";
-      component.style.margin = 0;
-      component.style.marginTop = 0;
-      component.style.marginLeft = 0;
+      styleRef.current.width = window.getComputedStyle(component).width;
 
       if (trace) {
         console.log(
@@ -149,37 +130,24 @@ export function withMousePosition(Component) {
         styleRef.current.position === POSITION.RELATIVE &&
         !event.target.checked
       ) {
-        if (trace) console.log(`[${Component.name}] convertRelativeToAbsolute`);
         convertRelativeToAbsolute();
       }
 
       setLocked(event.target.checked);
     };
 
-    const calculNewPosition = () => {
-      const coord = getMouseCoordinates();
-      const { component } = selectComponent();
-      const newStyle = styleRef.current;
-
-      newStyle.left = coord.x + offsetRef.current.x + "px";
-      newStyle.top = coord.y + offsetRef.current.y + "px";
-
-      // delete margin if exists
-      if (newStyle.margin) delete newStyle.margin;
-      if (newStyle.marginTop) delete newStyle.marginTop;
-      if (newStyle.marginLeft) delete newStyle.marginLeft;
-
-      newStyle.right = "auto";
-      newStyle.bottom = "auto";
-
-      component.style.left = newStyle.left;
-      component.style.top = newStyle.top;
-      component.style.right = newStyle.right;
-      component.style.bottom = newStyle.bottom;
-      component.style.margin = newStyle.margin;
-      component.style.marginTop = newStyle.marginTop;
-      component.style.marginLeft = newStyle.marginLeft;
-      component.style.position = newStyle.position;
+    const selectComponent = (titleBar = null) => {
+      // if there is a title bar, mouse apply only on the title bar
+      if (titleBar) {
+        return {
+          waitEvent: titleRef.current,
+          component: componentRef.current,
+        };
+      }
+      return {
+        waitEvent: componentRef.current,
+        component: componentRef.current,
+      };
     };
 
     useEffect(() => {
@@ -188,11 +156,15 @@ export function withMousePosition(Component) {
           const { waitEvent } = selectComponent(titleBar);
           if (!mouseIsInsideComponent(event, waitEvent)) {
             setCanMove(false);
+            document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
+            waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
+            waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
             return;
           }
-
-          setMouseCoordinates(event.clientX, event.clientY);
-          calculNewPosition();
+          setMousePosition({
+            x: event.clientX,
+            y: event.clientY,
+          });
           if (trace) debounceLogs("move:", event.clientX, event.clientY);
         }
       };
@@ -243,22 +215,23 @@ export function withMousePosition(Component) {
          * if where is a title bar, we need to move the component
          * when the mouse is down on the title bar
          */
-        if (isLocked) return;
-
         const { waitEvent, component } = selectComponent(titleBar);
         if (waitEvent && waitEvent.contains(event.target)) {
           const coord = { x: event.clientX, y: event.clientY };
           setCanMove(true);
 
-          setMouseCoordinates(event.clientX, event.clientY);
-
+          setMousePosition(coord);
           // difference between the mouse and the component
           const compPos = {
             left: component.offsetLeft,
             top: component.offsetTop,
           };
           offsetRef.current = getRectOffset(coord, compPos);
-          calculNewPosition();
+
+          document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
+          waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
+          waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
+          waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
         }
       };
 
@@ -267,10 +240,20 @@ export function withMousePosition(Component) {
        * @param {MouseEvent} event
        */
       const mouseUp = (event) => {
-        setCanMove(false);
-        setMouseCoordinates(event.clientX, event.clientY);
-      };
+        const { waitEvent } = selectComponent(titleBar);
+        if (waitEvent && waitEvent.contains(event.target)) {
+          setCanMove(false);
+          setMousePosition({ x: event.clientX, y: event.clientY });
 
+          document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
+          waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
+          if (isLocked) {
+            waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
+          } else {
+            waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
+          }
+        }
+      };
       const handleMouseLeave = (event) => {
         if (trace) console.log(`[${Component.name}] mouseLeave`);
         if (canMove()) {
@@ -285,9 +268,13 @@ export function withMousePosition(Component) {
       const { waitEvent, component } = selectComponent(titleBar);
 
       if (component && waitEvent) {
-        waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
-        waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
-        waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
+        if (canMove()) {
+          waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
+          waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
+        } else if (!isLocked) {
+          // disable mouseDown when locked
+          waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
+        }
         if (
           !styleRef.current ||
           !styleRef.current.position ||
@@ -295,6 +282,11 @@ export function withMousePosition(Component) {
         ) {
           component.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
+
+        componentPos.current = {
+          left: component.offsetLeft,
+          top: component.offsetTop,
+        };
       }
 
       return () => {
@@ -306,13 +298,45 @@ export function withMousePosition(Component) {
           component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
       };
-    }, [isLocked]);
+    }, [isLocked, mousePosition, titleBar]);
 
-    if (trace) console.log("Render: styleRef:", styleRef.current);
+    let newStyle = {};
+    if (canMove()) {
+      /**
+       * move the component
+       */
+      newStyle.left = mousePosition ? mousePosition.x + offsetRef.current.x : 0;
+      newStyle.top = mousePosition ? mousePosition.y + offsetRef.current.y : 0;
+
+      // delete margin if exists
+      if (styleRef.current.margin) delete styleRef.current.margin;
+      if (styleRef.current.marginTop) delete styleRef.current.marginTop;
+      if (styleRef.current.marginLeft) delete styleRef.current.marginLeft;
+      if (newStyle.left) styleRef.current.right = "auto";
+      if (newStyle.top) styleRef.current.bottom = "auto";
+
+      newStyle = { ...styleRef.current, ...newStyle };
+    } else if (componentPos.current) {
+      // copy the position of the component after change from relative to absolute
+      newStyle = { ...styleRef.current, ...componentPos.current };
+
+      if (trace) {
+        debounceLogs(
+          `[${Component.name}] =>`,
+          styleRef.current.position,
+          ":",
+          newStyle.left,
+          newStyle.top
+        );
+      }
+    } else {
+      newStyle = { ...styleRef.current };
+    }
+
     return (
       <div
         ref={componentRef}
-        style={{ ...styleRef.current }}
+        style={newStyle}
         className={clsx("group hover:z-40", className, {
           "border-grey-800 cursor-pointer border shadow-lg": canMove(),
           "hover:cursor-default": isLocked || titleBar,

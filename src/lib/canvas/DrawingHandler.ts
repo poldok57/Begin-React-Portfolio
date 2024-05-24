@@ -188,7 +188,7 @@ export abstract class DrawingHandler {
   }
 
   startAction(): void {}
-  abstract endAction(): void;
+  abstract endAction(nextMode: string): void;
   abstract changeData(data: paramsAll): void;
   abstract initData(data: paramsAll): void;
 

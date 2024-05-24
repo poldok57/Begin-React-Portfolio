@@ -16,6 +16,7 @@ import {
   mouseCircle,
   paramsGeneral,
   paramsAll,
+  isDrawingLine,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
 
@@ -236,7 +237,11 @@ export class DrawLine extends DrawingHandler {
         break;
     }
   }
-  endAction() {
+  endAction(nextMode: string) {
+    if (!isDrawingLine(nextMode)) {
+      clearCanvasByCtx(this.ctxTempory);
+      this.line.eraseLastCoordinates();
+    }
     clearCanvasByCtx(this.ctxMouse);
   }
 }
