@@ -22,6 +22,7 @@ import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../../hooks/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
+import { DrawControlSelect } from "./DrawControlSelect";
 
 // import clsx from "clsx";
 
@@ -74,12 +75,6 @@ export const DrawControl = ({
     addEventChangeMode(newMode);
   };
 
-  const handleImage = (value) => {
-    setMode(DRAWING_MODES.SELECT);
-    changeMode(DRAWING_MODES.IMAGE);
-    addEventChangeMode(value);
-  };
-
   const handleUndo = () => {
     addEventChangeMode(DRAWING_MODES.UNDO);
   };
@@ -90,14 +85,6 @@ export const DrawControl = ({
     setParams({ lockRatio: ratio });
     setLockRatio(ratio);
     addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
-  };
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      addEventSaveFile(DRAWING_MODES.LOAD, url, file.name);
-      handleChangeRatio(true);
-    }
   };
 
   return useMemo(() => {
@@ -148,7 +135,7 @@ export const DrawControl = ({
           </Button>
           <Button
             className="bg-blue-500 px-5"
-            selected={mode == DRAWING_MODES.SELECT}
+            selected={isDrawingSelect(mode)}
             onClick={() => {
               handleModeChange(DRAWING_MODES.SELECT);
               handleChangeRatio(false);
@@ -168,51 +155,13 @@ export const DrawControl = ({
             <MdAspectRatio size="20px" />
           </Button>
         </div>
-        <div
-          className={clsx("flex flex-col border-2 border-secondary p-2", {
-            "bg-paper": isDrawingSelect(mode),
-            hidden: !isDrawingSelect(mode),
-          })}
-        >
-          <div className="flex flex-row gap-3">
-            <Button
-              className="px-2 py-1"
-              title="Ctrl+C"
-              selected={mode === DRAWING_MODES.COPY}
-              onClick={() => handleImage(DRAWING_MODES.COPY)}
-            >
-              Copy
-            </Button>
-            <Button
-              className="px-2 py-1"
-              title="Ctrl+V"
-              selected={mode === DRAWING_MODES.PASTE}
-              onClick={() => handleImage(DRAWING_MODES.PASTE)}
-            >
-              Paste
-            </Button>
-            <Button
-              className="px-2 py-1"
-              title="Ctrl+X"
-              onClick={() => handleImage(DRAWING_MODES.CUT)}
-            >
-              Cut
-            </Button>
-            <ButtonConfirmModal
-              className="bg-blue-500"
-              value="Upload image"
-              width="380px"
-              showUnder={true}
-            >
-              <div className="flex flex-row">Select a file to upload :</div>
-              <input
-                XclassName="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
-                type="file"
-                onChange={handleFileChange}
-              />
-            </ButtonConfirmModal>
-          </div>
-        </div>
+        <DrawControlSelect
+          mode={mode}
+          setMode={setMode}
+          changeMode={changeMode}
+          handleChangeRatio={handleChangeRatio}
+          addEvent={addEvent}
+        />
         <DrawControlLine
           mode={mode}
           handleParamChange={handleParamChange}

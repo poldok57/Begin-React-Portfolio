@@ -6,7 +6,11 @@ import { AiOutlineRadiusBottomright } from "react-icons/ai";
 import { WiMoonFirstQuarter } from "react-icons/wi";
 import { Button } from "../atom/Button";
 import ToggleSwitch from "../atom/ToggleSwitch";
-import { DRAWING_MODES, isDrawingShape } from "../../lib/canvas/canvas-defines";
+import {
+  DRAWING_MODES,
+  isDrawingShape,
+  isDrawingSquare,
+} from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 
 export const DrawControlShape = ({
@@ -74,13 +78,17 @@ export const DrawControlShape = ({
             <WiMoonFirstQuarter size="20px" />
           </Button>
         </div>
-        <div className="flex flex-row gap-3">
+        <div className="flex flex-row gap-5">
           <label
             htmlFor="toggle-filled"
-            className={clsx("flex items-center justify-center gap-1", {
-              hidden: !isDrawingShape(mode),
-            })}
+            className={clsx(
+              "flex flex-col items-center justify-center font-bold",
+              {
+                hidden: !isDrawingShape(mode),
+              }
+            )}
           >
+            Filled
             <ToggleSwitch
               id="toggle-filled"
               defaultChecked={drawingParams.shape.filled}
@@ -88,12 +96,11 @@ export const DrawControlShape = ({
                 handleShape({ filled: event.target.checked })
               }
             />
-            Filled
           </label>
           <label
             htmlFor="draw-radius-picker"
-            className={clsx("flex items-center justify-center gap-1", {
-              hidden: mode === DRAWING_MODES.CIRCLE,
+            className={clsx("flex flex-col items-center justify-center gap-2", {
+              hidden: !isDrawingSquare(mode),
             })}
           >
             Radius
@@ -113,32 +120,31 @@ export const DrawControlShape = ({
           <label
             htmlFor="toggle-text"
             className={clsx(
-              "flex items-center justify-center gap-2 font-bold",
+              "flex flex-col items-center justify-center font-bold",
               {
                 hidden: !isDrawingShape(mode),
               }
             )}
           >
+            With Text
             <ToggleSwitch
               id="toggle-text"
               defaultChecked={drawingParams.shape.withText}
               onChange={(event) => handleWithText(event)}
             />
-            With Text
           </label>
         </div>
       </div>
       <div
-        className={clsx("flex flex-row gap-2 p-2", {
+        className={clsx("mt-1 flex flex-row  border-t border-secondary p-2", {
           hidden: !isDrawingShape(mode),
         })}
       >
         <label
           htmlFor="toggle-border"
-          className={clsx("flex items-center justify-center gap-2", {
-            "font-bold": withBorder,
-          })}
+          className="flex flex-col items-center justify-center font-bold"
         >
+          Border
           <ToggleSwitch
             id="toggle-Border"
             defaultChecked={drawingParams.shape.withBorder}
@@ -147,9 +153,8 @@ export const DrawControlShape = ({
               setWithBorder(event.target.checked);
             }}
           />
-          Border
         </label>
-        <div style={{ display: withBorder ? "flex" : "none" }}>
+        <div className={clsx("flex flex-row gap-5", { hidden: !withBorder })}>
           <label
             htmlFor="border-color-picker"
             className="flex items-center justify-center gap-2"
@@ -164,7 +169,7 @@ export const DrawControlShape = ({
           </label>
           <label
             htmlFor="border-size-picker"
-            className="flex items-center justify-center gap-1"
+            className="flex flex-col items-center justify-center gap-1"
           >
             width
             <input
@@ -183,7 +188,7 @@ export const DrawControlShape = ({
           </label>
           <label
             htmlFor="border-interval-picker"
-            className="flex items-center justify-center gap-1"
+            className="flex flex-col items-center justify-center gap-1"
           >
             Interval
             <input
@@ -202,7 +207,7 @@ export const DrawControlShape = ({
           </label>
           <label
             htmlFor="border-opacity-picker"
-            className="flex items-center justify-center gap-2"
+            className="flex flex-col items-center justify-center gap-2"
           >
             Opacity
             <input

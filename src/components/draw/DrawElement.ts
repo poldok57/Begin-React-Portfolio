@@ -108,6 +108,7 @@ export class DrawElement extends DrawingHandler {
         height: SQUARE_HEIGHT,
       });
     this.data.rotation = 0;
+    this.data.text.rotation = 0;
     this.data.size.ratio = 0;
     this.fixed = false;
   }

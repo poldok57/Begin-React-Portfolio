@@ -1,5 +1,8 @@
 import { Area, Surface, Coordinate } from "../../lib/types";
-import { getCoordinates } from "../../lib/canvas/canvas-tools";
+import {
+  getCoordinates,
+  makeWhiteTransparent,
+} from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   paramsAll,
@@ -103,6 +106,8 @@ export class DrawSelection extends DrawingHandler {
         height: SQUARE_HEIGHT,
       });
     this.data.rotation = 0;
+    this.data.canvasImage = null;
+    this.data.canvasImageTransparent = null;
     this.fixed = false;
     this.setWithMiddleButtons(true);
   }
@@ -333,6 +338,29 @@ export class DrawSelection extends DrawingHandler {
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.IMAGE);
     this.setRotation(0);
+    this.refreshDrawing(1, BORDER.INSIDE);
+  }
+  transparencySelection(delta: number) {
+    // console.log("transparency " + delta);
+    if (delta <= 0) {
+      // Reset the transparency
+      this.data.canvasImageTransparent = null;
+    } else {
+      this.data.canvasImageTransparent = document.createElement("canvas");
+
+      makeWhiteTransparent(
+        this.data.canvasImage,
+        this.data.canvasImageTransparent,
+        delta
+      );
+    }
+
+    this.refreshDrawing(1, BORDER.INSIDE);
+  }
+  radiusSelection(radius: number) {
+    this.data.shape.radius = radius;
+
+    console.log("radius ", radius);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
 

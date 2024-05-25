@@ -106,9 +106,8 @@ export function withMousePosition(Component) {
      */
     const convertRelativeToAbsolute = () => {
       const { component } = selectComponent();
-      if (!component) {
-        return;
-      }
+      if (!component) return;
+
       /**
        * New position is set when the component is changed from relative to absolute
        */
@@ -144,7 +143,6 @@ export function withMousePosition(Component) {
      */
     const toggleLocked = (event) => {
       if (trace) console.log(`[${Component.name}] toggleLocked`);
-
       if (
         styleRef.current.position === POSITION.RELATIVE &&
         !event.target.checked
@@ -193,7 +191,6 @@ export function withMousePosition(Component) {
 
           setMouseCoordinates(event.clientX, event.clientY);
           calculNewPosition();
-          if (trace) debounceLogs("move:", event.clientX, event.clientY);
         }
       };
 
@@ -280,11 +277,11 @@ export function withMousePosition(Component) {
       /**
        * add the events listener
        */
-      document.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
 
       const { waitEvent, component } = selectComponent(titleBar);
 
       if (component && waitEvent) {
+        waitEvent.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
         waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
         waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
         waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
@@ -298,9 +295,8 @@ export function withMousePosition(Component) {
       }
 
       return () => {
-        document.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
-
         if (waitEvent && component) {
+          waitEvent.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
           waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
           waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
           component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);

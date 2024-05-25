@@ -95,7 +95,7 @@ export const FullScreenModal = forwardRef(function FullScreenModal(
   return (
     <div
       ref={ref}
-      className="z-10 rounded-lg border-2 border-red-700 bg-paper p-4 shadow-xl"
+      className="z-40 rounded-lg border-2 border-red-700 bg-paper p-4 shadow-xl"
       style={mStyle}
     >
       <TitleBar

@@ -288,6 +288,20 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         alertMessage("Cut the selection");
         drawSelection.cutSelection();
         break;
+      case DRAWING_MODES.TRANSPARENCY:
+        if (drawSelection !== null) {
+          const value = event.detail.value ?? 5;
+          alertMessage("Transparency (" + value + ") on selection");
+          drawSelection.transparencySelection(value);
+        }
+        break;
+      case DRAWING_MODES.IMAGE_RADIUS:
+        if (drawSelection !== null) {
+          const value = event.detail.value ?? 5;
+          alertMessage("Radius (" + value + ") on selection");
+          drawSelection.radiusSelection(value);
+        }
+        break;
     }
   };
 
@@ -411,12 +425,11 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     };
 
     const canvasMouse = canvasMouseRef.current;
+    canvasMouse.style.pointerEvents = "auto";
 
-    const mouseEffect = canvasMouse;
-
-    mouseEffect.addEventListener("mousedown", handleMouseDown);
-    mouseEffect.addEventListener("mousemove", handleMouseMove);
-    mouseEffect.addEventListener("mouseup", handleMouseUp);
+    canvasMouse.addEventListener("mousedown", handleMouseDown);
+    canvasMouse.addEventListener("mousemove", handleMouseMove);
+    canvasMouse.addEventListener("mouseup", handleMouseUp);
     canvasMouse.addEventListener("mouseleave", onMouseLeave);
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("modeChanged", handleChangeMode);
@@ -476,6 +489,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           position: "absolute",
           left: 0,
           top: 0,
+          zIndex: 2,
         }}
         className="transparent m-auto"
       />
@@ -489,7 +503,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           position: "absolute",
           left: 0,
           top: 0,
-          zIndex: 100,
+          zIndex: 3,
         }}
         className="transparent m-auto"
       />

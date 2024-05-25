@@ -23,6 +23,8 @@ export const DRAWING_MODES = {
   COPY: "copy",
   PASTE: "paste",
   DELETE: "delete",
+  IMAGE_RADIUS: "imageRadius",
+  TRANSPARENCY: "transparency",
   CUT: "cut",
   CONTROL_PANEL: {
     IN: "in",
@@ -52,6 +54,8 @@ const ALL_DRAWING_MODES = [
 ];
 export const isDrawingMode = (mode: string) => ALL_DRAWING_MODES.includes(mode);
 export const isDrawingShape = (mode: string) => SHAPE_MODES.includes(mode);
+export const isDrawingSquare = (mode: string) =>
+  isDrawingShape(mode) && mode !== DRAWING_MODES.CIRCLE;
 export const isDrawingLine = (mode: string) => LINE_MODES.includes(mode);
 export const isDrawingFreehand = (mode: string) =>
   FREEHAND_MODES.includes(mode);
@@ -114,7 +118,8 @@ export type ShapeDefinition = {
   rotation: number;
   lockRatio: boolean;
   size: Area;
-  canvasImage: HTMLCanvasElement;
+  canvasImage: HTMLCanvasElement | null;
+  canvasImageTransparent: HTMLCanvasElement | null;
   general: paramsGeneral;
   shape: paramsShape;
   border: paramsGeneral;

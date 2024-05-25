@@ -22,13 +22,11 @@ const TEXT_PADDING = 20;
  */
 const drawRoundedRect = (
   ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
+  area: Area,
   radius: number
 ) => {
   ctx.beginPath();
+  const { x, y, width, height } = area;
 
   radius = Math.min(radius, width / 2, height / 2);
 
@@ -122,7 +120,7 @@ const getShapeSize = (square: Area, lineWidth: number = 0) => {
     x += lineWidth / 2;
     y += lineWidth / 2;
   }
-  return { x, y, width, height };
+  return { x, y, width, height } as Area;
 };
 
 /**
@@ -138,15 +136,16 @@ const drawSquare = (
   lineWidth: number,
   radius: number
 ) => {
-  let { x, y, width, height } = getShapeSize(squareSize, lineWidth);
+  const newArea = getShapeSize(squareSize, lineWidth);
 
   ctx.beginPath();
 
   if (!radius || radius < 1) {
     ctx.lineJoin = "miter";
+    const { x, y, width, height } = newArea;
     ctx.rect(x, y, width, height);
   } else {
-    drawRoundedRect(ctx, x, y, width, height, radius);
+    drawRoundedRect(ctx, newArea, radius);
   }
 };
 /**
@@ -206,15 +205,26 @@ const drawImage = (
   ctx: CanvasRenderingContext2D,
   squareSize: Area,
   rotation: number,
-  virtualCanval: HTMLCanvasElement
+  radius: number,
+  virtualCanval: HTMLCanvasElement | null
 ) => {
   if (!virtualCanval || !virtualCanval.width || !virtualCanval.height) {
     return;
   }
   if (rotation !== 0) {
     rotateElement(ctx, squareSize, rotation);
+  } else if (radius > 0) {
+    ctx.save();
   }
+
   let { x, y, width, height } = squareSize;
+
+  if (radius > 0) {
+    const radiusPc = (Math.min(width, height) * radius) / 100;
+    ctx.beginPath();
+    drawRoundedRect(ctx, squareSize, radiusPc);
+    ctx.clip();
+  }
 
   ctx.drawImage(
     virtualCanval,
@@ -227,7 +237,7 @@ const drawImage = (
     width,
     height
   );
-  if (rotation !== 0) {
+  if (rotation !== 0 || radius > 0) {
     ctx.restore();
   }
 };
@@ -485,7 +495,11 @@ export const showElement = (
       drawDashedRectangle(ctx, square.size);
       return;
     case SHAPE_TYPE.IMAGE:
-      drawImage(ctx, square.size, square.rotation, square.canvasImage);
+      {
+        const img: HTMLCanvasElement | null =
+          square.canvasImageTransparent ?? square.canvasImage;
+        drawImage(ctx, square.size, square.rotation, square.shape.radius, img);
+      }
       break;
     case SHAPE_TYPE.SQUARE:
       // drawSquare(ctx, square);

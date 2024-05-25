@@ -1,5 +1,10 @@
 import clsx from "clsx";
-import { isDrawingAllLines } from "../../lib/canvas/canvas-defines";
+import {
+  DRAWING_MODES,
+  isDrawingAllLines,
+  isDrawingSelect,
+} from "../../lib/canvas/canvas-defines";
+import { ColorPicker } from "../atom/ColorPicker";
 
 export const DrawControlLine = ({
   mode,
@@ -20,19 +25,26 @@ export const DrawControlLine = ({
     >
       <label
         htmlFor="draw-color-picker"
-        className="flex items-center justify-center gap-4"
+        className={clsx("flex items-center justify-center gap-3", {
+          hidden: isDrawingSelect(mode) || mode === DRAWING_MODES.ERASE,
+        })}
       >
         Color
-        <input
+        <ColorPicker
+          className="my-0"
           id="draw-color-picker"
-          type="color"
+          height="40"
+          width="40"
           defaultValue={drawingParams.general.color}
-          onChange={(event) => handleGeneral({ color: event.target.value })}
+          onChange={(color) => handleGeneral({ color: color })}
         />
       </label>
       <label
         htmlFor="draw-size-picker"
-        className="flex items-center justify-center gap-4 whitespace-nowrap"
+        className={clsx(
+          "flex flex-col items-center justify-center gap-1 whitespace-nowrap",
+          { hidden: isDrawingSelect(mode) }
+        )}
       >
         Line width
         <input
@@ -48,7 +60,9 @@ export const DrawControlLine = ({
       </label>
       <label
         htmlFor="draw-opacity-picker"
-        className="flex items-center justify-center gap-4"
+        className={clsx("flex flex-col items-center justify-center gap-1", {
+          hidden: mode === DRAWING_MODES.SELECT,
+        })}
       >
         Opacity
         <input
