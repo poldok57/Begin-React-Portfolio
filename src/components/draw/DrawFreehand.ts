@@ -183,7 +183,6 @@ export class DrawFreehand extends DrawingHandler {
 
     this.setDrawing(false);
   }
-  actionKeyDown(event: KeyboardEvent) {}
   endAction() {
     this.setDrawing(false);
 

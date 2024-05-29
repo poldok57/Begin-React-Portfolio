@@ -25,7 +25,7 @@ export const DrawControlText = ({
    * @param {number} angle - The angle to rotate the text in grad
    */
   const handleTextRotation = (angle) => {
-    const newAngle = drawingParams.text.rotation + (angle * Math.PI) / 200;
+    const newAngle = drawingParams.text.rotation + angle;
     handleText({ rotation: newAngle });
   };
 
@@ -130,10 +130,16 @@ export const DrawControlText = ({
             onChange={(e) => handleText({ color: e.target.value })}
           />
         </label>
-        <Button className="px-3 py-1" onClick={() => handleTextRotation(-25)}>
+        <Button
+          className="px-3 py-1"
+          onClick={() => handleTextRotation(-Math.PI / 16)}
+        >
           <TbRotate2 size="20px" />
         </Button>
-        <Button className="px-3 py-1" onClick={() => handleTextRotation(25)}>
+        <Button
+          className="px-3 py-1"
+          onClick={() => handleTextRotation(Math.PI / 16)}
+        >
           <TbRotateClockwise2 size="20px" />
         </Button>
       </div>

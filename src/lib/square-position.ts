@@ -12,7 +12,11 @@ import {
 /**
  * is the mouse inside the square
  */
-export const isInsideSquare = (coord: Coordinate | Area, square: Area) => {
+export const isInsideSquare = (
+  coord: Coordinate | Area | null,
+  square: Area | null
+): boolean => {
+  if (!coord || !square) return false;
   const rect = {
     left: square.x,
     top: square.y,
@@ -20,9 +24,7 @@ export const isInsideSquare = (coord: Coordinate | Area, square: Area) => {
     bottom: square.y + square.height,
   } as Rect;
 
-  const isInside = mouseIsInsideRect(coord, rect);
-
-  return isInside;
+  return mouseIsInsideRect(coord, rect);
 };
 
 export const getSquareOffset = (coord, square) => {

@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { withMousePosition } from "../../hooks/withMousePosition";
 import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
@@ -26,13 +26,9 @@ import { DrawControlSelect } from "./DrawControlSelect";
 
 // import clsx from "clsx";
 
-export const DrawControl = ({
-  setParams,
-  changeMode,
-  defaultMode,
-  drawingParams,
-}) => {
-  const [mode, setMode] = useState(defaultMode);
+export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
+  const [mode, setMode] = useState(drawingParams.mode);
+  const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
   const [lockRatio, setLockRatio] = useState(false);
   const [opacity, setOpacity] = useState(drawingParams.general.opacity * 100);
@@ -44,24 +40,29 @@ export const DrawControl = ({
     const event = new CustomEvent("modeChanged", detail);
     document.dispatchEvent(event);
   };
-  const addEventChangeMode = (mode) => {
-    addEvent({ detail: { mode } });
+  const addEventDetail = (detail) => addEvent({ detail });
+
+  const addEventAction = (action) => {
+    addEventDetail({ mode: DRAWING_MODES.ACTION, action });
   };
-  const addEventSaveFile = (mode, filename, name = null) => {
-    addEvent({ detail: { mode, filename, name } });
+  const addEventMode = (mode) => {
+    addEventDetail({ mode });
+  };
+  const addEventSaveFile = (action, filename, name = null) => {
+    addEventDetail({ mode: DRAWING_MODES.ACTION, action, filename, name });
   };
 
   const handleConfirmReset = () => {
     alertMessage("Reset confirmed");
     changeMode(DRAWING_MODES.INIT);
-    addEventChangeMode(DRAWING_MODES.INIT);
+    addEventAction(DRAWING_MODES.INIT);
     setMode(DRAWING_MODES.DRAW);
     eraseHistory();
   };
 
   const handleParamChange = (newParams) => {
     setParams(newParams);
-    addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
+    addEventDetail({ mode: DRAWING_MODES.CHANGE });
   };
   const handleOpacity = (value) => {
     setOpacity(value);
@@ -72,26 +73,85 @@ export const DrawControl = ({
   const handleModeChange = (newMode) => {
     setMode(newMode);
     changeMode(newMode);
-    addEventChangeMode(newMode);
+    addEventMode(newMode);
   };
 
-  const handleUndo = () => {
-    addEventChangeMode(DRAWING_MODES.UNDO);
+  const handleImage = (mode) => {
+    setMode(DRAWING_MODES.IMAGE);
+    changeMode(DRAWING_MODES.IMAGE);
+    addEventAction(mode);
+  };
+
+  const handleSelectZone = () => {
+    handleModeChange(DRAWING_MODES.SELECT);
+    handleChangeRatio(false);
   };
 
   const handleChangeRatio = (ratio) => {
     alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
-    drawingParams.ratio = ratio;
     setParams({ lockRatio: ratio });
     setLockRatio(ratio);
-    addEventChangeMode(DRAWING_MODES.DRAWING_CHANGE);
+    addEventMode(DRAWING_MODES.CHANGE);
   };
+  const handleKeyDown = (event) => {
+    switch (event.key) {
+      case "Escape":
+        addEventAction(DRAWING_MODES.ABORT);
+        break;
+      case "Enter":
+        addEventAction(DRAWING_MODES.VALID);
+        break;
+      case "z":
+      case "Z":
+        if (event.ctrlKey) {
+          addEventAction(DRAWING_MODES.UNDO);
+        }
+        break;
+      case "a":
+      case "A":
+        if (event.ctrlKey) {
+          event.preventDefault();
+          handleSelectZone();
+        }
+        break;
+
+      case "c":
+      case "C":
+        // console.log("Ctrl-c", mode);
+        if (isDrawingSelect(modeRef.current) && event.ctrlKey) {
+          handleImage(DRAWING_MODES.COPY);
+        }
+        break;
+      case "v":
+      case "V":
+        if (isDrawingSelect(modeRef.current) && event.ctrlKey) {
+          handleImage(DRAWING_MODES.PASTE);
+        }
+        break;
+      case "x":
+      case "X":
+        if (isDrawingSelect(modeRef.current) && event.ctrlKey) {
+          handleImage(DRAWING_MODES.CUT);
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    modeRef.current = mode;
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mode]);
 
   return useMemo(() => {
     return (
       <div
-        onMouseEnter={() => addEventChangeMode(DRAWING_MODES.CONTROL_PANEL.IN)}
-        onMouseLeave={() => addEventChangeMode(DRAWING_MODES.CONTROL_PANEL.OUT)}
+        onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
+        onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
         className="flex w-auto flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl"
       >
         <div className="flex flex-row gap-4">
@@ -106,6 +166,7 @@ export const DrawControl = ({
             className="px-5 py-1"
             selected={mode == DRAWING_MODES.LINE}
             onClick={() => handleModeChange(DRAWING_MODES.LINE)}
+            title="Draw lines"
           >
             <MdTimeline size="28px" />
           </Button>
@@ -113,6 +174,7 @@ export const DrawControl = ({
             className="px-5 py-1"
             selected={mode == DRAWING_MODES.ARC}
             onClick={() => handleModeChange(DRAWING_MODES.ARC)}
+            title="Draw arcs"
           >
             <AiOutlineLoading size="28px" />
           </Button>
@@ -130,6 +192,7 @@ export const DrawControl = ({
               handleModeChange(DRAWING_MODES.ERASE);
               handleOpacity(100);
             }}
+            title="Erase"
           >
             <CiEraser size="20px" />
           </Button>
@@ -137,9 +200,9 @@ export const DrawControl = ({
             className="bg-blue-500 px-5"
             selected={isDrawingSelect(mode)}
             onClick={() => {
-              handleModeChange(DRAWING_MODES.SELECT);
-              handleChangeRatio(false);
+              handleSelectZone();
             }}
+            title="Select zone (Ctrl-A)"
           >
             <PiSelectionPlusLight size="20px" />
           </Button>
@@ -149,6 +212,7 @@ export const DrawControl = ({
               "bg-green-600": !lockRatio,
               "bg-red-600": lockRatio,
             })}
+            title="Lock ratio"
             selected={lockRatio}
             onClick={() => handleChangeRatio(!lockRatio)}
           >
@@ -158,9 +222,10 @@ export const DrawControl = ({
         <DrawControlSelect
           mode={mode}
           setMode={setMode}
-          changeMode={changeMode}
+          handleImage={handleImage}
           handleChangeRatio={handleChangeRatio}
           addEvent={addEvent}
+          addEventDetail={addEventDetail}
         />
         <DrawControlLine
           mode={mode}
@@ -187,7 +252,7 @@ export const DrawControl = ({
           <Button
             className="bg-pink-500"
             title="Ctrl-Z"
-            onClick={() => handleUndo()}
+            onClick={() => addEventAction(DRAWING_MODES.UNDO)}
           >
             <SlActionUndo size="20px" />
           </Button>

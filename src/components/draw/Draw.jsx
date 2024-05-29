@@ -1,7 +1,7 @@
-import { useRef } from "react";
+import { Component, useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
-import { DRAWING_MODES, DEFAULT_PARAMS } from "../../lib/canvas/canvas-defines";
+import { DEFAULT_PARAMS, isDrawingMode } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 
 const MAX_HISTORY = 40;
@@ -22,12 +22,10 @@ export const Draw = () => {
   };
 
   const changeMode = (mode) => {
-    switch (mode) {
-      case DRAWING_MODES.UNDO:
-      case DRAWING_MODES.SAVE:
-        break;
-      default:
-        drawingParamsRef.current.mode = mode;
+    if (isDrawingMode(mode)) {
+      drawingParamsRef.current.mode = mode;
+    } else {
+      console.error(`${Component.name} Invalid mode: `, mode);
     }
   };
 

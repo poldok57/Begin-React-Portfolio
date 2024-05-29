@@ -13,6 +13,7 @@ import { ConfirmationModal } from "./ConfirmationModal";
  * @param {object} props.children - The children of the confirmation modal
  * @param {string} props.width - The width of the confirmation modal
  * @param {boolean} props.showUnder - The boolean to show the modal under the button
+ *
  * @returns The ButtonConfirmModal component
  */
 export const ButtonConfirmModal = ({
@@ -23,6 +24,7 @@ export const ButtonConfirmModal = ({
   value,
   className,
   width,
+  isModalOpen = true,
   showUnder = false,
   ...props
 }) => {
@@ -41,6 +43,9 @@ export const ButtonConfirmModal = ({
     onOpen?.();
     setIsOpen(true);
   };
+  // const close = () => {
+  //   setIsOpen(false);
+  // };
 
   return (
     <>
@@ -52,16 +57,18 @@ export const ButtonConfirmModal = ({
       >
         {value}
       </Button>
-      <ConfirmationModal
-        referrer={ref}
-        isOpen={isOpen}
-        onClose={() => handleClose()}
-        onConfirm={onConfirm ? handleConfirm : undefined}
-        width={width}
-        showUnder={showUnder}
-      >
-        {children}
-      </ConfirmationModal>
+      {isModalOpen && isOpen && (
+        <ConfirmationModal
+          referrer={ref}
+          isOpen={isOpen}
+          onClose={() => handleClose()}
+          onConfirm={onConfirm ? handleConfirm : undefined}
+          width={width}
+          showUnder={showUnder}
+        >
+          {children}
+        </ConfirmationModal>
+      )}
     </>
   );
 };

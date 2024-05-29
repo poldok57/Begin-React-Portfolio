@@ -5,6 +5,7 @@ import {
   isDrawingShape,
   ShapeDefinition,
   paramsGeneral,
+  isDrawingSquare,
 } from "./canvas-defines";
 import { drawBadge, drawMiddleButtons } from "./canvas-buttons";
 import { drawDashedRectangle } from "./canvas-dashed-rect";
@@ -90,16 +91,18 @@ const drawRectWithRoundedCorner = (
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
  * @param {number} angle - angle of rotation in radian
+ * @param {boolean} saveContext - save the context before rotation
  */
 const rotateElement = (
   ctx: CanvasRenderingContext2D,
   sSize: Area,
-  angle: number
+  angle: number,
+  saveContext = true
 ) => {
   if (angle === 0) {
     return;
   }
-  ctx.save();
+  if (saveContext) ctx.save();
   ctx.translate(sSize.x + sSize.width / 2, sSize.y + sSize.height / 2);
   ctx.rotate(angle);
   ctx.translate(-(sSize.x + sSize.width / 2), -(sSize.y + sSize.height / 2));
@@ -203,18 +206,20 @@ const drawEllipse = (
  */
 const drawImage = (
   ctx: CanvasRenderingContext2D,
-  squareSize: Area,
-  rotation: number,
-  radius: number,
+  square: ShapeDefinition,
+  withBtn: boolean,
   virtualCanval: HTMLCanvasElement | null
 ) => {
   if (!virtualCanval || !virtualCanval.width || !virtualCanval.height) {
     return;
   }
+  const { rotation, blackWhite } = square;
+  const squareSize = square.size;
+  const radius = square.shape.radius;
+
+  ctx.save();
   if (rotation !== 0) {
-    rotateElement(ctx, squareSize, rotation);
-  } else if (radius > 0) {
-    ctx.save();
+    rotateElement(ctx, squareSize, rotation, false);
   }
 
   let { x, y, width, height } = squareSize;
@@ -226,6 +231,9 @@ const drawImage = (
     ctx.clip();
   }
 
+  if (blackWhite) {
+    ctx.filter = "grayscale(100%)";
+  }
   ctx.drawImage(
     virtualCanval,
     0,
@@ -237,9 +245,23 @@ const drawImage = (
     width,
     height
   );
-  if (rotation !== 0 || radius > 0) {
-    ctx.restore();
+
+  // Draw the border if needed
+  if (square.shape.withBorder) {
+    if (!withBtn) {
+      ctx.globalAlpha = square.border.opacity;
+    }
+    drawBorder(
+      ctx,
+      square.border,
+      square.size,
+      radius,
+      square.type,
+      isDrawingSquare
+    );
   }
+
+  ctx.restore();
 };
 
 /**
@@ -480,11 +502,12 @@ const shapeDrawing = (
  * @param {string} mouseOnShape - border where the mouse is
  */
 export const showElement = (
-  ctx: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D | null,
   square: ShapeDefinition,
   withBtn: boolean = true,
   mouseOnShape: string | null = null
 ) => {
+  if (!ctx) return;
   // console.log("show", square.type, square.size);
   switch (square.type) {
     case SHAPE_TYPE.TEXT:
@@ -498,7 +521,7 @@ export const showElement = (
       {
         const img: HTMLCanvasElement | null =
           square.canvasImageTransparent ?? square.canvasImage;
-        drawImage(ctx, square.size, square.rotation, square.shape.radius, img);
+        drawImage(ctx, square, withBtn, img);
       }
       break;
     case SHAPE_TYPE.SQUARE:

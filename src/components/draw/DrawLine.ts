@@ -111,7 +111,8 @@ export class DrawLine extends DrawingHandler {
     if (opacity > 0) {
       this.ctxTempory.globalAlpha = opacity;
     }
-    clearCanvasByCtx(this.ctxTempory);
+
+    this.clearTemporyCanvas();
     switch (mode) {
       case DRAWING_MODES.LINE:
         this.line.showLine(this.ctxTempory);
@@ -146,7 +147,7 @@ export class DrawLine extends DrawingHandler {
     switch (this.getType()) {
       case DRAWING_MODES.ARC:
         hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        clearCanvasByCtx(this.ctxTempory);
+        this.clearTemporyCanvas();
         this.line.showArc(this.ctxTempory, true);
         cursorType = "crosshair";
         break;
@@ -161,7 +162,7 @@ export class DrawLine extends DrawingHandler {
 
           break;
         }
-        clearCanvasByCtx(this.ctxTempory);
+        this.clearTemporyCanvas();
         this.line.showLine(this.ctxTempory);
         break;
     }
@@ -229,17 +230,14 @@ export class DrawLine extends DrawingHandler {
     clearCanvasByCtx(this.ctxMouse);
   }
 
-  actionKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "Escape":
-        clearCanvasByCtx(this.ctxTempory);
-        this.line.eraseLastCoordinates();
-        break;
-    }
+  actionAbort(): void {
+    this.clearTemporyCanvas();
+    this.line.eraseLastCoordinates();
   }
+
   endAction(nextMode: string) {
     if (!isDrawingLine(nextMode)) {
-      clearCanvasByCtx(this.ctxTempory);
+      this.clearTemporyCanvas();
       this.line.eraseLastCoordinates();
     }
     clearCanvasByCtx(this.ctxMouse);

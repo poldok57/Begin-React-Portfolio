@@ -11,26 +11,39 @@ export const SHAPE_TYPE = {
   TEXT: "text",
 };
 
+const DRAWING_ACTIONS = {
+  UNDO: "undo",
+  SAVE: "save",
+  LOAD: "load",
+  INIT: "init",
+  ABORT: "abort",
+  VALID: "valid",
+};
+const IMAGE_ACTIONS = {
+  IMAGE_RADIUS: "imageRadius",
+  TRANSPARENCY: "transparency",
+  CUT: "cut",
+  COPY: "copy",
+  PASTE: "paste",
+  DELETE: "delete",
+  BLACK_WHITE: "blackWhite",
+};
+
 export const DRAWING_MODES = {
   DRAW: "draw",
   LINE: "line",
   ARC: "arc",
   ERASE: "erase",
-  UNDO: "undo",
-  SAVE: "save",
-  LOAD: "load",
-  INIT: "init",
-  COPY: "copy",
-  PASTE: "paste",
-  DELETE: "delete",
-  IMAGE_RADIUS: "imageRadius",
-  TRANSPARENCY: "transparency",
-  CUT: "cut",
+
   CONTROL_PANEL: {
     IN: "in",
     OUT: "out",
   },
-  DRAWING_CHANGE: "drawingChange",
+  CHANGE: "drawChange",
+  ACTION: "drawAction",
+
+  ...DRAWING_ACTIONS,
+  ...IMAGE_ACTIONS,
   ...SHAPE_TYPE,
 };
 
@@ -117,6 +130,7 @@ export type ShapeDefinition = {
   type: string;
   rotation: number;
   lockRatio: boolean;
+  blackWhite: boolean;
   size: Area;
   canvasImage: HTMLCanvasElement | null;
   canvasImageTransparent: HTMLCanvasElement | null;

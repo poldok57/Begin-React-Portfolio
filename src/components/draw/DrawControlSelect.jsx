@@ -1,4 +1,5 @@
-// import { useRef, useMemo, useState } from "react";
+import { useState } from "react";
+import { BsCircleHalf } from "react-icons/bs";
 import clsx from "clsx";
 import { Button } from "../atom/Button";
 import {
@@ -11,39 +12,33 @@ import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 
 export const DrawControlSelect = ({
   mode,
-  changeMode,
   setMode,
   handleChangeRatio,
-  addEvent,
+  handleImage,
+  addEventDetail,
 }) => {
-  const addEventChangeMode = (mode) => {
-    addEvent({ detail: { mode } });
-  };
-  const addEventSaveFile = (mode, filename, name = null) => {
-    addEvent({ detail: { mode, filename, name } });
-  };
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isBlackWhite, setBlackWhite] = useState(false);
 
-  const handleImage = (value) => {
-    changeMode(DRAWING_MODES.IMAGE);
-    setMode(DRAWING_MODES.IMAGE);
-    addEventChangeMode(value);
-  };
-  const handleTransparency = (value) => {
-    addEvent({
-      detail: { mode: DRAWING_MODES.TRANSPARENCY, value },
-    });
-  };
-  const handleRadius = (value) => {
-    addEvent({ detail: { mode: DRAWING_MODES.IMAGE_RADIUS, value } });
+  const addEventActionValue = (action, value) => {
+    addEventDetail({ mode: DRAWING_MODES.ACTION, action, value });
   };
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      addEventSaveFile(DRAWING_MODES.LOAD, url, file.name);
+      addEventDetail({
+        mode: DRAWING_MODES.ACTION,
+        action: DRAWING_MODES.LOAD,
+        filename: url,
+        file: file.name,
+      });
+
       handleChangeRatio(true);
       setMode(DRAWING_MODES.IMAGE);
+
+      setModalOpen(false);
     }
   };
 
@@ -78,11 +73,13 @@ export const DrawControlSelect = ({
         >
           Cut
         </Button>
+
         <ButtonConfirmModal
           className="z-10 bg-blue-500 px-2"
           value="Upload image"
           width="380px"
-          showUnder={false}
+          isModalOpen={isModalOpen}
+          onOpen={() => setModalOpen(true)}
         >
           <div className="flex flex-row">Select a file to upload :</div>
           <input
@@ -97,37 +94,60 @@ export const DrawControlSelect = ({
           })}
           htmlFor="transparency-picker"
         >
-          Transparency
+          Detouring
           <input
-            className="h-2 w-24 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="transparency-picker"
             type="range"
             defaultValue={0}
             min="0"
-            max="100"
-            step="5"
-            onChange={(event) => handleTransparency(event.target.value)}
+            max="200"
+            step="3"
+            onChange={(event) =>
+              addEventActionValue(
+                DRAWING_MODES.TRANSPARENCY,
+                event.target.value
+              )
+            }
           />
         </label>
-
         <label
           htmlFor="select-radius-picker"
           className={clsx("flex flex-col items-center justify-center gap-1", {
             hidden: mode !== DRAWING_MODES.IMAGE,
           })}
         >
-          Radius image
+          Radius
           <input
-            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="h-2 w-16 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="select-radius-picker"
             type="range"
             defaultValue={0}
             min="0"
             max="50"
             step="1"
-            onChange={(event) => handleRadius(event.target.value)}
+            onChange={(event) =>
+              addEventActionValue(
+                DRAWING_MODES.IMAGE_RADIUS,
+                event.target.value
+              )
+            }
           />
         </label>
+        <Button
+          className={clsx("px-2 py-1  font-bold", {
+            "bg-gradient-to-r from-green-400 via-blue-500 to-red-600  text-white hover:from-red-700 hover:via-green-500 hover:to-blue-600":
+              !isBlackWhite,
+            "bg-gradient-to-r from-gray-800 to-gray-200  hover:from-black  hover:to-white":
+              isBlackWhite,
+          })}
+          onClick={() => {
+            setBlackWhite(!isBlackWhite);
+            addEventActionValue(DRAWING_MODES.BLACK_WHITE, !isBlackWhite);
+          }}
+        >
+          <BsCircleHalf />
+        </Button>
       </div>
     </div>
   );

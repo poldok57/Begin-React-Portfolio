@@ -20,7 +20,6 @@ import { DrawLine } from "./DrawLine";
 import { DrawElement } from "./DrawElement";
 import { DrawSelection } from "./DrawSelection";
 import { DrawFreehand } from "./DrawFreehand";
-import { DrawingHandler } from "../../lib/canvas/DrawingHandler";
 
 const TEMPORTY_OPACITY = 0.6;
 // Draw on Canvas
@@ -231,16 +230,34 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     drawing.refreshDrawing();
   };
 
-  const handleSpecialEvent = (event) => {
-    const eventMode = event.detail.mode;
-    const filename = event.detail.filename;
-    switch (eventMode) {
+  const handleActionEvent = (event) => {
+    const eventAction = event.detail.action;
+    const filename = event.detail?.filename;
+    const value = event.detail?.value;
+
+    switch (eventAction) {
+      case DRAWING_MODES.INIT:
+        generalInitialisation();
+        clearCanvasByCtx(canvasRef.current.getContext("2d"));
+        clearTemporyCanvas();
+        break;
       case DRAWING_MODES.CONTROL_PANEL.IN:
         mouseOnCtrlPanel.current = true;
         drawing.actionMouseLeave();
         break;
+
       case DRAWING_MODES.CONTROL_PANEL.OUT:
         mouseOnCtrlPanel.current = false;
+        break;
+      case DRAWING_MODES.UNDO:
+        clearTemporyCanvas();
+        previousPicture(canvasRef.current);
+        break;
+      case DRAWING_MODES.ABORT:
+        drawing.actionAbort();
+        break;
+      case DRAWING_MODES.VALID:
+        drawing.actionValid();
         break;
       case DRAWING_MODES.SAVE:
         alertMessage("Save the canvas");
@@ -257,6 +274,8 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
             selectDrawingHandler(DRAWING_MODES.IMAGE);
           }
           drawSelection.loadCanvas(filename, name);
+          // correction of mouse position
+          mouseOnCtrlPanel.current = false;
         }
         break;
       case DRAWING_MODES.COPY:
@@ -290,18 +309,24 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         break;
       case DRAWING_MODES.TRANSPARENCY:
         if (drawSelection !== null) {
-          const value = event.detail.value ?? 5;
           alertMessage("Transparency (" + value + ") on selection");
           drawSelection.transparencySelection(value);
         }
         break;
       case DRAWING_MODES.IMAGE_RADIUS:
         if (drawSelection !== null) {
-          const value = event.detail.value ?? 5;
           alertMessage("Radius (" + value + ") on selection");
           drawSelection.radiusSelection(value);
         }
         break;
+      case DRAWING_MODES.BLACK_WHITE:
+        if (drawSelection !== null) {
+          alertMessage("Black and white on selection");
+          drawSelection.blackWhiteSelection(value);
+        }
+        break;
+      default:
+        console.error("Action not found : ", eventAction);
     }
   };
 
@@ -384,42 +409,25 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         canvasMouseRef.current.style.cursor = pointer;
       }
     };
-    const handleKeyDown = (event) => {
-      switch (event.key) {
-        case "z":
-        case "Z": // Ctrl Z
-          if (event.ctrlKey) {
-            // undo
-            clearTemporyCanvas();
-            previousPicture(canvasRef.current);
-          }
-          break;
-        default:
-          drawing.actionKeyDown(event);
-      }
-    };
 
     const handleChangeMode = (event) => {
       const newMode = event.detail.mode;
+
       switch (newMode) {
-        case DRAWING_MODES.DRAWING_CHANGE:
+        case DRAWING_MODES.CHANGE:
           drawingParamChanged();
           break;
-        case DRAWING_MODES.UNDO:
-          previousPicture(canvasRef.current);
+        case DRAWING_MODES.ACTION:
+          handleActionEvent(event);
           break;
-        case DRAWING_MODES.INIT:
-          generalInitialisation();
-          clearCanvasByCtx(canvasRef.current.getContext("2d"));
-          clearTemporyCanvas();
-          break;
+
         default:
           if (isDrawingMode(newMode)) {
             // drawing modes --------------------------
             clearTemporyCanvas();
             actionChangeMode(newMode);
           } else {
-            handleSpecialEvent(event);
+            console.error("Mode not found : ", newMode);
           }
       }
     };
@@ -431,7 +439,6 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     canvasMouse.addEventListener("mousemove", handleMouseMove);
     canvasMouse.addEventListener("mouseup", handleMouseUp);
     canvasMouse.addEventListener("mouseleave", onMouseLeave);
-    document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("modeChanged", handleChangeMode);
     if (document.readyState === "complete") {
       handleDocumentLoaded();
@@ -450,7 +457,6 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       canvasMouse.removeEventListener("mouseleave", onMouseLeave);
 
       document.removeEventListener("modeChanged", handleChangeMode);
-      document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("load", handleDocumentLoaded);
 
       drawingParams.current.mode = DRAWING_MODES.INIT;

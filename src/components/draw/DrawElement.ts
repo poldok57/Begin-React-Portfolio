@@ -18,6 +18,7 @@ import {
   returnMouseDown,
 } from "../../lib/canvas/DrawingHandler";
 import { alertMessage } from "../../hooks/alertMessage";
+import { isInsideSquare } from "../../lib/square-position";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
@@ -262,7 +263,7 @@ export class DrawElement extends DrawingHandler {
     }
     if (!this.isFixed()) {
       this.clearTemporyCanvas();
-      if (this.ctxTempory) showElement(this.ctxTempory, this.data, true, null);
+      showElement(this.ctxTempory, this.data, true, null);
       return "pointer";
     }
 
@@ -272,6 +273,13 @@ export class DrawElement extends DrawingHandler {
   actionMouseUp() {
     this.setFixed(true);
     this.setResizing(null);
+
+    if (this.ctxTempory === null ) return;
+
+    if (isInsideSquare(this.coordinates, this.data.size)) {
+      this.ctxTempory.globalAlpha = this.data.general.opacity;
+      showElement(this.ctxTempory, this.data, true, BORDER.INSIDE);
+    }
   }
 
   actionMouseLeave() {
@@ -281,12 +289,8 @@ export class DrawElement extends DrawingHandler {
     this.clearTemporyCanvas();
   }
 
-  actionKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "Enter":
-        this.validDrawedElement();
-        break;
-    }
+  actionValid() {
+    this.validDrawedElement();
   }
 
   endAction() {

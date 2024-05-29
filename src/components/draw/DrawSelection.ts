@@ -1,16 +1,19 @@
 import { Area, Surface, Coordinate } from "../../lib/types";
+import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
-  getCoordinates,
   makeWhiteTransparent,
-} from "../../lib/canvas/canvas-tools";
+  makeWhiteTransparent2,
+} from "../../lib/canvas/image-transparency";
 import {
   DRAWING_MODES,
   paramsAll,
+  paramsGeneral,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER } from "../../lib/mouse-position";
 import { showElement } from "../../lib/canvas/canvas-elements";
 import { resizingElement } from "../../lib/canvas/canvas-resize";
+import { isInsideSquare } from "../../lib/square-position";
 
 import {
   copyInVirtualCanvas,
@@ -113,8 +116,12 @@ export class DrawSelection extends DrawingHandler {
   }
   changeData(data: paramsAll) {
     this.setDataGeneral(data.general);
+    this.setDataBorder(data.border);
 
     this.data.lockRatio = data.lockRatio;
+  }
+  setDataBorder(data: paramsGeneral) {
+    this.data.border = { ...data };
   }
 
   getData() {
@@ -204,6 +211,12 @@ export class DrawSelection extends DrawingHandler {
     this.clearTemporyCanvas();
   }
 
+  /**
+   * Action on the canvas when the mouse is down
+   * @param {string} mode - mode of the action
+   * @param {MouseEvent} event - mouse event
+   * @returns {object} - {toReset, toContinue, pointer} - toReset: reset the action, toContinue: continue the action, pointer: cursor pointer
+   */
   actionMouseDown(mode: string, event: MouseEvent): returnMouseDown {
     // if (!this.isFixed()) {
     //   return false;
@@ -234,13 +247,15 @@ export class DrawSelection extends DrawingHandler {
       } else {
         alertMessage("resizing: " + mouseOnShape);
         this.setResizing(mouseOnShape);
-
-        // console.log("resizing element: ", mouseOnShape);
       }
     }
     return { toReset, toContinue: false, pointer } as returnMouseDown;
   }
-
+  /**
+   * Function to handle the mouse move event
+   * @param {MouseEvent} event - mouse event
+   * @returns {string | null} - cursor type
+   */
   actionMouseMove(event: MouseEvent) {
     this.setCoordinates(event);
     if (this.resizing !== null) {
@@ -262,46 +277,41 @@ export class DrawSelection extends DrawingHandler {
     return this.followCursorOnElement(this.data.general.opacity);
   }
 
+  /**
+   * Function to handle the mouse up event
+   */
   actionMouseUp() {
     this.setFixed(true);
     this.setResizing(null);
+
+    if (this.ctxTempory === null) return;
+
+    if (isInsideSquare(this.coordinates, this.data.size)) {
+      this.ctxTempory.globalAlpha = this.data.general.opacity;
+      showElement(this.ctxTempory, this.data, true, BORDER.INSIDE);
+    }
   }
 
   actionMouseLeave() {}
 
-  actionKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "Escape":
-        this.eraseSelectedArea();
-        this.setType(DRAWING_MODES.SELECT);
-        this.refreshDrawing(1, BORDER.INSIDE);
-        break;
-      // ctrl + c
-      case "c":
-      case "C":
-        if (event.ctrlKey) {
-          this.copySelection();
-        }
-        break;
-      // ctrl + v
-      case "v":
-      case "V":
-        if (event.ctrlKey) {
-          this.pasteSelection();
-        }
-        break;
-      // Ctrl X
-      case "x":
-      case "X":
-        if (event.ctrlKey) {
-          this.cutSelection();
-        }
-        break;
-    }
+  /**
+   * Function to abort the action on the canvas (Escape key pressed)
+   */
+  actionAbort(): void {
+    this.eraseSelectedArea();
+    this.setType(DRAWING_MODES.SELECT);
+    this.refreshDrawing(1, BORDER.INSIDE);
   }
 
   /**
-   * Function to end the action on the canvas
+   * Function to validate the action on the canvas (Enter key pressed)
+   */
+  actionValid() {
+    this.validDrawedElement();
+  }
+
+  /**
+   * Function to end the action on the canvas affter changing the mode
    */
   endAction() {
     this.setFixed(true);
@@ -309,6 +319,27 @@ export class DrawSelection extends DrawingHandler {
     this.clearTemporyCanvas();
   }
 
+  /**
+   * Function to start the action on the canvas, after changing the mode
+   */
+  startAction(): void {
+    const mode = this.getType();
+    switch (mode) {
+      case DRAWING_MODES.SELECT:
+        // Zone selection
+        const rect = imageSize(this.mCanvas);
+        const area = this.memorizeSelectedArea(rect);
+
+        this.setWithMiddleButtons(false);
+        this.setWithCornerButton(false);
+        this.data.canvasImageTransparent = null;
+        break;
+      case DRAWING_MODES.IMAGE:
+        this.setWithMiddleButtons(true);
+        this.setWithCornerButton(true);
+        this.data.canvasImageTransparent = null;
+    }
+  }
   /**
    * Function to copy the selected zone in a virtual canvas
    */
@@ -321,6 +352,9 @@ export class DrawSelection extends DrawingHandler {
     console.log("copySelection: refreshDrawing");
     this.refreshDrawing(1, BORDER.INSIDE);
   }
+  /**
+   * Function to delete the selected zone in the canvas
+   */
   deleteSelection() {
     const area = this.getSelectedArea();
     if (area === null) return;
@@ -330,6 +364,9 @@ export class DrawSelection extends DrawingHandler {
     this.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
+  /**
+   * Function to cut the selected zone in the canvas
+   */
   cutSelection() {
     const area = this.getSelectedArea();
     if (area === null || this.context === null) return;
@@ -340,6 +377,9 @@ export class DrawSelection extends DrawingHandler {
     this.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
+  /**
+   * Function to change white to transparent in the selected zone
+   */
   transparencySelection(delta: number) {
     // console.log("transparency " + delta);
     if (delta <= 0) {
@@ -348,19 +388,38 @@ export class DrawSelection extends DrawingHandler {
     } else {
       this.data.canvasImageTransparent = document.createElement("canvas");
 
-      makeWhiteTransparent(
-        this.data.canvasImage,
-        this.data.canvasImageTransparent,
-        delta
-      );
+      if (delta < 100)
+        makeWhiteTransparent(
+          this.data.canvasImage,
+          this.data.canvasImageTransparent,
+          delta
+        );
+      else
+        makeWhiteTransparent2(
+          this.data.canvasImage,
+          this.data.canvasImageTransparent,
+          delta
+        );
     }
 
     this.refreshDrawing(1, BORDER.INSIDE);
   }
+
+  /**
+   * Function to change the selected zone in black and white
+   */
+  blackWhiteSelection(blackWhite: boolean) {
+    this.data.blackWhite = blackWhite;
+    this.refreshDrawing(1, BORDER.INSIDE);
+  }
+  /**
+   * Function to rounded corners in the selected zone
+   * @param {number} radius - radius of the corners
+   */
   radiusSelection(radius: number) {
     this.data.shape.radius = radius;
 
-    console.log("radius ", radius);
+    // console.log("radius ", radius);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
 
@@ -373,22 +432,6 @@ export class DrawSelection extends DrawingHandler {
     this.refreshDrawing(1, BORDER.INSIDE);
   }
 
-  startAction(): void {
-    const mode = this.getType();
-    switch (mode) {
-      case DRAWING_MODES.SELECT:
-        // Zone selection
-        const rect = imageSize(this.mCanvas);
-        const area = this.memorizeSelectedArea(rect);
-
-        this.setWithMiddleButtons(false);
-        this.setWithCornerButton(false);
-        break;
-      case DRAWING_MODES.IMAGE:
-        this.setWithMiddleButtons(true);
-        this.setWithCornerButton(true);
-    }
-  }
   /**
    * Function to save the canvas in a file
    * @param {string} filename - name of the file to save
@@ -422,6 +465,7 @@ export class DrawSelection extends DrawingHandler {
       const ratio = img.width / img.height;
       ctx.drawImage(img, 0, 0);
       this.data.canvasImage = virtualCanvas;
+      this.data.canvasImageTransparent = null;
 
       alertMessage(
         "Image '" + name + "' loaded w:" + img.width + " h:" + img.height

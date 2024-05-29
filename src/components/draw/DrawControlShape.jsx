@@ -8,6 +8,7 @@ import { Button } from "../atom/Button";
 import ToggleSwitch from "../atom/ToggleSwitch";
 import {
   DRAWING_MODES,
+  isDrawingSelect,
   isDrawingShape,
   isDrawingSquare,
 } from "../../lib/canvas/canvas-defines";
@@ -99,13 +100,13 @@ export const DrawControlShape = ({
           </label>
           <label
             htmlFor="draw-radius-picker"
-            className={clsx("flex flex-col items-center justify-center gap-2", {
+            className={clsx("flex flex-col items-center justify-center", {
               hidden: !isDrawingSquare(mode),
             })}
           >
             Radius
             <input
-              className="h-2 w-12 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+              className="h-2 w-12 bg-gray-300 py-3 opacity-70 outline-none transition-opacity hover:opacity-100"
               id="draw-radius-picker"
               type="range"
               defaultValue={drawingParams.shape.radius}
@@ -137,7 +138,7 @@ export const DrawControlShape = ({
       </div>
       <div
         className={clsx("mt-1 flex flex-row  border-t border-secondary p-2", {
-          hidden: !isDrawingShape(mode),
+          hidden: !isDrawingShape(mode) && !isDrawingSelect(mode),
         })}
       >
         <label

@@ -188,6 +188,10 @@ export abstract class DrawingHandler {
   }
 
   startAction(): void {}
+  actionKeyDown(event: KeyboardEvent): void {}
+  actionAbort(): void {}
+  actionValid(): void {}
+
   abstract endAction(nextMode: string): void;
   abstract changeData(data: paramsAll): void;
   abstract initData(data: paramsAll): void;
@@ -196,7 +200,6 @@ export abstract class DrawingHandler {
   abstract actionMouseMove(event: MouseEvent): string | null;
   abstract actionMouseUp(): void;
   abstract actionMouseLeave(): void;
-  abstract actionKeyDown(event: KeyboardEvent): void;
 
   abstract refreshDrawing(opacity: number, mouseOnShape: string | null): void;
 }
