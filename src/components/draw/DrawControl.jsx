@@ -93,6 +93,11 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
     setLockRatio(ratio);
     addEventMode(DRAWING_MODES.CHANGE);
   };
+  const handleChangeRadius = (radius) => {
+    drawingParams.shape = { ...drawingParams.shape, radius };
+    handleParamChange({ shape: drawingParams.shape });
+  };
+
   const handleKeyDown = (event) => {
     switch (event.key) {
       case "Escape":
@@ -224,6 +229,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           setMode={setMode}
           handleImage={handleImage}
           handleChangeRatio={handleChangeRatio}
+          handleChangeRadius={handleChangeRadius}
           addEvent={addEvent}
           addEventDetail={addEventDetail}
         />
@@ -239,6 +245,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           drawingParams={drawingParams}
           handleParamChange={handleParamChange}
           handleModeChange={handleModeChange}
+          handleChangeRadius={handleChangeRadius}
           setWithText={setWithText}
         />
         <DrawControlText

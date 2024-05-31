@@ -19,6 +19,7 @@ export const DrawControlShape = ({
   drawingParams,
   handleParamChange,
   handleModeChange,
+  handleChangeRadius,
   setWithText,
 }) => {
   const [withBorder, setWithBorder] = useState(drawingParams.shape.withBorder);
@@ -114,7 +115,7 @@ export const DrawControlShape = ({
               max="50"
               step="1"
               onChange={(event) =>
-                handleShape({ radius: parseInt(event.target.value) })
+                handleChangeRadius(parseInt(event.target.value))
               }
             />
           </label>
@@ -139,6 +140,7 @@ export const DrawControlShape = ({
       <div
         className={clsx("mt-1 flex flex-row  border-t border-secondary p-2", {
           hidden: !isDrawingShape(mode) && !isDrawingSelect(mode),
+          "bg-paper": isDrawingSelect(mode),
         })}
       >
         <label

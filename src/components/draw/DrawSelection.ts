@@ -116,12 +116,10 @@ export class DrawSelection extends DrawingHandler {
   }
   changeData(data: paramsAll) {
     this.setDataGeneral(data.general);
-    this.setDataBorder(data.border);
+    this.data.shape = { ...data.shape };
+    this.data.border = { ...data.border };
 
     this.data.lockRatio = data.lockRatio;
-  }
-  setDataBorder(data: paramsGeneral) {
-    this.data.border = { ...data };
   }
 
   getData() {

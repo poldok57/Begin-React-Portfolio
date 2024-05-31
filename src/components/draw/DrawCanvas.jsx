@@ -29,7 +29,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
   const canvasTemporyRef = useRef(null);
   const mouseOnCtrlPanel = useRef(false);
 
-  const [WIDTH, HEIGHT] = [560, 315]; // 16:9 aspact ratio
+  const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
 
   let drawLine = null;
   let drawFreehand = null;

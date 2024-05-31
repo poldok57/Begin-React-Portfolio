@@ -20,7 +20,7 @@ export const DrawControlLine = ({
   return (
     <div
       className={clsx("flex flex-row gap-4 border border-secondary p-2", {
-        "bg-paper": isDrawingAllLines(mode),
+        "bg-paper": isDrawingAllLines(mode) || mode === DRAWING_MODES.IMAGE,
       })}
     >
       <label

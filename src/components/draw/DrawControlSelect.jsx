@@ -14,6 +14,7 @@ export const DrawControlSelect = ({
   mode,
   setMode,
   handleChangeRatio,
+  handleChangeRadius,
   handleImage,
   addEventDetail,
 }) => {
@@ -111,29 +112,6 @@ export const DrawControlSelect = ({
             }
           />
         </label>
-        <label
-          htmlFor="select-radius-picker"
-          className={clsx("flex flex-col items-center justify-center gap-1", {
-            hidden: mode !== DRAWING_MODES.IMAGE,
-          })}
-        >
-          Radius
-          <input
-            className="h-2 w-16 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
-            id="select-radius-picker"
-            type="range"
-            defaultValue={0}
-            min="0"
-            max="50"
-            step="1"
-            onChange={(event) =>
-              addEventActionValue(
-                DRAWING_MODES.IMAGE_RADIUS,
-                event.target.value
-              )
-            }
-          />
-        </label>
         <Button
           className={clsx("px-2 py-1  font-bold", {
             "bg-gradient-to-r from-green-400 via-blue-500 to-red-600  text-white hover:from-red-700 hover:via-green-500 hover:to-blue-600":
@@ -148,6 +126,26 @@ export const DrawControlSelect = ({
         >
           <BsCircleHalf />
         </Button>
+        <label
+          htmlFor="select-radius-picker"
+          className={clsx("flex flex-col items-center justify-center gap-1", {
+            hidden: mode !== DRAWING_MODES.IMAGE,
+          })}
+        >
+          Radius
+          <input
+            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            id="select-radius-picker"
+            type="range"
+            defaultValue={0}
+            min="0"
+            max="150"
+            step="1"
+            onChange={(event) =>
+              handleChangeRadius(parseInt(event.target.value))
+            }
+          />
+        </label>
       </div>
     </div>
   );

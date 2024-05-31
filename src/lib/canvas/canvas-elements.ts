@@ -6,11 +6,23 @@ import {
   ShapeDefinition,
   paramsGeneral,
   isDrawingSquare,
+  DRAWING_MODES,
 } from "./canvas-defines";
 import { drawBadge, drawMiddleButtons } from "./canvas-buttons";
 import { drawDashedRectangle } from "./canvas-dashed-rect";
+import { shape } from "prop-types";
 
 const TEXT_PADDING = 20;
+
+type drawingProps = {
+  ctx: CanvasRenderingContext2D;
+  squareSize: Area;
+  lineWidth?: number;
+  radius?: number;
+  type?: string;
+  virtualCanvas?: HTMLCanvasElement | null;
+  blackWhite?: boolean;
+};
 
 /**
  * Function to draw a rounded rectangle
@@ -58,10 +70,12 @@ const drawRectWithRoundedCorner = (
   y: number,
   width: number,
   height: number,
-  radius: number,
+  radius: number | undefined | null,
   type: string
 ) => {
   ctx.beginPath();
+
+  if (!radius) radius = 0;
 
   radius = Math.min(radius, width / 2, height / 2);
 
@@ -133,12 +147,7 @@ const getShapeSize = (square: Area, lineWidth: number = 0) => {
  * @param {number} lineWidth - width of the line
  * @param {number} radius - radius of the square
  */
-const drawSquare = (
-  ctx: CanvasRenderingContext2D,
-  squareSize: Area,
-  lineWidth: number,
-  radius: number
-) => {
+const drawSquare = ({ ctx, squareSize, lineWidth, radius }: drawingProps) => {
   const newArea = getShapeSize(squareSize, lineWidth);
 
   ctx.beginPath();
@@ -156,14 +165,15 @@ const drawSquare = (
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, filled, radius, type, rotation}
  */
-const drawSquareWithRoundedCorner = (
-  ctx: CanvasRenderingContext2D,
-  squareSize: Area,
-  lineWidth: number,
-  radius: number,
-  shapeType: string
-) => {
+const drawSquareWithRoundedCorner = ({
+  ctx,
+  squareSize,
+  lineWidth,
+  radius = 0,
+  type: shapeType,
+}: drawingProps) => {
   let { x, y, width, height } = getShapeSize(squareSize, lineWidth);
+  if (!shapeType) shapeType = SHAPE_TYPE.TWO_RADIUS;
 
   if (!radius || radius < 1) {
     ctx.lineJoin = "miter";
@@ -175,14 +185,10 @@ const drawSquareWithRoundedCorner = (
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
  */
-const drawEllipse = (
-  ctx: CanvasRenderingContext2D,
-  squareSize: Area,
-  lineWidth: number,
-  radius: number
-) => {
+const drawEllipse = ({ ctx, squareSize, lineWidth }: drawingProps) => {
   let { x, y, width, height } = getShapeSize(squareSize, lineWidth);
 
+  ctx.beginPath();
   if (width === height) {
     ctx.arc(x + width / 2, y + height / 2, width / 2, 0, 2 * Math.PI);
   } else {
@@ -204,64 +210,46 @@ const drawEllipse = (
  * @param {object} squareSize: Area - {x, y, width, height}
  * @param {ImageData} data - image data to show on the canvas
  */
-const drawImage = (
-  ctx: CanvasRenderingContext2D,
-  square: ShapeDefinition,
-  withBtn: boolean,
-  virtualCanval: HTMLCanvasElement | null
-) => {
-  if (!virtualCanval || !virtualCanval.width || !virtualCanval.height) {
+const drawImage = ({
+  ctx,
+  squareSize,
+  radius = 0,
+  virtualCanvas,
+  blackWhite,
+}: drawingProps) => {
+  if (!virtualCanvas || !virtualCanvas.width || !virtualCanvas.height) {
+    console.error("drawImage: no image to show");
     return;
   }
-  const { rotation, blackWhite } = square;
-  const squareSize = square.size;
-  const radius = square.shape.radius;
 
-  ctx.save();
-  if (rotation !== 0) {
-    rotateElement(ctx, squareSize, rotation, false);
+  if (radius > 0 || blackWhite) {
+    ctx.save();
   }
-
-  let { x, y, width, height } = squareSize;
-
   if (radius > 0) {
-    const radiusPc = (Math.min(width, height) * radius) / 100;
     ctx.beginPath();
-    drawRoundedRect(ctx, squareSize, radiusPc);
+    drawRoundedRect(ctx, squareSize, radius);
     ctx.clip();
   }
 
   if (blackWhite) {
     ctx.filter = "grayscale(100%)";
   }
+  let { x, y, width, height } = squareSize;
   ctx.drawImage(
-    virtualCanval,
+    virtualCanvas,
     0,
     0,
-    virtualCanval.width,
-    virtualCanval.height,
+    virtualCanvas.width,
+    virtualCanvas.height,
     x,
     y,
     width,
     height
   );
 
-  // Draw the border if needed
-  if (square.shape.withBorder) {
-    if (!withBtn) {
-      ctx.globalAlpha = square.border.opacity;
-    }
-    drawBorder(
-      ctx,
-      square.border,
-      square.size,
-      radius,
-      square.type,
-      isDrawingSquare
-    );
+  if (radius > 0 || blackWhite) {
+    ctx.restore();
   }
-
-  ctx.restore();
 };
 
 /**
@@ -295,13 +283,18 @@ const drawBorder = (
   if (radius > 0) {
     radiusB += addRadius;
   }
-
   ctx.beginPath();
   ctx.globalAlpha = squareBorder.opacity;
   ctx.strokeStyle = squareBorder.color;
   ctx.lineWidth = bWidth;
 
-  drawingFunction(ctx, bSize, bWidth, radiusB, shapeType);
+  drawingFunction({
+    ctx,
+    squareSize: bSize,
+    lineWidth: bWidth,
+    radius: radiusB,
+    type: shapeType,
+  } as drawingProps);
 
   ctx.stroke();
 };
@@ -445,12 +438,14 @@ const drawButtonsAndLines = (
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
  * @param {Function} drawingFunction - function to draw the shape
+ * @param {Function} drawingBorderFunction - function to draw the border of the shape
  */
 const shapeDrawing = (
   ctx: CanvasRenderingContext2D,
   square: ShapeDefinition,
   withBtn: boolean,
-  drawingFunction: Function
+  drawingFunction: Function,
+  drawingBorderFunction: Function | undefined = undefined
 ) => {
   if (square.rotation !== 0) {
     rotateElement(ctx, square.size, square.rotation);
@@ -466,13 +461,22 @@ const shapeDrawing = (
   } else {
     lineWidth = 0;
   }
-  ctx.beginPath();
-  drawingFunction(ctx, square.size, lineWidth, radius, square.type);
+  drawingFunction({
+    ctx,
+    squareSize: square.size,
+    lineWidth,
+    radius,
+    type: square.type,
+    blackWhite: square.blackWhite,
+    virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
+  } as drawingProps);
 
-  if (filled) {
-    ctx.fill();
-  } else {
-    ctx.stroke();
+  if (isDrawingShape(square.type)) {
+    if (filled) {
+      ctx.fill();
+    } else {
+      ctx.stroke();
+    }
   }
 
   // Draw the border if needed
@@ -480,13 +484,17 @@ const shapeDrawing = (
     if (!withBtn) {
       ctx.globalAlpha = square.border.opacity;
     }
+    if (!drawingBorderFunction) {
+      drawingBorderFunction = drawingFunction;
+    }
+
     drawBorder(
       ctx,
       square.border,
       square.size,
       radius,
       square.type,
-      drawingFunction
+      drawingBorderFunction
     );
   }
 
@@ -518,11 +526,7 @@ export const showElement = (
       drawDashedRectangle(ctx, square.size);
       return;
     case SHAPE_TYPE.IMAGE:
-      {
-        const img: HTMLCanvasElement | null =
-          square.canvasImageTransparent ?? square.canvasImage;
-        drawImage(ctx, square, withBtn, img);
-      }
+      shapeDrawing(ctx, square, withBtn, drawImage, drawSquare);
       break;
     case SHAPE_TYPE.SQUARE:
       // drawSquare(ctx, square);
