@@ -84,7 +84,10 @@ export const DrawControlSelect = ({
         >
           <div className="flex flex-row">Select a file to upload :</div>
           <input
-            className="ronded-md my-2 h-8 border-2 border-gray-500 bg-white px-2"
+            className={clsx(
+              "h-fit w-72 rounded-md border-2 border-blue-300 bg-white py-0 pr-2 text-sm",
+              "file:mr-4 file:rounded-l-md file:border file:bg-blue-500 file:py-2 file:px-2 file:font-semibold file:text-white hover:file:bg-blue-600"
+            )}
             type="file"
             onChange={handleFileChange}
           />
@@ -97,7 +100,7 @@ export const DrawControlSelect = ({
         >
           Detouring
           <input
-            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="h-4 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
             id="transparency-picker"
             type="range"
             defaultValue={0}

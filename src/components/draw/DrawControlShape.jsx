@@ -6,6 +6,7 @@ import { AiOutlineRadiusBottomright } from "react-icons/ai";
 import { WiMoonFirstQuarter } from "react-icons/wi";
 import { Button } from "../atom/Button";
 import ToggleSwitch from "../atom/ToggleSwitch";
+
 import {
   DRAWING_MODES,
   isDrawingSelect,
@@ -13,6 +14,7 @@ import {
   isDrawingSquare,
 } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
+import { inputRangeVariants } from "../../styles/input-range";
 
 export const DrawControlShape = ({
   mode,
@@ -43,37 +45,37 @@ export const DrawControlShape = ({
       })}
     >
       <div className="flex flex-row gap-3">
-        <div className="flex flex-row gap-1">
+        <div className="flex flex-row gap-2">
           <Button
-            className="px-2 py-1"
+            className="py-1"
             selected={mode == DRAWING_MODES.CIRCLE}
             onClick={() => handleModeChange(DRAWING_MODES.CIRCLE)}
           >
             <MdRadioButtonUnchecked size="20px" />
           </Button>
           <Button
-            className="px-2 py-1"
+            className="py-1"
             selected={mode == DRAWING_MODES.SQUARE}
             onClick={() => handleModeChange(DRAWING_MODES.SQUARE)}
           >
             <BiSquare size="20px" />
           </Button>
           <Button
-            className="px-2 py-1"
+            className="py-1"
             selected={mode == DRAWING_MODES.ONE_RADIUS_T}
             onClick={() => handleModeChange(DRAWING_MODES.ONE_RADIUS_T)}
           >
             <AiOutlineRadiusUpright size="20px" />
           </Button>
           <Button
-            className="px-2 py-1"
+            className="py-1"
             selected={mode == DRAWING_MODES.ONE_RADIUS_B}
             onClick={() => handleModeChange(DRAWING_MODES.ONE_RADIUS_B)}
           >
             <AiOutlineRadiusBottomright size="20px" />
           </Button>
           <Button
-            className="px-2 py-1"
+            className="py-1"
             selected={mode == DRAWING_MODES.TWO_RADIUS}
             onClick={() => handleModeChange(DRAWING_MODES.TWO_RADIUS)}
           >
@@ -107,7 +109,7 @@ export const DrawControlShape = ({
           >
             Radius
             <input
-              className="h-2 w-12 bg-gray-300 py-3 opacity-70 outline-none transition-opacity hover:opacity-100"
+              className={inputRangeVariants({ width: "16", size: "xs" })}
               id="draw-radius-picker"
               type="range"
               defaultValue={drawingParams.shape.radius}
@@ -149,7 +151,7 @@ export const DrawControlShape = ({
         >
           Border
           <ToggleSwitch
-            id="toggle-Border"
+            id="toggle-border"
             defaultChecked={drawingParams.shape.withBorder}
             onChange={(event) => {
               handleShape({ withBorder: event.target.checked });
@@ -176,7 +178,7 @@ export const DrawControlShape = ({
           >
             width
             <input
-              className="h-2 w-10 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+              className={inputRangeVariants({ width: "10", size: "xs" })}
               id="border-size-picker"
               type="range"
               defaultValue={drawingParams.border.lineWidth}
@@ -195,7 +197,7 @@ export const DrawControlShape = ({
           >
             Interval
             <input
-              className="h-2 w-10 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+              className={inputRangeVariants({ width: "10", size: "xs" })}
               id="border-interval-picker"
               type="range"
               defaultValue={drawingParams.border.interval}
@@ -210,11 +212,11 @@ export const DrawControlShape = ({
           </label>
           <label
             htmlFor="border-opacity-picker"
-            className="flex flex-col items-center justify-center gap-2"
+            className="flex flex-col items-center justify-center gap-1"
           >
             Opacity
             <input
-              className="h-2 w-8 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+              className={inputRangeVariants({ width: "8", size: "xs" })}
               id="border-opacity-picker"
               type="range"
               defaultValue={drawingParams.border.opacity * 100}

@@ -35,6 +35,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
 
   const filenameRef = useRef(null);
   const defaultFilename = useRef("my-drawing");
+  const saveFormatRef = useRef("png");
 
   const addEvent = (detail) => {
     const event = new CustomEvent("modeChanged", detail);
@@ -49,7 +50,14 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
     addEventDetail({ mode });
   };
   const addEventSaveFile = (action, filename, name = null) => {
-    addEventDetail({ mode: DRAWING_MODES.ACTION, action, filename, name });
+    const format = saveFormatRef.current;
+    addEventDetail({
+      mode: DRAWING_MODES.ACTION,
+      action,
+      filename,
+      name,
+      format,
+    });
   };
 
   const handleConfirmReset = () => {
@@ -157,7 +165,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
       <div
         onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
         onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
-        className="flex w-auto flex-col gap-1 rounded-md border-2 border-secondary bg-background p-1 shadow-xl"
+        className="flex flex-col w-auto gap-1 p-1 border-2 rounded-md shadow-xl border-secondary bg-background"
       >
         <div className="flex flex-row gap-4">
           <Button
@@ -191,7 +199,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
             Text
           </Button>
           <Button
-            className="bg-pink-500 px-5"
+            className="px-5 btn btn-accent"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => {
               handleModeChange(DRAWING_MODES.ERASE);
@@ -202,7 +210,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
             <CiEraser size="20px" />
           </Button>
           <Button
-            className="bg-blue-500 px-5"
+            className="px-5 bg-blue-500"
             selected={isDrawingSelect(mode)}
             onClick={() => {
               handleSelectZone();
@@ -255,7 +263,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           handleTextParams={handleParamChange}
         />
 
-        <div className="relative m-auto flex gap-4">
+        <div className="relative flex gap-4 m-auto">
           <Button
             className="bg-pink-500"
             title="Ctrl-Z"
@@ -278,17 +286,28 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
               defaultFilename.current = filenameRef.current.value;
             }}
           >
-            <div className="flex flex-row">
-              Do you want to reccord this image ?
-            </div>
-            <div className="flex flex-row">
-              Name:
-              <input
-                className="mx-2 h-8 w-40 rounded-md border-2 border-gray-500 bg-white px-2"
-                type="text"
-                defaultValue={defaultFilename.current}
-                ref={filenameRef}
-              />
+            <div className="flex flex-col w-full gap-2">
+              <div className="flex">Do you want to reccord this image ?</div>
+              <div className="flex justify-between w-full">
+                Name:
+                <input
+                  className="w-40 h-8 px-2 mx-2 bg-white border-2 border-gray-500 rounded-md"
+                  type="text"
+                  defaultValue={defaultFilename.current}
+                  ref={filenameRef}
+                />
+              </div>
+              <div className="flex justify-center w-full">
+                <select
+                  defaultValue={saveFormatRef.current}
+                  onChange={(e) => (saveFormatRef.current = e.target.value)}
+                  className="w-20 h-8 px-2 mx-2 text-sm bg-gray-200 border-2 border-gray-500 rounded-md"
+                >
+                  <option value="png">PNG</option>
+                  <option value="svg">SVG</option>
+                  <option value="gif">GIF</option>
+                </select>
+              </div>
             </div>
           </ButtonConfirmModal>
         </div>

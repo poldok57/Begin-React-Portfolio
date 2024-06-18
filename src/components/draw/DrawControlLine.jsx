@@ -1,4 +1,6 @@
 import clsx from "clsx";
+import { inputRangeVariants } from "../../styles/input-range";
+
 import {
   DRAWING_MODES,
   isDrawingAllLines,
@@ -48,7 +50,7 @@ export const DrawControlLine = ({
       >
         Line width
         <input
-          className="h-2 w-24 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+          className={inputRangeVariants({ width: "24", size: "sm" })}
           id="draw-size-picker"
           type="range"
           defaultValue={drawingParams.general.lineWidth}
@@ -66,7 +68,7 @@ export const DrawControlLine = ({
       >
         Opacity
         <input
-          className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+          className={inputRangeVariants({ width: "20", size: "sm" })}
           id="draw-size-picker"
           type="range"
           value={opacity}

@@ -1,4 +1,4 @@
-import { Area } from "./canvas-defines";
+import { Area } from "../types";
 
 const getAlphaLines = (canvas: HTMLCanvasElement): Uint8ClampedArray[] => {
   const ctx = canvas.getContext("2d")!;
@@ -70,7 +70,7 @@ export const imageSize = (canvas: HTMLCanvasElement | null): Area | null => {
   }
 };
 
-const cutOutArea = (
+export const cutOutArea = (
   canvas: HTMLCanvasElement,
   area: Area
 ): HTMLCanvasElement => {
@@ -81,24 +81,4 @@ const cutOutArea = (
   tempCanvas.height = height;
   tempCtx.drawImage(canvas, x, y, width, height, 0, 0, width, height);
   return tempCanvas;
-};
-
-export const saveCanvas = (
-  canvas: HTMLCanvasElement,
-  filename: string,
-  area: Area | null = null
-): void => {
-  if (area === null) {
-    area = imageSize(canvas);
-    if (area === null) {
-      return;
-    }
-  }
-  const tempCanvas = cutOutArea(canvas, area);
-
-  const dataURL = tempCanvas.toDataURL();
-  const link = document.createElement("a");
-  link.href = dataURL;
-  link.download = filename + ".png";
-  link.click();
 };

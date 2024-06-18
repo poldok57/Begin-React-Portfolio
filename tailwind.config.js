@@ -21,6 +21,22 @@ module.exports = {
         secondary: "rgb(var(--color-secondary) / <alpha-value>)",
       },
     },
+    daisyui: {
+      themes: [
+        {
+          light: {
+            ...require("daisyui/src/theming/themes")["light"],
+            primary: "#012883",
+            ".btn-primary": {
+              "background-color": "#012883",
+            },
+          },
+        },
+
+        "dark",
+        "cupcake",
+      ],
+    },
   },
-  plugins: [],
+  plugins: [require("daisyui")],
 };

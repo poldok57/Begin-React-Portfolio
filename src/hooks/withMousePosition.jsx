@@ -304,7 +304,6 @@ export function withMousePosition(Component) {
       };
     }, [isLocked]);
 
-    if (trace) console.log("Render: styleRef:", styleRef.current);
     return (
       <div
         ref={componentRef}
@@ -350,11 +349,11 @@ export function withMousePosition(Component) {
             onChange={toggleLocked}
             color="red"
             initialColor="green"
-            className="color-primary absolute left-2 z-50 mt-1 opacity-0 group-hover:opacity-95"
+            className="absolute z-50 mt-1 opacity-0 color-primary left-2 group-hover:opacity-95"
           />
           {close.current && (
             <CloseButton
-              className="absolute right-2 mt-1"
+              className="absolute mt-1 right-2"
               onClick={hideComponent}
             />
           )}

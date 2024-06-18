@@ -6,6 +6,7 @@ import { TbRotateClockwise2 } from "react-icons/tb";
 import { fontOptions } from "../../lib/canvas/font-family";
 import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
+import { inputRangeVariants } from "../../styles/input-range";
 
 export const DrawControlText = ({
   mode,
@@ -43,7 +44,7 @@ export const DrawControlText = ({
         >
           Font
           <select
-            className="w-32 rounded-md border-2 border-primary bg-paper p-2 focus:ring-blue-500"
+            className="w-32 p-2 border-2 rounded-md border-primary bg-paper focus:ring-blue-500"
             id="text-font-selector"
             defaultValue={drawingParams.text.font}
             onChange={(event) => handleText({ font: event.target.value })}
@@ -66,7 +67,7 @@ export const DrawControlText = ({
         >
           Size
           <input
-            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className={inputRangeVariants({ width: "20", size: "sm" })}
             id="text-size-picker"
             type="range"
             defaultValue={drawingParams.text.fontSize}
@@ -82,7 +83,7 @@ export const DrawControlText = ({
         >
           Bold
           <input
-            className="h-2 w-12 bg-gray-300 opacity-50 outline-none transition-opacity hover:opacity-100"
+            className={inputRangeVariants({ width: "12", size: "sm" })}
             id="text-bold-picker"
             type="range"
             defaultValue={drawingParams.text.bold}
@@ -113,7 +114,7 @@ export const DrawControlText = ({
           <input
             id="text"
             type="text"
-            className="rounded-md border-2 border-primary bg-paper p-2"
+            className="p-2 border-2 rounded-md border-primary bg-paper"
             defaultValue={drawingParams.text.text}
             onChange={(event) => handleText({ text: event.target.value })}
           />

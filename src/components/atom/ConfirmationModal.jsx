@@ -3,7 +3,6 @@ import { useRef } from "react";
 import clsx from "clsx";
 
 export const ConfirmationModal = ({
-  isOpen,
   onClose,
   onConfirm = null,
   referrer = null,
@@ -13,7 +12,6 @@ export const ConfirmationModal = ({
   children,
 }) => {
   const ref = useRef(null);
-  if (!isOpen) return null;
 
   const rect =
     referrer && referrer.current
@@ -48,7 +46,7 @@ export const ConfirmationModal = ({
     <div
       ref={ref}
       className={clsx(
-        "z-50 gap-3 rounded-lg border-2 border-red-700 bg-paper p-4 shadow-xl",
+        "z-50 gap-3 rounded-lg h-fit border-2 border-red-700 bg-paper px-3 py-2 shadow-xl",
         className
       )}
       style={{
@@ -56,16 +54,12 @@ export const ConfirmationModal = ({
         left: left,
         top: top,
         width: width,
-        height: "fit-content",
-        maxHeight: "200px",
         transform: transform,
       }}
     >
-      <div className="mb-5 flex flex-col items-center gap-2 text-lg">
-        {children}
-      </div>
+      <div className="flex flex-col items-center text-lg">{children}</div>
       <div
-        className={clsx("flex", {
+        className={clsx("flex mt-3", {
           "items-center justify-between": onConfirm !== null,
           "justify-center": onConfirm === null,
         })}

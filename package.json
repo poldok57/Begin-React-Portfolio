@@ -3,15 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 5173",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "pnpm next dev -p 5173",
+    "build": "pnpm next build",
+    "start": "pnpm next start",
+    "lint": "pnpm next lint"
   },
   "dependencies": {
     "@notionhq/client": "^0.4.4",
     "bad-words": "^3.0.4",
+    "class-variance-authority": "^0.7.0",
     "clsx": "^1.2.1",
+    "gif.js": "^0.2.0",
     "next": "^14.1.4",
     "prop-types": "^15.8.1",
     "react": "18.2.0",
@@ -21,9 +23,11 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.4",
+    "@types/gif.js": "^0.2.5",
     "@types/node": "^20.12.11",
     "@types/react": "^18.3.2",
     "autoprefixer": "^10.4.8",
+    "daisyui": "^4.12.2",
     "eslint": "^8.22.0",
     "eslint-config-next": "12.2.5",
     "eslint-plugin-react": "^7.30.1",

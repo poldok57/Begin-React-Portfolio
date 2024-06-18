@@ -7,7 +7,6 @@ import {
 import {
   DRAWING_MODES,
   paramsAll,
-  paramsGeneral,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER } from "../../lib/mouse-position";
@@ -25,7 +24,12 @@ import {
   returnMouseDown,
 } from "../../lib/canvas/DrawingHandler";
 import { alertMessage } from "../../hooks/alertMessage";
-import { imageSize, saveCanvas } from "../../lib/canvas/canvas-size";
+import { imageSize, cutOutArea } from "../../lib/canvas/canvas-size";
+import {
+  downloadCanvasToPNG,
+  downloadCanvasToSVG,
+  downloadCanvasToGIF,
+} from "../../lib/canvas/canvas-save";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
@@ -434,11 +438,33 @@ export class DrawSelection extends DrawingHandler {
    * Function to save the canvas in a file
    * @param {string} filename - name of the file to save
    */
-  saveCanvas(filename: string) {
+  saveCanvas(filename: string, format: string = "png") {
     if (!this.mCanvas) return;
-    const area = this.getSelectedArea();
+    let area = this.getSelectedArea();
 
-    saveCanvas(this.mCanvas, filename, area);
+    if (area === null) {
+      // find empty space
+      area = imageSize(this.mCanvas);
+      if (area === null) {
+        return;
+      }
+    }
+    // remove empty space
+    const tempCanvas = cutOutArea(this.mCanvas, area);
+    if (!tempCanvas) return;
+
+    alertMessage("Save canvas in '" + format + "' format");
+
+    switch (format) {
+      case "svg":
+        downloadCanvasToSVG(tempCanvas, filename);
+        break;
+      case "gif":
+        downloadCanvasToGIF(tempCanvas, filename);
+        break;
+      default:
+        downloadCanvasToPNG(tempCanvas, filename);
+    }
   }
 
   /**

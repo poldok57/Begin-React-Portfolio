@@ -260,11 +260,10 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         drawing.actionValid();
         break;
       case DRAWING_MODES.SAVE:
-        alertMessage("Save the canvas");
         if (drawSelection === null) {
           selectDrawingHandler(DRAWING_MODES.SELECT);
         }
-        drawSelection.saveCanvas(filename);
+        drawSelection.saveCanvas(filename, event.detail?.format);
         break;
       case DRAWING_MODES.LOAD:
         {

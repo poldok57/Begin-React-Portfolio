@@ -43,9 +43,6 @@ export const ButtonConfirmModal = ({
     onOpen?.();
     setIsOpen(true);
   };
-  // const close = () => {
-  //   setIsOpen(false);
-  // };
 
   return (
     <>
