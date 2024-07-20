@@ -1,6 +1,5 @@
 import clsx from "clsx";
 import React, { forwardRef } from "react";
-import { ForwardedRef } from "react";
 
 /**
  * Simple button for the application
