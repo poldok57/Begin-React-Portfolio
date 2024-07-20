@@ -18,7 +18,7 @@ const HeroPresentation = () => {
     <div className="flex flex-col gap-4 md:mr-16">
       <h1 className="whitespace-nowrap text-5xl drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] md:text-7xl">
         We are{" "}
-        <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text font-extrabold text-transparent">
+        <span className="font-extrabold text-transparent bg-gradient-to-r from-secondary to-primary bg-clip-text">
           {FULL_NAME}
         </span>
       </h1>
@@ -35,13 +35,13 @@ const HeroPresentationWP = withMousePosition(HeroPresentation);
 
 export const HeroSection = () => {
   return (
-    <div className="relative m-auto flex w-full max-w-4xl flex-col">
+    <div className="relative flex flex-col w-full max-w-4xl m-auto">
       <HeroLogoWP className="top-0 right-0 md:absolute" />
       <HeroPresentationWP
-        trace="false"
-        locked="true"
+        trace={true}
+        locked={true}
         className="md:relative"
-        titleBar="true"
+        titleBar={true}
         title="Welcome to the React Factory !"
       />
     </div>

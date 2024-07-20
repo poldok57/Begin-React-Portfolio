@@ -11,7 +11,7 @@ export const GameSelector = () => {
   return (
     <SectionWrapper title="Are U boring ? Let's play !">
       <ButtonOpenModal
-        className="h-24 text-lg"
+        className="h-32 text-lg w-28"
         value="Memory"
         title="Test your memory"
       >

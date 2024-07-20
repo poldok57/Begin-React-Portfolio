@@ -1,7 +1,19 @@
 import { MdOutlineClose } from "react-icons/md";
 import clsx from "clsx";
+import React, { MouseEventHandler } from "react";
 
-export const CloseButton = ({ onClick, className, size, ...props }) => {
+interface CloseButtonProps {
+  onClick: MouseEventHandler<HTMLButtonElement>;
+  className?: string;
+  size?: "2xl" | "xl" | "md" | "sm" | "xs";
+}
+
+export const CloseButton: React.FC<CloseButtonProps> = ({
+  onClick,
+  className,
+  size = "md",
+  ...props
+}) => {
   return (
     <button
       {...props}
@@ -12,6 +24,7 @@ export const CloseButton = ({ onClick, className, size, ...props }) => {
           "text-xl": size === "xl",
           "text-md": size === "md",
           "text-sm": size === "sm",
+          "text-xs": size === "xs",
         },
         className
       )}

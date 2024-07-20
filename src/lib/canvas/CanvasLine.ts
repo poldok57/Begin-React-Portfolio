@@ -1,12 +1,13 @@
 import { getCoordinates } from "./canvas-tools";
-import { basicLine, crossLine, coordinate } from "./canvas-basic";
+import { basicLine, crossLine } from "./canvas-basic";
+import { Coordinate } from "../types";
 
 export class CanvasLine {
   mCanvas: HTMLCanvasElement | null = null;
   context: CanvasRenderingContext2D | null = null;
-  coordinates: coordinate | null = null;
-  startCoordinates: coordinate | null;
-  endCoordinates: coordinate | null;
+  coordinates: Coordinate | null = null;
+  startCoordinates: Coordinate | null;
+  endCoordinates: Coordinate | null;
   globalAlpha: string | null;
   strokeStyle: string | null;
   lineWidth: number = 0;
@@ -42,7 +43,7 @@ export class CanvasLine {
     this.coordinates = null;
   }
 
-  setStartCoordinates(coord: coordinate = null) {
+  setStartCoordinates(coord: Coordinate | null = null) {
     this.startCoordinates = coord || this.coordinates;
   }
 

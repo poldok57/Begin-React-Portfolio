@@ -1,4 +1,4 @@
-import { Component, useRef } from "react";
+import React, { Component, useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
 import { DEFAULT_PARAMS, isDrawingMode } from "../../lib/canvas/canvas-defines";
@@ -7,7 +7,7 @@ import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 const MAX_HISTORY = 40;
 
 export const Draw = () => {
-  const canvas = useRef(null);
+  const canvasRef = useRef(null);
 
   let drawingParamsRef = useRef(DEFAULT_PARAMS);
 
@@ -31,7 +31,7 @@ export const Draw = () => {
 
   return (
     <div className="relative block gap-8">
-      <DrawCanvas canvas={canvas} getParams={getDrawingParams} />
+      <DrawCanvas canvasRef={canvasRef} getParams={getDrawingParams} />
       <DrawControlWP
         trace={false}
         style={{
@@ -39,11 +39,11 @@ export const Draw = () => {
           position: "relative",
           marginTop: 10,
         }}
-        titleBar="true"
+        titleBar={true}
         title="Drawing Control"
-        titleHidden="false"
+        titleHidden={false}
         locked={true}
-        close="false"
+        close={false}
         setParams={setDrawingParams}
         changeMode={changeMode}
         drawingParams={drawingParamsRef.current}

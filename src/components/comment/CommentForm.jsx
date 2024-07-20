@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { TextField } from "../atom/TextField";
 
 import { ErrorMessage } from "../atom/ErrorMessage";
-import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
+import { Button } from "../atom/Button";
 
 import { commentsUrl } from "../../lib/api-url";
 
@@ -63,7 +63,7 @@ export const CommentForm = ({ addComment }) => {
       action={commentsUrl}
       id="commentForm"
       method="POST"
-      className="flex w-full flex-col gap-4 md:px-8"
+      className="flex flex-col w-full gap-4 md:px-8"
       onSubmit={(e) => handleSubmit(e)}
     >
       {errorSending && <ErrorMessage> {errorSending} </ErrorMessage>}
@@ -86,9 +86,9 @@ export const CommentForm = ({ addComment }) => {
       {errorMessage.current.comment && (
         <ErrorMessage> {errorMessage.current.comment} </ErrorMessage>
       )}
-      <ButtonConfirmModal value="Submit" type="submit">
-        Your comment has been sent !
-      </ButtonConfirmModal>
+      <Button position="over" type="submit">
+        Submit
+      </Button>
     </form>
   );
 };

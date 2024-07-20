@@ -161,7 +161,7 @@ export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
  */
 export const crossLine = (
   ctx: CanvasRenderingContext2D,
-  center: Coordinate,
+  center: Coordinate | null,
   width: number
 ) => {
   if (!center) return;

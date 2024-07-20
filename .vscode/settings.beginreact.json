@@ -30,5 +30,6 @@
   "editor.smoothScrolling": true,
   "explorer.confirmDelete": false,
   "workbench.iconTheme": "material-icon-theme",
-  "workbench.colorTheme": "Dracula"
+  "workbench.colorTheme": "Dracula",
+  "editor.audioCues.enabled": false
 }

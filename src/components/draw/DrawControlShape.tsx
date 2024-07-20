@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { MdRadioButtonUnchecked } from "react-icons/md";
 import { BiSquare } from "react-icons/bi";
 import { AiOutlineRadiusUpright } from "react-icons/ai";
@@ -14,7 +14,7 @@ import {
   isDrawingSquare,
 } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
-import { inputRangeVariants } from "../../styles/input-range";
+import { inputRangeVariants } from "../../styles/input-variants";
 
 export const DrawControlShape = ({
   mode,

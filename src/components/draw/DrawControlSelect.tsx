@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { BsCircleHalf } from "react-icons/bs";
 import clsx from "clsx";
 import { Button } from "../atom/Button";
@@ -76,7 +76,7 @@ export const DrawControlSelect = ({
         </Button>
 
         <ButtonConfirmModal
-          className="z-10 bg-blue-500 px-2"
+          className="z-10 px-2 bg-blue-500"
           value="Upload image"
           width="380px"
           isModalOpen={isModalOpen}
@@ -100,7 +100,7 @@ export const DrawControlSelect = ({
         >
           Detouring
           <input
-            className="h-4 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="w-20 h-4 transition-opacity bg-gray-300 outline-none opacity-70 hover:opacity-100"
             id="transparency-picker"
             type="range"
             defaultValue={0}
@@ -137,7 +137,7 @@ export const DrawControlSelect = ({
         >
           Radius
           <input
-            className="h-2 w-20 bg-gray-300 opacity-70 outline-none transition-opacity hover:opacity-100"
+            className="w-20 h-2 transition-opacity bg-gray-300 outline-none opacity-70 hover:opacity-100"
             id="select-radius-picker"
             type="range"
             defaultValue={0}

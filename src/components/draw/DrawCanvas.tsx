@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+//@ts-check
+import React, { useEffect, useRef } from "react";
 import {
   undoHistory,
   getCurrentHistory,
@@ -12,6 +13,7 @@ import {
   isDrawingMode,
   isDrawingShape,
   isDrawingSelect,
+  paramsAll,
 } from "../../lib/canvas/canvas-defines";
 
 import { alertMessage } from "../../hooks/alertMessage";
@@ -20,22 +22,31 @@ import { DrawLine } from "./DrawLine";
 import { DrawElement } from "./DrawElement";
 import { DrawSelection } from "./DrawSelection";
 import { DrawFreehand } from "./DrawFreehand";
+import { DrawingHandler } from "../../lib/canvas/DrawingHandler";
 
 const TEMPORTY_OPACITY = 0.6;
+
+interface DrawCanvasProps {
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+  getParams: () => paramsAll;
+}
 // Draw on Canvas
-export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
-  const drawingParams = useRef(null);
-  const canvasMouseRef = useRef(null);
-  const canvasTemporyRef = useRef(null);
+export const DrawCanvas: React.FC<DrawCanvasProps> = ({
+  canvasRef,
+  getParams,
+}) => {
+  const drawingParams: React.RefObject<paramsAll> = useRef(null);
+  const canvasMouseRef: React.RefObject<HTMLCanvasElement> = useRef(null);
+  const canvasTemporyRef: React.RefObject<HTMLCanvasElement> = useRef(null);
   const mouseOnCtrlPanel = useRef(false);
 
   const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
 
-  let drawLine = null;
-  let drawFreehand = null;
-  let drawElement = null;
-  let drawSelection = null;
-  let drawing = null;
+  let drawLine: DrawLine | null = null;
+  let drawFreehand: DrawFreehand | null = null;
+  let drawElement: DrawElement | null = null;
+  let drawSelection: DrawSelection | null = null;
+  let drawing: DrawingHandler | null = null;
 
   /**
    * Function to get the last picture in the history for undo action
@@ -62,9 +73,13 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * @param {HTMLCanvasElement} canvas
    * @param {number} opacity
    */
-  const setContext = (canvas, opacity = null) => {
+  const setContext = (
+    canvas: HTMLCanvasElement | null,
+    opacity: number | null = null
+  ) => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+    if (!ctx || !drawingParams.current) return;
 
     if (drawingParams.current) {
       ctx.strokeStyle = drawingParams.current.general.color;
@@ -81,7 +96,13 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * @param {string} mode
    * @returns {DrawingHandler} the drawing handler
    */
-  const selectDrawingHandler = (mode) => {
+  const selectDrawingHandler: (mode: string) => DrawingHandler = (mode) => {
+    if (canvasRef.current === null) {
+      throw new Error("Canvas is null");
+    }
+    if (drawingParams.current === null) {
+      throw new Error("drawingParams is null");
+    }
     let drawing;
     if (isDrawingLine(mode)) {
       if (drawLine === null) {
@@ -131,18 +152,24 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
 
     if (drawSelection !== null) drawSelection.eraseSelectedArea();
 
-    canvasRef.current.getContext("2d").globalCompositeOperation = "source-over";
+    if (canvasRef.current)
+      canvasRef.current.getContext("2d").globalCompositeOperation =
+        "source-over";
   };
 
-  const handleMouseUpExtend = (event) => {
+  const handleMouseUpExtend = (event: MouseEvent) => {
     // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target)) {
+    if (
+      !canvasMouseRef.current ||
+      canvasMouseRef.current.contains(event.target as Node)
+    ) {
       return;
     }
-    drawing.actionMouseUp();
+    drawing && drawing.actionMouseUp();
   };
 
   const handleMouseDownExtend = (event) => {
+    if (!drawingParams.current || !drawing || !canvasMouseRef.current) return;
     // the event is inside the canvas, let event on the canvas to be handled
     if (canvasMouseRef.current.contains(event.target)) {
       return;
@@ -164,24 +191,27 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
 
   const handleMouseMoveExtend = (event) => {
     // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target)) {
+    if (
+      !canvasMouseRef.current ||
+      canvasMouseRef.current.contains(event.target)
+    ) {
       return;
     }
-    drawing.actionMouseMove(event);
+    drawing && drawing.actionMouseMove(event);
   };
 
   /**
    * Extend mouse event to the document
    */
   const extendMouseEvent = () => {
-    if (drawing.isExtendedMouseArea()) return;
+    if (!drawing || drawing.isExtendedMouseArea()) return;
     drawing.setExtendedMouseArea(true);
     document.addEventListener("mousedown", handleMouseDownExtend);
     document.addEventListener("mousemove", handleMouseMoveExtend);
     document.addEventListener("mouseup", handleMouseUpExtend);
   };
   const stopExtendMouseEvent = () => {
-    if (!drawing.isExtendedMouseArea()) return;
+    if (!drawing || !drawing.isExtendedMouseArea()) return;
     drawing.setExtendedMouseArea(false);
     document.removeEventListener("mousedown", handleMouseDownExtend);
     document.removeEventListener("mousemove", handleMouseMoveExtend);
@@ -193,6 +223,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    */
   const drawingParamChanged = () => {
     drawingParams.current = getParams();
+    if (!drawing) return;
 
     drawing.changeData(drawingParams.current);
 
@@ -217,8 +248,10 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     if (drawing) drawing.endAction(newMode);
     stopExtendMouseEvent();
     const context = canvasRef.current.getContext("2d");
-    context.globalCompositeOperation =
-      newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
+
+    if (context)
+      context.globalCompositeOperation =
+        newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
 
     // set the new drawing mode
     drawing = selectDrawingHandler(newMode);
@@ -234,6 +267,10 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     const eventAction = event.detail.action;
     const filename = event.detail?.filename;
     const value = event.detail?.value;
+
+    if (!canvasRef.current || !drawing) {
+      return;
+    }
 
     switch (eventAction) {
       case DRAWING_MODES.INIT:
@@ -263,7 +300,8 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         if (drawSelection === null) {
           selectDrawingHandler(DRAWING_MODES.SELECT);
         }
-        drawSelection.saveCanvas(filename, event.detail?.format);
+        drawSelection &&
+          drawSelection.saveCanvas(filename, event.detail?.format);
         break;
       case DRAWING_MODES.LOAD:
         {
@@ -272,7 +310,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           if (drawSelection === null) {
             selectDrawingHandler(DRAWING_MODES.IMAGE);
           }
-          drawSelection.loadCanvas(filename, name);
+          drawSelection && drawSelection.loadCanvas(filename, name);
           // correction of mouse position
           mouseOnCtrlPanel.current = false;
         }
@@ -333,6 +371,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * Function to clear the temporary canvas
    */
   const clearTemporyCanvas = () => {
+    if (!canvasTemporyRef.current) return;
     const context = canvasTemporyRef.current.getContext("2d");
     clearCanvasByCtx(context);
   };
@@ -342,6 +381,13 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * @param {Event} event
    */
   const actionMouseDown = (event) => {
+    if (!drawingParams.current || !canvasRef.current) {
+      console.error(
+        canvasRef.current == null ? "canvas" : "drawingParams",
+        "is null"
+      );
+      return;
+    }
     // color and width painting
     drawingParams.current = getParams();
     setContext(canvasRef.current);
@@ -355,7 +401,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
     } else {
       stopExtendMouseEvent();
     }
-    if (toReset) {
+    if (toReset && drawing) {
       drawing.endAction();
       // restart with basic drawing mode
       const chgtMode = DRAWING_MODES.DRAW;
@@ -363,7 +409,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       drawingParams.current.mode = chgtMode;
       drawing = selectDrawingHandler(chgtMode);
     }
-    if (pointer !== null) {
+    if (pointer !== null && canvasMouseRef.current) {
       canvasMouseRef.current.style.cursor = pointer;
     }
 
@@ -376,7 +422,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
    * erase canavasOver (temporary canvas) when mouse leave the canvas
    */
   const onMouseLeave = () => {
-    drawing.actionMouseLeave();
+    drawing && drawing.actionMouseLeave();
   };
 
   useEffect(() => {
@@ -384,7 +430,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       generalInitialisation();
     };
     const handleMouseUp = () => {
-      drawing.actionMouseUp();
+      drawing && drawing.actionMouseUp();
     };
     const handleMouseDown = (event) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
@@ -392,6 +438,10 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       actionMouseDown(event);
     };
     const handleMouseMove = (event) => {
+      if (!canvasMouseRef.current || !drawingParams.current || !drawing) {
+        return;
+      }
+
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
 
       if (!drawingParams.current) {
@@ -399,10 +449,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         return;
       }
 
-      const pointer = drawing.actionMouseMove(
-        event,
-        drawingParams.current.general.opacity
-      );
+      const pointer = drawing.actionMouseMove(event);
 
       if (pointer !== null) {
         canvasMouseRef.current.style.cursor = pointer;
@@ -431,6 +478,10 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       }
     };
 
+    if (!canvasMouseRef.current) {
+      console.error("canvasMouseRef.current is null");
+      return;
+    }
     const canvasMouse = canvasMouseRef.current;
     canvasMouse.style.pointerEvents = "auto";
 
@@ -458,7 +509,9 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
       document.removeEventListener("modeChanged", handleChangeMode);
       window.removeEventListener("load", handleDocumentLoaded);
 
-      drawingParams.current.mode = DRAWING_MODES.INIT;
+      if (drawingParams.current) {
+        drawingParams.current.mode = DRAWING_MODES.INIT;
+      }
     };
   }, []);
 
@@ -469,11 +522,9 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
         height: HEIGHT + 5,
         width: WIDTH + 5,
       }}
-      className="border-spacing-2 border-2 border-blue-300"
+      className="border-2 border-blue-300 border-spacing-2"
     >
       <canvas
-        left={0}
-        top={0}
         width={WIDTH}
         height={HEIGHT}
         ref={canvasRef}
@@ -482,11 +533,9 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           left: 0,
           top: 0,
         }}
-        className="m-auto border-spacing-3 rounded-md bg-white shadow-md"
+        className="m-auto bg-white rounded-md shadow-md border-spacing-3"
       />
       <canvas
-        left={0}
-        top={0}
         width={WIDTH}
         height={HEIGHT}
         ref={canvasTemporyRef}
@@ -496,11 +545,9 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           top: 0,
           zIndex: 2,
         }}
-        className="transparent m-auto"
+        className="m-auto transparent"
       />
       <canvas
-        left={0}
-        top={0}
         width={WIDTH}
         height={HEIGHT}
         ref={canvasMouseRef}
@@ -510,7 +557,7 @@ export const DrawCanvas = ({ canvas: canvasRef, getParams }) => {
           top: 0,
           zIndex: 3,
         }}
-        className="transparent m-auto"
+        className="m-auto transparent"
       />
     </div>
   );

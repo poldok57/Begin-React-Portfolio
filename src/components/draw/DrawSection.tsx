@@ -1,3 +1,4 @@
+import React from "react";
 import { SectionWrapper } from "../atom/SectionWrapper";
 import { Draw } from "./Draw";
 

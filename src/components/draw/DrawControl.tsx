@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState, useEffect } from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
 import { withMousePosition } from "../../hooks/withMousePosition";
 import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
@@ -23,6 +23,7 @@ import { eraseHistory } from "../../lib/canvas/canvas-history";
 import { alertMessage } from "../../hooks/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { DrawControlSelect } from "./DrawControlSelect";
+import { MutableRefObject } from "react";
 
 // import clsx from "clsx";
 
@@ -33,7 +34,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
   const [lockRatio, setLockRatio] = useState(false);
   const [opacity, setOpacity] = useState(drawingParams.general.opacity * 100);
 
-  const filenameRef = useRef(null);
+  const filenameRef: MutableRefObject<HTMLInputElement> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
 
@@ -272,6 +273,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
             <SlActionUndo size="20px" />
           </Button>
           <ButtonConfirmModal
+            position="over"
             className="bg-red-500"
             value="Reset"
             onConfirm={handleConfirmReset}
@@ -279,11 +281,14 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
             Do you want to erase all your drawing ?
           </ButtonConfirmModal>
           <ButtonConfirmModal
+            position="modal"
             className="bg-blue-500"
             value="Save my drawing"
             onConfirm={() => {
-              addEventSaveFile(DRAWING_MODES.SAVE, filenameRef.current.value);
-              defaultFilename.current = filenameRef.current.value;
+              if (filenameRef.current != null) {
+                addEventSaveFile(DRAWING_MODES.SAVE, filenameRef.current.value);
+                defaultFilename.current = filenameRef.current.value;
+              }
             }}
           >
             <div className="flex flex-col w-full gap-2">

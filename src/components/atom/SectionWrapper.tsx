@@ -1,3 +1,4 @@
+import React from "react";
 import { Typography } from "./Typography";
 
 /**
@@ -8,7 +9,15 @@ import { Typography } from "./Typography";
  * @returns {JSX.Element}
  * @constructor
  */
-export const SectionWrapper = ({ children, title }) => {
+interface SectionWrapperProps {
+  children: React.ReactNode;
+  title: string;
+}
+
+export const SectionWrapper: React.FC<SectionWrapperProps> = ({
+  children,
+  title,
+}) => {
   return (
     <div className="flex flex-col items-center gap-12">
       <Typography variant="h2" id={title.toLowerCase().replaceAll(/\s/g, "-")}>

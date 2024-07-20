@@ -1,3 +1,4 @@
+import React from "react";
 import clsx from "clsx";
 
 /**
@@ -19,6 +20,13 @@ export const Typography = ({
   children,
   className,
   ...props
+}: {
+  variant?: string;
+  component?: React.ElementType;
+  color?: string;
+  children?: React.ReactNode;
+  className?: string;
+  [propName: string]: any; // For additional props not explicitly defined
 }) => {
   if (variant === "h1") {
     const H1Component = component || "h1";

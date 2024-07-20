@@ -1,6 +1,15 @@
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
 import { Button } from "./Button";
 import { ConfirmationModal } from "./ConfirmationModal";
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogOpen,
+  DialogTitle,
+  DialogTrigger,
+} from "./Dialog";
 
 /**
  * ButtonConfirmModal component is a button that opens a confirmation modal when clicked.
@@ -28,44 +37,13 @@ export const ButtonConfirmModal = ({
   showUnder = false,
   ...props
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef(null);
-
-  const handleConfirm = () => {
-    onConfirm?.();
-    setIsOpen(false);
-  };
-  const handleClose = () => {
-    onClose?.();
-    setIsOpen(false);
-  };
-  const handleOpen = () => {
-    onOpen?.();
-    setIsOpen(true);
-  };
-
   return (
-    <>
-      <Button
-        ref={ref}
-        className={className}
-        onClick={() => handleOpen()}
-        {...props}
-      >
-        {value}
-      </Button>
-      {isModalOpen && isOpen && (
-        <ConfirmationModal
-          referrer={ref}
-          isOpen={isOpen}
-          onClose={() => handleClose()}
-          onConfirm={onConfirm ? handleConfirm : undefined}
-          width={width}
-          showUnder={showUnder}
-        >
-          {children}
-        </ConfirmationModal>
-      )}
-    </>
+    <Dialog>
+      <DialogOpen>
+        <Button className={className}>{value}</Button>
+      </DialogOpen>
+
+      <DialogContent>{children}</DialogContent>
+    </Dialog>
   );
 };

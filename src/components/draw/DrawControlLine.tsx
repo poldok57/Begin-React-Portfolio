@@ -1,5 +1,6 @@
+import React from "react";
 import clsx from "clsx";
-import { inputRangeVariants } from "../../styles/input-range";
+import { inputRangeVariants } from "../../styles/input-variants";
 
 import {
   DRAWING_MODES,
@@ -35,8 +36,8 @@ export const DrawControlLine = ({
         <ColorPicker
           className="my-0"
           id="draw-color-picker"
-          height="40"
-          width="40"
+          height={40}
+          width={40}
           defaultValue={drawingParams.general.color}
           onChange={(color) => handleGeneral({ color: color })}
         />

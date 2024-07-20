@@ -6,7 +6,7 @@ import { TbRotateClockwise2 } from "react-icons/tb";
 import { fontOptions } from "../../lib/canvas/font-family";
 import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
-import { inputRangeVariants } from "../../styles/input-range";
+import { inputRangeVariants } from "../../styles/input-variants";
 
 export const DrawControlText = ({
   mode,

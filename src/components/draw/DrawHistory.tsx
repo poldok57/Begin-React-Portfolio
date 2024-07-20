@@ -1,13 +1,19 @@
-import { useContext, createContext, useRef } from "react";
+import React, { useContext, createContext, useRef } from "react";
 
-const DrawContext = createContext();
+const DrawContext = createContext(null);
 
 const DEFAULT_MAX_LEN = 10;
 
-export const HistoryProvider = ({ maxLen = 0, children }) => {
+export const HistoryProvider = ({
+  maxLen = 0,
+  children,
+}: {
+  maxLen?: number;
+  children: React.ReactNode;
+}) => {
   const historyRef = useRef([]);
 
-  const maxHistoryLen = maxLen || DEFAULT_MAX_LEN;
+  const maxHistoryLen: number = maxLen || DEFAULT_MAX_LEN;
 
   const lastUndo = useRef(0);
   const undoHistory = () => {

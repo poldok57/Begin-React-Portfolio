@@ -204,7 +204,7 @@ export class DrawLine extends DrawingHandler {
     switch (mode) {
       case DRAWING_MODES.LINE:
         if (this.line.drawLine()) {
-          this.saveCanvasPicture();
+          this.saveCanvasPicture(this.line.getCoordinates() as Coordinate);
         }
         toContinue = true;
         break;
@@ -212,7 +212,7 @@ export class DrawLine extends DrawingHandler {
         if (this.line.drawArc()) {
           this.line.showArc(null, false);
           this.line.setStartFromEnd();
-          this.saveCanvasPicture();
+          this.saveCanvasPicture(this.line.getStartCoordinates() as Coordinate);
         }
         toContinue = true;
         break;
@@ -235,7 +235,7 @@ export class DrawLine extends DrawingHandler {
     this.line.eraseLastCoordinates();
   }
 
-  endAction(nextMode: string) {
+  endAction(nextMode: string = DRAWING_MODES.DRAW) {
     if (!isDrawingLine(nextMode)) {
       this.clearTemporyCanvas();
       this.line.eraseLastCoordinates();

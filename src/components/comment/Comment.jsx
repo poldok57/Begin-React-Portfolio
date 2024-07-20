@@ -11,8 +11,8 @@ export const Comment = ({ username, comment, createdAt }) => {
   )}/${createdAtDate.getFullYear()}`;
 
   return (
-    <fieldset className="flex flex-col justify-between rounded-md border-opacity-25 bg-paper p-4 pt-2">
-      <legend className="text rounded-full border-2 border-secondary bg-background p-1 px-3 text-sm font-semibold text-primary">
+    <fieldset className="flex flex-col justify-between p-4 pt-2 border border-opacity-25 rounded-lg shadow-lg border-secondary bg-paper min-w-60 md:min-w-72 w-fit">
+      <legend className="p-1 px-3 text-sm font-semibold border-2 rounded-full text border-secondary bg-background text-primary">
         {username}
       </legend>
       <Typography variant="body2" className="mb-2 break-all">

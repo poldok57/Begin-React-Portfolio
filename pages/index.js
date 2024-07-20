@@ -14,7 +14,7 @@ const Home = () => {
       <Head>
         <title>Portfolio</title>
       </Head>
-      <div className="flex flex-col gap-40">
+      <div className="flex flex-col gap-y-32">
         <Header />
         <HeroSection />
         <ProjectSection />

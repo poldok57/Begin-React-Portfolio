@@ -123,11 +123,9 @@ export abstract class DrawingHandler {
   /**
    * Function to save the picture in the history
    */
-  saveCanvasPicture() {
+  saveCanvasPicture(coordinate: Coordinate | null = null) {
     const type = this.getType();
-    const coord: Coordinate | null = isDrawingLine(type)
-      ? (this.getCoordinates() as Coordinate)
-      : null;
+    const coord: Coordinate | null = coordinate;
     const savePicture = {
       type: this.getType(),
       canvas: this.mCanvas,
@@ -192,7 +190,7 @@ export abstract class DrawingHandler {
   actionAbort(): void {}
   actionValid(): void {}
 
-  abstract endAction(nextMode: string): void;
+  abstract endAction(nextMode?: string): void;
   abstract changeData(data: paramsAll): void;
   abstract initData(data: paramsAll): void;
 
@@ -201,5 +199,5 @@ export abstract class DrawingHandler {
   abstract actionMouseUp(): void;
   abstract actionMouseLeave(): void;
 
-  abstract refreshDrawing(opacity: number, mouseOnShape: string | null): void;
+  abstract refreshDrawing(opacity?: number, mouseOnShape?: string | null): void;
 }
