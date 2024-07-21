@@ -1,4 +1,4 @@
-import { SiGithub, SiLinkedin, SiTwitter, SiInstagram } from "react-icons/si";
+import { SiGithub, SiInstagram } from "react-icons/si";
 
 export const GITHUB_USERNAME = "poldok57";
 
