@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 
 import { Button } from "../components/atom/Button";
@@ -13,7 +14,16 @@ import clsx from "clsx";
  * @param {array} props.messages - array of messages to display
  * @param {function} props.clearMessages - function to clear messages
  */
-export const ShowDivAlertMessages = ({
+interface ShowDivAlertMessagesProps {
+  style?: React.CSSProperties;
+  className?: string;
+  display: boolean;
+  trace?: boolean;
+  messages: string[];
+  clearMessages: () => void;
+}
+
+export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
   style,
   className,
   display,
@@ -34,7 +44,7 @@ export const ShowDivAlertMessages = ({
     }
     const alertElement = document.querySelector(`#${messageId}`);
     // make a scroll down on this div
-    let timerId = 0;
+    let timerId: number | NodeJS.Timeout = 0;
     if (alertElement) {
       timerId = setTimeout(() => {
         alertElement.scrollTop = alertElement.scrollHeight;
@@ -74,16 +84,16 @@ export const ShowDivAlertMessages = ({
             }}
           >
             <ul style={{ listStyleType: "none" }}>
-              {messages.map((message, idx) => (
+              {messages.map((message: string, idx: number) => (
                 <li key={idx}>{message}</li>
               ))}
             </ul>
           </div>
         )}
         {messages.length > 0 && (
-          <div className="flex flex-row items-center justify-between p-2 bg-gray-200">
-            <div className="w-2/3 p-2">
-              <label className="m-0">
+          <div className="flex flex-row items-center justify-between p-1 bg-gray-200">
+            <div className="w-3/4">
+              <label className="flex flex-row w-full p-1 cursor-pointer">
                 Display Alert: &nbsp;
                 <input
                   type="checkbox"
@@ -93,7 +103,10 @@ export const ShowDivAlertMessages = ({
               </label>
             </div>
             {displayAlert && (
-              <Button className="bg-secondary" onClick={() => clearMessages()}>
+              <Button
+                className="bg-secondary btn-sm"
+                onClick={() => clearMessages()}
+              >
                 Clear
               </Button>
             )}

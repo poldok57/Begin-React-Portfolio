@@ -34,7 +34,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
   const [lockRatio, setLockRatio] = useState(false);
   const [opacity, setOpacity] = useState(drawingParams.general.opacity * 100);
 
-  const filenameRef: MutableRefObject<HTMLInputElement> = useRef(null);
+  const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
 
@@ -200,7 +200,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
             Text
           </Button>
           <Button
-            className="px-5 btn btn-accent"
+            className="px-5 bg-teal-400 hover:bg-teal-500"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => {
               handleModeChange(DRAWING_MODES.ERASE);
@@ -211,7 +211,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
             <CiEraser size="20px" />
           </Button>
           <Button
-            className="px-5 bg-blue-500"
+            className="px-5 bg-blue-500 hover:bg-blue-600"
             selected={isDrawingSelect(mode)}
             onClick={() => {
               handleSelectZone();
@@ -223,10 +223,10 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           <Button
             className={clsx("px-5", {
               hidden: !(isDrawingShape(mode) || isDrawingSelect(mode)),
-              "bg-green-600": !lockRatio,
-              "bg-red-600": lockRatio,
+              "bg-green-600 hover:bg-green-400": !lockRatio,
+              "bg-red-600 hover:bg-red-400": lockRatio,
             })}
-            title="Lock ratio"
+            title={!lockRatio ? "Lock ratio" : "Ratio locked"}
             selected={lockRatio}
             onClick={() => handleChangeRatio(!lockRatio)}
           >
@@ -239,7 +239,6 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           handleImage={handleImage}
           handleChangeRatio={handleChangeRatio}
           handleChangeRadius={handleChangeRadius}
-          addEvent={addEvent}
           addEventDetail={addEventDetail}
         />
         <DrawControlLine
@@ -266,7 +265,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
 
         <div className="relative flex gap-4 m-auto">
           <Button
-            className="bg-pink-500"
+            className="bg-pink-500 hover:bg-pink-600"
             title="Ctrl-Z"
             onClick={() => addEventAction(DRAWING_MODES.UNDO)}
           >
@@ -274,7 +273,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           </Button>
           <ButtonConfirmModal
             position="over"
-            className="bg-red-500"
+            className="bg-red-500 hover:bg-red-600"
             value="Reset"
             onConfirm={handleConfirmReset}
           >
@@ -282,7 +281,7 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
           </ButtonConfirmModal>
           <ButtonConfirmModal
             position="modal"
-            className="bg-blue-500"
+            className="bg-blue-500 hover:bg-blue-600"
             value="Save my drawing"
             onConfirm={() => {
               if (filenameRef.current != null) {

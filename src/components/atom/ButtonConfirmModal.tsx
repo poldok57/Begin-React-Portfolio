@@ -23,44 +23,51 @@ interface ButtonConfirmModalProps {
   onConfirm?: () => void;
   onClose?: () => void;
   onOpen?: () => void;
+  dialogRef?: MutableRefObject<HTMLDialogElement | null>;
   children: React.ReactNode;
   isModalOpen?: boolean;
   position?: "over" | "under" | "modal";
 }
 export const ButtonConfirmModal: React.FC<ButtonConfirmModalProps> = ({
+  value,
   children,
   onConfirm,
   onClose,
   onOpen,
-  value,
+  dialogRef,
   className,
   isModalOpen = false,
   position = "over",
   ...props
 }) => {
   const ref = useRef(null);
-  const dialogRef: MutableRefObject<DialogHTMLAttributes> = useRef(null);
+  const localDialogRef: MutableRefObject<HTMLDialogElement | null> =
+    useRef(null);
+
+  if (dialogRef) {
+    dialogRef.current = localDialogRef.current;
+  }
 
   const handleConfirm = () => {
     onConfirm?.();
-    if (dialogRef.current) {
-      dialogRef.current.close();
+    if (localDialogRef.current) {
+      localDialogRef.current.close();
     }
   };
   const handleClose = () => {
     onClose?.();
-    if (dialogRef.current) {
-      dialogRef.current.close();
+    if (localDialogRef.current) {
+      localDialogRef.current.close();
     }
   };
   const handleOpen = () => {
     onOpen?.();
-    if (dialogRef.current) {
+    if (localDialogRef.current) {
       if (position === "modal") {
-        dialogRef.current.showModal();
+        localDialogRef.current.showModal();
         return;
       }
-      dialogRef.current.show();
+      localDialogRef.current.show();
     }
   };
 
@@ -76,7 +83,7 @@ export const ButtonConfirmModal: React.FC<ButtonConfirmModalProps> = ({
       </Button>
 
       <ConfirmationModal
-        ref={dialogRef}
+        ref={localDialogRef}
         onClose={() => handleClose()}
         onConfirm={() => handleConfirm()}
         isModalOpen={isModalOpen}

@@ -3,7 +3,18 @@ import React, { useMemo } from "react";
 import { useMessageStore } from "../lib/stores/useMessageStore";
 import { ShowDivAlertMessages } from "./ShowDivAlertMessages";
 
-export const ShowAlertMessages = ({
+/**
+ * ShowAlertMessages component to display messages in a div
+ * @param {object} props
+ * @param {boolean} props.display - display messages in the div or not
+ * @param {boolean} props.trace - trace the render
+ */
+interface ShowAlertMessagesProps {
+  display?: boolean;
+  trace?: boolean;
+}
+
+export const ShowAlertMessages: React.FC<ShowAlertMessagesProps> = ({
   display = true,
   trace = false,
   ...props
@@ -21,7 +32,7 @@ export const ShowAlertMessages = ({
         display={display}
         messages={messages}
         clearMessages={clearMessages}
-        trace={Boolean(trace)}
+        trace={trace}
         {...props}
       />
     );

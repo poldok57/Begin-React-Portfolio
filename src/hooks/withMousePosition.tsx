@@ -59,6 +59,7 @@ export function withMousePosition<P extends object>(
     style,
     trace = false,
     close = false,
+    locked = false,
     className = null,
     titleBar = false,
     titleHidden = true,
@@ -75,7 +76,7 @@ export function withMousePosition<P extends object>(
     const canMoveRef = useRef(false);
     const mouseCoordinatesRef = useRef({ x: 0, y: 0 });
 
-    const [isLocked, setLocked] = useState(props.locked);
+    const [isLocked, setLocked] = useState(locked);
 
     const setMouseCoordinates = (x, y) => {
       mouseCoordinatesRef.current.x = x;

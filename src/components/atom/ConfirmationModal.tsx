@@ -1,9 +1,7 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, ForwardedRef } from "react";
+
 import { Button } from "./Button";
 import clsx from "clsx";
-
-import { DialogHTMLAttributes } from "react";
-import { ForwardedRef } from "react";
 
 interface ConfirmationModalProps {
   onClose: () => void;
@@ -14,12 +12,12 @@ interface ConfirmationModalProps {
   children: React.ReactNode;
 }
 export const ConfirmationModal = forwardRef<
-  HTMLDivElement,
+  HTMLDialogElement,
   ConfirmationModalProps
 >(
   (
     { onClose, onConfirm, className, isModalOpen, position, children },
-    ref: ForwardedRef<DialogHTMLAttributes>
+    ref: ForwardedRef<HTMLDialogElement>
   ) => {
     // console.log("ConfirmationModal", { top, left, transform });
 
@@ -51,11 +49,14 @@ export const ConfirmationModal = forwardRef<
             })}
           >
             {onConfirm && (
-              <Button className="bg-green-500" onClick={onConfirm}>
+              <Button
+                className="bg-green-500 hover:bg-green-600"
+                onClick={onConfirm}
+              >
                 Confirm
               </Button>
             )}
-            <Button className="bg-red-500" onClick={onClose}>
+            <Button className="bg-red-500 hover:bg-red-600" onClick={onClose}>
               {onConfirm ? "Cancel" : "Close"}
             </Button>
           </div>

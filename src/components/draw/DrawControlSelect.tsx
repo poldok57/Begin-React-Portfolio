@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { BsCircleHalf } from "react-icons/bs";
 import clsx from "clsx";
 import { Button } from "../atom/Button";
@@ -7,6 +7,7 @@ import {
   isDrawingSelect,
 } from "../../lib/canvas/canvas-defines";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
+import { MutableRefObject } from "react";
 
 // import clsx from "clsx";
 
@@ -18,8 +19,8 @@ export const DrawControlSelect = ({
   handleImage,
   addEventDetail,
 }) => {
-  const [isModalOpen, setModalOpen] = useState(false);
   const [isBlackWhite, setBlackWhite] = useState(false);
+  const dialogRef: MutableRefObject<HTMLDialogElement | null> = useRef(null);
 
   const addEventActionValue = (action, value) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action, value });
@@ -38,8 +39,9 @@ export const DrawControlSelect = ({
 
       handleChangeRatio(true);
       setMode(DRAWING_MODES.IMAGE);
-
-      setModalOpen(false);
+      if (dialogRef.current) {
+        dialogRef.current.close();
+      }
     }
   };
 
@@ -76,14 +78,14 @@ export const DrawControlSelect = ({
         </Button>
 
         <ButtonConfirmModal
-          className="z-10 px-2 bg-blue-500"
+          className="z-10 px-2 text-white bg-blue-500 hover:bg-blue-600"
           value="Upload image"
-          width="380px"
-          isModalOpen={isModalOpen}
-          onOpen={() => setModalOpen(true)}
+          position="modal"
+          dialogRef={dialogRef}
         >
           <div className="flex flex-row">Select a file to upload :</div>
           <input
+            formMethod="dialog"
             className={clsx(
               "h-fit w-72 rounded-md border-2 border-blue-300 bg-white py-0 pr-2 text-sm",
               "file:mr-4 file:rounded-l-md file:border file:bg-blue-500 file:py-2 file:px-2 file:font-semibold file:text-white hover:file:bg-blue-600"
