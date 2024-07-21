@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import Head from "next/head";
 import { CommentSection } from "../src/components/comment";
 import { DrawSection } from "../src/components/draw";

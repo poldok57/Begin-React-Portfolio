@@ -93,7 +93,7 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
         {messages.length > 0 && (
           <div className="flex flex-row items-center justify-between p-1 bg-gray-200">
             <div className="w-3/4">
-              <label className="flex flex-row w-full p-1 cursor-pointer">
+              <label className="flex flex-row w-full p-1 cursor-pointer text-primary">
                 Display Alert: &nbsp;
                 <input
                   type="checkbox"

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm next dev -p 5173",
-    "build": "pnpm next build",
-    "start": "pnpm next start",
-    "lint": "pnpm next lint"
-  },
+  "dev": "next dev  -p 5173",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint"
+}
   "dependencies": {
     "@notionhq/client": "^0.4.4",
     "bad-words": "^3.0.4",
