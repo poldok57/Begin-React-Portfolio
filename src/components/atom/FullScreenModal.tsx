@@ -14,6 +14,8 @@ const [FRAME_WIDTH, FRAME_HEIGHT] = ["calc(100% - 10px)", "calc(100% - 5px)"];
 const DEFAULT_OVERFLOW = "auto";
 
 const TITLE_HEIGHT = 40;
+const DURATION_HORIZONTAL = 0.6;
+const DURATION_VERTICAL = 0.5;
 
 const toggleMinimize = (
   minimize: boolean,
@@ -48,7 +50,7 @@ const toggleMinimize = (
 
     // Apply transitions
     setTimeout(() => {
-      style.transition = "top 1.5s, left 1s, width 1s, height 1.5s";
+      style.transition = `top ${DURATION_VERTICAL}s, ${DURATION_VERTICAL}s, width ${DURATION_HORIZONTAL}s, height ${DURATION_HORIZONTAL}s`;
       style.top = top;
       style.left = left;
       style.width = width;
@@ -93,6 +95,7 @@ export const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
     // let isMinimized = false;
 
     const frameMinimize = (minimize: boolean) => {
+      // console.log("frameMinimize", minimize);
       // isMinimized = minimize;
       toggleMinimize(minimize, ref as MutableRefObject<HTMLDivElement>);
     };
@@ -111,7 +114,7 @@ export const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
       mStyle.top = `${rect.top}px`;
       mStyle.width = `${rect.width}px`;
       mStyle.height = `${rect.height}px`;
-      mStyle.transition = "all 0.1s";
+      mStyle.transition = "all 0.5s";
 
       setTimeout(() => {
         toggleMinimize(false, ref as MutableRefObject<HTMLDivElement>);
@@ -120,7 +123,7 @@ export const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
     return (
       <div
         ref={ref}
-        className="z-40 p-4 border-2 border-red-700 rounded-lg shadow-xl bg-paper"
+        className="z-30 p-4 border-2 border-red-700 rounded-lg shadow-xl bg-paper"
         style={mStyle}
       >
         <TitleBar
@@ -137,7 +140,7 @@ export const FullScreenModal = forwardRef<HTMLDivElement, FullScreenModalProps>(
             width: "100%",
             ...(bgTitle ? { backgroundColor: bgTitle } : {}),
           }}
-          onClick={() => frameMinimize(false)}
+          // onClick={() => frameMinimize(false)}
         >
           {title}
           <div className="absolute flex flex-row justify-end gap-4 pt-0 mt-0 top-1 right-3">
