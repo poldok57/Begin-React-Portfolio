@@ -1,7 +1,11 @@
 import React, { Component, useRef } from "react";
 import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
-import { DEFAULT_PARAMS, isDrawingMode } from "../../lib/canvas/canvas-defines";
+import {
+  DEFAULT_PARAMS,
+  isDrawingMode,
+  paramsAll,
+} from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 
 const MAX_HISTORY = 40;
@@ -17,11 +21,11 @@ export const Draw = () => {
     return drawingParamsRef.current;
   };
 
-  const setDrawingParams = (props) => {
+  const setDrawingParams = (props: paramsAll) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
   };
 
-  const changeMode = (mode) => {
+  const changeMode = (mode: string) => {
     if (isDrawingMode(mode)) {
       drawingParamsRef.current.mode = mode;
     } else {
