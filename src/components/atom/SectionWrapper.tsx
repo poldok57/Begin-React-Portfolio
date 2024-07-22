@@ -20,7 +20,7 @@ export const SectionWrapper: React.FC<SectionWrapperProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center gap-12">
-      <Typography variant="h2" id={title.toLowerCase().replaceAll(/\s/g, "-")}>
+      <Typography variant="h2" key={title.toLowerCase().replaceAll(/\s/g, "-")}>
         {title}
       </Typography>
       {children}
