@@ -18,7 +18,7 @@ export const CloseButton: React.FC<CloseButtonProps> = ({
     <button
       {...props}
       className={clsx(
-        "z-50 rounded border border-black bg-red-600 text-lg text-white opacity-30 group-hover:opacity-95",
+        "z-auto rounded border border-black bg-red-600 text-lg text-white opacity-30 group-hover:opacity-95",
         {
           "text-2xl": size === "2xl",
           "text-xl": size === "xl",

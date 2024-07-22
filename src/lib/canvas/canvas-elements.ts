@@ -261,7 +261,7 @@ const drawBorder = (
   squareSize: Area,
   radius: number,
   shapeType: string,
-  drawingFunction: Function
+  drawingFunction: (props: drawingProps) => void
 ) => {
   const bWidth = squareBorder.lineWidth;
   const bInterval = squareBorder.interval ?? 0;
@@ -431,15 +431,14 @@ const drawButtonsAndLines = (
  * function to shapDraw a shape on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
- * @param {Function} drawingFunction - function to draw the shape
- * @param {Function} drawingBorderFunction - function to draw the border of the shape
+ * @param {boolean} withBtn - show button to resize the square
  */
 const shapeDrawing = (
   ctx: CanvasRenderingContext2D,
   square: ShapeDefinition,
   withBtn: boolean,
-  drawingFunction: Function,
-  drawingBorderFunction: Function | undefined = undefined
+  drawingFunction: (props: drawingProps) => void,
+  drawingBorderFunction?: (props: drawingProps) => void
 ) => {
   if (square.rotation !== 0) {
     rotateElement(ctx, square.size, square.rotation);

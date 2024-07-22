@@ -17,7 +17,7 @@ export const HistoryProvider = ({
 
   const lastUndo = useRef(0);
   const undoHistory = () => {
-    let history = historyRef.current;
+    const history = historyRef.current;
     if (history.length === 0) return;
 
     // debounce undo

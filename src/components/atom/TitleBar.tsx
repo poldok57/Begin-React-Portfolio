@@ -5,6 +5,7 @@ interface TitleBarProps {
   className?: string;
   children?: ReactNode;
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
@@ -14,6 +15,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         ref={ref}
         className={clsx("flex items-center justify-center", className)}
         style={style}
+        // onClick={onClick}
         {...props}
       >
         {children}

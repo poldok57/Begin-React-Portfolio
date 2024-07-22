@@ -4,7 +4,7 @@ import { showElement } from "./canvas-elements";
 import { mousePointer, isInside } from "../mouse-position";
 import {
   addPictureToHistory,
-  canvasPicture,
+  CanvasPicture,
 } from "../../lib/canvas/canvas-history";
 
 import {
@@ -130,7 +130,7 @@ export abstract class DrawingHandler {
       coordinates: coord,
       image: null,
     };
-    addPictureToHistory(savePicture as canvasPicture);
+    addPictureToHistory(savePicture as CanvasPicture);
   }
   /**
    * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
@@ -184,7 +184,7 @@ export abstract class DrawingHandler {
   }
 
   startAction(): void {}
-  actionKeyDown(event: KeyboardEvent): void {}
+  actionKeyDown(_event: KeyboardEvent): void {}
   actionAbort(): void {}
   actionValid(): void {}
 
@@ -193,7 +193,7 @@ export abstract class DrawingHandler {
   abstract initData(data: paramsAll): void;
 
   abstract actionMouseDown(mode: string, event: MouseEvent): returnMouseDown;
-  abstract actionMouseMove(event: MouseEvent): string | null;
+  abstract actionMouseMove(_event: MouseEvent): string | null;
   abstract actionMouseUp(): void;
   abstract actionMouseLeave(): void;
 

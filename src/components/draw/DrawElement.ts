@@ -11,7 +11,7 @@ import { BORDER } from "../../lib/mouse-position";
 import { showElement } from "../../lib/canvas/canvas-elements";
 import { resizingElement } from "../../lib/canvas/canvas-resize";
 
-import { Coordinate } from "../../lib/types";
+import { Coordinate, Area } from "../../lib/types";
 
 import {
   DrawingHandler,
@@ -26,7 +26,9 @@ export class DrawElement extends DrawingHandler {
   private fixed: boolean = false;
   private resizing: string | null = null;
   private offset: Coordinate | null = null;
-  protected data: ShapeDefinition;
+  protected data: ShapeDefinition = {
+    size: { x: 0, y: 0, width: 0, height: 0 },
+  } as ShapeDefinition;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
@@ -46,20 +48,25 @@ export class DrawElement extends DrawingHandler {
         type: DRAWING_MODES.SQUARE,
         rotation: 0,
       },
-    };
+    } as ShapeDefinition;
   }
 
-  setCoordinates(event: MouseEvent, canvas: HTMLCanvasElement | null = null) {
-    if (!event) return { x: 0, y: 0 };
+  setDataParams(params: Area | paramsGeneral | paramsShape | paramsText) {
+    this.data = { ...this.data, ...params } as ShapeDefinition;
+  }
+
+  setCoordinates(e: MouseEvent, canvas: HTMLCanvasElement | null = null) {
+    if (!e) return { x: 0, y: 0 };
     if (!canvas) canvas = this.mCanvas;
 
-    this.coordinates = getCoordinates(event, canvas);
+    this.coordinates = getCoordinates(e, canvas);
     if (this.coordinates && this.offset && !this.fixed) {
       const x = this.coordinates.x + this.offset.x;
       const y = this.coordinates.y + this.offset.y;
 
-      this.data.size.x = x;
-      this.data.size.y = y;
+      const size = { ...this.data.size, x, y };
+
+      this.setDataSize(size);
     }
     return this.coordinates;
   }
@@ -86,7 +93,7 @@ export class DrawElement extends DrawingHandler {
     };
   }
 
-  addData(data: any) {
+  addData(data: paramsAll) {
     this.data = { ...this.data, ...data };
   }
   setDataBorder(data: paramsGeneral) {
@@ -274,7 +281,7 @@ export class DrawElement extends DrawingHandler {
     this.setFixed(true);
     this.setResizing(null);
 
-    if (this.ctxTempory === null ) return;
+    if (this.ctxTempory === null) return;
 
     if (isInsideSquare(this.coordinates, this.data.size)) {
       this.ctxTempory.globalAlpha = this.data.general.opacity;

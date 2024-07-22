@@ -126,21 +126,13 @@ export type ThingsToDraw = {
   withCornerButton: boolean;
   withResize: boolean;
 };
-export type ShapeDefinition = {
-  type: string;
-  rotation: number;
-  lockRatio: boolean;
+export type ShapeDefinition = ThingsToDraw & {
   blackWhite: boolean;
-  size: Area;
   canvasImage: HTMLCanvasElement | null;
   canvasImageTransparent: HTMLCanvasElement | null;
-  general: paramsGeneral;
   shape: paramsShape;
   border: paramsGeneral;
   text: paramsText;
-  withMiddleButtons: boolean;
-  withCornerButton: boolean;
-  withResize: boolean;
 };
 
 export const DEFAULT_PARAMS: paramsAll = {

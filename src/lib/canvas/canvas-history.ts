@@ -1,17 +1,22 @@
-import { coordinate } from "./canvas-basic";
+import { Coordinate } from "../types";
 import { DRAWING_MODES } from "./canvas-defines";
-export type canvasPicture = {
+export type CanvasPicture = {
   type: string;
   canvas: HTMLCanvasElement;
-  coordinates: coordinate | null;
+  coordinates: Coordinate | null;
   image: ImageData | null;
+};
+type HistoryItem = {
+  type: string;
+  image: ImageData | null;
+  coordinates: Coordinate | null;
 };
 
 // Import the store
 import useHistoryStore from "../stores/useHistoryStore";
 
 // Function to add history item from non-React JS file
-export const addItemToHistory: (item: any) => void = (item) => {
+export const addItemToHistory: (item: HistoryItem) => void = (item) => {
   // Access the store and use the addHistoryItem method
   useHistoryStore.getState().addHistoryItem(item);
 };
@@ -37,7 +42,7 @@ export const eraseHistory = () => {
 };
 
 export const addPictureToHistory: (
-  saveCanvasPicture: canvasPicture
+  saveCanvasPicture: CanvasPicture
 ) => void = ({ type = null, canvas, image = null, coordinates = null }) => {
   if (!image) {
     if (canvas === null) {
@@ -51,5 +56,5 @@ export const addPictureToHistory: (
   }
   type = type ?? DRAWING_MODES.DRAW;
   // console.log("addPictureToHistory", image, coordonates);
-  addItemToHistory({ type, image, coordinates });
+  addItemToHistory({ type, image, coordinates } as HistoryItem);
 };

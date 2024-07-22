@@ -22,7 +22,7 @@ import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
  * DrawLine class , manager all actions to draw a line on the canvas
  */
 export class DrawFreehand extends DrawingHandler {
-  private drawing: boolean;
+  private drawing: boolean = false;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
@@ -72,7 +72,7 @@ export class DrawFreehand extends DrawingHandler {
     this.ctxTempory = canvas.getContext("2d");
   }
 
-  setStartCoordinates(coord: Coordinate | null = null) {}
+  // setStartCoordinates(_coord: Coordinate | null = null) {}
 
   isExtendedMouseArea() {
     return this.extendedMouseArea;
@@ -82,7 +82,7 @@ export class DrawFreehand extends DrawingHandler {
     this.extendedMouseArea = value;
   }
 
-  refreshDrawing(opacity: number) {}
+  refreshDrawing() {}
   /**
    * Function follow the cursor on the canvas
    * @param {DRAWING_MODES} mode
@@ -97,7 +97,6 @@ export class DrawFreehand extends DrawingHandler {
     clearCanvasByCtx(ctxMouse);
     ctxMouse.globalAlpha = 0.4;
 
-    let cursorType = "none";
     const coord = this.getCoordinates() as Coordinate;
 
     switch (this.getType()) {
@@ -129,8 +128,7 @@ export class DrawFreehand extends DrawingHandler {
         break;
     }
 
-    // ctxMouse.canvas.style.cursor = cursorType;
-    return cursorType as string;
+    return "none"; //  cursorType;
   }
   /**
    * Function who recieve the mouse move event

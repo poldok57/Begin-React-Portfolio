@@ -37,7 +37,10 @@ export class DrawSelection extends DrawingHandler {
   private fixed: boolean = false;
   private resizing: string | null = null;
   private offset: Coordinate | null = null;
-  protected data: ShapeDefinition;
+  protected data: ShapeDefinition = {
+    size: { x: 0, y: 0, width: 0, height: 0 },
+    type: DRAWING_MODES.SELECT,
+  } as ShapeDefinition;
   private selectedArea: Area | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -98,10 +101,6 @@ export class DrawSelection extends DrawingHandler {
     };
   }
 
-  addData(data: any) {
-    this.data = { ...this.data, ...data };
-  }
-
   initData(initData: paramsAll) {
     this.data = { ...this.data, ...initData };
     this.changeData(initData);
@@ -155,7 +154,6 @@ export class DrawSelection extends DrawingHandler {
     );
 
     if (newCoord) {
-      this.addData(newCoord);
       this.setDataSize(newCoord);
     }
   }
@@ -330,7 +328,7 @@ export class DrawSelection extends DrawingHandler {
       case DRAWING_MODES.SELECT:
         // Zone selection
         const rect = imageSize(this.mCanvas);
-        const area = this.memorizeSelectedArea(rect);
+        this.memorizeSelectedArea(rect);
 
         this.setWithMiddleButtons(false);
         this.setWithCornerButton(false);

@@ -1,11 +1,17 @@
 import { LiaWindowMinimize } from "react-icons/lia";
 import { LiaWindowMaximize } from "react-icons/lia";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 import clsx from "clsx";
 
-export const ToggleMinimize = ({
+interface ToggleMinimizeProps {
+  frameMinimize: (minimize: boolean) => void;
+  className?: string;
+  size?: "2xl" | "xl" | "md" | "sm";
+  referrer: React.MutableRefObject<HTMLButtonElement> | null;
+}
+export const ToggleMinimize: React.FC<ToggleMinimizeProps> = ({
   frameMinimize,
   className,
   size,
