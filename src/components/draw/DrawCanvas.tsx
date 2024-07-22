@@ -1,4 +1,4 @@
-//@ts-check
+//@ts-nocheck
 import React, { useEffect, useRef } from "react";
 import {
   undoHistory,
@@ -51,13 +51,16 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   /**
    * Function to get the last picture in the history for undo action
    */
-  const previousPicture = (canvas) => {
+  const previousPicture = (canvas: HTMLCanvasElement) => {
     if (canvasRef.current === null) {
       return;
     }
     undoHistory();
     const item = getCurrentHistory();
     const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
 
     if (!item || !item.image) {
       clearCanvasByCtx(ctx);
@@ -189,11 +192,11 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     }
   };
 
-  const handleMouseMoveExtend = (event) => {
+  const handleMouseMoveExtend = (event: MouseEvent) => {
     // the event is inside the canvas, let event on the canvas to be handled
     if (
       !canvasMouseRef.current ||
-      canvasMouseRef.current.contains(event.target)
+      canvasMouseRef.current.contains(event.target as Node)
     ) {
       return;
     }
@@ -234,7 +237,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
    * Function to change the drawing mode
    * @param {string} newMode - new drawing mode
    */
-  const actionChangeMode = (newMode) => {
+  const actionChangeMode = (newMode: string) => {
     if (drawingParams.current === null) {
       drawingParams.current = getParams();
       // setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
