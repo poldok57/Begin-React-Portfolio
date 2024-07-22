@@ -13,7 +13,6 @@ import {
   ShapeDefinition,
   paramsAll,
   paramsGeneral,
-  isDrawingLine,
 } from "./canvas-defines";
 import { isOnSquareBorder } from "../square-position";
 
@@ -124,7 +123,6 @@ export abstract class DrawingHandler {
    * Function to save the picture in the history
    */
   saveCanvasPicture(coordinate: Coordinate | null = null) {
-    const type = this.getType();
     const coord: Coordinate | null = coordinate;
     const savePicture = {
       type: this.getType(),

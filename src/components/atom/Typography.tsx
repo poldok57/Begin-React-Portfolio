@@ -26,7 +26,6 @@ export const Typography = ({
   color?: string;
   children?: React.ReactNode;
   className?: string;
-  [propName: string]: any; // For additional props not explicitly defined
 }) => {
   if (variant === "h1") {
     const H1Component = component || "h1";

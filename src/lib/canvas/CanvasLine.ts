@@ -8,8 +8,8 @@ export class CanvasLine {
   coordinates: Coordinate | null = null;
   startCoordinates: Coordinate | null;
   endCoordinates: Coordinate | null;
-  globalAlpha: string | null;
-  strokeStyle: string | null;
+  globalAlpha: string | null = null;
+  strokeStyle: string | null = null;
   lineWidth: number = 0;
   drawing: boolean;
 
@@ -95,7 +95,7 @@ export class CanvasLine {
       context = this.context;
     }
 
-    let start = this.startCoordinates;
+    const start = this.startCoordinates;
     const end = this.coordinates; // start for next segment
     this.setStartCoordinates(end);
     if (start !== null && end !== null && context !== null) {

@@ -124,7 +124,7 @@ export const badgePosition = (
     right?: number;
   },
   maxWidth: number = 0
-): any => {
+) => {
   const x = rect.x ?? rect.left!;
   const y = Math.max(rect.y ?? rect.top!, 0);
   const w = rect.width ?? rect.right! - rect.left!;
@@ -158,7 +158,7 @@ export const middleButtonPosition = (rect: {
   right?: number;
   height?: number;
   bottom?: number;
-}): any => {
+}) => {
   const x = rect.x ?? rect.left!;
   const y = rect.y ?? rect.top!;
   const w = rect.width ?? rect.right! - rect.left!;
@@ -244,7 +244,7 @@ export const resizeRect = (
   rect: DOMRect | Rect,
   border: string
 ): Rect => {
-  let newRect: Rect = { ...rect };
+  const newRect: Rect = { ...rect };
   const minimumSize = 25;
   switch (border) {
     case BORDER.CORNER.TOP_LEFT:
@@ -293,13 +293,13 @@ export const resizeElement = ({
   component,
   border,
 }: {
-  style: any;
+  style: Rect;
   mouse: { x: number; y: number };
   component: HTMLElement;
   border: string;
 }): Rect => {
   const rect = component.getBoundingClientRect();
-  let newRect: Rect = { ...style };
+  const newRect: Rect = { ...style };
   newRect.left = rect.left;
   newRect.top = rect.top;
   newRect.width = rect.width;

@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import { Button } from "./Button";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { MutableRefObject } from "react";
-import { DialogHTMLAttributes } from "react";
 
 /**
  * ButtonConfirmModal component is a button that opens a confirmation modal when clicked.

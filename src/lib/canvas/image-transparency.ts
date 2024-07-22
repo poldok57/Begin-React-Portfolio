@@ -6,7 +6,7 @@ export const makeWhiteTransparent = (
   if (canvas === null) return;
   if (!canvasDest) canvasDest = canvas;
   const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-  let ctxDest: CanvasRenderingContext2D = canvasDest?.getContext("2d") || ctx;
+  const ctxDest: CanvasRenderingContext2D = canvasDest?.getContext("2d") || ctx;
   const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
   const data = imageData.data;
   const maxWhite = 255 - clarityLevel;
@@ -15,7 +15,6 @@ export const makeWhiteTransparent = (
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
-    const a = data[i + 3];
 
     // Check if the pixel is white (RGB value of 255, 255, 255)
     if (

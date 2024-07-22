@@ -1,5 +1,5 @@
 import { Area } from "../types";
-const drawRoundedImage = (
+export const drawRoundedImage = (
   ctx: CanvasRenderingContext2D,
   canvasSource: HTMLCanvasElement | null,
   area: Area,

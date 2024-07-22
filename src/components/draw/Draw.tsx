@@ -9,7 +9,7 @@ const MAX_HISTORY = 40;
 export const Draw = () => {
   const canvasRef = useRef(null);
 
-  let drawingParamsRef = useRef(DEFAULT_PARAMS);
+  const drawingParamsRef = useRef(DEFAULT_PARAMS);
 
   setHistoryMaxLen(MAX_HISTORY);
 

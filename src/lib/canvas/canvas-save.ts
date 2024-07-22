@@ -17,12 +17,12 @@ export const downloadCanvasToPNG = (
 
 // Fonction pour convertir le canevas en SVG
 const canvasToSVG = (canvas: HTMLCanvasElement) => {
-  var svgNS = "http://www.w3.org/2000/svg";
-  var svg = document.createElementNS(svgNS, "svg");
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("width", "" + canvas.width);
   svg.setAttribute("height", "" + canvas.height);
 
-  var image = document.createElementNS(svgNS, "image");
+  const image = document.createElementNS(svgNS, "image");
   image.setAttribute("href", canvas.toDataURL("image/png"));
   image.setAttribute("x", "0");
   image.setAttribute("y", "0");
@@ -30,8 +30,8 @@ const canvasToSVG = (canvas: HTMLCanvasElement) => {
   image.setAttribute("height", "" + canvas.height);
   svg.appendChild(image);
 
-  var serializer = new XMLSerializer();
-  var svgString = serializer.serializeToString(svg);
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(svg);
   return svgString;
 };
 

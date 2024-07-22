@@ -4,12 +4,12 @@ const getAlphaLines = (canvas: HTMLCanvasElement): Uint8ClampedArray[] => {
   const ctx = canvas.getContext("2d")!;
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  let lines: Uint8ClampedArray[] = [];
+  const lines: Uint8ClampedArray[] = [];
 
   for (let y = 0; y < canvas.height; y++) {
-    let lineData = new Uint8ClampedArray(canvas.width);
+    const lineData = new Uint8ClampedArray(canvas.width);
     for (let x = 0; x < canvas.width; x++) {
-      let index = (y * canvas.width + x) * 4;
+      const index = (y * canvas.width + x) * 4;
       lineData[x] = data[index + 3];
     }
     lines.push(lineData);
