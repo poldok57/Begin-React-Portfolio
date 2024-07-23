@@ -4,15 +4,20 @@ import { TbRotate2 } from "react-icons/tb";
 import { TbRotateClockwise2 } from "react-icons/tb";
 
 import { fontOptions } from "../../lib/canvas/font-family";
-import { DRAWING_MODES, Params } from "../../lib/canvas/canvas-defines";
+import {
+  DRAWING_MODES,
+  Params,
+  GroupParams,
+  AllParams,
+} from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 
 interface DrawControlTextProps {
   mode: string;
   hidden: boolean;
-  drawingParams: any;
-  handleTextParams: (params: Params) => void;
+  drawingParams: AllParams;
+  handleTextParams: (params: GroupParams) => void;
 }
 
 export const DrawControlText: React.FC<DrawControlTextProps> = ({

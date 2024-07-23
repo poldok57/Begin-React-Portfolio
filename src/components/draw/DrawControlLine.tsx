@@ -3,7 +3,9 @@ import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 
 import {
+  AllParams,
   DRAWING_MODES,
+  GroupParams,
   isDrawingAllLines,
   isDrawingSelect,
   Params,
@@ -12,8 +14,8 @@ import { ColorPicker } from "../atom/ColorPicker";
 
 interface DrawControlLineProps {
   mode: string;
-  handleParamChange: (params: any) => void;
-  drawingParams: any;
+  handleParamChange: (params: GroupParams) => void;
+  drawingParams: AllParams;
   opacity: number;
   setOpacity: (opacity: number) => void;
 }

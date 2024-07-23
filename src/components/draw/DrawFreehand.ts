@@ -14,7 +14,7 @@ import {
 import {
   DRAWING_MODES,
   mouseCircle,
-  paramsAll,
+  AllParams,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
 
@@ -32,11 +32,11 @@ export class DrawFreehand extends DrawingHandler {
     this.setType(DRAWING_MODES.DRAW);
   }
 
-  initData(initData: paramsAll): void {
+  initData(initData: AllParams): void {
     this.setType(initData.mode);
     this.changeData(initData);
   }
-  changeData(data: paramsAll): void {
+  changeData(data: AllParams): void {
     this.setDataGeneral(data.general);
     if (this.ctxMouse === null) return;
     this.ctxMouse.lineWidth = data.general.lineWidth;

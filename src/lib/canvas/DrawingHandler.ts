@@ -11,8 +11,8 @@ import {
   DRAWING_MODES,
   ThingsToDraw,
   ShapeDefinition,
-  paramsAll,
-  paramsGeneral,
+  AllParams,
+  ParamsGeneral,
 } from "./canvas-defines";
 import { isOnSquareBorder } from "../square-position";
 
@@ -76,7 +76,7 @@ export abstract class DrawingHandler {
   setDataSize(data: Area): void {
     this.data.size = { ...data };
   }
-  setDataGeneral(data: paramsGeneral): void {
+  setDataGeneral(data: ParamsGeneral): void {
     this.data.general = { ...data };
   }
   changeRotation(rotation: number): void {
@@ -189,8 +189,8 @@ export abstract class DrawingHandler {
   actionValid(): void {}
 
   abstract endAction(nextMode?: string): void;
-  abstract changeData(data: paramsAll): void;
-  abstract initData(data: paramsAll): void;
+  abstract changeData(data: AllParams): void;
+  abstract initData(data: AllParams): void;
 
   abstract actionMouseDown(mode: string, event: MouseEvent): returnMouseDown;
   abstract actionMouseMove(_event: MouseEvent): string | null;

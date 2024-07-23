@@ -1,10 +1,10 @@
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
-  paramsAll,
-  paramsGeneral,
-  paramsShape,
-  paramsText,
+  AllParams,
+  ParamsGeneral,
+  ParamsShape,
+  ParamsText,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER } from "../../lib/mouse-position";
@@ -51,7 +51,7 @@ export class DrawElement extends DrawingHandler {
     } as ShapeDefinition;
   }
 
-  setDataParams(params: Area | paramsGeneral | paramsShape | paramsText) {
+  setDataParams(params: Area | ParamsGeneral | ParamsShape | ParamsText) {
     this.data = { ...this.data, ...params } as ShapeDefinition;
   }
 
@@ -93,19 +93,19 @@ export class DrawElement extends DrawingHandler {
     };
   }
 
-  addData(data: paramsAll) {
+  addData(data: AllParams) {
     this.data = { ...this.data, ...data };
   }
-  setDataBorder(data: paramsGeneral) {
+  setDataBorder(data: ParamsGeneral) {
     this.data.border = { ...data };
   }
-  setDataShape(data: paramsShape) {
+  setDataShape(data: ParamsShape) {
     this.data.shape = { ...data };
   }
-  setDataText(data: paramsText) {
+  setDataText(data: ParamsText) {
     this.data.text = { ...data };
   }
-  initData(initData: paramsAll) {
+  initData(initData: AllParams) {
     this.data = { ...this.data, ...initData };
     this.changeData(initData);
     if (this.mCanvas !== null)
@@ -120,7 +120,7 @@ export class DrawElement extends DrawingHandler {
     this.data.size.ratio = 0;
     this.fixed = false;
   }
-  changeData(param: paramsAll) {
+  changeData(param: AllParams) {
     this.setDataGeneral(param.general);
     this.setDataBorder(param.border);
     this.setDataShape(param.shape);

@@ -13,7 +13,7 @@ import {
   isDrawingMode,
   isDrawingShape,
   isDrawingSelect,
-  paramsAll,
+  AllParams,
 } from "../../lib/canvas/canvas-defines";
 
 import { alertMessage } from "../../hooks/alertMessage";
@@ -28,14 +28,14 @@ const TEMPORTY_OPACITY = 0.6;
 
 interface DrawCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  getParams: () => paramsAll;
+  getParams: () => AllParams;
 }
 // Draw on Canvas
 export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   canvasRef,
   getParams,
 }) => {
-  const drawingParams: React.RefObject<paramsAll> = useRef(null);
+  const drawingParams: React.RefObject<AllParams> = useRef(null);
   const canvasMouseRef: React.RefObject<HTMLCanvasElement> = useRef(null);
   const canvasTemporyRef: React.RefObject<HTMLCanvasElement> = useRef(null);
   const mouseOnCtrlPanel = useRef(false);

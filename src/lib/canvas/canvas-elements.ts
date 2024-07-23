@@ -4,7 +4,7 @@ import {
   SHAPE_TYPE,
   isDrawingShape,
   ShapeDefinition,
-  paramsGeneral,
+  ParamsGeneral,
 } from "./canvas-defines";
 import { drawBadge, drawMiddleButtons } from "./canvas-buttons";
 import { drawDashedRectangle } from "./canvas-dashed-rect";
@@ -257,7 +257,7 @@ const drawImage = ({
  */
 const drawBorder = (
   ctx: CanvasRenderingContext2D,
-  squareBorder: paramsGeneral,
+  squareBorder: ParamsGeneral,
   squareSize: Area,
   radius: number,
   shapeType: string,
@@ -304,15 +304,15 @@ const drawText = (ctx: CanvasRenderingContext2D, square: ShapeDefinition) => {
     rotateElement(ctx, square.size, rotation);
   }
 
-  const paramsText = square.text;
-  const text = paramsText.text ?? "";
+  const ParamsText = square.text;
+  const text = ParamsText.text ?? "";
 
-  ctx.font = `${paramsText.bold} ${paramsText.italic ? "italic" : ""} ${
-    paramsText.fontSize
-  }px ${paramsText.font}`;
+  ctx.font = `${ParamsText.bold} ${ParamsText.italic ? "italic" : ""} ${
+    ParamsText.fontSize
+  }px ${ParamsText.font}`;
 
   // console.log("draw text", square);
-  ctx.fillStyle = paramsText.color;
+  ctx.fillStyle = ParamsText.color;
 
   const w = ctx.measureText(text).width;
   const h = ctx.measureText(text).actualBoundingBoxAscent;

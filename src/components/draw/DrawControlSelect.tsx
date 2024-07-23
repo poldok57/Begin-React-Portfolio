@@ -5,6 +5,7 @@ import { Button } from "../atom/Button";
 import {
   DRAWING_MODES,
   isDrawingSelect,
+  Params,
 } from "../../lib/canvas/canvas-defines";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { MutableRefObject } from "react";
@@ -16,7 +17,7 @@ interface DrawControlSelectProps {
   handleChangeRatio: (value: boolean) => void;
   handleChangeRadius: (value: number) => void;
   handleImage: (action: string) => void;
-  addEventDetail: (detail: any) => void;
+  addEventDetail: (detail: Params) => void;
 }
 
 export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({

@@ -97,19 +97,19 @@ export type EventDetail = {
   };
 };
 
-export type paramsGeneral = {
+export type ParamsGeneral = {
   color: string;
   lineWidth: number;
   opacity: number;
   interval?: number;
 };
-export type paramsShape = {
+export type ParamsShape = {
   filled: boolean;
   radius: number;
   withText: boolean;
   withBorder: boolean;
 };
-export type paramsText = {
+export type ParamsText = {
   text: string;
   color: string;
   font: string;
@@ -118,14 +118,23 @@ export type paramsText = {
   fontSize: number;
   rotation: number;
 };
-export type paramsAll = {
+export type AllParams = {
   mode: string;
   fixed: boolean;
   lockRatio: boolean;
-  general: paramsGeneral;
-  shape: paramsShape;
-  text: paramsText;
-  border: paramsGeneral;
+  general: ParamsGeneral;
+  shape: ParamsShape;
+  text: ParamsText;
+  border: ParamsGeneral;
+};
+export type GroupParams = {
+  [key: string]:
+    | string
+    | boolean
+    | ParamsGeneral
+    | ParamsShape
+    | ParamsText
+    | null; // Exemple avec une union de types
 };
 
 export type ThingsToDraw = {
@@ -133,7 +142,7 @@ export type ThingsToDraw = {
   rotation: number;
   lockRatio: boolean;
   size: Area;
-  general: paramsGeneral;
+  general: ParamsGeneral;
   withMiddleButtons: boolean;
   withCornerButton: boolean;
   withResize: boolean;
@@ -142,12 +151,12 @@ export type ShapeDefinition = ThingsToDraw & {
   blackWhite: boolean;
   canvasImage: HTMLCanvasElement | null;
   canvasImageTransparent: HTMLCanvasElement | null;
-  shape: paramsShape;
-  border: paramsGeneral;
-  text: paramsText;
+  shape: ParamsShape;
+  border: ParamsGeneral;
+  text: ParamsText;
 };
 
-export const DEFAULT_PARAMS: paramsAll = {
+export const DEFAULT_PARAMS: AllParams = {
   mode: DRAWING_MODES.INIT,
   fixed: false,
   lockRatio: false,

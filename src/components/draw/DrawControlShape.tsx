@@ -13,14 +13,16 @@ import {
   isDrawingShape,
   isDrawingSquare,
   Params,
+  GroupParams,
+  AllParams,
 } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 
 interface DrawControlShapeProps {
   mode: string;
-  drawingParams: any;
-  handleParamChange: (params: any) => void;
+  drawingParams: AllParams;
+  handleParamChange: (params: GroupParams) => void;
   handleModeChange: (mode: string) => void;
   handleChangeRadius: (value: number) => void;
   setWithText: (value: boolean) => void;

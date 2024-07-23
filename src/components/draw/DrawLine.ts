@@ -14,8 +14,8 @@ import {
 import {
   DRAWING_MODES,
   mouseCircle,
-  paramsGeneral,
-  paramsAll,
+  ParamsGeneral,
+  AllParams,
   isDrawingLine,
 } from "../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
@@ -46,7 +46,7 @@ export class DrawLine extends DrawingHandler {
     return this.line.getCoordinates() as Coordinate;
   }
 
-  setDataGeneral(data: paramsGeneral) {
+  setDataGeneral(data: ParamsGeneral) {
     this.line.setLineWidth(data.lineWidth);
     this.line.setStrokeStyle(data.color);
     if (this.ctxMouse !== null) {
@@ -59,11 +59,11 @@ export class DrawLine extends DrawingHandler {
     }
   }
 
-  initData(initData: paramsAll) {
+  initData(initData: AllParams) {
     this.setType(initData.mode);
     this.setDataGeneral(initData.general);
   }
-  changeData(data: paramsAll) {
+  changeData(data: AllParams) {
     this.setDataGeneral(data.general);
   }
 

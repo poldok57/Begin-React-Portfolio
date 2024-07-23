@@ -4,7 +4,8 @@ import { DrawControlWP } from "./DrawControl";
 import {
   DEFAULT_PARAMS,
   isDrawingMode,
-  paramsAll,
+  AllParams,
+  GroupParams,
 } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 
@@ -21,7 +22,7 @@ export const Draw = () => {
     return drawingParamsRef.current;
   };
 
-  const setDrawingParams = (props: paramsAll) => {
+  const setDrawingParams = (props: GroupParams) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
   };
 

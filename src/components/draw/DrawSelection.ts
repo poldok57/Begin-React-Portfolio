@@ -6,7 +6,7 @@ import {
 } from "../../lib/canvas/image-transparency";
 import {
   DRAWING_MODES,
-  paramsAll,
+  AllParams,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { BORDER } from "../../lib/mouse-position";
@@ -101,7 +101,7 @@ export class DrawSelection extends DrawingHandler {
     };
   }
 
-  initData(initData: paramsAll) {
+  initData(initData: AllParams) {
     this.data = { ...this.data, ...initData };
     this.changeData(initData);
     if (this.mCanvas !== null)
@@ -117,7 +117,7 @@ export class DrawSelection extends DrawingHandler {
     this.fixed = false;
     this.setWithMiddleButtons(true);
   }
-  changeData(data: paramsAll) {
+  changeData(data: AllParams) {
     this.setDataGeneral(data.general);
     this.data.shape = { ...data.shape };
     this.data.border = { ...data.border };
