@@ -14,6 +14,8 @@ import {
   DRAWING_MODES,
   isDrawingSelect,
   isDrawingShape,
+  Params,
+  EventDetail,
 } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
@@ -25,9 +27,17 @@ import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";
 
-// import clsx from "clsx";
+interface DrawControlProps {
+  setParams: (params: any) => void;
+  changeMode: (mode: string) => void;
+  drawingParams: any;
+}
 
-export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
+export const DrawControl: React.FC<DrawControlProps> = ({
+  setParams,
+  changeMode,
+  drawingParams,
+}) => {
   const [mode, setMode] = useState(drawingParams.mode);
   const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
@@ -38,19 +48,23 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
 
-  const addEvent = (detail) => {
+  const addEvent = (detail: EventDetail) => {
     const event = new CustomEvent("modeChanged", detail);
     document.dispatchEvent(event);
   };
-  const addEventDetail = (detail) => addEvent({ detail });
+  const addEventDetail = (detail: Params) => addEvent({ detail });
 
-  const addEventAction = (action) => {
+  const addEventAction = (action: string) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action });
   };
-  const addEventMode = (mode) => {
+  const addEventMode = (mode: string) => {
     addEventDetail({ mode });
   };
-  const addEventSaveFile = (action, filename, name = null) => {
+  const addEventSaveFile = (
+    action: string,
+    filename: string,
+    name: string | null = null
+  ) => {
     const format = saveFormatRef.current;
     addEventDetail({
       mode: DRAWING_MODES.ACTION,
@@ -69,23 +83,23 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
     eraseHistory();
   };
 
-  const handleParamChange = (newParams) => {
+  const handleParamChange = (newParams: Params) => {
     setParams(newParams);
     addEventDetail({ mode: DRAWING_MODES.CHANGE });
   };
-  const handleOpacity = (value) => {
+  const handleOpacity = (value: number) => {
     setOpacity(value);
     drawingParams.general.opacity = value / 100;
     handleParamChange({ general: drawingParams.general });
   };
 
-  const handleModeChange = (newMode) => {
+  const handleModeChange = (newMode: string) => {
     setMode(newMode);
     changeMode(newMode);
     addEventMode(newMode);
   };
 
-  const handleImage = (mode) => {
+  const handleImage = (mode: string) => {
     setMode(DRAWING_MODES.IMAGE);
     changeMode(DRAWING_MODES.IMAGE);
     addEventAction(mode);
@@ -96,18 +110,18 @@ export const DrawControl = ({ setParams, changeMode, drawingParams }) => {
     handleChangeRatio(false);
   };
 
-  const handleChangeRatio = (ratio) => {
+  const handleChangeRatio = (ratio: boolean) => {
     alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
     setParams({ lockRatio: ratio });
     setLockRatio(ratio);
     addEventMode(DRAWING_MODES.CHANGE);
   };
-  const handleChangeRadius = (radius) => {
+  const handleChangeRadius = (radius: number) => {
     drawingParams.shape = { ...drawingParams.shape, radius };
     handleParamChange({ shape: drawingParams.shape });
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case "Escape":
         addEventAction(DRAWING_MODES.ABORT);

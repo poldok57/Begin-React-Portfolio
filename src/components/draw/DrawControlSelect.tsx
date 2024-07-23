@@ -10,8 +10,16 @@ import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { MutableRefObject } from "react";
 
 // import clsx from "clsx";
+interface DrawControlSelectProps {
+  mode: string;
+  setMode: (mode: string) => void;
+  handleChangeRatio: (value: boolean) => void;
+  handleChangeRadius: (value: number) => void;
+  handleImage: (action: string) => void;
+  addEventDetail: (detail: any) => void;
+}
 
-export const DrawControlSelect = ({
+export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
   mode,
   setMode,
   handleChangeRatio,
@@ -22,11 +30,18 @@ export const DrawControlSelect = ({
   const [isBlackWhite, setBlackWhite] = useState(false);
   const dialogRef: MutableRefObject<HTMLDialogElement | null> = useRef(null);
 
-  const addEventActionValue = (action, value) => {
+  const addEventActionValue = (
+    action: string,
+    value: string | number | boolean
+  ) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action, value });
   };
 
-  const handleFileChange = (event) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) {
+      return;
+    }
+
     const file = event.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);

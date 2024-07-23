@@ -6,17 +6,26 @@ import {
   DRAWING_MODES,
   isDrawingAllLines,
   isDrawingSelect,
+  Params,
 } from "../../lib/canvas/canvas-defines";
 import { ColorPicker } from "../atom/ColorPicker";
 
-export const DrawControlLine = ({
+interface DrawControlLineProps {
+  mode: string;
+  handleParamChange: (params: any) => void;
+  drawingParams: any;
+  opacity: number;
+  setOpacity: (opacity: number) => void;
+}
+
+export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   mode,
   handleParamChange,
   drawingParams,
   opacity,
   setOpacity,
 }) => {
-  const handleGeneral = (param) => {
+  const handleGeneral = (param: Params) => {
     drawingParams.general = { ...drawingParams.general, ...param };
     handleParamChange({ general: drawingParams.general });
   };
@@ -76,7 +85,7 @@ export const DrawControlLine = ({
           min="5"
           max="100"
           step="5"
-          onChange={(event) => setOpacity(event.target.value)}
+          onChange={(event) => setOpacity(Number(event.target.value))}
         />
       </label>
     </div>

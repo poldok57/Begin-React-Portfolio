@@ -12,11 +12,21 @@ import {
   isDrawingSelect,
   isDrawingShape,
   isDrawingSquare,
+  Params,
 } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 
-export const DrawControlShape = ({
+interface DrawControlShapeProps {
+  mode: string;
+  drawingParams: any;
+  handleParamChange: (params: any) => void;
+  handleModeChange: (mode: string) => void;
+  handleChangeRadius: (value: number) => void;
+  setWithText: (value: boolean) => void;
+}
+
+export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
   mode,
   drawingParams,
   handleParamChange,
@@ -25,15 +35,15 @@ export const DrawControlShape = ({
   setWithText,
 }) => {
   const [withBorder, setWithBorder] = useState(drawingParams.shape.withBorder);
-  const handleShape = (param) => {
+  const handleShape = (param: Params) => {
     drawingParams.shape = { ...drawingParams.shape, ...param };
     handleParamChange({ shape: drawingParams.shape });
   };
-  const handleBorder = (param) => {
+  const handleBorder = (param: Params) => {
     drawingParams.border = { ...drawingParams.border, ...param };
     handleParamChange({ border: drawingParams.border });
   };
-  const handleWithText = (event) => {
+  const handleWithText = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWithText(event.target.checked);
     handleShape({ withText: event.target.checked });
   };

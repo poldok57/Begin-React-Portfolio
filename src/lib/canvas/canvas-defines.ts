@@ -84,6 +84,18 @@ export const mouseCircle = {
   filled: true,
   lineWidth: 25,
 };
+export type Params = {
+  [key: string]: string | number | boolean | null; // Exemple avec une union de types
+};
+export type EventDetail = {
+  detail: {
+    mode?: string;
+    action?: string;
+    filename?: string;
+    theme?: string;
+    format?: string;
+  };
+};
 
 export type paramsGeneral = {
   color: string;

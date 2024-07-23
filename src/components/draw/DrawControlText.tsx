@@ -4,11 +4,18 @@ import { TbRotate2 } from "react-icons/tb";
 import { TbRotateClockwise2 } from "react-icons/tb";
 
 import { fontOptions } from "../../lib/canvas/font-family";
-import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
+import { DRAWING_MODES, Params } from "../../lib/canvas/canvas-defines";
 import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 
-export const DrawControlText = ({
+interface DrawControlTextProps {
+  mode: string;
+  hidden: boolean;
+  drawingParams: any;
+  handleTextParams: (params: Params) => void;
+}
+
+export const DrawControlText: React.FC<DrawControlTextProps> = ({
   mode,
   hidden,
   drawingParams,
@@ -16,7 +23,7 @@ export const DrawControlText = ({
 }) => {
   const [italic, setItalic] = useState(drawingParams.text.italic);
 
-  const handleText = (param) => {
+  const handleText = (param: Params) => {
     drawingParams.text = { ...drawingParams.text, ...param };
     handleTextParams({ text: drawingParams.text });
   };
@@ -25,7 +32,7 @@ export const DrawControlText = ({
    *  Handle the text rotation
    * @param {number} angle - The angle to rotate the text in grad
    */
-  const handleTextRotation = (angle) => {
+  const handleTextRotation = (angle: number) => {
     const newAngle = drawingParams.text.rotation + angle;
     handleText({ rotation: newAngle });
   };
