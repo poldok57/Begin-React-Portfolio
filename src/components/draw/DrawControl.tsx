@@ -54,7 +54,9 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     const event = new CustomEvent("modeChanged", detail);
     document.dispatchEvent(event);
   };
-  const addEventDetail = (detail: EventModeAction) => addEvent({ detail });
+  const addEventDetail = (detail: EventModeAction) => {
+    addEvent({ detail } as EventDetail);
+  };
 
   const addEventAction = (action: string) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action });
