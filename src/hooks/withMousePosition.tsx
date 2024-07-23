@@ -78,13 +78,13 @@ export function withMousePosition<P extends object>(
 
     const [isLocked, setLocked] = useState(locked);
 
-    const setMouseCoordinates = (x, y) => {
+    const setMouseCoordinates = (x: number, y: number) => {
       mouseCoordinatesRef.current.x = x;
       mouseCoordinatesRef.current.y = y;
     };
     const getMouseCoordinates = () => mouseCoordinatesRef.current;
 
-    const setCanMove = (value) => {
+    const setCanMove = (value: boolean) => {
       canMoveRef.current = value;
     };
     const canMove = () => canMoveRef.current;
@@ -151,7 +151,7 @@ export function withMousePosition<P extends object>(
      * Toggle the locked state
      * @param {Event} event
      */
-    const toggleLocked = (event) => {
+    const toggleLocked = (event: React.ChangeEvent<HTMLInputElement>) => {
       if (trace) console.log(`[${WrappedComponent.name}] toggleLocked`);
       if (
         styleRef.current.position === POSITION.RELATIVE &&
@@ -175,11 +175,6 @@ export function withMousePosition<P extends object>(
       newStyle.left = coord.x + offsetRef.current.x + "px";
       newStyle.top = coord.y + offsetRef.current.y + "px";
 
-      // delete margin if exists
-      // if (newStyle.margin) delete newStyle.margin;
-      // if (newStyle.marginTop) delete newStyle.marginTop;
-      // if (newStyle.marginLeft) delete newStyle.marginLeft;
-
       newStyle.right = "auto";
       newStyle.bottom = "auto";
 
@@ -194,7 +189,7 @@ export function withMousePosition<P extends object>(
     };
 
     useEffect(() => {
-      const handleMouseMove = (event) => {
+      const handleMouseMove = (event: MouseEvent) => {
         if (canMove()) {
           const { waitEvent } = selectComponent(titleBar);
           if (!mouseIsInsideComponent(event, waitEvent)) {
@@ -247,7 +242,7 @@ export function withMousePosition<P extends object>(
        * When the mouse is down
        * @param {MouseEvent} event
        */
-      const mouseDown = (event) => {
+      const mouseDown = (event: MouseEvent) => {
         event.preventDefault();
         /**
          * if where is a title bar, we need to move the component
@@ -256,7 +251,7 @@ export function withMousePosition<P extends object>(
         if (isLocked) return;
 
         const { waitEvent, component } = selectComponent(titleBar);
-        if (waitEvent && waitEvent.contains(event.target)) {
+        if (waitEvent && waitEvent.contains(event.target as Node)) {
           const coord = { x: event.clientX, y: event.clientY };
           setCanMove(true);
 
@@ -278,12 +273,12 @@ export function withMousePosition<P extends object>(
        * When the mouse is up
        * @param {MouseEvent} event
        */
-      const mouseUp = (event) => {
+      const mouseUp = (event: MouseEvent) => {
         setCanMove(false);
         setMouseCoordinates(event.clientX, event.clientY);
       };
 
-      const handleMouseLeave = (event) => {
+      const handleMouseLeave = (event: MouseEvent) => {
         if (trace) console.log(`[${WrappedComponent.name}] mouseLeave`);
         if (canMove()) {
           mouseUp(event);
