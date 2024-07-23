@@ -35,3 +35,9 @@ export type ArgsMouseOnShape = {
   withMiddleButtons: boolean | null;
   maxWidth: number;
 };
+export type MouseCircle = {
+  color: string;
+  width: number;
+  filled: boolean;
+  lineWidth: number;
+};

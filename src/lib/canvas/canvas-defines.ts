@@ -1,4 +1,4 @@
-import { Area } from "../types";
+import { Area, MouseCircle } from "../types";
 
 export const SHAPE_TYPE = {
   SQUARE: "square",
@@ -78,7 +78,7 @@ export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
 
 const DEFAULT = { COLOR: "#ff0000", SIZE: 4, OPACITY: 1 };
 
-export const mouseCircle = {
+export const mouseCircle: MouseCircle = {
   color: "rgba(255, 255, 0,0.8)",
   width: 80,
   filled: true,

@@ -1,5 +1,5 @@
 const SIZE_CROSS_MIN = 16;
-import { Coordinate } from "../types";
+import { Coordinate, MouseCircle } from "../types";
 export type drawingCircle = {
   context: CanvasRenderingContext2D;
   coordinate: Coordinate | null;
@@ -69,7 +69,12 @@ export const drawPoint: (drawingCircle: drawingCircle) => void = ({
  * @param {Array} coord [x, y]
  * @param {object} element - {width, color, lineWidth, filled}
  */
-export const hightLightMouseCursor = (ctx, coord, element) => {
+
+export const hightLightMouseCursor = (
+  ctx: CanvasRenderingContext2D,
+  coord: Coordinate,
+  element: MouseCircle
+) => {
   ctx.beginPath();
 
   if (element.filled) {
