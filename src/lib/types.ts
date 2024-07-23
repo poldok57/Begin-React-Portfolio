@@ -27,6 +27,7 @@ export type RectPosition = {
   left: number;
   top: number;
 };
+
 export type ArgsMouseOnShape = {
   coordinate: Coordinate;
   area: Area;

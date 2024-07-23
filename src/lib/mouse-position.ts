@@ -149,6 +149,13 @@ export const badgePosition = (
   return badge;
 };
 
+type MiddleButton = Rect & {
+  middle: number;
+  axeX1: number;
+  axeX2: number;
+  axeY: number;
+  radius: number;
+};
 export const middleButtonPosition = (rect: {
   x?: number;
   y?: number;
@@ -163,7 +170,7 @@ export const middleButtonPosition = (rect: {
   const y = rect.y ?? rect.top!;
   const w = rect.width ?? rect.right! - rect.left!;
   const h = rect.height ?? rect.bottom! - rect.top!;
-  const middleButton = {
+  const middleButton: MiddleButton = {
     left: x + w / 2 - MIDDLE_BTN_RADIUS * 2,
     right: x + w / 2 + MIDDLE_BTN_RADIUS * 2,
     middle: x + w / 2,
@@ -173,7 +180,7 @@ export const middleButtonPosition = (rect: {
     radius: MIDDLE_BTN_RADIUS,
     axeY: 0,
     bottom: 0,
-  };
+  } as MiddleButton;
   middleButton.axeY = middleButton.top + MIDDLE_BTN_RADIUS;
   middleButton.bottom = middleButton.top + MIDDLE_BTN_RADIUS * 2;
 

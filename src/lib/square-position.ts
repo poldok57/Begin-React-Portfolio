@@ -27,7 +27,7 @@ export const isInsideSquare = (
   return mouseIsInsideRect(coord, rect);
 };
 
-export const getSquareOffset = (coord, square) => {
+export const getSquareOffset = (coord: Coordinate, square: Coordinate) => {
   const rect: Rect = {
     left: square.x,
     top: square.y,
@@ -35,7 +35,7 @@ export const getSquareOffset = (coord, square) => {
   return getRectOffset(coord, rect);
 };
 
-export const getSquarePosition = (coord, offset) => {
+export const getSquarePosition = (coord: Coordinate, offset: Coordinate) => {
   return { x: coord.x + offset.x, y: coord.y + offset.y };
 };
 
@@ -80,8 +80,12 @@ export const isOnSquareBorder = ({
   return mouseIsOnBorderRect(coordinate, rect);
 };
 
-export const resizeSquare = (coordinate, area, border) => {
-  const newArea: Area = { ...coordinate };
+export const resizeSquare = (
+  coordinate: Coordinate,
+  area: Area,
+  border: string
+) => {
+  const newArea: Area = { ...coordinate } as Area;
   const rect: Rect = {
     left: area.x,
     top: area.y,
