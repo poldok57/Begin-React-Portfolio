@@ -14,6 +14,7 @@ import {
   DRAWING_MODES,
   isDrawingSelect,
   isDrawingShape,
+  paramsAll,
   Params,
   EventDetail,
 } from "../../lib/canvas/canvas-defines";
@@ -28,7 +29,7 @@ import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";
 
 interface DrawControlProps {
-  setParams: (params: any) => void;
+  setParams: (params: paramsAll) => void;
   changeMode: (mode: string) => void;
   drawingParams: any;
 }
