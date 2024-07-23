@@ -16,8 +16,8 @@ import {
   isDrawingShape,
   AllParams,
   GroupParams,
-  Params,
   EventDetail,
+  EventModeAction,
 } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
@@ -54,7 +54,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     const event = new CustomEvent("modeChanged", detail);
     document.dispatchEvent(event);
   };
-  const addEventDetail = (detail: Params) => addEvent({ detail });
+  const addEventDetail = (detail: EventModeAction) => addEvent({ detail });
 
   const addEventAction = (action: string) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action });
@@ -72,8 +72,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       mode: DRAWING_MODES.ACTION,
       action,
       filename,
-      name,
       format,
+      ...(name ? { name } : {}),
     });
   };
 

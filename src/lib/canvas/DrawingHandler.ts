@@ -59,11 +59,13 @@ export abstract class DrawingHandler {
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D | null;
   }
 
-  setMouseCanvas(canvas: HTMLCanvasElement) {
+  setMouseCanvas(canvas: HTMLCanvasElement | null) {
+    if (!canvas) return;
     this.ctxMouse = canvas.getContext("2d") as CanvasRenderingContext2D | null;
   }
 
-  setTemporyCanvas(canvas: HTMLCanvasElement) {
+  setTemporyCanvas(canvas: HTMLCanvasElement | null) {
+    if (!canvas) return;
     this.ctxTempory = canvas.getContext(
       "2d"
     ) as CanvasRenderingContext2D | null;

@@ -4,7 +4,6 @@ import { DrawControlWP } from "./DrawControl";
 import {
   DEFAULT_PARAMS,
   isDrawingMode,
-  AllParams,
   GroupParams,
 } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";

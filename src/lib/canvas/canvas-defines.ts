@@ -87,15 +87,20 @@ export const mouseCircle = {
 export type Params = {
   [key: string]: string | number | boolean | null; // Exemple avec une union de types
 };
-export type EventDetail = {
-  detail: {
-    mode?: string;
-    action?: string;
-    filename?: string;
-    theme?: string;
-    format?: string;
-  };
+
+export type EventModeAction = {
+  mode: string;
+  action?: string;
+  filename?: string;
+  name?: string;
+  theme?: string;
+  format?: string;
+  value?: string | number | boolean;
 };
+
+export interface EventDetail extends Event {
+  detail: EventModeAction;
+}
 
 export type ParamsGeneral = {
   color: string;

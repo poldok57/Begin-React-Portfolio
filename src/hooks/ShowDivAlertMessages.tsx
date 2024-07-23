@@ -34,7 +34,7 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
 }) => {
   const messageId = "alert-messages";
   const [displayAlert, setDisplayAlert] = useState(display);
-  const onCheck = (e) => {
+  const onCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDisplayAlert(e.target.checked);
   };
 

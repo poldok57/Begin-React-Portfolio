@@ -1,4 +1,3 @@
-//@ts-nocheck
 import React, { useEffect, useRef } from "react";
 import {
   undoHistory,
@@ -14,6 +13,7 @@ import {
   isDrawingShape,
   isDrawingSelect,
   AllParams,
+  EventDetail,
 } from "../../lib/canvas/canvas-defines";
 
 import { alertMessage } from "../../hooks/alertMessage";
@@ -35,12 +35,15 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   canvasRef,
   getParams,
 }) => {
-  const drawingParams: React.RefObject<AllParams> = useRef(null);
-  const canvasMouseRef: React.RefObject<HTMLCanvasElement> = useRef(null);
-  const canvasTemporyRef: React.RefObject<HTMLCanvasElement> = useRef(null);
+  const canvasMouseRef: React.RefObject<HTMLCanvasElement | undefined> =
+    useRef(undefined);
+  const canvasTemporyRef: React.RefObject<HTMLCanvasElement | undefined> =
+    useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
 
   const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
+
+  let currentParams = getParams();
 
   let drawLine: DrawLine | null = null;
   let drawFreehand: DrawFreehand | null = null;
@@ -82,16 +85,14 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   ) => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    if (!ctx || !drawingParams.current) return;
+    if (!ctx) return;
 
-    if (drawingParams.current) {
-      ctx.strokeStyle = drawingParams.current.general.color;
-      ctx.lineWidth = drawingParams.current.general.lineWidth;
-    }
+    ctx.strokeStyle = currentParams.general.color;
+    ctx.lineWidth = currentParams.general.lineWidth;
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.globalAlpha = opacity ?? drawingParams.current.general.opacity;
+    ctx.globalAlpha = opacity ?? currentParams.general.opacity;
     return ctx;
   };
   /**
@@ -103,32 +104,30 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     if (canvasRef.current === null) {
       throw new Error("Canvas is null");
     }
-    if (drawingParams.current === null) {
-      throw new Error("drawingParams is null");
-    }
+
     let drawing;
     if (isDrawingLine(mode)) {
       if (drawLine === null) {
         drawLine = new DrawLine(canvasRef.current);
-        drawLine.initData(drawingParams.current);
+        drawLine.initData(currentParams);
       }
       drawing = drawLine;
     } else if (isDrawingFreehand(mode)) {
       if (drawFreehand === null) {
         drawFreehand = new DrawFreehand(canvasRef.current);
-        drawFreehand.initData(drawingParams.current);
+        drawFreehand.initData(currentParams);
       }
       drawing = drawFreehand;
     } else if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {
       if (drawElement === null) {
         drawElement = new DrawElement(canvasRef.current);
-        drawElement.initData(drawingParams.current);
+        drawElement.initData(currentParams);
       }
       drawing = drawElement;
     } else if (isDrawingSelect(mode)) {
       if (drawSelection === null) {
         drawSelection = new DrawSelection(canvasRef.current);
-        drawSelection.initData(drawingParams.current);
+        drawSelection.initData(currentParams);
       }
       drawing = drawSelection;
     } else {
@@ -136,28 +135,29 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     }
     drawing.setType(mode);
     drawing.setCanvas(canvasRef.current);
-    drawing.setMouseCanvas(canvasMouseRef.current);
-    drawing.setTemporyCanvas(canvasTemporyRef.current);
+    drawing.setMouseCanvas(canvasMouseRef.current as HTMLCanvasElement);
+    drawing.setTemporyCanvas(canvasTemporyRef.current as HTMLCanvasElement);
     return drawing;
   };
 
   const generalInitialisation = () => {
     // Initialize canvas
-    drawingParams.current = getParams();
-    drawingParams.current.mode = DRAWING_MODES.DRAW;
+    currentParams = getParams();
+    currentParams.mode = DRAWING_MODES.DRAW;
 
     // initialise mouse and tempory canvas
-    setContext(canvasMouseRef.current);
-    setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
+    setContext(canvasMouseRef.current as HTMLCanvasElement);
+    setContext(canvasTemporyRef.current as HTMLCanvasElement, TEMPORTY_OPACITY);
 
     // default drawing handler
-    drawing = selectDrawingHandler(drawingParams.current.mode);
+    drawing = selectDrawingHandler(currentParams.mode);
 
     if (drawSelection !== null) drawSelection.eraseSelectedArea();
 
-    if (canvasRef.current)
-      canvasRef.current.getContext("2d").globalCompositeOperation =
-        "source-over";
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      if (ctx) ctx.globalCompositeOperation = "source-over";
+    }
   };
 
   const handleMouseUpExtend = (event: MouseEvent) => {
@@ -171,10 +171,10 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     drawing && drawing.actionMouseUp();
   };
 
-  const handleMouseDownExtend = (event) => {
-    if (!drawingParams.current || !drawing || !canvasMouseRef.current) return;
+  const handleMouseDownExtend = (event: MouseEvent) => {
+    if (!drawing || !canvasMouseRef.current) return;
     // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target)) {
+    if (canvasMouseRef.current.contains(event.target as Node)) {
       return;
     }
     // draw line can be extended outside the canvas
@@ -183,10 +183,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
 
-    const toContinue = drawing.actionMouseDown(
-      drawingParams.current.mode,
-      event
-    );
+    const toContinue = drawing.actionMouseDown(currentParams.mode, event);
     if (!toContinue) {
       stopExtendMouseEvent();
     }
@@ -225,12 +222,11 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
    * call then user change something in the drawing panel
    */
   const drawingParamChanged = () => {
-    drawingParams.current = getParams();
+    currentParams = getParams();
     if (!drawing) return;
 
-    drawing.changeData(drawingParams.current);
-
-    drawing.refreshDrawing(drawingParams.current.general.opacity);
+    drawing.changeData(currentParams);
+    drawing.refreshDrawing(currentParams.general.opacity);
   };
 
   /**
@@ -238,10 +234,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
    * @param {string} newMode - new drawing mode
    */
   const actionChangeMode = (newMode: string) => {
-    if (drawingParams.current === null) {
-      drawingParams.current = getParams();
-      // setContext(canvasTemporyRef.current, TEMPORTY_OPACITY);
-    }
+    currentParams = getParams();
 
     if (newMode === DRAWING_MODES.INIT) {
       generalInitialisation();
@@ -250,23 +243,25 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     // end previous action then changing mode
     if (drawing) drawing.endAction(newMode);
     stopExtendMouseEvent();
-    const context = canvasRef.current.getContext("2d");
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext("2d");
 
-    if (context)
-      context.globalCompositeOperation =
-        newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
+      if (context)
+        context.globalCompositeOperation =
+          newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
+    }
 
     // set the new drawing mode
     drawing = selectDrawingHandler(newMode);
     drawing.setType(newMode);
-    drawing.changeData(drawingParams.current);
+    drawing.changeData(currentParams);
 
     drawing.startAction();
 
     drawing.refreshDrawing();
   };
 
-  const handleActionEvent = (event) => {
+  const handleActionEvent = (event: EventDetail) => {
     const eventAction = event.detail.action;
     const filename = event.detail?.filename;
     const value = event.detail?.value;
@@ -350,19 +345,19 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       case DRAWING_MODES.TRANSPARENCY:
         if (drawSelection !== null) {
           alertMessage("Transparency (" + value + ") on selection");
-          drawSelection.transparencySelection(value);
+          drawSelection.transparencySelection(value as number);
         }
         break;
       case DRAWING_MODES.IMAGE_RADIUS:
         if (drawSelection !== null) {
           alertMessage("Radius (" + value + ") on selection");
-          drawSelection.radiusSelection(value);
+          drawSelection.radiusSelection(value as number);
         }
         break;
       case DRAWING_MODES.BLACK_WHITE:
         if (drawSelection !== null) {
           alertMessage("Black and white on selection");
-          drawSelection.blackWhiteSelection(value);
+          drawSelection.blackWhiteSelection(value as boolean);
         }
         break;
       default:
@@ -383,8 +378,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
    * Function to start drawing on the canvas
    * @param {Event} event
    */
-  const actionMouseDown = (event) => {
-    if (!drawingParams.current || !canvasRef.current) {
+  const actionMouseDown = (event: MouseEvent) => {
+    if (!canvasRef.current) {
       console.error(
         canvasRef.current == null ? "canvas" : "drawingParams",
         "is null"
@@ -392,11 +387,12 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
     // color and width painting
-    drawingParams.current = getParams();
+    currentParams = getParams();
     setContext(canvasRef.current);
 
+    if (!drawing) return;
     const { toContinue, toReset, pointer } = drawing.actionMouseDown(
-      drawingParams.current.mode,
+      currentParams.mode,
       event
     );
     if (toContinue) {
@@ -408,8 +404,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       drawing.endAction();
       // restart with basic drawing mode
       const chgtMode = DRAWING_MODES.DRAW;
-      drawing.initData(drawingParams.current);
-      drawingParams.current.mode = chgtMode;
+      drawing.initData(currentParams);
+      currentParams.mode = chgtMode;
       drawing = selectDrawingHandler(chgtMode);
     }
     if (pointer !== null && canvasMouseRef.current) {
@@ -417,7 +413,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     }
 
     alertMessage(
-      `Start ${drawingParams.current.mode} : + color:${drawingParams.current.general.color}`
+      `Start ${currentParams.mode} : + color:${currentParams.general.color}`
     );
   };
 
@@ -435,22 +431,17 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     const handleMouseUp = () => {
       drawing && drawing.actionMouseUp();
     };
-    const handleMouseDown = (event) => {
+    const handleMouseDown = (event: MouseEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
 
       actionMouseDown(event);
     };
-    const handleMouseMove = (event) => {
-      if (!canvasMouseRef.current || !drawingParams.current || !drawing) {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!canvasMouseRef.current || !drawing) {
         return;
       }
 
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
-
-      if (!drawingParams.current) {
-        console.log("drawingParams.current is null");
-        return;
-      }
 
       const pointer = drawing.actionMouseMove(event);
 
@@ -459,7 +450,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       }
     };
 
-    const handleChangeMode = (event) => {
+    const handleChangeMode = (e: Event) => {
+      const event = e as EventDetail;
       const newMode = event.detail.mode;
 
       switch (newMode) {
@@ -512,9 +504,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       document.removeEventListener("modeChanged", handleChangeMode);
       window.removeEventListener("load", handleDocumentLoaded);
 
-      if (drawingParams.current) {
-        drawingParams.current.mode = DRAWING_MODES.INIT;
-      }
+      currentParams.mode = DRAWING_MODES.INIT;
     };
   }, []);
 
@@ -541,7 +531,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       <canvas
         width={WIDTH}
         height={HEIGHT}
-        ref={canvasTemporyRef}
+        ref={canvasTemporyRef as React.RefObject<HTMLCanvasElement>}
         style={{
           position: "absolute",
           left: 0,
@@ -553,7 +543,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       <canvas
         width={WIDTH}
         height={HEIGHT}
-        ref={canvasMouseRef}
+        ref={canvasMouseRef as React.RefObject<HTMLCanvasElement>}
         style={{
           position: "absolute",
           left: 0,

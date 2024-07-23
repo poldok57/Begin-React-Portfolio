@@ -436,7 +436,7 @@ export class DrawSelection extends DrawingHandler {
    * Function to save the canvas in a file
    * @param {string} filename - name of the file to save
    */
-  saveCanvas(filename: string, format: string = "png") {
+  saveCanvas(filename: string = "my-file", format: string = "png") {
     if (!this.mCanvas) return;
     let area = this.getSelectedArea();
 
@@ -469,7 +469,7 @@ export class DrawSelection extends DrawingHandler {
    * Function to load an image in the canvas
    * @param {string} filename - name of the file to load
    */
-  loadCanvas(filename: string, name: string) {
+  loadCanvas(filename: string = "my-file", name: string) {
     const virtualCanvas = document.createElement("canvas");
     const ctx = virtualCanvas.getContext("2d");
     if (!ctx) return;

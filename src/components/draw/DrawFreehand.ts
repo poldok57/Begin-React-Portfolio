@@ -50,13 +50,13 @@ export class DrawFreehand extends DrawingHandler {
     return this.drawing;
   }
 
-  setCanvas(canvas: HTMLCanvasElement) {
+  setCanvas(canvas: HTMLCanvasElement | null) {
     if (!canvas) return;
     this.mCanvas = canvas;
     this.context = canvas.getContext("2d");
   }
 
-  setMouseCanvas(canvas: HTMLCanvasElement) {
+  setMouseCanvas(canvas: HTMLCanvasElement | null) {
     if (canvas === null) {
       console.error("setMouseCanvas canvas is null");
       return;
@@ -64,7 +64,7 @@ export class DrawFreehand extends DrawingHandler {
     this.ctxMouse = canvas.getContext("2d");
   }
 
-  setTemporyCanvas(canvas: HTMLCanvasElement) {
+  setTemporyCanvas(canvas: HTMLCanvasElement | null) {
     if (canvas === null) {
       console.error("setTemporyCanvas canvas is null");
       return;
