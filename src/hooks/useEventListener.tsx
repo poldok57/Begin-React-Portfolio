@@ -1,12 +1,18 @@
-"use client";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
+
+interface UseEventListenerProps {
+  handler: (e: Event) => void;
+  isEnabled?: boolean;
+  type: string;
+  element?: HTMLElement | Window;
+}
 
 export const useEventListener = ({
   handler,
   isEnabled = true,
   type,
   element = window,
-}) => {
+}: UseEventListenerProps): void => {
   const handlerRef = useRef(handler);
 
   useEffect(() => {
@@ -14,21 +20,18 @@ export const useEventListener = ({
   }, [handler]);
 
   useEffect(() => {
-    if (!isEnabled) {
-      return;
-    }
-    if (!element) {
+    if (!isEnabled || !element) {
       return;
     }
 
-    const onEvent = (e) => {
-      handlerRef.current(e);
-    };
+    // The actual event listener logic should go here
+    // For example:
+    const eventListener = (event: Event) => handlerRef.current(event);
+    element.addEventListener(type, eventListener);
 
-    element.addEventListener(type, onEvent);
-
+    // Cleanup function
     return () => {
-      element.removeEventListener(type, onEvent);
+      element.removeEventListener(type, eventListener);
     };
-  }, [isEnabled, type, element]);
+  }, [type, element, isEnabled]);
 };
