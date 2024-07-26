@@ -2,7 +2,7 @@ import React, { useMemo, useState, useRef, forwardRef } from "react";
 import { useMemoryContext } from "./MemoryProvider";
 import { Button } from "../atom/Button";
 
-import { withMousePosition } from "../../hooks/withMousePosition";
+import { withMousePosition } from "../windows/withMousePosition";
 import { alertMessage } from "../../hooks/alertMessage";
 
 const InputDimension = forwardRef(function InputDimension(props, ref) {
@@ -36,7 +36,7 @@ const InputDimension = forwardRef(function InputDimension(props, ref) {
   return (
     <div>
       <label
-        className="p-2 border-2 rounded-md flex-nowrap whitespace-nowrap border-primary bg-background"
+        className="flex-nowrap p-2 whitespace-nowrap rounded-md border-2 border-primary bg-background"
         htmlFor={id}
       >
         {label} &nbsp;:
@@ -60,7 +60,7 @@ const SelectType = forwardRef(function SelectType(props, ref) {
   return (
     <div
       onChange={(e) => props.setType(e.target.value)}
-      className="flex justify-between w-9/12 gap-5 p-2 border-2 rounded-md border-primary bg-background"
+      className="flex gap-5 justify-between p-2 w-9/12 rounded-md border-2 border-primary bg-background"
     >
       <label>
         <input type="radio" value="emoji" name="type" className="m-1" />
@@ -92,12 +92,12 @@ const ResizePicture = ({ children, ...props }) => {
 
   return (
     <label
-      className="items-center p-2 text-lg border-2 rounded-md whitespace-nowrap border-primary bg-background"
+      className="items-center p-2 text-lg whitespace-nowrap rounded-md border-2 border-primary bg-background"
       htmlFor={id}
     >
       {children} &nbsp;
       <input
-        className="w-32 transition-opacity range range-primary opacity-70 hover:opacity-100"
+        className="w-32 opacity-70 transition-opacity range range-primary hover:opacity-100"
         id={id}
         type="range"
         min="50"
@@ -135,13 +135,13 @@ export const MemoryControl = () => {
 
   return useMemo(() => {
     return (
-      <div className="border rounded-md shadow-lg border-secondary bg-paper">
+      <div className="rounded-md border shadow-lg border-secondary bg-paper">
         <form onSubmit={handleReset} className="flex justify-between p-2">
-          <div className="w-full mx-1 ">
+          <div className="mx-1 w-full">
             <div className="flex justify-center w-full">
               <SelectType ref={inputTypeRef} setType={setInputType} />
             </div>
-            <div className="flex items-center justify-between w-full gap-2 pt-2 whitespace-nowrap">
+            <div className="flex gap-2 justify-between items-center pt-2 w-full whitespace-nowrap">
               <InputDimension
                 ref={inputColsRef}
                 name="width"
@@ -165,7 +165,7 @@ export const MemoryControl = () => {
           </div>
         </form>
         {inputType === "images" && (
-          <div className="flex items-center justify-center w-full my-2">
+          <div className="flex justify-center items-center my-2 w-full">
             <ResizePicture id="resize" name="resize">
               Resize picture
             </ResizePicture>

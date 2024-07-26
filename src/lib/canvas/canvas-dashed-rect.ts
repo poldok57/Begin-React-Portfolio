@@ -1,7 +1,7 @@
 /**
  * Part of the canvas module that contains the functions to draw a dashed rectangle on the canvas
  */
-import { Area } from "../types";
+import { Area } from "./types";
 
 /**
  * Function to draw a dashed rectangle on the canvas

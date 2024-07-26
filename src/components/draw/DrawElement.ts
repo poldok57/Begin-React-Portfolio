@@ -11,7 +11,7 @@ import { BORDER } from "../../lib/mouse-position";
 import { showElement } from "../../lib/canvas/canvas-elements";
 import { resizingElement } from "../../lib/canvas/canvas-resize";
 
-import { Coordinate, Area } from "../../lib/types";
+import { Coordinate, Area } from "../../lib/canvas/types";
 
 import {
   DrawingHandler,

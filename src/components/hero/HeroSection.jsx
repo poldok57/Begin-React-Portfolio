@@ -1,9 +1,11 @@
+import Image from "next/image";
+
 import { FULL_NAME } from "../../lib/config";
-import { withMousePosition } from "../../hooks/withMousePosition";
+import { withMousePosition } from "../windows/withMousePosition";
 
 const HeroLogo = () => {
   return (
-    <img
+    <Image
       width={300}
       height={300}
       src="/images/alinenkarl-300.png"
@@ -18,7 +20,7 @@ const HeroPresentation = () => {
     <div className="flex flex-col gap-4 md:mr-16">
       <h1 className="whitespace-nowrap text-5xl drop-shadow-[0_20px_20px_rgba(0,0,0,0.8)] md:text-7xl">
         We are{" "}
-        <span className="font-extrabold text-transparent bg-gradient-to-r from-secondary to-primary bg-clip-text">
+        <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary">
           {FULL_NAME}
         </span>
       </h1>
@@ -35,7 +37,7 @@ const HeroPresentationWP = withMousePosition(HeroPresentation);
 
 export const HeroSection = () => {
   return (
-    <div className="relative flex flex-col w-full max-w-4xl m-auto">
+    <div className="flex relative flex-col m-auto w-full max-w-4xl">
       <HeroLogoWP className="top-0 right-0 md:absolute" />
       <HeroPresentationWP
         trace={true}

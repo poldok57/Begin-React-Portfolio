@@ -1,5 +1,5 @@
 const SIZE_CROSS_MIN = 16;
-import { Coordinate, MouseCircle } from "../types";
+import { Coordinate, MouseCircle } from "./types";
 export type drawingCircle = {
   context: CanvasRenderingContext2D;
   coordinate: Coordinate | null;

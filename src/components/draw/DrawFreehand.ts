@@ -1,4 +1,4 @@
-import { Coordinate } from "../../lib/types";
+import { Coordinate } from "../../lib/canvas/types";
 import {
   basicLine,
   drawingCircle,

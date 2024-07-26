@@ -1,4 +1,4 @@
-import { Area, Rect, Coordinate } from "./types";
+import { Area, Rect, Coordinate } from "./canvas/types";
 
 export const BORDER = {
   RIGHT: "brd-right",
@@ -155,6 +155,7 @@ type MiddleButton = Rect & {
   axeX2: number;
   axeY: number;
   radius: number;
+  bottom: number;
 };
 export const middleButtonPosition = (rect: {
   x?: number;

@@ -1,4 +1,4 @@
-import { Area } from "../types";
+import { Area } from "./types";
 
 const getAlphaLines = (canvas: HTMLCanvasElement): Uint8ClampedArray[] => {
   const ctx = canvas.getContext("2d")!;

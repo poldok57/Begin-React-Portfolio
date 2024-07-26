@@ -1,7 +1,7 @@
 /**
  * Fonctions ton manipulate images in a canvas
  */
-import { Area, Surface } from "../types";
+import { Area, Surface } from "./types";
 
 /**
  * Function to copy the selected zone in a virtual canvas

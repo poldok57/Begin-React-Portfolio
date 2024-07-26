@@ -1,5 +1,5 @@
 import { BORDER, badgePosition } from "../mouse-position";
-import { Area } from "../types";
+import { Area } from "./types";
 import {
   SHAPE_TYPE,
   isDrawingShape,

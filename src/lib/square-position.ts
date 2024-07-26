@@ -1,4 +1,4 @@
-import { Rect, Coordinate, Area, ArgsMouseOnShape } from "./types";
+import { Rect, Coordinate, Area, ArgsMouseOnShape } from "./canvas/types";
 import {
   BORDER,
   badgePosition,

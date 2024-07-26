@@ -1,4 +1,4 @@
-import { Coordinate, Area, ArgsMouseOnShape } from "../types";
+import { Coordinate, Area, ArgsMouseOnShape } from "./types";
 import { getCoordinates, clearCanvasByCtx } from "./canvas-tools";
 import { showElement } from "./canvas-elements";
 import { mousePointer, isInside } from "../mouse-position";

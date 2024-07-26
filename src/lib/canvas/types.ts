@@ -7,26 +7,22 @@ export type Surface = {
   width: number;
   height: number;
 };
-export type Area = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  ratio?: number;
-};
 
-export type Rect = {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-  width: number;
-  height: number;
-};
+export type Area = Coordinate &
+  Surface & {
+    ratio?: number;
+  };
+
 export type RectPosition = {
   left: number;
   top: number;
 };
+
+export type Rect = RectPosition &
+  Surface & {
+    right: number;
+    bottom: number;
+  };
 
 export type ArgsMouseOnShape = {
   coordinate: Coordinate;
@@ -36,6 +32,7 @@ export type ArgsMouseOnShape = {
   withMiddleButtons: boolean | null;
   maxWidth: number;
 };
+
 export type MouseCircle = {
   color: string;
   width: number;

@@ -1,21 +1,19 @@
 import React from "react";
 
-import { LiaWindowMinimize } from "react-icons/lia";
-import { LiaWindowMaximize } from "react-icons/lia";
-
+import { Expand, Shrink } from "lucide-react";
 import clsx from "clsx";
 
-interface ToggleMinimizeProps {
+interface ToggleMaximizeProps {
   className?: string;
   size?: "2xl" | "xl" | "md" | "sm";
-  isMinimized: boolean;
-  toggleMinimize: () => void;
+  isMaximized: boolean;
+  toggleMaximize: () => void;
 }
-export const ToggleMinimize: React.FC<ToggleMinimizeProps> = ({
+export const ToggleMaximize: React.FC<ToggleMaximizeProps> = ({
   className,
   size,
-  isMinimized,
-  toggleMinimize,
+  isMaximized,
+  toggleMaximize,
   ...props
 }) => {
   return (
@@ -29,14 +27,14 @@ export const ToggleMinimize: React.FC<ToggleMinimizeProps> = ({
           "text-xl": size === "xl",
           "text-md": size === "md",
           "text-sm": size === "sm",
-          "bg-blue-700": !isMinimized,
-          "bg-green-600": isMinimized,
+          "bg-blue-700": !isMaximized,
+          "bg-green-600": isMaximized,
         }
       )}
-      onClick={toggleMinimize}
+      onClick={toggleMaximize}
     >
-      {isMinimized && <LiaWindowMaximize />}
-      {!isMinimized && <LiaWindowMinimize />}
+      {isMaximized && <Expand />}
+      {!isMaximized && <Shrink />}
     </button>
   );
 };

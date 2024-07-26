@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import { mouseIsInsideComponent, getRectOffset } from "../lib/mouse-position";
-import { creatPlaceholder } from "../lib/component-move";
-import { ToggleSwitch } from "../components/atom/ToggleSwitch";
-import { TitleBar } from "../components/atom/TitleBar";
-import { CloseButton } from "../components/atom/CloseButton";
+import {
+  mouseIsInsideComponent,
+  getRectOffset,
+} from "../../lib/mouse-position";
+import { creatPlaceholder } from "../../lib/component-move";
+import { ToggleSwitch } from "../atom/ToggleSwitch";
+import { TitleBar } from "../atom/TitleBar";
+import { CloseButton } from "../atom/CloseButton";
+
 import clsx from "clsx";
 
 enum EVENT {
@@ -345,19 +349,17 @@ export function withMousePosition<P extends object>(
           })}
         >
           {title}
-          <ToggleSwitch
-            defaultChecked={isLocked}
-            onChange={toggleLocked}
-            color="red"
-            initialColor="green"
-            className="absolute z-40 mt-1 border-blue-600 opacity-0 color-primary left-2 group-hover:opacity-95 border2"
-          />
-          {close && (
-            <CloseButton
-              className="absolute mt-1 right-2"
-              onClick={hideComponent}
+
+          <div className="flex absolute top-0 right-1 left-1 justify-between opacity-10 group-hover:opacity-95">
+            <ToggleSwitch
+              defaultChecked={isLocked}
+              onChange={toggleLocked}
+              color="red"
+              initialColor="green"
+              className="z-40 mt-1 border-blue-600 color-primary border2"
             />
-          )}
+            {close && <CloseButton className="mt-1" onClick={hideComponent} />}
+          </div>
         </TitleBar>
       </div>
     );

@@ -5,6 +5,7 @@ import styles from "./MemoryCard.module.css";
 import { CARD_STATE } from "../../lib/memory";
 import { useTheme } from "../../context/ThemeProvider";
 import { useMemoryContext } from "./MemoryProvider";
+import Image from "next/image";
 
 export const MemoryCard = ({ card, idx }) => {
   // const [showLayer, setShowLayer] = useState(false);
@@ -42,9 +43,10 @@ export const MemoryCard = ({ card, idx }) => {
             }
           )}
         >
-          <img
+          <Image
             src={"/images" + card.emoji}
             width={getWidthCards()}
+            height={getWidthCards()} // Ajoutez cette ligne
             onClick={(e) => {
               hightLightImage(e);
             }}
@@ -57,7 +59,8 @@ export const MemoryCard = ({ card, idx }) => {
               clearTimeout(timerRef.current);
               removeHightLight(e);
             }}
-            className="block rounded-md bg-paper p-1"
+            className="block p-1 rounded-md bg-paper"
+            alt="= ? ="
           />
         </button>
         <button
@@ -90,7 +93,7 @@ export const MemoryCard = ({ card, idx }) => {
           }
         )}
       >
-        <span className="block rounded bg-paper p-3">{card.emoji}</span>
+        <span className="block p-3 rounded bg-paper">{card.emoji}</span>
       </button>
       <button
         onClick={() => onClick(idx)}

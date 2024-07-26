@@ -1,6 +1,6 @@
 import { getCoordinates } from "./canvas-tools";
 import { basicLine, crossLine } from "./canvas-basic";
-import { Coordinate } from "../types";
+import { Coordinate } from "./types";
 
 export class CanvasLine {
   mCanvas: HTMLCanvasElement | null = null;

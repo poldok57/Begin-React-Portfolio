@@ -3,7 +3,7 @@
  */
 import { BORDER } from "../mouse-position";
 import { resizeSquare } from "../square-position";
-import { Coordinate, Area } from "../types";
+import { Coordinate, Area } from "./types";
 import { ShapeDefinition } from "./canvas-defines";
 import { showElement } from "./canvas-elements";
 

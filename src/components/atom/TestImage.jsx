@@ -1,14 +1,17 @@
-import { withMousePosition } from "../../hooks/withMousePosition";
-
+import { withMousePosition } from "../windows/withMousePosition";
+import Image from "next/image";
 export const TestImage = ({ image_width }) => {
   return (
     <div className="group" style={{ width: image_width || "250px" }}>
-      <img
-        className="rounded-lg object-cover"
+      <Image
+        className="object-cover rounded-lg"
         src="/images/card-18-250.jpg"
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        alt="Description de l'image"
+        layout="responsive"
+        width={250}
+        height={250}
       />
-      <div className="rounded bg-paper text-center opacity-20 group-hover:opacity-100">
+      <div className="text-center rounded opacity-20 bg-paper group-hover:opacity-100">
         absolute image
       </div>
     </div>

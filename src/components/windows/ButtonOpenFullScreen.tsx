@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
-import { Button } from "./Button";
+import React, { useState, useRef } from "react";
+import { Button } from "../atom/Button";
+import { Expand } from "lucide-react";
 
-import { FullScreenModal } from "./FullScreenModal";
+import { FullScreenWindow } from "./FullScreenWindow";
 
 /**
  * ButtonOpenModal component open a full screen modal
@@ -13,12 +14,19 @@ import { FullScreenModal } from "./FullScreenModal";
  * @param {object} props - The props of the button
  * @returns {JSX.Element}
  */
-export const ButtonOpenModal = ({
+interface ButtonFullScreenProps {
+  title?: string;
+  bgTitle?: string;
+  children?: React.ReactNode;
+  className?: string;
+  value?: string;
+}
+export const ButtonOpenFullScreen: React.FC<ButtonFullScreenProps> = ({
   title = "Modal",
-  bgTitle = null,
+  bgTitle = undefined,
   children,
-  className = "h-24 text-lg",
-  value = "Open Modal",
+  className = "p-2",
+  value = null,
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,19 +44,19 @@ export const ButtonOpenModal = ({
         className={className}
         {...props}
       >
-        {value}
+        {value ? value : <Expand size={16} />}
       </Button>
       {isOpen && (
-        <FullScreenModal
+        <FullScreenWindow
           ref={frameRef}
           referrer={buttonRef}
-          isOpen={isOpen}
           title={title}
           bgTitle={bgTitle}
+          withMinimize={true}
           onClose={() => setIsOpen(false)}
         >
           {children}
-        </FullScreenModal>
+        </FullScreenWindow>
       )}
     </>
   );

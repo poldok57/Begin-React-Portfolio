@@ -1,5 +1,5 @@
 import { mouseIsInsideComponent } from "../../lib/mouse-position";
-import { Coordinate } from "../../lib/types";
+import { Coordinate } from "../../lib/canvas/types";
 import {
   drawingCircle,
   drawPoint,

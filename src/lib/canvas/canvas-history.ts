@@ -1,4 +1,4 @@
-import { Coordinate } from "../types";
+import { Coordinate } from "./types";
 import { DRAWING_MODES } from "./canvas-defines";
 export type CanvasPicture = {
   type: string;

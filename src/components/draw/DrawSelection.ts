@@ -1,4 +1,4 @@
-import { Area, Surface, Coordinate } from "../../lib/types";
+import { Area, Surface, Coordinate } from "../../lib/canvas/types";
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   makeWhiteTransparent,

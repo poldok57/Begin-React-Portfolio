@@ -2,7 +2,7 @@
  * Part of the canvas module that contains the functions to draw buttons on the canvas
  */
 import { BORDER, middleButtonPosition } from "../mouse-position";
-import { Area, Coordinate } from "../types";
+import { Area, Coordinate } from "./types";
 import { basicCircle } from "./canvas-basic";
 const CIRCLE_COLOR = "#e0e0e0"; // color of the circle around control buttons
 

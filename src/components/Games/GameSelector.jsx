@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { SectionWrapper } from "../atom/SectionWrapper";
-import { ButtonOpenModal } from "../atom/ButtonOpenModal";
+import { ButtonOpenFullScreen } from "../windows/ButtonOpenFullScreen";
 
 // dynamic import Memory Section
 const DynamicMemorySection = dynamic(() => import("../memory"), {
@@ -10,13 +10,14 @@ const DynamicMemorySection = dynamic(() => import("../memory"), {
 export const GameSelector = () => {
   return (
     <SectionWrapper title="Are U boring ? Let's play !">
-      <ButtonOpenModal
-        className="h-32 text-lg w-28"
+      <ButtonOpenFullScreen
+        className="w-28 h-32 text-lg"
         value="Memory"
         title="Test your memory"
+        // bgTitle="#44ee99"
       >
         <DynamicMemorySection />
-      </ButtonOpenModal>
+      </ButtonOpenFullScreen>
     </SectionWrapper>
   );
 };

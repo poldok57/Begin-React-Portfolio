@@ -1,4 +1,4 @@
-import { Area, MouseCircle } from "../types";
+import { Area, MouseCircle } from "./types";
 
 export const SHAPE_TYPE = {
   SQUARE: "square",
@@ -142,7 +142,7 @@ export type GroupParams = {
     | null; // Exemple avec une union de types
 };
 
-export type ThingsToDraw = {
+export interface ThingsToDraw {
   type: string;
   rotation: number;
   lockRatio: boolean;
@@ -151,15 +151,15 @@ export type ThingsToDraw = {
   withMiddleButtons: boolean;
   withCornerButton: boolean;
   withResize: boolean;
-};
-export type ShapeDefinition = ThingsToDraw & {
+}
+export interface ShapeDefinition extends ThingsToDraw {
   blackWhite: boolean;
   canvasImage: HTMLCanvasElement | null;
   canvasImageTransparent: HTMLCanvasElement | null;
   shape: ParamsShape;
   border: ParamsGeneral;
   text: ParamsText;
-};
+}
 
 export const DEFAULT_PARAMS: AllParams = {
   mode: DRAWING_MODES.INIT,
