@@ -5,9 +5,8 @@ import {
   getRectOffset,
 } from "../../lib/mouse-position";
 import { creatPlaceholder } from "../../lib/component-move";
-import { ToggleSwitch } from "../atom/ToggleSwitch";
-import { TitleBar } from "../atom/TitleBar";
-import { CloseButton } from "../atom/CloseButton";
+import { TitleBar as TitleBar2 } from "./TitleBar";
+import { generateRandomKey } from "./store";
 
 import clsx from "clsx";
 
@@ -81,6 +80,9 @@ export function withMousePosition<P extends object>(
     const mouseCoordinatesRef = useRef({ x: 0, y: 0 });
 
     const [isLocked, setLocked] = useState(locked);
+
+    const randomKey = useRef(generateRandomKey());
+    const id = title ? title : randomKey.current;
 
     const setMouseCoordinates = (x: number, y: number) => {
       mouseCoordinatesRef.current.x = x;
@@ -331,7 +333,8 @@ export function withMousePosition<P extends object>(
       >
         <WrappedComponent trace={trace} {...(props as P)} />
 
-        <TitleBar
+        <TitleBar2
+          id={id}
           ref={titleRef}
           style={{
             top: titleHidden ? 0 : -titleHeight,
@@ -343,24 +346,16 @@ export function withMousePosition<P extends object>(
             group: titleBar && !titleHidden,
             "bg-transparent": !titleBar,
             "invisible group-hover:visible": titleBar && titleHidden,
-            "opacity-60": titleBar && titleHidden,
-            "opacity-5": titleBar && isLocked && titleHidden,
+            "opacity-60": titleBar && titleHidden && !isLocked,
+            "opacity-10": titleBar && titleHidden && isLocked,
             "hover:cursor-move": titleBar && !isLocked,
           })}
+          isLocked={isLocked}
+          toggleLocked={toggleLocked}
+          {...(close ? { onClose: hideComponent } : {})}
         >
           {title}
-
-          <div className="flex absolute top-0 right-1 left-1 justify-between opacity-10 group-hover:opacity-95">
-            <ToggleSwitch
-              defaultChecked={isLocked}
-              onChange={toggleLocked}
-              color="red"
-              initialColor="green"
-              className="z-40 mt-1 border-blue-600 color-primary border2"
-            />
-            {close && <CloseButton className="mt-1" onClick={hideComponent} />}
-          </div>
-        </TitleBar>
+        </TitleBar2>
       </div>
     );
   };

@@ -10,7 +10,8 @@ import clsx from "clsx";
 import { TitleBar } from "./TitleBar";
 import { toggleWindowSize, TITLE_HEIGHT } from "./window-size";
 
-import { useWindowActions } from "./store";
+// import { useWindowActions } from "./store";
+import { generateRandomKey } from "./store";
 import { getContrastColor } from "../../lib/utils/colors";
 
 /**
@@ -27,6 +28,7 @@ interface FullScreenWindowProps {
   referrer?: MutableRefObject<HTMLButtonElement | null>;
   title?: string;
   bgTitle?: string;
+  maximize?: boolean;
   withMinimize?: boolean;
   children: React.ReactNode;
 }
@@ -39,6 +41,7 @@ export const FullScreenWindow = forwardRef<
     referrer,
     title = null,
     bgTitle = null,
+    maximize,
     withMinimize = false,
     children,
   },
@@ -52,9 +55,9 @@ export const FullScreenWindow = forwardRef<
       : null;
 
   const titleBarRef = useRef(null);
-  const randomKey = useRef(Math.random().toString(36).slice(2, 9));
+  const randomKey = useRef(generateRandomKey());
   const id = title ? title : randomKey.current;
-  const { getWindow, removeWindow } = useWindowActions();
+  // const { getWindow } = useWindowActions();
 
   const mStyle: React.CSSProperties = {
     transition: "all 0.5s",
@@ -70,11 +73,10 @@ export const FullScreenWindow = forwardRef<
   useEffect(() => {
     if (!rect || !ref) return;
     if ("current" in ref && ref.current) {
-      const win = getWindow(id);
-      console.log("useEffect -> toogle Up, Win", win);
-      if (win) win.isMinimized = false;
-      toggleWindowSize(ref.current, win);
-      removeWindow(id);
+      // const win = getWindow(id);
+      // console.log("useEffect -> toogle Up, Win", win);
+      // if (win) win.isMinimized = false;
+      toggleWindowSize(ref.current, undefined);
     }
   }, [ref, id]);
 
@@ -91,6 +93,7 @@ export const FullScreenWindow = forwardRef<
         })}
         ref={titleBarRef}
         withMinimize={withMinimize}
+        maximize={maximize}
         style={{
           top: 0,
           left: 0,

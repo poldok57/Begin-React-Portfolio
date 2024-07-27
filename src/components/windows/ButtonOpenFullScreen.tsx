@@ -52,6 +52,7 @@ export const ButtonOpenFullScreen: React.FC<ButtonFullScreenProps> = ({
           referrer={buttonRef}
           title={title}
           bgTitle={bgTitle}
+          maximize={true}
           withMinimize={true}
           onClose={() => setIsOpen(false)}
         >

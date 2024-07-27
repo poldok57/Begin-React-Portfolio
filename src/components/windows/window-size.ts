@@ -9,6 +9,11 @@ const FRAME_WIDTH = "calc(100% - 2px)";
 const FRAME_HEIGHT = "calc(100% - 1px)";
 const DEFAULT_OVERFLOW = "auto";
 
+// Fonction pour déterminer si une valeur est en pourcentage ou utilise calc()
+const isPercentageOrCalc = (value: string): boolean => {
+  return value.includes("%") || value.includes("calc");
+};
+
 export const copyDivStyle = (
   currentDiv: HTMLElement | null | undefined,
   id: string
@@ -16,6 +21,15 @@ export const copyDivStyle = (
   if (!currentDiv) return undefined;
 
   const style = getComputedStyle(currentDiv);
+  const cssStyle = currentDiv.style;
+
+  // Utiliser le style CSS si c'est un pourcentage ou calc, sinon utiliser le style calculé
+  const width = isPercentageOrCalc(cssStyle.width)
+    ? cssStyle.width
+    : style.width;
+  const height = isPercentageOrCalc(cssStyle.height)
+    ? cssStyle.height
+    : style.height;
 
   const win: WindowType = {
     id: id,
@@ -25,8 +39,8 @@ export const copyDivStyle = (
       top: style.top,
       left: style.left,
       right: style.right,
-      width: style.width,
-      height: style.height,
+      width: width,
+      height: height,
       bottom: style.bottom,
       overflow: style.overflow,
       position: style.position,

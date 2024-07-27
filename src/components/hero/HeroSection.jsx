@@ -40,7 +40,7 @@ export const HeroSection = () => {
     <div className="flex relative flex-col m-auto w-full max-w-4xl">
       <HeroLogoWP className="top-0 right-0 md:absolute" />
       <HeroPresentationWP
-        trace={true}
+        trace={false}
         locked={true}
         className="md:relative"
         titleBar={true}

@@ -5,7 +5,7 @@ import { useShallow } from "zustand/react/shallow";
 import { WindowType } from "./types";
 
 interface WindowState {
-  maximize: string;
+  maximizeId: string;
   windows: WindowType[];
   addWindow: (window: WindowType) => void;
   getWindow: (id: string) => WindowType | undefined;
@@ -18,7 +18,7 @@ interface WindowState {
 
 const zustandWindowStore = create<WindowState>((set, get) => ({
   windows: [],
-  maximize: "",
+  maximizeId: "",
   addWindow: (window: WindowType) =>
     set((state) => ({ windows: [...state.windows, window] })),
   getWindow: (id: string) => get().windows.find((w) => w.id === id),
@@ -46,7 +46,7 @@ const zustandWindowStore = create<WindowState>((set, get) => ({
     set((state) => ({
       windows: state.windows.filter((w) => w.id !== id),
     })),
-  setMaximize: (id: string) => set({ maximize: id }), // Nouvelle fonction
+  setMaximize: (id: string) => set({ maximizeId: id }), // Nouvelle fonction
 }));
 
 /**
@@ -57,7 +57,7 @@ export const useWindowStore = () => {
   return zustandWindowStore(
     useShallow((state: WindowState) => ({
       windows: state.windows,
-      maximize: state.maximize,
+      maximizeId: state.maximizeId,
     }))
   );
 };
@@ -76,3 +76,5 @@ export const useWindowActions = () => {
     setMaximize: state.setMaximize,
   }));
 };
+
+export const generateRandomKey = () => Math.random().toString(36).slice(2, 9);

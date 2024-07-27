@@ -9,8 +9,9 @@ import React, {
 import { CloseButton } from "../atom/CloseButton";
 import { ToggleMinimize } from "../atom/ToggleMinimize";
 import { ToggleMaximize } from "../atom/ToggleMaximize";
+import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { WindowType } from "./types";
-import { useWindowActions } from "./store";
+import { useWindowActions, useWindowStore } from "./store";
 import { copyDivStyle, toggleWindowSize } from "./window-size";
 
 import clsx from "clsx";
@@ -21,8 +22,11 @@ interface TitleBarProps {
   children?: ReactNode;
   style?: React.CSSProperties;
   onClose?: () => void;
+  maximize?: boolean;
   withMinimize?: boolean;
   withMaximize?: boolean;
+  toggleLocked?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isLocked?: boolean;
   referrer?: MutableRefObject<HTMLButtonElement | null | undefined>;
 }
 
@@ -34,16 +38,21 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       className,
       style,
       onClose,
+      maximize = false,
       referrer,
       withMinimize = false,
       withMaximize = false,
+      toggleLocked,
+      isLocked = false,
       ...props
     },
     ref
   ) {
     const [isMinimized, setMinimized] = useState(false);
-    const [isMaximized, setMaximized] = useState(false);
-    const { upsertWindow, getWindow, removeWindow } = useWindowActions();
+    const [isMaximized, setMaximized] = useState(maximize);
+    const { upsertWindow, getWindow, removeWindow, setMaximize } =
+      useWindowActions();
+    const { maximizeId } = useWindowStore();
 
     const btnRef = referrer ? referrer.current : undefined;
 
@@ -62,6 +71,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
           if (win) {
             // insert in store
             win.isMinimized = true;
+            win.isMaximized = isMaximized;
             upsertWindow(win);
           }
           toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
@@ -70,6 +80,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
           const win = getWindow(id);
           if (win) {
             win.isMinimized = false;
+            setMaximized(win.isMaximized);
             upsertWindow(win);
           }
           // window is maximized
@@ -104,28 +115,16 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     };
 
     useEffect(() => {
-      const handleResize = () => {
-        if (isMaximized && ref && "current" in ref && ref.current) {
-          const win = getWindow(id);
-          if (win) {
-            toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
-          }
-        }
-      };
-
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }, [isMaximized, id]);
-
-    useEffect(() => {
-      if (isMinimized) {
-        document.body.style.overflow = "auto";
-        document.body.style.transition = "overflow 0.5s";
-      } else {
+      console.log("isMaximized", isMaximized);
+      console.log("isMinimized", isMinimized);
+      if (isMaximized && !isMinimized) {
+        setMaximize(id);
         document.body.style.overflow = "hidden";
+        document.body.style.transition = "overflow 0.5s";
+      }
+      if (!isMaximized && maximizeId === id) {
+        setMaximize("");
+        document.body.style.overflow = "auto";
         document.body.style.transition = "overflow 0.5s";
       }
 
@@ -134,6 +133,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       };
     }, [isMinimized]);
 
+    // handle clic on the opener button
     useEffect(() => {
       if (!btnRef) return;
       btnRef.addEventListener("mousedown", handleMinimizeOff);
@@ -145,32 +145,50 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     return (
       <div
         ref={ref}
-        className={clsx("flex justify-between items-center p-1", className)}
+        className={clsx("flex justify-center items-center p-1", className)}
         style={style}
         {...props}
-        onClick={handleMinimizeOff}
       >
-        <div>{children}</div>
+        <div className="overflow-hidden justify-self-center self-center p-1 text-nowrap text-ellipsis">
+          {children}
+        </div>
         <div
+          onClick={handleMinimizeOff}
           className={clsx(
-            "flex flex-row gap-4 justify-end pt-0 mt-0 lg:gap-3",
+            "flex absolute flex-row gap-4 justify-between p-1 mt-0 w-full",
             "opacity-20 group-hover:opacity-95"
           )}
         >
-          {withMinimize && !isMinimized ? (
-            <ToggleMinimize
-              isMinimized={isMinimized}
-              toggleMinimize={handleMinimize}
-            />
-          ) : null}
-          {withMaximize ? (
-            <ToggleMaximize
-              isMaximized={isMaximized}
-              toggleMaximize={toggleMaximize}
-            />
-          ) : null}
-
-          {onClose ? <CloseButton onClick={handleClose} /> : null}
+          <div>
+            {toggleLocked && (
+              <ToggleSwitch
+                defaultChecked={isLocked}
+                onChange={toggleLocked}
+                color="red"
+                initialColor="green"
+                className="z-40 mt-1 border-blue-600 cursor-pointer color-primary border2"
+              />
+            )}
+          </div>
+          <div className="flex flex-row gap-4 justify-end ml-auto lg:gap-2">
+            {(withMinimize && !isMinimized) || withMaximize ? (
+              <>
+                {withMinimize && !isMinimized && (
+                  <ToggleMinimize
+                    isMinimized={isMinimized}
+                    toggleMinimize={handleMinimize}
+                  />
+                )}
+                {withMaximize && (
+                  <ToggleMaximize
+                    isMaximized={isMaximized}
+                    toggleMaximize={toggleMaximize}
+                  />
+                )}
+              </>
+            ) : null}
+            {onClose ? <CloseButton onClick={handleClose} /> : null}
+          </div>
         </div>
       </div>
     );
