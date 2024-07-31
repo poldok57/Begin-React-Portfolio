@@ -10,7 +10,8 @@ export const MemorySection = () => {
           className="flex absolute left-10 flex-col gap-2 items-center p-2 rounded-md border-2 shadow-lg w-fit border-secondary bg-background"
           titleBar={true}
           title="Select a couple of cards"
-          locked={true}
+          draggable={false}
+          withMaximize={true}
         />
 
         <MemoryControlWP
@@ -21,7 +22,7 @@ export const MemorySection = () => {
           titleHidden={false}
           title="Reset panel"
           titleHeight={36}
-          locked={true}
+          draggable={false}
         />
       </div>
     </MemoryProvider>

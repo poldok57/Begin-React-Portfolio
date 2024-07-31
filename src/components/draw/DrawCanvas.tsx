@@ -16,7 +16,7 @@ import {
   EventDetail,
 } from "../../lib/canvas/canvas-defines";
 
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 
 import { DrawLine } from "./DrawLine";
 import { DrawElement } from "./DrawElement";

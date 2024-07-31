@@ -5,7 +5,7 @@ import { MemoryNbrTry } from "./MemoryNbrTry";
 import { useMemoryContext } from "./MemoryProvider";
 import { HightLightOnRender } from "../../context/HightLightOnRender";
 import { withMousePosition } from "../windows/withMousePosition";
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 
 import clsx from "clsx";
 

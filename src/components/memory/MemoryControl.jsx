@@ -3,7 +3,7 @@ import { useMemoryContext } from "./MemoryProvider";
 import { Button } from "../atom/Button";
 
 import { withMousePosition } from "../windows/withMousePosition";
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 
 const InputDimension = forwardRef(function InputDimension(props, ref) {
   const id = props.id || props.name;

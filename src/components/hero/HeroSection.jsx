@@ -41,9 +41,10 @@ export const HeroSection = () => {
       <HeroLogoWP className="top-0 right-0 md:absolute" />
       <HeroPresentationWP
         trace={false}
-        locked={true}
+        draggable={false}
         className="md:relative"
         titleBar={true}
+        // withMinimize={true}
         title="Welcome to the React Factory !"
       />
     </div>

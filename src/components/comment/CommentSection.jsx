@@ -5,9 +5,11 @@ import { CommentForm } from "./CommentForm";
 import { useFetch } from "../../hooks/useFetch";
 import { commentsUrl } from "../../lib/api-url";
 import { addComment } from "../../lib/add-comment";
+import { withMousePosition } from "../windows/withMousePosition";
+
 import clsx from "clsx";
 
-export const CommentSection = () => {
+export const CommentLoader = () => {
   const {
     data: comments,
     error,
@@ -22,31 +24,17 @@ export const CommentSection = () => {
 
   // console.log("status:", status, " comments:", comments);
 
-  if (status === "rejected") {
-    return (
-      <SectionWrapper title="Any comment ?">
-        <div className="flex flex-col items-center w-full max-w-2xl gap-8 m-auto border-2 border-red-600 rounded-2xl">
-          <p>Error: {String(error)}</p>
-        </div>
-      </SectionWrapper>
-    );
-  }
-
-  if (!isLoaded || status === "idle") {
-    return (
-      <SectionWrapper title="Any comment ?">
-        <div className="flex flex-col items-center w-full max-w-4xl gap-8 m-auto border border-secondary border-opacity-60 rounded-2xl">
-          <Loader />
-        </div>
-      </SectionWrapper>
-    );
-  }
-
   return (
-    <SectionWrapper title="Any comment ?">
+    <SectionWrapper
+      title="Any comment ?"
+      className="py-8 rounded-2xl border border-opacity-50 shadow-md bg-background border-neutral-300"
+    >
       <div
         className={clsx(
-          "flex flex-col items-center w-full max-w-4xl m-auto rounded-2xl p-3",
+          [
+            "flex flex-col items-center w-fit max-w-5xl m-auto rounded-2xl p-5",
+            "bg-paper border border-secondary border-opacity-20 shadow-sm",
+          ],
           {
             "border-2 border-red-600": status === "rejected",
             "border border-secondary border-opacity-70":
@@ -59,7 +47,7 @@ export const CommentSection = () => {
         {(status === "idle" || !isLoaded) && <Loader />}
         {isLoaded && (
           <>
-            <div className="grid justify-center w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 justify-center w-full sm:grid-cols-2 lg:grid-cols-3">
               {comments.map((comment) => (
                 <Comment key={comment.id} {...comment} />
               ))}
@@ -69,5 +57,20 @@ export const CommentSection = () => {
         )}
       </div>
     </SectionWrapper>
+  );
+};
+
+export const CommentLoaderWP = withMousePosition(CommentLoader);
+
+export const CommentSection = () => {
+  return (
+    <CommentLoaderWP
+      title="Your comments"
+      titleBar={true}
+      withMaximize={true}
+      withMinimize={true}
+      close={true}
+      fixed={true}
+    />
   );
 };

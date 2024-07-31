@@ -1,7 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
 
-import { Button } from "../components/atom/Button";
+import React, { useMemo, useState, useEffect } from "react";
+import { useMessageStore } from "../../lib/stores/useMessageStore";
+
+import { Button } from "../atom/Button";
 import { MdCopyAll } from "react-icons/md";
 import clsx from "clsx";
 
@@ -70,7 +72,7 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
           <div className="items-center p-1 w-1/5 text-xl hover:cursor-move">
             <MdCopyAll size={10} />
           </div>
-          <div className="w-full text-xs text-center group-hover/draggable:hidden">
+          <div className="w-full text-xs text-center group-hover:hidden">
             Alert messages
           </div>
         </div>
@@ -115,4 +117,40 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
       </div>
     </div>
   );
+};
+
+/**
+ * ShowAlertMessages component to display messages in a div
+ * @param {object} props
+ * @param {boolean} props.display - display messages in the div or not
+ * @param {boolean} props.trace - trace the render
+ */
+interface ShowAlertMessagesProps {
+  display?: boolean;
+  trace?: boolean;
+}
+
+export const ShowAlertMessages: React.FC<ShowAlertMessagesProps> = ({
+  display = true,
+  trace = false,
+  ...props
+}) => {
+  const { messages, clearMessages } = useMessageStore((state) => ({
+    messages: state.messages,
+    addMessage: state.addMessage,
+    clearMessages: state.clearMessages,
+  }));
+
+  // useMemo hook to optimize the rendering
+  return useMemo(() => {
+    return (
+      <ShowDivAlertMessages
+        display={display}
+        messages={messages}
+        clearMessages={clearMessages}
+        trace={trace}
+        {...props}
+      />
+    );
+  }, [messages, display]);
 };

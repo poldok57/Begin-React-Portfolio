@@ -23,7 +23,7 @@ import {
   DrawingHandler,
   returnMouseDown,
 } from "../../lib/canvas/DrawingHandler";
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 import { imageSize, cutOutArea } from "../../lib/canvas/canvas-size";
 import {
   downloadCanvasToPNG,

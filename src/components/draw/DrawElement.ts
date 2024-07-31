@@ -17,7 +17,7 @@ import {
   DrawingHandler,
   returnMouseDown,
 } from "../../lib/canvas/DrawingHandler";
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 import { isInsideSquare } from "../../lib/square-position";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];

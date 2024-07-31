@@ -33,8 +33,8 @@ export const ToggleMaximize: React.FC<ToggleMaximizeProps> = ({
       )}
       onClick={toggleMaximize}
     >
-      {isMaximized && <Expand />}
-      {!isMaximized && <Shrink />}
+      {!isMaximized && <Expand size={16} />}
+      {isMaximized && <Shrink size={16} />}
     </button>
   );
 };

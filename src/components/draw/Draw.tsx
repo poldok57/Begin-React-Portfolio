@@ -34,7 +34,7 @@ export const Draw = () => {
   };
 
   return (
-    <div className="relative block gap-8">
+    <div className="block relative gap-8">
       <DrawCanvas canvasRef={canvasRef} getParams={getDrawingParams} />
       <DrawControlWP
         trace={false}
@@ -46,8 +46,9 @@ export const Draw = () => {
         titleBar={true}
         title="Drawing Control"
         titleHidden={false}
-        locked={true}
+        draggable={false}
         close={false}
+        withMinimize={true}
         setParams={setDrawingParams}
         changeMode={changeMode}
         drawingParams={drawingParamsRef.current}

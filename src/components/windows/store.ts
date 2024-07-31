@@ -1,9 +1,11 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import { WindowType } from "./types";
+import { TITLE_HEIGHT } from "./window-size";
 
+export const generateRandomKey = () => Math.random().toString(36).slice(2, 9);
 interface WindowState {
   maximizeId: string;
   windows: WindowType[];
@@ -77,4 +79,56 @@ export const useWindowActions = () => {
   }));
 };
 
-export const generateRandomKey = () => Math.random().toString(36).slice(2, 9);
+/**
+ * Hook personnalisé pour gérer la barre des tâches contenant les fenêtres minimisées
+ */
+export const useTaskbar = (withMinimizedWindows: boolean = false) => {
+  const { windows } = useWindowStore();
+  const [taskbarItems, setTaskbarItems] = useState<WindowType[]>([]);
+
+  useEffect(() => {
+    const minimizedWindows = windows.filter((w) => w.isMinimized);
+    setTaskbarItems(minimizedWindows);
+
+    if (!withMinimizedWindows) {
+      return;
+    }
+
+    const distributeWindows = () => {
+      const screenWidth = window.innerWidth;
+      const minWidth = 120;
+      const maxWidth = screenWidth / 5;
+      const availableWidth = screenWidth - 2; // 2px pour les marges
+      const itemCount = minimizedWindows.length;
+      const itemWidth = Math.max(
+        minWidth,
+        Math.min(maxWidth, availableWidth / itemCount)
+      );
+
+      minimizedWindows.forEach((window, index) => {
+        if (window.htmlDiv) {
+          window.htmlDiv.style.width = `${itemWidth}px`;
+          window.htmlDiv.style.height = `${TITLE_HEIGHT}px`;
+          window.htmlDiv.style.left = `${index * itemWidth + 1}px`;
+          window.htmlDiv.style.top = "auto"; // `${window.innerHeight - TITLE_HEIGHT}px`;
+          window.htmlDiv.style.bottom = `-${TITLE_HEIGHT + 5}px`;
+          window.htmlDiv.style.position = "fixed";
+          window.htmlDiv.style.overflow = "hidden";
+          window.htmlDiv.style.opacity = "0";
+          console.log(
+            `${window.title} - ${index}  left: ${window.htmlDiv.style.left}`
+          );
+        }
+      });
+    };
+
+    distributeWindows();
+    window.addEventListener("resize", distributeWindows);
+
+    return () => {
+      window.removeEventListener("resize", distributeWindows);
+    };
+  }, [windows]);
+
+  return { taskbarItems };
+};

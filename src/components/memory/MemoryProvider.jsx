@@ -7,7 +7,7 @@ import {
 } from "../../lib/memory";
 
 import { GAME_STATUS } from "../../lib/memory";
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 
 const DEFAULT_WIDTH = 80;
 

@@ -4,7 +4,8 @@ import "../src/styles/theme.css";
 import { withMousePosition } from "../src/components/windows/withMousePosition";
 import { ThemeProvider } from "../src/context/ThemeProvider";
 import { TestImageWP } from "../src/components/atom/TestImage";
-import { ShowAlertMessages } from "../src/hooks/ShowAlertMessages";
+import { ShowAlertMessages } from "../src/components/alert-messages/ShowAlertMessages";
+import { Taskbar } from "../src/components/windows/TaskBar";
 
 export const ShowAlertMessagesWP = withMousePosition(ShowAlertMessages);
 
@@ -18,9 +19,12 @@ const MyApp = ({ Component, pageProps }) => {
         </div>
         <ShowAlertMessagesWP
           display={true}
-          locked={false}
+          trace={true}
+          draggable={true}
           titleBar={true}
           titleHidden={true}
+          withMinimize={true}
+          bgTitle="magenta"
           title="Alert Message"
           style={{ position: "fixed", right: 20, bottom: 60 }}
         />
@@ -35,6 +39,7 @@ const MyApp = ({ Component, pageProps }) => {
           image_width="120px"
         />
       </div>
+      <Taskbar />
     </ThemeProvider>
   );
 };

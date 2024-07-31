@@ -24,7 +24,7 @@ import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
 import { eraseHistory } from "../../lib/canvas/canvas-history";
 
-import { alertMessage } from "../../hooks/alertMessage";
+import { alertMessage } from "../alert-messages/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";

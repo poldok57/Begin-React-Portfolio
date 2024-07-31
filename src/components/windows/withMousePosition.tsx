@@ -5,8 +5,10 @@ import {
   getRectOffset,
 } from "../../lib/mouse-position";
 import { creatPlaceholder } from "../../lib/component-move";
-import { TitleBar as TitleBar2 } from "./TitleBar";
+import { TitleBar } from "./TitleBar";
 import { generateRandomKey } from "./store";
+import { getContrastColor } from "../../lib/utils/colors";
+import { isAlignedRight, isAlignedBottom } from "../../lib/utils/position";
 
 import clsx from "clsx";
 
@@ -22,6 +24,7 @@ enum POSITION {
   RELATIVE = "relative",
   ABSOLUTE = "absolute",
   STATIC = "static",
+  FIXED = "fixed",
 }
 
 interface SelectComponentResult {
@@ -31,21 +34,24 @@ interface SelectComponentResult {
 interface WithMousePositionProps {
   style?: React.CSSProperties;
   trace?: boolean;
-  locked?: boolean;
+  draggable?: boolean;
   close?: boolean;
   className?: string | null;
   titleBar?: boolean;
   titleHidden?: boolean;
   title?: string;
+  bgTitle?: string | null;
   titleClassName?: string | null;
   titleHeight?: number;
+  withMinimize?: boolean;
+  withMaximize?: boolean;
 }
 
 /**
  * @param {Object} props
  * @param {Object} props.style  - the style of the component
  * @param {string} props.className  - the class name of the component
- * @param {boolean} props.locked - default true - if true, the component is locked
+ * @param {boolean} draggable - default true - if true, the component is draggable
  * @param {boolean} props.titleBar - default false - if true, the component can be moved by the title bar
  * @param {boolean} props.titleHidden - default true - if true, the title bar is hidden
  * @param {boolean} props.trace - default false - if true, the trace is enabled
@@ -53,6 +59,7 @@ interface WithMousePositionProps {
  * @param {string} props.title - the title of the title bar
  * @param {string} props.titleClassName - the class name of the title bar
  * @param {number} props.titleHeight - the height of the title bar
+ * @param {string} props.bgTitle - the background color of the title bar
  * @returns {JSX.Element} - the wrapped component
  */
 export function withMousePosition<P extends object>(
@@ -62,13 +69,17 @@ export function withMousePosition<P extends object>(
     style,
     trace = false,
     close = false,
-    locked = false,
+    draggable = true,
     className = null,
     titleBar = false,
     titleHidden = true,
     title = "",
     titleClassName = null,
+    bgTitle = null,
     titleHeight = 32,
+    withMinimize = false,
+    withMaximize = false,
+
     ...props
   }: WithMousePositionProps) {
     const titleRef = useRef(null);
@@ -79,10 +90,13 @@ export function withMousePosition<P extends object>(
     const canMoveRef = useRef(false);
     const mouseCoordinatesRef = useRef({ x: 0, y: 0 });
 
-    const [isLocked, setLocked] = useState(locked);
+    const [isLocked, setLocked] = useState(!draggable);
 
     const randomKey = useRef(generateRandomKey());
     const id = title ? title : randomKey.current;
+
+    const isAlignedRightRef = useRef(false);
+    const isAlignedBottomRef = useRef(false);
 
     const setMouseCoordinates = (x: number, y: number) => {
       mouseCoordinatesRef.current.x = x;
@@ -180,19 +194,81 @@ export function withMousePosition<P extends object>(
 
       newStyle.left = coord.x + offsetRef.current.x + "px";
       newStyle.top = coord.y + offsetRef.current.y + "px";
-
       newStyle.right = "auto";
       newStyle.bottom = "auto";
 
+      // Si l'élément est fixe et aligné à droite, calculer sa position par rapport à right
+      if (newStyle.position === POSITION.FIXED) {
+        // element fixed and aligned right
+        if (isAlignedRightRef.current) {
+          const windowWidth = document.documentElement.clientWidth;
+          const componentWidth = component.offsetWidth;
+
+          // Calculer la position right en tenant compte de la position actuelle du curseur
+          const rightPosition =
+            windowWidth - (coord.x + offsetRef.current.x) - componentWidth;
+
+          newStyle.right = `${rightPosition}px`;
+          newStyle.left = "auto";
+          if (trace) {
+            console.log(
+              `[${WrappedComponent.name}] isAlignedRight: ${rightPosition}`
+            );
+          }
+        }
+
+        if (isAlignedBottomRef.current) {
+          const windowHeight = document.documentElement.clientHeight;
+          const componentHeight = component.offsetHeight;
+          const bottomPosition =
+            windowHeight - coord.y - offsetRef.current.y - componentHeight;
+
+          newStyle.top = "auto";
+          newStyle.bottom = `${bottomPosition}px`;
+        }
+      }
+
       component.style.left = newStyle.left;
-      component.style.top = newStyle.top;
       component.style.right = newStyle.right;
+      component.style.top = newStyle.top;
       component.style.bottom = newStyle.bottom;
+
       component.style.margin = "0";
       component.style.marginTop = "0";
       component.style.marginLeft = "0";
       component.style.position = newStyle.position;
+      component.style.transition = "top 0s, left 0s";
     };
+
+    useEffect(() => {
+      /**
+       * test if the component is aligned right or bottom
+       */
+      const { component } = selectComponent(false);
+      if (!component) return;
+
+      const style = getComputedStyle(component);
+      isAlignedRightRef.current = isAlignedRight(
+        styleRef.current as CSSStyleDeclaration,
+        style
+      );
+      isAlignedBottomRef.current = isAlignedBottom(
+        styleRef.current as CSSStyleDeclaration,
+        style
+      );
+      if (trace) {
+        console.log(
+          `[${WrappedComponent.name}] isAligned: ${
+            isAlignedRightRef.current ? "Right" : "Left"
+          }`
+        );
+        console.log(
+          `[${WrappedComponent.name}] isAlignedBottom: ${
+            isAlignedBottomRef.current ? "Bottom" : "Top"
+          }`
+        );
+      }
+    }, []);
 
     useEffect(() => {
       const handleMouseMove = (event: MouseEvent) => {
@@ -219,6 +295,7 @@ export function withMousePosition<P extends object>(
 
         if (component) {
           const style = getComputedStyle(component);
+
           if (style.position && style.position !== POSITION.STATIC) {
             styleRef.current.position = style.position as POSITION;
 
@@ -249,6 +326,11 @@ export function withMousePosition<P extends object>(
        * @param {MouseEvent} event
        */
       const mouseDown = (event: MouseEvent) => {
+        if (trace) {
+          console.log(
+            `[${WrappedComponent.name}] mouseDown, isLocked: ${isLocked}`
+          );
+        }
         event.preventDefault();
         /**
          * if where is a title bar, we need to move the component
@@ -293,28 +375,30 @@ export function withMousePosition<P extends object>(
       /**
        * add the events listener
        */
-
       const { waitEvent, component } = selectComponent(titleBar);
 
-      if (component && waitEvent) {
+      if (waitEvent) {
         waitEvent.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
         waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
         waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
         waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
-        if (
-          !styleRef.current ||
+      }
+      if (
+        component &&
+        (!styleRef.current ||
           !styleRef.current.position ||
-          styleRef.current.position === POSITION.RELATIVE
-        ) {
-          component.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
-        }
+          styleRef.current.position === POSITION.RELATIVE)
+      ) {
+        component.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
       }
 
       return () => {
-        if (waitEvent && component) {
+        if (waitEvent) {
           waitEvent.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
           waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
           waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
+        }
+        if (component) {
           component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
       };
@@ -325,7 +409,7 @@ export function withMousePosition<P extends object>(
         ref={componentRef}
         style={{ ...styleRef.current }}
         className={clsx("hover:z-30", className, {
-          group: !titleBar || titleHidden,
+          "group/draggable": !titleBar || titleHidden,
           "border-grey-800 cursor-pointer border shadow-lg": canMove(),
           "hover:cursor-default": isLocked || titleBar,
           "hover:cursor-move": !(isLocked || titleBar),
@@ -333,29 +417,38 @@ export function withMousePosition<P extends object>(
       >
         <WrappedComponent trace={trace} {...(props as P)} />
 
-        <TitleBar2
+        <TitleBar
           id={id}
           ref={titleRef}
           style={{
-            top: titleHidden ? 0 : -titleHeight,
             height: titleHeight,
+
+            transform: titleHidden ? "none" : "translateY(-100%)",
+            ...(bgTitle
+              ? { backgroundColor: bgTitle, color: getContrastColor(bgTitle) }
+              : {}),
           }}
-          className={clsx("w-full absolute group-hover:z-40", titleClassName, {
+          className={clsx("group-hover/draggable:z-40", titleClassName, {
             "bg-primary rounded border border-gray-500 text-secondary":
               titleClassName === null && titleBar,
-            group: titleBar && !titleHidden,
+            "group/draggable": titleBar && !titleHidden,
             "bg-transparent": !titleBar,
-            "invisible group-hover:visible": titleBar && titleHidden,
-            "opacity-60": titleBar && titleHidden && !isLocked,
+            "invisible group-hover/draggable:visible": titleBar && titleHidden,
+            "opacity-60":
+              titleBar &&
+              titleHidden &&
+              (!isLocked || withMinimize || withMaximize),
             "opacity-10": titleBar && titleHidden && isLocked,
             "hover:cursor-move": titleBar && !isLocked,
           })}
           isLocked={isLocked}
           toggleLocked={toggleLocked}
+          withMinimize={withMinimize}
+          withMaximize={withMaximize}
           {...(close ? { onClose: hideComponent } : {})}
         >
           {title}
-        </TitleBar2>
+        </TitleBar>
       </div>
     );
   };

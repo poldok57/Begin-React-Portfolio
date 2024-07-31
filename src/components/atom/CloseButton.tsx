@@ -6,12 +6,14 @@ interface CloseButtonProps {
   onClick: MouseEventHandler<HTMLButtonElement>;
   className?: string;
   size?: "2xl" | "xl" | "md" | "sm" | "xs";
+  layout?: "square" | "circle" | "rounded";
 }
 
 export const CloseButton: React.FC<CloseButtonProps> = ({
   onClick,
   className,
   size = "md",
+  layout = "square",
   ...props
 }) => {
   return (
@@ -25,6 +27,8 @@ export const CloseButton: React.FC<CloseButtonProps> = ({
           "text-md": size === "md",
           "text-sm": size === "sm",
           "text-xs": size === "xs",
+          "rounded-full": layout === "circle",
+          "rounded-lg": layout === "rounded",
         },
         className
       )}
