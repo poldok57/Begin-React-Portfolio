@@ -8,7 +8,7 @@ import {
   taskbarItemVariants,
   selectBoxVariants,
 } from "@/styles/taskbar-variants";
-import { CloseButton } from "../atom/CloseButton";
+import { CloseButton } from "./CloseButton";
 import clsx from "clsx";
 
 const TASKBAR_PARAMS_KEY = "taskbarParams";
@@ -205,6 +205,7 @@ export const Taskbar = () => {
           {window.onClose && (
             <CloseButton
               layout="circle"
+              size="sm"
               onClick={window.onClose}
               className="absolute top-1 right-1 opacity-30 group-hover/item:opacity-90"
             />

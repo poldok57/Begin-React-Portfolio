@@ -76,7 +76,7 @@ export function withMousePosition<P extends object>(
     title = "",
     titleClassName = null,
     bgTitle = null,
-    titleHeight = 32,
+    titleHeight = 36,
     withMinimize = false,
     withMaximize = false,
 
@@ -197,14 +197,14 @@ export function withMousePosition<P extends object>(
       newStyle.right = "auto";
       newStyle.bottom = "auto";
 
-      // Si l'élément est fixe et aligné à droite, calculer sa position par rapport à right
+      // If the element is fixed and aligned to the right, calculate its position relative to right
       if (newStyle.position === POSITION.FIXED) {
         // element fixed and aligned right
         if (isAlignedRightRef.current) {
           const windowWidth = document.documentElement.clientWidth;
           const componentWidth = component.offsetWidth;
 
-          // Calculer la position right en tenant compte de la position actuelle du curseur
+          // Calculate the right position taking into account the current cursor position
           const rightPosition =
             windowWidth - (coord.x + offsetRef.current.x) - componentWidth;
 
@@ -247,7 +247,26 @@ export function withMousePosition<P extends object>(
       const { component } = selectComponent(false);
       if (!component) return;
 
+      /**
+       * test the kind of position of the component
+       */
+
       const style = getComputedStyle(component);
+
+      if (!style.position || style.position === POSITION.STATIC) {
+        // position is not set, set it to relative
+        styleRef.current.position = POSITION.RELATIVE;
+      } else {
+        styleRef.current.position = style.position as POSITION;
+      }
+      // if the component is relative and not locked, lock it
+      if (styleRef.current.position == POSITION.RELATIVE && isLocked == false) {
+        setLocked(true);
+      }
+
+      /**
+       * find aligned right or bottom
+       */
       isAlignedRightRef.current = isAlignedRight(
         styleRef.current as CSSStyleDeclaration,
         style
@@ -281,43 +300,6 @@ export function withMousePosition<P extends object>(
 
           setMouseCoordinates(event.clientX, event.clientY);
           calculNewPosition();
-        }
-      };
-
-      const onMouseEnter = () => {
-        if (trace) {
-          console.log(`[${WrappedComponent.name}] mouseEnter`);
-        }
-        /**
-         * test the kind of position of the component
-         */
-        const { component } = selectComponent(titleBar);
-
-        if (component) {
-          const style = getComputedStyle(component);
-
-          if (style.position && style.position !== POSITION.STATIC) {
-            styleRef.current.position = style.position as POSITION;
-
-            if (trace)
-              console.log(
-                `[${WrappedComponent.name}] copy position from computedStyle :`,
-                styleRef.current.position
-              );
-          } else {
-            styleRef.current.position = POSITION.RELATIVE;
-            if (trace) {
-              console.log(`[${WrappedComponent.name}] default Relative`);
-            }
-          }
-
-          if (
-            isLocked == false &&
-            styleRef.current.position == POSITION.RELATIVE
-          ) {
-            setLocked(true);
-          }
-          component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
         }
       };
 
@@ -375,32 +357,19 @@ export function withMousePosition<P extends object>(
       /**
        * add the events listener
        */
-      const { waitEvent, component } = selectComponent(titleBar);
-
-      if (waitEvent) {
-        waitEvent.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
-        waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
-        waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
-        waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
+      const { waitEvent } = selectComponent(titleBar);
+      if (!waitEvent) {
+        return;
       }
-      if (
-        component &&
-        (!styleRef.current ||
-          !styleRef.current.position ||
-          styleRef.current.position === POSITION.RELATIVE)
-      ) {
-        component.addEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
-      }
+      waitEvent.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
+      waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
+      waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
+      waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
 
       return () => {
-        if (waitEvent) {
-          waitEvent.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
-          waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
-          waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
-        }
-        if (component) {
-          component.removeEventListener(EVENT.MOUSE_ENTER, onMouseEnter);
-        }
+        waitEvent.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
+        waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
+        waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
       };
     }, [isLocked]);
 
@@ -422,7 +391,6 @@ export function withMousePosition<P extends object>(
           ref={titleRef}
           style={{
             height: titleHeight,
-
             transform: titleHidden ? "none" : "translateY(-100%)",
             ...(bgTitle
               ? { backgroundColor: bgTitle, color: getContrastColor(bgTitle) }
@@ -434,10 +402,9 @@ export function withMousePosition<P extends object>(
             "group/draggable": titleBar && !titleHidden,
             "bg-transparent": !titleBar,
             "invisible group-hover/draggable:visible": titleBar && titleHidden,
-            "opacity-60":
-              titleBar &&
-              titleHidden &&
-              (!isLocked || withMinimize || withMaximize),
+            "opacity-60": titleBar && titleHidden && !isLocked,
+            "opacity-80":
+              titleBar && titleHidden && (withMinimize || withMaximize),
             "opacity-10": titleBar && titleHidden && isLocked,
             "hover:cursor-move": titleBar && !isLocked,
           })}

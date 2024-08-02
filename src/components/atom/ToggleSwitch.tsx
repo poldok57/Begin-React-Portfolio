@@ -23,7 +23,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   return (
     <div {...props} className={className}>
-      <label className="relative inline-flex items-center cursor-pointer">
+      <label className="inline-flex relative items-center ml-1 cursor-pointer">
         <input
           id={id}
           alt="toggle switch input"

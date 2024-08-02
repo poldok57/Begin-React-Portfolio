@@ -11,7 +11,6 @@ interface WindowState {
   windows: WindowType[];
   addWindow: (window: WindowType) => void;
   getWindow: (id: string) => WindowType | undefined;
-  existsWindow: (id: string) => boolean;
   updateWindow: (id: string, updates: Partial<Window>) => void;
   upsertWindow: (window: WindowType) => void;
   removeWindow: (id: string) => void;
@@ -24,7 +23,6 @@ const zustandWindowStore = create<WindowState>((set, get) => ({
   addWindow: (window: WindowType) =>
     set((state) => ({ windows: [...state.windows, window] })),
   getWindow: (id: string) => get().windows.find((w) => w.id === id),
-  existsWindow: (id: string) => get().windows.some((w) => w.id === id),
   updateWindow: (id: string, updates: Partial<Window>) =>
     set((state) => ({
       windows: state.windows.map((w) =>
@@ -52,17 +50,31 @@ const zustandWindowStore = create<WindowState>((set, get) => ({
 }));
 
 /**
- * Custom hook to access the timers store
- * @returns timers store
+ * Custom hook to access the store
+ * @returns  store
  */
-export const useWindowStore = () => {
+// export const useWindowStore = () => {
+//   return zustandWindowStore(
+//     useShallow((state: WindowState) => ({
+//       windows: state.windows,
+//       maximizeId: state.maximizeId,
+//     }))
+//   );
+// };
+export const useWindowStore = <T>(selector?: (state: WindowState) => T): T => {
   return zustandWindowStore(
-    useShallow((state: WindowState) => ({
-      windows: state.windows,
-      maximizeId: state.maximizeId,
-    }))
+    useShallow((state) => (selector ? selector(state) : (state as T)))
   );
 };
+
+/**
+ * Fonction personnalisée pour obtenir l'ID de la fenêtre maximisée
+ * @returns l'ID de la fenêtre maximisée
+ */
+export const useMaximizedWindowId = (): string => {
+  return zustandWindowStore(useShallow((state) => state.maximizeId));
+};
+
 /**
  * Custom hook to access the timers store actions
  * @returns timers store actions
@@ -71,7 +83,6 @@ export const useWindowActions = () => {
   return zustandWindowStore((state) => ({
     addWindow: state.addWindow,
     getWindow: state.getWindow,
-    existsWindow: state.existsWindow,
     updateWindow: state.updateWindow,
     upsertWindow: state.upsertWindow,
     removeWindow: state.removeWindow,
@@ -83,7 +94,9 @@ export const useWindowActions = () => {
  * Hook personnalisé pour gérer la barre des tâches contenant les fenêtres minimisées
  */
 export const useTaskbar = (withMinimizedWindows: boolean = false) => {
-  const { windows } = useWindowStore();
+  const { windows } = zustandWindowStore((state) => ({
+    windows: state.windows,
+  }));
   const [taskbarItems, setTaskbarItems] = useState<WindowType[]>([]);
 
   useEffect(() => {

@@ -35,15 +35,7 @@ export const copyDivStyle = (
     : style.height;
 
   const isRightAligned = isAlignedRight(style, cssStyle);
-  console.log(`L'élément (${id}) est aligné à droite:`, isRightAligned);
 
-  console.log("copyDivStyle: style right:", style.right, "left:", style.left);
-  console.log(
-    "copyDivStyle: cssStyle right:",
-    cssStyle.right,
-    "left:",
-    cssStyle.left
-  );
   const win: WindowType = {
     id: id,
     title: "-",
@@ -81,6 +73,8 @@ export const toggleWindowSize = (
   const style: WindowStyle = {} as WindowStyle;
   const minimize = win ? win.isMinimized : false;
   const maximize = win ? win.isMaximized : true;
+
+  // console.log(`[${win?.id}] minimize`, minimize, "maximize", maximize);
 
   if (minimize) {
     // Minimized state

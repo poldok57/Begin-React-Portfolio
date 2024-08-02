@@ -8,10 +8,10 @@ import React, {
 import clsx from "clsx";
 
 import { TitleBar, STATUS } from "./TitleBar";
+import { WindowRect } from "./types";
 import { toggleWindowSize, TITLE_HEIGHT, copyDivStyle } from "./window-size";
 
-import { useWindowActions } from "./store";
-import { generateRandomKey } from "./store";
+import { useWindowActions, generateRandomKey } from "./store";
 import { getContrastColor } from "../../lib/utils/colors";
 
 /**
@@ -55,19 +55,20 @@ export const FullScreenWindow = forwardRef<
   const id = title ? title : randomKey.current;
   const { addWindow } = useWindowActions();
 
-  const mStyle: React.CSSProperties = {
-    transition: "all 1s",
-  };
-  if (rect) {
-    // set the position of the window to the position of the referrer (button who has opened the window)
-    mStyle.left = `${rect.left}px`;
-    mStyle.top = `${rect.top}px`;
-    mStyle.width = `${rect.width}px`;
-    mStyle.height = `${rect.height}px`;
-  }
+  const mStyle = useRef<WindowRect | null>(
+    rect
+      ? {
+          left: `${rect.left}px`,
+          top: `${rect.top}px`,
+          width: `${rect.width}px`,
+          height: `${rect.height}px`,
+        }
+      : null
+  );
 
   useEffect(() => {
-    if (!rect || !ref) return;
+    if (!ref) return;
+
     if ("current" in ref && ref.current) {
       toggleWindowSize(ref.current, undefined);
       const win = copyDivStyle(ref.current, id);
@@ -76,14 +77,22 @@ export const FullScreenWindow = forwardRef<
         win.isMaximized = true;
         addWindow(win);
       }
+      mStyle.current = {
+        left: ref.current.style.left as string,
+        top: ref.current.style.top as string,
+        width: ref.current.style.width as string,
+        height: ref.current.style.height as string,
+      };
     }
   }, [ref, id]);
+
+  // console.log("FULLSCREEN render: ", id);
 
   return (
     <div
       ref={ref}
       className="z-20 p-4 rounded-lg border-2 border-red-700 shadow-xl bg-paper"
-      style={mStyle}
+      style={mStyle.current as React.CSSProperties}
     >
       <TitleBar
         id={id}

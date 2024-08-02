@@ -1,10 +1,13 @@
-export type WindowStyle = {
+export type WindowRect = {
   top: string;
   left: string;
-  right: string;
-  bottom: string;
   width: string;
   height: string;
+};
+
+export type WindowStyle = WindowRect & {
+  right: string;
+  bottom: string;
   position: string;
   overflow: string;
   borderRadius: string;

@@ -6,13 +6,13 @@ import React, {
   useEffect,
 } from "react";
 
-import { CloseButton } from "../atom/CloseButton";
-import { ToggleMinimize } from "../atom/ToggleMinimize";
-import { ToggleMaximize } from "../atom/ToggleMaximize";
+import { CloseButton } from "./CloseButton";
+import { ToggleMinimize } from "./ToggleMinimize";
+import { ToggleMaximize } from "./ToggleMaximize";
 import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { WindowType } from "./types";
-import { useWindowActions, useWindowStore } from "./store";
-import { copyDivStyle, toggleWindowSize, TITLE_HEIGHT } from "./window-size";
+import { useWindowActions, useMaximizedWindowId } from "./store";
+import { copyDivStyle, toggleWindowSize } from "./window-size";
 
 import clsx from "clsx";
 
@@ -60,7 +60,8 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     const [currentStatus, setCurrentStatus] = useState<Status>(status);
     const { upsertWindow, getWindow, removeWindow, setMaximize } =
       useWindowActions();
-    const { maximizeId } = useWindowStore();
+
+    const maximizeId = useMaximizedWindowId();
 
     const btnRef = referrer ? referrer.current : undefined;
     /**
@@ -109,6 +110,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         return;
       }
       win.isMinimized = false;
+
       upsertWindow(win);
       // window is maximized
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
@@ -121,14 +123,6 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         return;
       }
       minimizeOn();
-    };
-
-    const handleMinimizeOff = (e: MouseEvent) => {
-      e.preventDefault();
-      // console.log("handleMinimizeOff ", isMinimized);
-      if (currentStatus === STATUS.MINIMIZED) {
-        minimizeOff();
-      }
     };
 
     const maximizeOn = () => {
@@ -184,6 +178,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
 
     // controle the scroll bar of the body
     useEffect(() => {
+      // console.log(`useEffet -> [${id}] currentStatus`, currentStatus);
       if (currentStatus === STATUS.MAXIMIZED) {
         setMaximize(id);
         document.body.style.overflow = "hidden";
@@ -208,66 +203,24 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       };
     }, [btnRef]);
 
-    if (currentStatus === STATUS.MINIMIZED) {
-      if (style) {
-        style = {
-          ...style,
-          transform: "none",
-          visibility: "visible",
-          opacity: "1",
-          cursor: "pointer",
-          height: `${TITLE_HEIGHT}px`,
-        };
-      }
-
-      // title bar for minimized window
-      return (
-        <div
-          ref={ref}
-          className={clsx(
-            className,
-            "flex absolute top-0 left-0 items-center w-full",
-            "visible opacity-100"
-          )}
-          style={style}
-          onClick={(e: React.MouseEvent) => handleMinimizeOff(e.nativeEvent)}
-          {...props}
-        >
-          <div className="overflow-hidden self-center px-1 mx-auto text-nowrap text-ellipsis">
-            {children}
-          </div>
-          <div
-            className={clsx(
-              "flex absolute p-1 w-full",
-              "opacity-20 group-hover/draggable:opacity-95"
-            )}
-          >
-            <div className="flex flex-row gap-4 justify-end ml-auto lg:gap-2">
-              {onClose ? <CloseButton onClick={handleClose} /> : null}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // title bar for window not minimized
+    // console.log(`render TitleBar -> [${id}] currentStatus`, currentStatus);
     return (
       <div
         ref={ref}
         className={clsx(
-          "flex absolute top-0 left-0 w-full :/items-center",
+          "flex absolute top-0 left-0 items-center w-full",
           className
         )}
         style={style}
         {...props}
       >
-        <div className="overflow-hidden self-center px-1 mx-auto text-nowrap text-ellipsis">
+        <div className="overflow-hidden self-center px-2 mx-auto text-nowrap text-ellipsis">
           {children}
         </div>
         <div
           className={clsx(
-            "flex absolute flex-row gap-4 justify-between items-center p-1 w-full",
-            "opacity-20 group-hover/draggable:opacity-95"
+            "flex absolute flex-row gap-4 justify-between items-center p-1 w-full h-full",
+            "opacity-20 group-hover/draggable:opacity-100"
           )}
         >
           <div>

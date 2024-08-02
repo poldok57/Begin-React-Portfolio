@@ -82,7 +82,7 @@ export const MemoryProvider = ({ children, ...props }) => {
     nbrTryRef.current++;
   };
 
-  const resetGame = (size, type) => {
+  const resetGame = (size, type = "images") => {
     setSize(size);
     setCards(() => getInitialMemory(size.width * size.height, type));
     nbrTryRef.current = 0;

@@ -19,7 +19,7 @@ const MyApp = ({ Component, pageProps }) => {
         </div>
         <ShowAlertMessagesWP
           display={true}
-          trace={true}
+          trace={false}
           draggable={true}
           titleBar={true}
           titleHidden={true}
