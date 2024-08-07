@@ -1,7 +1,7 @@
 /**
  * Fonctions ton manipulate images in a canvas
  */
-import { Area, Surface } from "./types";
+import { Area, Size } from "./types";
 
 /**
  * Function to copy the selected zone in a virtual canvas
@@ -34,8 +34,8 @@ export const copyInVirtualCanvas = (
  * @param {object} maxSize - {width, height} of the canvas
  */
 export const calculateSize = (
-  imageSize: Area | Surface,
-  maxSize: Area | Surface
+  imageSize: Area | Size,
+  maxSize: Area | Size
 ): Area => {
   const ratio = imageSize.width / imageSize.height;
   const maxWidth: number = maxSize.width,

@@ -1,4 +1,4 @@
-import { Rect, Coordinate, Area, ArgsMouseOnShape } from "./canvas/types";
+import { Rectangle, Coordinate, Area, ArgsMouseOnShape } from "./canvas/types";
 import {
   BORDER,
   badgePosition,
@@ -22,16 +22,16 @@ export const isInsideSquare = (
     top: square.y,
     right: square.x + square.width,
     bottom: square.y + square.height,
-  } as Rect;
+  } as Rectangle;
 
   return mouseIsInsideRect(coord, rect);
 };
 
 export const getSquareOffset = (coord: Coordinate, square: Coordinate) => {
-  const rect: Rect = {
+  const rect: Rectangle = {
     left: square.x,
     top: square.y,
-  } as Rect;
+  } as Rectangle;
   return getRectOffset(coord, rect);
 };
 
@@ -52,7 +52,7 @@ export const isOnSquareBorder = ({
     top: area.y,
     right: area.x + area.width,
     bottom: area.y + area.height,
-  } as Rect;
+  } as Rectangle;
 
   if (withCornerButton) {
     const badgePos = badgePosition(rect, maxWidth);
@@ -86,13 +86,14 @@ export const resizeSquare = (
   border: string
 ) => {
   const newArea: Area = { ...coordinate } as Area;
-  const rect: Rect = {
+  const rect: Rectangle = {
     left: area.x,
     top: area.y,
-    right: area.x + area.width,
-    bottom: area.y + area.height,
+
     width: area.width,
     height: area.height,
+    right: area.x + area.width,
+    bottom: area.y + area.height,
   };
 
   const newSquare = resizeRect(newArea, rect, border);

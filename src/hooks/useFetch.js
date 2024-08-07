@@ -58,7 +58,11 @@ export const useFetch = (url, config = null) => {
         }
       })
       .catch((error) => {
+        if (error.body) {
+          console.error("Error body:", error.body);
+        }
         if (!isMounted()) return;
+
         dispatch({ type: "rejected", error });
       });
   }, [url]);

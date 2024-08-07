@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useMessageStore } from "../../lib/stores/useMessageStore";
+import { withMousePosition } from "../windows/withMousePosition";
 
 import { Button } from "../atom/Button";
 import { MdCopyAll } from "react-icons/md";
@@ -154,3 +155,5 @@ export const ShowAlertMessages: React.FC<ShowAlertMessagesProps> = ({
     );
   }, [messages, display]);
 };
+
+export const ShowAlertMessagesWP = withMousePosition(ShowAlertMessages);

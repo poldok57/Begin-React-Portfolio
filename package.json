@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@notionhq/client": "^0.4.4",
+    "@notionhq/client": "^0.4.13",
     "bad-words": "^3.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^1.2.1",

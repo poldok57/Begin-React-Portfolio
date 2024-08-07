@@ -1,4 +1,4 @@
-import { Area, Surface, Coordinate } from "../../lib/canvas/types";
+import { Area, Size, Coordinate } from "../../lib/canvas/types";
 import { getCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   makeWhiteTransparent,
@@ -477,7 +477,7 @@ export class DrawSelection extends DrawingHandler {
     img.src = filename;
     img.onload = () => {
       const MAX_PC = 0.9;
-      const maxSize: Surface = {
+      const maxSize: Size = {
         width: MAX_PC * (this.mCanvas?.width || SQUARE_WIDTH),
         height: MAX_PC * (this.mCanvas?.height || SQUARE_HEIGHT),
       };
@@ -493,7 +493,7 @@ export class DrawSelection extends DrawingHandler {
         "Image '" + name + "' loaded w:" + img.width + " h:" + img.height
       );
 
-      const area: Area = calculateSize(img as Surface, maxSize);
+      const area: Area = calculateSize(img as Size, maxSize);
       area.ratio = ratio;
       this.setDataSize(area);
       this.setRotation(0);

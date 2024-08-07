@@ -1,6 +1,7 @@
 import { MemoryBoardWP } from "./MemoryBoard";
 import { MemoryControlWP } from "./MemoryControl";
 import { MemoryProvider } from "./MemoryProvider";
+import { ShowAlertMessagesWP } from "../alert-messages/ShowAlertMessages";
 
 export const MemorySection = () => {
   return (
@@ -18,13 +19,29 @@ export const MemorySection = () => {
         />
 
         <MemoryBoardWP
+          id="memory-board"
           className="flex absolute left-10 flex-col gap-2 items-center p-2 rounded-md border-2 shadow-lg w-fit h-fit border-secondary bg-background"
-          titleBar={true}
+          titleBar={false}
           title="Select a couple of cards"
+          titleHeight={30}
           draggable={false}
+          resizable={true}
+          close={true}
           withMaximize={true}
+          trace={false}
         />
       </div>
+      <ShowAlertMessagesWP
+        display={true}
+        close={true}
+        draggable={true}
+        titleBar={true}
+        titleHidden={true}
+        withMinimize={true}
+        bgTitle="pink"
+        title="Alert Message"
+        style={{ position: "fixed", right: 20, bottom: 30 }}
+      />
     </MemoryProvider>
   );
 };

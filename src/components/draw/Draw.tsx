@@ -39,16 +39,16 @@ export const Draw = () => {
       <DrawControlWP
         trace={false}
         style={{
-          top: "30px",
+          top: "40px",
           position: "relative",
-          marginTop: 10,
+          zIndex: 5,
         }}
         titleBar={true}
         title="Drawing Control"
         titleHidden={false}
         draggable={false}
+        resizable={true}
         close={false}
-        withMinimize={true}
         setParams={setDrawingParams}
         changeMode={changeMode}
         drawingParams={drawingParamsRef.current}

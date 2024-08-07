@@ -13,6 +13,7 @@ import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { WindowType } from "./types";
 import { useWindowActions, useMaximizedWindowId } from "./store";
 import { copyDivStyle, toggleWindowSize } from "./window-size";
+import { useComponentSize } from "./withMousePosition";
 
 import clsx from "clsx";
 
@@ -58,12 +59,31 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     ref
   ) {
     const [currentStatus, setCurrentStatus] = useState<Status>(status);
-    const { upsertWindow, getWindow, removeWindow, setMaximize } =
-      useWindowActions();
+    const { upsertWindow, getWindow, setMaximize } = useWindowActions();
+    const { lockResize } = useComponentSize();
 
     const maximizeId = useMaximizedWindowId();
 
     const btnRef = referrer ? referrer.current : undefined;
+
+    /**
+     * Gère la fermeture de la fenêtre
+     */
+    const handleClose = () => {
+      if (onClose) {
+        onClose();
+      }
+      // Remove the window from the store
+      // removeWindow(id);
+
+      // Restore the scroll of the body if no window is maximized
+      if (maximizeId === id) {
+        setMaximize("");
+        document.body.style.overflow = "auto";
+      }
+
+      setCurrentStatus(STATUS.CLOSED);
+    };
     /**
      * Minimize the window
      */
@@ -97,6 +117,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
 
       setCurrentStatus(STATUS.MINIMIZED);
+      lockResize(true);
     };
 
     const minimizeOff = () => {
@@ -115,6 +136,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       // window is maximized
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
       setCurrentStatus(win.isMaximized ? STATUS.MAXIMIZED : STATUS.OPEN);
+      lockResize(false);
     };
 
     const handleMinimize = () => {
@@ -169,11 +191,6 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         return;
       }
       maximizeOn();
-    };
-
-    const handleClose = () => {
-      removeWindow(id);
-      onClose && onClose();
     };
 
     // controle the scroll bar of the body

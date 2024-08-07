@@ -2,7 +2,7 @@ import { withMousePosition } from "../windows/withMousePosition";
 import Image from "next/image";
 export const TestImage = ({ image_width }) => {
   return (
-    <div className="group/testImage" style={{ width: image_width || "250px" }}>
+    <div className="group/testImage" style={{ width: image_width || "100%" }}>
       <Image
         className="object-cover rounded-lg"
         src="/images/card-18-250.jpg"

@@ -88,6 +88,11 @@ const ResizePicture = ({ children, ...props }) => {
   const onChange = (e) => {
     setWidthCards(e.target.value);
     alertMessage(`Resize picture to ${e.target.value}`);
+    const memoryBoard = document.getElementById("memory-board");
+    if (memoryBoard) {
+      memoryBoard.style.width = null;
+      memoryBoard.style.height = null;
+    }
   };
 
   return (

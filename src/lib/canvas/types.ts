@@ -3,13 +3,13 @@ export type Coordinate = {
   y: number;
 };
 
-export type Surface = {
+export type Size = {
   width: number;
   height: number;
 };
 
 export type Area = Coordinate &
-  Surface & {
+  Size & {
     ratio?: number;
   };
 
@@ -18,8 +18,8 @@ export type RectPosition = {
   top: number;
 };
 
-export type Rect = RectPosition &
-  Surface & {
+export type Rectangle = RectPosition &
+  Size & {
     right: number;
     bottom: number;
   };

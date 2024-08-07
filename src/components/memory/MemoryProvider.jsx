@@ -88,6 +88,13 @@ export const MemoryProvider = ({ children, ...props }) => {
     nbrTryRef.current = 0;
     startTimeRef.current = 0;
     gameStatusRef.current = GAME_STATUS.PLAYING;
+
+    const memoryBoard = document.getElementById("memory-board");
+    if (memoryBoard) {
+      memoryBoard.style.display = "flex";
+      memoryBoard.style.width = null;
+      memoryBoard.style.height = null;
+    }
   };
 
   //  ---- onClick ----

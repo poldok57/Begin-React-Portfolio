@@ -6,6 +6,7 @@ import { Header } from "../src/components/Header";
 import { HeroSection } from "../src/components/hero";
 import { ProjectSection } from "../src/components/project";
 import { GameSelector } from "../src/components/Games/GameSelector";
+import { ShowAlertMessagesWP } from "../src/components/alert-messages/ShowAlertMessages";
 
 const Home = () => {
   return (
@@ -22,6 +23,17 @@ const Home = () => {
         <CommentSection />
         <Footer />
       </div>
+      <ShowAlertMessagesWP
+        display={true}
+        trace={false}
+        draggable={true}
+        titleBar={true}
+        titleHidden={true}
+        withMinimize={true}
+        bgTitle="magenta"
+        title="Alert Message"
+        style={{ position: "fixed", right: 20, bottom: 60 }}
+      />
     </>
   );
 };

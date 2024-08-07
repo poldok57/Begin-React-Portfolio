@@ -3,6 +3,8 @@ import { Button } from "../atom/Button";
 import { Expand } from "lucide-react";
 
 import { FullScreenWindow } from "./FullScreenWindow";
+import { alertMessage } from "../alert-messages/alertMessage";
+import clsx from "clsx";
 
 /**
  * ButtonOpenModal component open a full screen modal
@@ -38,26 +40,26 @@ export const ButtonOpenFullScreen: React.FC<ButtonFullScreenProps> = ({
       <Button
         ref={buttonRef}
         onClick={() => {
+          alertMessage("Open Full Screen");
           setIsOpen(true);
         }}
         selected={isOpen}
-        className={className}
+        className={clsx(className, "cursor-pointer")}
         {...props}
       >
         {value ? value : <Expand size={16} />}
       </Button>
-      {isOpen && (
-        <FullScreenWindow
-          ref={frameRef}
-          referrer={buttonRef}
-          title={title}
-          bgTitle={bgTitle}
-          withMinimize={true}
-          onClose={() => setIsOpen(false)}
-        >
-          {children}
-        </FullScreenWindow>
-      )}
+      <FullScreenWindow
+        isOpen={isOpen}
+        ref={frameRef}
+        referrer={buttonRef}
+        title={title}
+        bgTitle={bgTitle}
+        withMinimize={true}
+        onClose={() => setIsOpen(false)}
+      >
+        {children}
+      </FullScreenWindow>
     </>
   );
 };

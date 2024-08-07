@@ -1,4 +1,4 @@
-import { Area, Rect, Coordinate } from "./canvas/types";
+import { Area, Rectangle, Coordinate, RectPosition } from "./canvas/types";
 
 export const BORDER = {
   RIGHT: "brd-right",
@@ -32,6 +32,21 @@ export const isBorder = (border: string): boolean => {
     : false;
 };
 
+export const isBorderRightOrBottom = (border: string): boolean => {
+  return border
+    ? border === BORDER.RIGHT ||
+        border === BORDER.BOTTOM ||
+        border === BORDER.CORNER.BOTTOM_RIGHT
+    : false;
+};
+
+export const isBorderLeft = (border: string): boolean => {
+  return border ? border.includes("left") : false;
+};
+export const isBorderTop = (border: string): boolean => {
+  return border ? border.includes("top") : false;
+};
+
 export const isCorner = (border: string): boolean => {
   return border ? border.startsWith("crn-") : false;
 };
@@ -50,7 +65,7 @@ export const isInside = (border: string): boolean => {
 
 export const getRectOffset = (
   coord: Coordinate,
-  rect: DOMRect | Rect
+  rect: DOMRect | Rectangle | RectPosition
 ): Coordinate => {
   const x = rect.left - coord.x;
   const y = rect.top - coord.y;
@@ -66,7 +81,7 @@ export const getRectPosition = (
 
 export const mouseIsInsideRect = (
   coord: Coordinate | Area,
-  rect: DOMRect | Rect
+  rect: DOMRect | Rectangle
 ): boolean => {
   return (
     coord.x >= rect.left &&
@@ -149,7 +164,7 @@ export const badgePosition = (
   return badge;
 };
 
-type MiddleButton = Rect & {
+type MiddleButton = Rectangle & {
   middle: number;
   axeX1: number;
   axeX2: number;
@@ -190,50 +205,50 @@ export const middleButtonPosition = (rect: {
 
 export const mouseIsOnBorderRect = (
   coord: { x: number; y: number },
-  rect: DOMRect | Rect
+  rect: DOMRect | Rectangle
 ): string | null => {
   if (
     coord.x >= rect.right - margin &&
-    coord.x <= rect.right &&
-    coord.y >= rect.top &&
+    coord.x <= rect.right + margin &&
+    coord.y >= rect.top - margin &&
     coord.y <= rect.top + margin
   ) {
     return BORDER.CORNER.TOP_RIGHT;
   }
   if (
-    coord.x >= rect.left &&
+    coord.x >= rect.left - margin &&
     coord.x <= rect.left + margin &&
-    coord.y >= rect.top &&
+    coord.y >= rect.top - margin &&
     coord.y <= rect.top + margin
   ) {
     return BORDER.CORNER.TOP_LEFT;
   }
   if (
-    coord.x >= rect.left &&
+    coord.x >= rect.left - margin &&
     coord.x <= rect.left + margin &&
     coord.y >= rect.bottom - margin &&
-    coord.y <= rect.bottom
+    coord.y <= rect.bottom + margin
   ) {
     return BORDER.CORNER.BOTTOM_LEFT;
   }
   if (
     coord.x >= rect.right - margin &&
-    coord.x <= rect.right &&
+    coord.x <= rect.right + margin &&
     coord.y >= rect.bottom - margin &&
-    coord.y <= rect.bottom
+    coord.y <= rect.bottom + margin
   ) {
     return BORDER.CORNER.BOTTOM_RIGHT;
   }
-  if (coord.x >= rect.left && coord.x <= rect.left + margin) {
+  if (coord.x >= rect.left - margin && coord.x <= rect.left + margin) {
     return BORDER.LEFT;
   }
-  if (coord.x >= rect.right - margin && coord.x <= rect.right) {
+  if (coord.x >= rect.right - margin && coord.x <= rect.right + margin) {
     return BORDER.RIGHT;
   }
-  if (coord.y >= rect.top && coord.y <= rect.top + margin) {
+  if (coord.y >= rect.top - margin && coord.y <= rect.top + margin) {
     return BORDER.TOP;
   }
-  if (coord.y >= rect.bottom - margin && coord.y <= rect.bottom) {
+  if (coord.y >= rect.bottom - margin && coord.y <= rect.bottom + margin) {
     return BORDER.BOTTOM;
   }
   if (
@@ -249,27 +264,34 @@ export const mouseIsOnBorderRect = (
 
 export const resizeRect = (
   coord: Coordinate | Area,
-  rect: DOMRect | Rect,
-  border: string
-): Rect => {
-  const newRect: Rect = { ...rect };
+  rect: DOMRect | Rectangle,
+  border: string,
+  withPosition: boolean = true
+): Rectangle => {
+  const newRect: Rectangle = { ...rect };
   const minimumSize = 25;
   switch (border) {
     case BORDER.CORNER.TOP_LEFT:
       newRect.width = Math.max(rect.width + rect.left - coord.x, minimumSize);
       newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
-      newRect.left = coord.x;
-      newRect.top = coord.y;
+      if (withPosition) {
+        newRect.left = coord.x;
+        newRect.top = coord.y;
+      }
       break;
     case BORDER.CORNER.TOP_RIGHT:
       newRect.width = Math.max(coord.x - rect.left, minimumSize);
       newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
-      newRect.top = coord.y;
+      if (withPosition) {
+        newRect.top = coord.y;
+      }
       break;
     case BORDER.CORNER.BOTTOM_LEFT:
       newRect.width = Math.max(rect.width + rect.left - coord.x, minimumSize);
       newRect.height = Math.max(coord.y - rect.top, minimumSize);
-      newRect.left = coord.x;
+      if (withPosition) {
+        newRect.left = coord.x;
+      }
       break;
     case BORDER.CORNER.BOTTOM_RIGHT:
       newRect.width = Math.max(coord.x - rect.left, minimumSize);
@@ -277,77 +299,21 @@ export const resizeRect = (
       break;
     case BORDER.LEFT:
       newRect.width = Math.max(rect.width + rect.left - coord.x, minimumSize);
-      newRect.left = coord.x;
+      if (withPosition) {
+        newRect.left = coord.x;
+      }
+      break;
+    case BORDER.TOP:
+      newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
+      if (withPosition) {
+        newRect.top = coord.y;
+      }
       break;
     case BORDER.RIGHT:
       newRect.width = Math.max(coord.x - rect.left, minimumSize);
       break;
-    case BORDER.TOP:
-      newRect.height = Math.max(rect.height + rect.top - coord.y, minimumSize);
-      newRect.top = coord.y;
-      break;
     case BORDER.BOTTOM:
       newRect.height = Math.max(coord.y - rect.top, minimumSize);
-      break;
-    default:
-      break;
-  }
-  return newRect;
-};
-
-export const resizeElement = ({
-  style,
-  mouse,
-  component,
-  border,
-}: {
-  style: Rect;
-  mouse: { x: number; y: number };
-  component: HTMLElement;
-  border: string;
-}): Rect => {
-  const rect = component.getBoundingClientRect();
-  const newRect: Rect = { ...style };
-  newRect.left = rect.left;
-  newRect.top = rect.top;
-  newRect.width = rect.width;
-  newRect.height = rect.height;
-
-  switch (border) {
-    case BORDER.CORNER.TOP_LEFT:
-      newRect.width = component.offsetWidth + component.offsetLeft - mouse.x;
-      newRect.height = component.offsetHeight + component.offsetTop - mouse.y;
-      newRect.left = mouse.x;
-      newRect.top = mouse.y;
-      break;
-    case BORDER.CORNER.TOP_RIGHT:
-      newRect.width = mouse.x - component.offsetLeft;
-      newRect.height = component.offsetHeight + component.offsetTop - mouse.y;
-      newRect.top = mouse.y;
-      break;
-
-    case BORDER.CORNER.BOTTOM_LEFT:
-      newRect.width = component.offsetWidth + component.offsetLeft - mouse.x;
-      newRect.height = mouse.y - component.offsetTop;
-      newRect.left = mouse.x;
-      break;
-    case BORDER.CORNER.BOTTOM_RIGHT:
-      newRect.width = mouse.x - component.offsetLeft;
-      newRect.height = mouse.y - component.offsetTop;
-      break;
-    case BORDER.LEFT:
-      newRect.width = component.offsetWidth + component.offsetLeft - mouse.x;
-      newRect.left = mouse.x;
-      break;
-    case BORDER.RIGHT:
-      newRect.width = mouse.x - component.offsetLeft;
-      break;
-    case BORDER.TOP:
-      newRect.height = component.offsetHeight + component.offsetTop - mouse.y;
-      newRect.top = mouse.y;
-      break;
-    case BORDER.BOTTOM:
-      newRect.height = mouse.y - component.offsetTop;
       break;
     default:
       break;

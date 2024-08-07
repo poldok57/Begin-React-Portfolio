@@ -13,6 +13,7 @@ import { toggleWindowSize, TITLE_HEIGHT, copyDivStyle } from "./window-size";
 
 import { useWindowActions, generateRandomKey } from "./store";
 import { getContrastColor } from "../../lib/utils/colors";
+import { withMousePosition } from "./withMousePosition";
 
 /**
  * FullScreenModal component
@@ -25,6 +26,7 @@ import { getContrastColor } from "../../lib/utils/colors";
  */
 interface FullScreenWindowProps {
   onClose: () => void;
+  isOpen: boolean;
   referrer?: MutableRefObject<HTMLButtonElement | null>;
   title?: string;
   bgTitle?: string;
@@ -37,6 +39,7 @@ export const FullScreenWindow = forwardRef<
 >(function FullScreenModal(
   {
     onClose,
+    isOpen,
     referrer,
     title = null,
     bgTitle = null,
@@ -68,6 +71,17 @@ export const FullScreenWindow = forwardRef<
 
   useEffect(() => {
     if (!ref) return;
+    if (isOpen == false) {
+      if (rect) {
+        mStyle.current = {
+          left: `${rect.left}px`,
+          top: `${rect.top}px`,
+          width: `${rect.width}px`,
+          height: `${rect.height}px`,
+        };
+      }
+      return;
+    }
 
     if ("current" in ref && ref.current) {
       toggleWindowSize(ref.current, undefined);
@@ -84,43 +98,60 @@ export const FullScreenWindow = forwardRef<
         height: ref.current.style.height as string,
       };
     }
-  }, [ref, id]);
+  }, [ref, id, isOpen]);
 
   // console.log("FULLSCREEN render: ", id);
+
+  // if (!isOpen) return null; // <div ref={ref}> Close !</div>;
 
   return (
     <div
       ref={ref}
-      className="z-20 p-4 rounded-lg border-2 border-red-700 shadow-xl bg-paper"
+      className={clsx(
+        "z-20 p-4 rounded-lg border-2 border-red-700 shadow-xl bg-paper",
+        {
+          invisible: !isOpen,
+        }
+      )}
       style={mStyle.current as React.CSSProperties}
     >
-      <TitleBar
-        id={id}
-        className={clsx("group/draggable", {
-          "text-lg rounded border border-gray-500 bg-primary text-paper": title,
-        })}
-        ref={titleBarRef}
-        withMinimize={withMinimize}
-        status={STATUS.MAXIMIZED}
-        style={{
-          height: TITLE_HEIGHT,
-          ...(bgTitle
-            ? { backgroundColor: bgTitle, color: getContrastColor(bgTitle) }
-            : {}),
-        }}
-        onClose={onClose}
-        referrer={referrer}
-      >
-        {title}
-      </TitleBar>
-      <div
-        className={clsx("absolute mx-0 my-2", {
-          "mt-10": title,
-        })}
-        style={{ width: "calc(100% - 20px)" }}
-      >
-        {children}
-      </div>
+      {isOpen && (
+        <>
+          <TitleBar
+            id={id}
+            className={clsx("group/draggable", {
+              "text-lg rounded border border-gray-500 bg-primary text-paper":
+                title,
+            })}
+            ref={titleBarRef}
+            withMinimize={withMinimize}
+            status={STATUS.MAXIMIZED}
+            style={{
+              height: TITLE_HEIGHT,
+              ...(bgTitle
+                ? {
+                    backgroundColor: bgTitle,
+                    color: getContrastColor(bgTitle),
+                  }
+                : {}),
+            }}
+            onClose={onClose}
+            referrer={referrer}
+          >
+            {title}
+          </TitleBar>
+          <div
+            className={clsx("absolute mx-0 my-2", {
+              "mt-10": title,
+            })}
+            style={{ width: "calc(100% - 20px)" }}
+          >
+            {children}
+          </div>
+        </>
+      )}
     </div>
   );
 });
+
+export const FullScreenWindowWP = withMousePosition(FullScreenWindow);

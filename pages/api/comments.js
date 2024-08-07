@@ -79,27 +79,41 @@ const postHandler = async (req, res) => {
 };
 
 const getHandler = async (req, res) => {
-  const response = await notion.databases.query({
-    database_id: process.env.NOTION_DATABASE_ID,
-    page_size: 9,
-    sorts: [
-      {
-        property: "Created",
-        direction: "descending",
-      },
-    ],
-  });
+  try {
+    const response = await notion.databases.query({
+      database_id: process.env.NOTION_DATABASE_ID,
+      page_size: 9,
+      sorts: [
+        {
+          property: "Created",
+          direction: "descending",
+        },
+      ],
+    });
 
-  const result = response.results.map((result) => {
-    const properties = result.properties;
-    return {
-      id: result.id,
-      comment: properties.Comment.rich_text[0].plain_text,
-      username: properties.Username.title[0].plain_text,
-      createdAt: properties.Created.created_time,
-    };
-  });
-  res.status(200).json(result);
+    const result = response.results.map((result) => {
+      const properties = result.properties;
+      return {
+        id: result.id,
+        comment: properties.Comment.rich_text[0].plain_text,
+        username: properties.Username.title[0].plain_text,
+        createdAt: properties.Created.created_time,
+      };
+    });
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Erreur Notion complète:", error);
+
+    if (error.body) {
+      console.error("Corps de la réponse Notion:", error.body);
+    }
+
+    res.status(500).json({
+      error: "Erreur lors de la récupération des données de Notion",
+      details: error.message,
+      body: error.body,
+    });
+  }
 };
 
 export default handler;
