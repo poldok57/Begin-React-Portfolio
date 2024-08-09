@@ -8,13 +8,13 @@ import { withMousePosition } from "../windows/withMousePosition";
 import { alertMessage } from "../alert-messages/alertMessage";
 import { RefreshCcw, Maximize2, Minimize2 } from "lucide-react";
 import { useComponentSize } from "../windows/WithResizing";
-
+import { debounce } from "../../lib/utils/debounce";
 import clsx from "clsx";
 import { useEffect } from "react";
 
-const VERTICAL_MARGIN = 90;
+const VERTICAL_MARGIN = 80;
 const HORIZONTAL_MARGIN = 10;
-const CARD_MARGIN = 15;
+const CARD_MARGIN = 12;
 
 const ResizeButtons = ({
   className,
@@ -52,8 +52,7 @@ const ResizeButtons = ({
   );
 };
 
-export const MemoryBoard = () => {
-  // Memory Game - Exercise
+export const MemoryBoard = ({ trace = false }) => {
   const {
     getCards,
     getSize,
@@ -152,49 +151,49 @@ export const MemoryBoard = () => {
         const cardSizeH =
           (heightAvailable - (size.height + 1) * CARD_MARGIN) / size.height;
 
-        let cardSize = Math.min(cardSizeW, cardSizeH);
-        const newSize = Math.floor(cardSize / 5) * 5;
+        const cardSize = Math.floor(Math.min(cardSizeW, cardSizeH) / 5) * 5;
+
+        if (trace) {
+          console.log(
+            "MemoryBoard resizeObserver w:",
+            cardSizeW,
+            "h:",
+            cardSizeH,
+            "c:",
+            cardSize
+          );
+        }
 
         if (!configChange.current) {
-          // setWidthCards(newSize);
-          // if (memoWidthCards.current === newSize && !sizingChange.current) {
-          //   ref.current.parentElement.style.width = null;
-          // }
-          const debounceResize = (() => {
-            let timeout = null;
-            return (newSize) => {
-              if (timeout) {
-                clearTimeout(timeout);
-              }
-              timeout = setTimeout(() => {
-                setWidthCards(newSize);
-                if (
-                  memoWidthCards.current === newSize &&
-                  !sizingChange.current
-                ) {
-                  ref.current.parentElement.style.width = null;
-                }
-              }, 500);
-            };
-          })();
-
-          debounceResize(cardSize);
+          const handleResizeCards = () => {
+            setWidthCards(cardSize);
+            if (memoWidthCards.current === cardSize && !sizingChange.current) {
+              ref.current.parentElement.style.width = null;
+            }
+          };
+          const debouncedResizeCards = debounce(handleResizeCards, 500);
+          debouncedResizeCards(cardSize);
         }
         configChange.current = false;
       }
     });
 
-    if (ref.current.clientWidth + HORIZONTAL_MARGIN > componentSize.width) {
-      // back to initial size
-      if (memoWidthParent.current === ref.current.parentElement.clientWidth) {
-        setWidthCards(memoWidthCards.current);
-      } // else ref.current.parentElement.style.width = null;
-    }
-    if (ref.current.clientHeight + VERTICAL_MARGIN > componentSize.height) {
-      ref.current.parentElement.style.height = null;
-    }
-    // init sizingChange
-    sizingChange.current = false;
+    const handleResizeComponent = () => {
+      if (ref.current.clientWidth > componentSize.width) {
+        // back to initial size
+        if (memoWidthParent.current === ref.current.parentElement.clientWidth) {
+          setWidthCards(memoWidthCards.current);
+        } // else ref.current.parentElement.style.width = null;
+      }
+      if (ref.current.clientHeight > componentSize.height) {
+        ref.current.parentElement.style.height = null;
+      }
+      // init sizingChange
+      sizingChange.current = false;
+    };
+
+    const debouncedResizeComponent = debounce(handleResizeComponent, 1000);
+    debouncedResizeComponent();
 
     resizeObserver.observe(ref.current.parentElement);
 

@@ -91,9 +91,11 @@ export const MemoryProvider = ({ children, ...props }) => {
 
     const memoryBoard = document.getElementById("memory-board");
     if (memoryBoard) {
-      memoryBoard.style.display = "flex";
-      memoryBoard.style.width = null;
-      memoryBoard.style.height = null;
+      if (memoryBoard.style.display === "none") {
+        memoryBoard.style.display = "flex";
+        // memoryBoard.style.width = null;
+        // memoryBoard.style.height = null;
+      }
     }
   };
 
@@ -114,7 +116,6 @@ export const MemoryProvider = ({ children, ...props }) => {
       alertMessage("clear timeout");
 
       gameStatusRef.current = GAME_STATUS.PLAYING;
-      // console.log("return playing :", gameStatusRef.current);
     }
     // not playing -------------------------------------
     if (
