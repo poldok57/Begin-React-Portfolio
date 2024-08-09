@@ -1,3 +1,18 @@
+export enum EVENT {
+  MOUSE_DOWN = "mousedown",
+  MOUSE_UP = "mouseup",
+  MOUSE_MOVE = "mousemove",
+  MOUSE_OVER = "mouseover",
+  MOUSE_LEAVE = "mouseleave",
+  MOUSE_ENTER = "mouseenter",
+}
+export enum POSITION {
+  RELATIVE = "relative",
+  ABSOLUTE = "absolute",
+  STATIC = "static",
+  FIXED = "fixed",
+}
+
 export type WindowRect = {
   top: string;
   left: string;

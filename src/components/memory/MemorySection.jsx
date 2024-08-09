@@ -16,14 +16,14 @@ export const MemorySection = () => {
           title="Reset panel"
           titleHeight={36}
           draggable={false}
+          resizable={true}
         />
 
         <MemoryBoardWP
           id="memory-board"
           className="flex absolute left-10 flex-col gap-2 items-center p-2 rounded-md border-2 shadow-lg w-fit h-fit border-secondary bg-background"
           titleBar={false}
-          title="Select a couple of cards"
-          titleHeight={30}
+          title="Memory Board"
           draggable={false}
           resizable={true}
           close={true}
@@ -35,11 +35,12 @@ export const MemorySection = () => {
         display={true}
         close={true}
         draggable={true}
+        resizable={true}
         titleBar={true}
         titleHidden={true}
         withMinimize={true}
         bgTitle="pink"
-        title="Alert Message"
+        title="Game Message"
         style={{ position: "fixed", right: 20, bottom: 30 }}
       />
     </MemoryProvider>

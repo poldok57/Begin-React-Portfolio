@@ -6,14 +6,13 @@ import { useMemoryContext } from "./MemoryProvider";
 import { HightLightOnRender } from "../../context/HightLightOnRender";
 import { withMousePosition } from "../windows/withMousePosition";
 import { alertMessage } from "../alert-messages/alertMessage";
-// import { resizeElement } from "../../lib/square-size";
 import { RefreshCcw, Maximize2, Minimize2 } from "lucide-react";
-import { useComponentSize } from "../windows/withMousePosition";
+import { useComponentSize } from "../windows/WithResizing";
 
 import clsx from "clsx";
 import { useEffect } from "react";
 
-const VERTICAL_MARGIN = 125;
+const VERTICAL_MARGIN = 90;
 const HORIZONTAL_MARGIN = 10;
 const CARD_MARGIN = 15;
 
@@ -65,7 +64,7 @@ export const MemoryBoard = () => {
     withResizeButtons = false,
   } = useMemoryContext();
 
-  const { componentSize, resizeComponent } = useComponentSize();
+  const { componentSize, resizeComponent, setMinimumSize } = useComponentSize();
 
   const ref = useRef(null);
 
@@ -89,8 +88,6 @@ export const MemoryBoard = () => {
     const newWidth = parentWidth + size.width * variable;
     const newHeight = parentHeight + size.height * variable;
 
-    // console.log("resizingParent W:", parentWidth, "->", newWidth);
-    // console.log("resizingParent H:", parentHeight, "->", newHeight);
     alertMessage(`resizing: ${newWidth}x${newHeight}`);
 
     resizeComponent({ width: newWidth, height: newHeight });
@@ -111,6 +108,21 @@ export const MemoryBoard = () => {
   }
 
   useEffect(() => {
+    const CARD_MIN = 50;
+    const width =
+      size.width * (CARD_MIN + CARD_MARGIN) +
+      CARD_MARGIN +
+      HORIZONTAL_MARGIN +
+      5;
+    const height =
+      size.height * (CARD_MIN + CARD_MARGIN) +
+      CARD_MARGIN +
+      VERTICAL_MARGIN +
+      5;
+    setMinimumSize({ width, height });
+  }, [size]);
+
+  useEffect(() => {
     if (!ref.current) {
       return;
     }
@@ -125,27 +137,48 @@ export const MemoryBoard = () => {
     const resizeObserver = new ResizeObserver((entries) => {
       if (entries.length > 0) {
         const entry = entries[0];
-        const widthAvailable = Math.min(
-          entry.target.clientWidth,
-          document.documentElement.clientWidth - HORIZONTAL_MARGIN
-        );
-        const heightAvailable = Math.min(
-          entry.target.clientHeight,
-          document.documentElement.clientHeight - VERTICAL_MARGIN
-        );
+        const widthAvailable =
+          Math.min(
+            entry.target.clientWidth,
+            document.documentElement.clientWidth
+          ) - HORIZONTAL_MARGIN;
+        const heightAvailable =
+          Math.min(
+            entry.target.clientHeight,
+            document.documentElement.clientHeight
+          ) - VERTICAL_MARGIN;
         const cardSizeW =
           (widthAvailable - (size.width + 1) * CARD_MARGIN) / size.width;
         const cardSizeH =
           (heightAvailable - (size.height + 1) * CARD_MARGIN) / size.height;
 
         let cardSize = Math.min(cardSizeW, cardSizeH);
-        cardSize = Math.floor(cardSize / 5) * 5;
+        const newSize = Math.floor(cardSize / 5) * 5;
 
         if (!configChange.current) {
-          setWidthCards(cardSize);
-          if (memoWidthCards.current === cardSize && !sizingChange.current) {
-            ref.current.parentElement.style.width = null;
-          }
+          // setWidthCards(newSize);
+          // if (memoWidthCards.current === newSize && !sizingChange.current) {
+          //   ref.current.parentElement.style.width = null;
+          // }
+          const debounceResize = (() => {
+            let timeout = null;
+            return (newSize) => {
+              if (timeout) {
+                clearTimeout(timeout);
+              }
+              timeout = setTimeout(() => {
+                setWidthCards(newSize);
+                if (
+                  memoWidthCards.current === newSize &&
+                  !sizingChange.current
+                ) {
+                  ref.current.parentElement.style.width = null;
+                }
+              }, 500);
+            };
+          })();
+
+          debounceResize(cardSize);
         }
         configChange.current = false;
       }

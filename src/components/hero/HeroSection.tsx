@@ -1,16 +1,15 @@
 import { default as NextImage } from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, LegacyRef } from "react";
 
 import { FULL_NAME } from "../../lib/config";
-import {
-  withMousePosition,
-  useComponentSize,
-} from "../windows/withMousePosition";
+import { withMousePosition } from "../windows/withMousePosition";
+import { useComponentSize } from "../windows/WithResizing";
 
 const HeroLogo = () => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const { componentSize } = useComponentSize();
   const [size, setSize] = useState({ width: 300, height: 300 });
+  const canResizeRef = useRef(false);
 
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -21,19 +20,43 @@ const HeroLogo = () => {
   }, []);
 
   useEffect(() => {
-    if (imageLoaded && ref.current) {
+    if (!imageLoaded || !ref.current) {
+      return;
+    }
+    if (canResizeRef.current) {
+      // console.log("onResize", componentSize);
       setSize({
         width: Math.max(componentSize.width ?? 10, 30),
         height: Math.max(componentSize.height ?? 10, 30),
       });
     }
+
+    const canResize = () => {
+      canResizeRef.current = true;
+    };
+    const canNotResize = () => {
+      canResizeRef.current = false;
+    };
+
+    if (ref.current) {
+      ref.current.addEventListener("mousedown", canResize);
+      ref.current.addEventListener("mousemove", canResize);
+      document.addEventListener("mouseup", canNotResize);
+    }
+    return () => {
+      if (ref.current) {
+        ref.current.removeEventListener("mousedown", canResize);
+        ref.current.removeEventListener("mousemove", canResize);
+      }
+      document.removeEventListener("mouseup", canNotResize);
+    };
   }, [componentSize, imageLoaded]);
 
   return (
     <NextImage
-      ref={ref}
-      width={Math.max(size.width, 30)}
-      height={Math.max(size.height, 30)}
+      ref={ref as LegacyRef<HTMLImageElement>}
+      width={Math.max(size.width, 100)}
+      height={Math.max(size.height, 100)}
       src="/images/alinenkarl-300.png"
       alt="avatar"
       className="rounded-full shadow-lg"
@@ -64,13 +87,16 @@ const HeroPresentationWP = withMousePosition(HeroPresentation);
 export const HeroSection = () => {
   return (
     <div className="flex relative flex-col m-auto w-full max-w-4xl">
-      <HeroLogoWP className="top-0 right-0 md:absolute" resizable={true} />
+      <HeroLogoWP
+        className="top-0 right-0 h-fit md:absolute"
+        resizable={true}
+        draggable={true}
+      />
       <HeroPresentationWP
         trace={false}
         draggable={false}
         className="md:relative"
         titleBar={true}
-        // withMinimize={true}
         title="Welcome to the React Factory !"
       />
     </div>

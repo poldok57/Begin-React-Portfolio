@@ -13,7 +13,7 @@ import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { WindowType } from "./types";
 import { useWindowActions, useMaximizedWindowId } from "./store";
 import { copyDivStyle, toggleWindowSize } from "./window-size";
-import { useComponentSize } from "./withMousePosition";
+import { useComponentSize } from "./WithResizing";
 
 import clsx from "clsx";
 
@@ -31,6 +31,7 @@ interface TitleBarProps {
   className?: string;
   children?: ReactNode;
   style?: React.CSSProperties;
+  close?: boolean;
   onClose?: (() => void) | undefined;
   status?: Status;
   withMinimize?: boolean;
@@ -47,7 +48,8 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       id,
       className,
       style,
-      onClose,
+      close,
+      onClose = undefined,
       status = STATUS.OPEN,
       referrer,
       withMinimize = false,
@@ -59,8 +61,13 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     ref
   ) {
     const [currentStatus, setCurrentStatus] = useState<Status>(status);
-    const { upsertWindow, getWindow, setMaximize } = useWindowActions();
-    const { lockResize } = useComponentSize();
+    const {
+      upsertWindow,
+      getWindow,
+      addMaximizedWindow,
+      removeMaximizedWindow,
+    } = useWindowActions();
+    const { lockResize, hideComponent } = useComponentSize();
 
     const maximizeId = useMaximizedWindowId();
 
@@ -70,15 +77,15 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
      * Gère la fermeture de la fenêtre
      */
     const handleClose = () => {
-      if (onClose) {
-        onClose();
+      if (close) {
+        hideComponent();
       }
-      // Remove the window from the store
-      // removeWindow(id);
+      onClose && onClose();
 
       // Restore the scroll of the body if no window is maximized
-      if (maximizeId === id) {
-        setMaximize("");
+      removeMaximizedWindow(id);
+
+      if (maximizeId.length === 0) {
         document.body.style.overflow = "auto";
       }
 
@@ -111,13 +118,12 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       win.bgColor = style?.backgroundColor || null;
       win.color = style?.color || null;
       win.toggleUp = minimizeOff;
-      win.onClose = onClose;
+      win.onClose = hideComponent;
 
       upsertWindow(win);
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
 
       setCurrentStatus(STATUS.MINIMIZED);
-      lockResize(true);
     };
 
     const minimizeOff = () => {
@@ -136,7 +142,6 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       // window is maximized
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
       setCurrentStatus(win.isMaximized ? STATUS.MAXIMIZED : STATUS.OPEN);
-      lockResize(false);
     };
 
     const handleMinimize = () => {
@@ -166,6 +171,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       upsertWindow(win);
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
       setCurrentStatus(STATUS.MAXIMIZED);
+      lockResize(true);
     };
 
     const maximizeOff = () => {
@@ -183,6 +189,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       upsertWindow(win);
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);
       setCurrentStatus(STATUS.OPEN);
+      lockResize(false);
     };
 
     const toggleMaximize = () => {
@@ -195,19 +202,24 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
 
     // controle the scroll bar of the body
     useEffect(() => {
-      // console.log(`useEffet -> [${id}] currentStatus`, currentStatus);
+      const windowClosed = () => {
+        removeMaximizedWindow(id);
+        if (maximizeId.length === 0) {
+          document.body.style.overflow = "auto";
+          document.body.style.transition = "overflow 0.5s";
+        }
+      };
+
       if (currentStatus === STATUS.MAXIMIZED) {
-        setMaximize(id);
+        addMaximizedWindow(id);
         document.body.style.overflow = "hidden";
         document.body.style.transition = "overflow 0.5s";
-      } else if (maximizeId === id) {
-        setMaximize("");
-        document.body.style.overflow = "auto";
-        document.body.style.transition = "overflow 0.5s";
+      } else {
+        windowClosed();
       }
 
       return () => {
-        document.body.style.overflow = "auto";
+        windowClosed();
       };
     }, [currentStatus, id]);
 
@@ -268,7 +280,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
                 )}
               </>
             ) : null}
-            {onClose ? <CloseButton onClick={handleClose} /> : null}
+            {close || onClose ? <CloseButton onClick={handleClose} /> : null}
           </div>
         </div>
       </div>

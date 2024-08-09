@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useMessageStore } from "../../lib/stores/useMessageStore";
 import { withMousePosition } from "../windows/withMousePosition";
+import { useComponentSize } from "../windows/WithResizing";
 
 import { Button } from "../atom/Button";
 import { MdCopyAll } from "react-icons/md";
@@ -26,20 +27,26 @@ interface ShowDivAlertMessagesProps {
   clearMessages: () => void;
 }
 
+const DEFAULT_MAX_HEIGHT = 220;
+
 export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
   style,
   className,
   display,
-  trace,
   messages,
   clearMessages,
   ...props
 }) => {
   const messageId = "alert-messages";
+  const ref = useRef<HTMLDivElement>(null);
   const [displayAlert, setDisplayAlert] = useState(display);
+  const [maxHeight, setMaxHeight] = useState(DEFAULT_MAX_HEIGHT);
   const onCheck = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDisplayAlert(e.target.checked);
   };
+  const { componentSize, setMinimumSize } = useComponentSize();
+
+  setMinimumSize({ width: 290, height: DEFAULT_MAX_HEIGHT + 60 });
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -58,17 +65,25 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
     };
   }, [messages]);
 
-  if (trace) console.log("render [ShowDivAlertMessages], display:", display);
+  useEffect(() => {
+    // console.log("height", componentSize.height);
+    setMaxHeight(Math.max(DEFAULT_MAX_HEIGHT, componentSize.height - 60));
+  }, [componentSize]);
 
   return (
     <div
+      ref={ref}
       style={style}
-      className={clsx("flex flex-col gap-2 items-center w-80", className, {
-        "opacity-20": !displayAlert,
-        "opacity-100": displayAlert,
-      })}
+      className={clsx(
+        "flex flex-col gap-2 items-center w-full min-w-72",
+        className,
+        {
+          "opacity-20": !displayAlert,
+          "opacity-100": displayAlert,
+        }
+      )}
     >
-      <div className="z-40 w-full rounded-md border shadow-lg">
+      <div className="z-40 w-full h-full rounded-md border shadow-lg min-h-fit">
         <div className="flex flex-row justify-between rounded-lg bg-secondary">
           <div className="items-center p-1 w-1/5 text-xl hover:cursor-move">
             <MdCopyAll size={10} />
@@ -80,10 +95,11 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
         {displayAlert && (
           <div
             {...props}
-            className="p-2 w-80 max-h-48 rounded border border-grey-100 bg-paper"
+            className="p-2 w-full h-full max-h-56 rounded border min-h-16 border-grey-100 bg-paper"
             id={messageId}
             style={{
               overflowY: "scroll",
+              maxHeight: `${maxHeight}px`,
             }}
           >
             <ul style={{ listStyleType: "none" }}>

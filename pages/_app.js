@@ -17,7 +17,7 @@ const MyApp = ({ Component, pageProps }) => {
         <TestImageWP
           className="absolute rounded-md border-double border-primary"
           close={true}
-          resizable={false}
+          resizable={true}
           style={{
             left: "50px",
             top: "75px",

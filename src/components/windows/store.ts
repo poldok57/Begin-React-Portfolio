@@ -7,19 +7,21 @@ import { TITLE_HEIGHT } from "./window-size";
 
 export const generateRandomKey = () => Math.random().toString(36).slice(2, 9);
 interface WindowState {
-  maximizeId: string;
+  maximizeId: string[];
   windows: WindowType[];
   addWindow: (window: WindowType) => void;
   getWindow: (id: string) => WindowType | undefined;
   updateWindow: (id: string, updates: Partial<Window>) => void;
   upsertWindow: (window: WindowType) => void;
   removeWindow: (id: string) => void;
-  setMaximize: (id: string) => void;
+  addMaximizedWindow: (id: string) => void;
+  removeMaximizedWindow: (id: string) => void;
+  isMaximizedWindow: (id: string) => boolean;
 }
 
 const zustandWindowStore = create<WindowState>((set, get) => ({
   windows: [],
-  maximizeId: "",
+  maximizeId: [],
   addWindow: (window: WindowType) =>
     set((state) => ({ windows: [...state.windows, window] })),
   getWindow: (id: string) => get().windows.find((w) => w.id === id),
@@ -46,7 +48,11 @@ const zustandWindowStore = create<WindowState>((set, get) => ({
     set((state) => ({
       windows: state.windows.filter((w) => w.id !== id),
     })),
-  setMaximize: (id: string) => set({ maximizeId: id }), // Nouvelle fonction
+  addMaximizedWindow: (id: string) =>
+    set((state) => ({ maximizeId: [...state.maximizeId, id] })),
+  removeMaximizedWindow: (id: string) =>
+    set((state) => ({ maximizeId: state.maximizeId.filter((i) => i !== id) })),
+  isMaximizedWindow: (id: string) => get().maximizeId.includes(id),
 }));
 
 /**
@@ -71,7 +77,7 @@ export const useWindowStore = <T>(selector?: (state: WindowState) => T): T => {
  * Fonction personnalisée pour obtenir l'ID de la fenêtre maximisée
  * @returns l'ID de la fenêtre maximisée
  */
-export const useMaximizedWindowId = (): string => {
+export const useMaximizedWindowId = (): string[] => {
   return zustandWindowStore(useShallow((state) => state.maximizeId));
 };
 
@@ -86,7 +92,8 @@ export const useWindowActions = () => {
     updateWindow: state.updateWindow,
     upsertWindow: state.upsertWindow,
     removeWindow: state.removeWindow,
-    setMaximize: state.setMaximize,
+    addMaximizedWindow: state.addMaximizedWindow,
+    removeMaximizedWindow: state.removeMaximizedWindow,
   }));
 };
 

@@ -13,7 +13,7 @@ import { toggleWindowSize, TITLE_HEIGHT, copyDivStyle } from "./window-size";
 
 import { useWindowActions, generateRandomKey } from "./store";
 import { getContrastColor } from "../../lib/utils/colors";
-import { withMousePosition } from "./withMousePosition";
+import { WithResizing } from "./WithResizing";
 
 /**
  * FullScreenModal component
@@ -115,43 +115,47 @@ export const FullScreenWindow = forwardRef<
       )}
       style={mStyle.current as React.CSSProperties}
     >
-      {isOpen && (
-        <>
-          <TitleBar
-            id={id}
-            className={clsx("group/draggable", {
-              "text-lg rounded border border-gray-500 bg-primary text-paper":
-                title,
-            })}
-            ref={titleBarRef}
-            withMinimize={withMinimize}
-            status={STATUS.MAXIMIZED}
-            style={{
-              height: TITLE_HEIGHT,
-              ...(bgTitle
-                ? {
-                    backgroundColor: bgTitle,
-                    color: getContrastColor(bgTitle),
-                  }
-                : {}),
-            }}
-            onClose={onClose}
-            referrer={referrer}
-          >
-            {title}
-          </TitleBar>
-          <div
-            className={clsx("absolute mx-0 my-2", {
-              "mt-10": title,
-            })}
-            style={{ width: "calc(100% - 20px)" }}
-          >
-            {children}
-          </div>
-        </>
-      )}
+      <WithResizing
+        componentRef={ref as MutableRefObject<HTMLElement>}
+        resizable={false}
+        trace={false}
+      >
+        {isOpen && (
+          <>
+            <TitleBar
+              id={id}
+              className={clsx("group/draggable", {
+                "text-lg rounded border border-gray-500 bg-primary text-paper":
+                  title,
+              })}
+              ref={titleBarRef}
+              withMinimize={withMinimize}
+              status={STATUS.MAXIMIZED}
+              style={{
+                height: TITLE_HEIGHT,
+                ...(bgTitle
+                  ? {
+                      backgroundColor: bgTitle,
+                      color: getContrastColor(bgTitle),
+                    }
+                  : {}),
+              }}
+              onClose={onClose}
+              referrer={referrer}
+            >
+              {title}
+            </TitleBar>
+            <div
+              className={clsx("absolute mx-0 my-2", {
+                "mt-10": title,
+              })}
+              style={{ width: "calc(100% - 20px)" }}
+            >
+              {children}
+            </div>
+          </>
+        )}
+      </WithResizing>
     </div>
   );
 });
-
-export const FullScreenWindowWP = withMousePosition(FullScreenWindow);

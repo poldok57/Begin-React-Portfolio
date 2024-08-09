@@ -129,9 +129,7 @@ export const MemoryControl = () => {
       width: Math.max(parseInt(inputColsRef.current.value), 3),
       height: Math.max(parseInt(inputRowsRef.current.value), 2),
     };
-    alertMessage(
-      `Reset game with size: ${size.width}x${size.height}, type: ${inputTypeRef.current}`
-    );
+    alertMessage(`Reset game with size: ${size.width}x${size.height}`);
 
     resetGame(size, inputType);
   };

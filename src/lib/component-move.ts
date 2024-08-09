@@ -3,11 +3,15 @@
  * when the position is changed from relative to absolute
  * @param {HTMLElement} component
  */
-export const creatPlaceholder = (component: HTMLElement) => {
+export const creatPlaceholder = (
+  component: HTMLElement,
+  style: CSSStyleDeclaration | null = null
+) => {
   // reccording the position of the component
   if (!component) {
     return null;
   }
+
   const rect = component.getBoundingClientRect();
   const backgroundColor = window.getComputedStyle(component).backgroundColor;
 
@@ -20,7 +24,15 @@ export const creatPlaceholder = (component: HTMLElement) => {
   placeholder.style.border = "1px dashed gray";
   placeholder.style.boxSizing = "border-box"; // placeholder must have the same size as the component
   placeholder.style.transition =
-    "border 7s ease-out, background-color 3s ease-out";
+    "border 6s ease-out, background-color 3s ease-out";
+  if (style) {
+    if (style.top) {
+      placeholder.style.top = style.top;
+    }
+    if (style.left) {
+      placeholder.style.left = style.left;
+    }
+  }
 
   // Insert the placeholder before the component
   component.parentNode?.insertBefore(placeholder, component);

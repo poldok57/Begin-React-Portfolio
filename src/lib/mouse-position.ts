@@ -13,14 +13,14 @@ export const BORDER = {
   },
   ON_BUTTON: "on-btn",
   ON_MIDDLE_BUTTON: "on-btn-middle",
-  ON_BUTTON_LEFT: "on-turn-btn-left",
-  ON_BUTTON_RIGHT: "on-turn-btn-right",
+  ON_BUTTON_LEFT: "on-turn-btn-Left", // avoid confusion with border left
+  ON_BUTTON_RIGHT: "on-turn-btn-Right", // avoid confusion with border right
   INSIDE: "inside",
 } as const;
 
 const BADGE_RADIUS = 10;
 const MIDDLE_BTN_RADIUS = 12;
-let margin = 5;
+let margin = 6;
 
 export const setMargin = (newMargin: number): void => {
   margin = newMargin;
@@ -45,6 +45,12 @@ export const isBorderLeft = (border: string): boolean => {
 };
 export const isBorderTop = (border: string): boolean => {
   return border ? border.includes("top") : false;
+};
+export const isBorderBottom = (border: string): boolean => {
+  return border ? border.includes("bottom") : false;
+};
+export const isBorderRight = (border: string): boolean => {
+  return border ? border.includes("right") : false;
 };
 
 export const isCorner = (border: string): boolean => {
@@ -91,6 +97,18 @@ export const mouseIsInsideRect = (
   );
 };
 
+export const mouseIsInsideBorder = (
+  coord: Coordinate | Area,
+  rect: DOMRect | Rectangle
+): boolean => {
+  return (
+    coord.x > rect.left + margin &&
+    coord.x < rect.right - margin &&
+    coord.y > rect.top + margin &&
+    coord.y < rect.bottom - margin
+  );
+};
+
 export const mouseIsInsideComponent = (
   event: MouseEvent,
   component: HTMLElement | null
@@ -99,6 +117,17 @@ export const mouseIsInsideComponent = (
     const rect = component.getBoundingClientRect();
     const coordinates = { x: event.clientX, y: event.clientY };
     return mouseIsInsideRect(coordinates, rect);
+  }
+  return false;
+};
+
+export const mouseIsInsideBorderComponent = (
+  event: MouseEvent,
+  component: HTMLElement | null
+): boolean => {
+  if (component) {
+    const rect = component.getBoundingClientRect();
+    return mouseIsInsideBorder(event, rect);
   }
   return false;
 };
