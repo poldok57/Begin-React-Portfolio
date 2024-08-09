@@ -127,9 +127,18 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     }
   };
 
-  const setMinimumSize = (size: Size) => {
-    if (size.width !== undefined) minimumSize.current.width = size.width;
-    if (size.height !== undefined) minimumSize.current.height = size.height;
+  const setMinimumSize = (size: Size | null = null) => {
+    if (size == null) {
+      const { component } = selectComponent();
+      if (component) {
+        const rect = component.getBoundingClientRect();
+        minimumSize.current.width = rect.width;
+        minimumSize.current.height = rect.height;
+      }
+    } else {
+      if (size.width !== undefined) minimumSize.current.width = size.width;
+      if (size.height !== undefined) minimumSize.current.height = size.height;
+    }
   };
 
   const setResizeOn = () => {

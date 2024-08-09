@@ -12,10 +12,11 @@ const HeroLogo = () => {
   const canResizeRef = useRef(false);
 
   const [imageLoaded, setImageLoaded] = useState(false);
+  const strImage = "/images/alinenkarl-300.png";
 
   useEffect(() => {
     const img = new Image();
-    img.src = "/images/alinenkarl-300.png";
+    img.src = strImage;
     img.onload = () => setImageLoaded(true);
   }, []);
 
@@ -57,7 +58,7 @@ const HeroLogo = () => {
       ref={ref as LegacyRef<HTMLImageElement>}
       width={Math.max(size.width, 100)}
       height={Math.max(size.height, 100)}
-      src="/images/alinenkarl-300.png"
+      src={strImage}
       alt="avatar"
       className="rounded-full shadow-lg"
     />

@@ -253,7 +253,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
           )}
         >
           <div>
-            {toggleLocked && (
+            {toggleLocked && currentStatus !== STATUS.MAXIMIZED && (
               <ToggleSwitch
                 defaultChecked={isLocked}
                 onChange={toggleLocked}

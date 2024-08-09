@@ -12,7 +12,7 @@ import { debounce } from "../../lib/utils/debounce";
 import clsx from "clsx";
 import { useEffect } from "react";
 
-const VERTICAL_MARGIN = 80;
+const VERTICAL_MARGIN = 85;
 const HORIZONTAL_MARGIN = 10;
 const CARD_MARGIN = 12;
 
@@ -214,8 +214,11 @@ export const MemoryBoard = ({ trace = false }) => {
   let info = " ";
   const finised = isGameFinished(cards);
   if (finised) {
+    if (!finisedRef.current) {
+      alertMessage("Game finished !!!");
+    }
     finisedRef.current = true;
-    alertMessage("Game finished !!!");
+
     info = "Game finished !!!";
   } else if (finisedRef.current) {
     info = "Start a new game";
