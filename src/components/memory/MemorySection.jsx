@@ -11,9 +11,9 @@ export const MemorySection = () => {
           className="absolute top-10 right-10 bg-background"
           trace={false}
           close={false}
-          titleBar={true}
+          withTitleBar={true}
           titleHidden={false}
-          title="Reset panel"
+          titleText="Reset panel"
           titleHeight={36}
           draggable={false}
           resizable={true}
@@ -22,8 +22,8 @@ export const MemorySection = () => {
         <MemoryBoardWP
           id="memory-board"
           className="flex absolute left-10 flex-col gap-2 items-center p-2 rounded-md border-2 shadow-lg w-fit h-fit border-secondary bg-background"
-          titleBar={false}
-          title="Memory Board"
+          withTitleBar={false}
+          titleText="Memory Board"
           draggable={false}
           resizable={true}
           close={true}
@@ -36,11 +36,11 @@ export const MemorySection = () => {
         close={true}
         draggable={true}
         resizable={true}
-        titleBar={true}
+        withTitleBar={true}
         titleHidden={true}
         withMinimize={true}
-        bgTitle="pink"
-        title="Game Message"
+        titleBackground="pink"
+        titleText="Game Message"
         style={{ position: "fixed", right: 20, bottom: 30 }}
       />
     </MemoryProvider>

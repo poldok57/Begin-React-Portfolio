@@ -65,8 +65,8 @@ export const CommentLoaderWP = withMousePosition(CommentLoader);
 export const CommentSection = () => {
   return (
     <CommentLoaderWP
-      title="Your comments"
-      titleBar={true}
+      titleText="Your comments"
+      withTitleBar={true}
       withMaximize={true}
       withMinimize={true}
       close={true}

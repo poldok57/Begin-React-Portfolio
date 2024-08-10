@@ -1,5 +1,4 @@
 "use client";
-import { useEffect } from "react";
 import { withMousePosition } from "../windows/withMousePosition";
 import { useComponentSize } from "../windows/WithResizing";
 import Image from "next/image";

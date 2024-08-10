@@ -184,7 +184,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       <div
         onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
         onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
-        className="flex flex-col w-auto gap-1 p-1 border-2 rounded-md shadow-xl border-secondary bg-background"
+        className="flex flex-col gap-1 p-1 w-auto rounded-md border-2 shadow-xl border-secondary bg-background"
       >
         <div className="flex flex-row gap-4">
           <Button
@@ -281,7 +281,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleTextParams={handleParamChange}
         />
 
-        <div className="relative flex gap-4 m-auto">
+        <div className="flex relative gap-4 m-auto">
           <Button
             className="bg-pink-500 hover:bg-pink-600"
             title="Ctrl-Z"
@@ -308,12 +308,12 @@ export const DrawControl: React.FC<DrawControlProps> = ({
               }
             }}
           >
-            <div className="flex flex-col w-full gap-2">
+            <div className="flex flex-col gap-2 w-full">
               <div className="flex">Do you want to reccord this image ?</div>
               <div className="flex justify-between w-full">
                 Name:
                 <input
-                  className="w-40 h-8 px-2 mx-2 bg-white border-2 border-gray-500 rounded-md"
+                  className="px-2 mx-2 w-40 h-8 bg-white rounded-md border-2 border-gray-500"
                   type="text"
                   defaultValue={defaultFilename.current}
                   ref={filenameRef}
@@ -323,7 +323,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
                 <select
                   defaultValue={saveFormatRef.current}
                   onChange={(e) => (saveFormatRef.current = e.target.value)}
-                  className="w-20 h-8 px-2 mx-2 text-sm bg-gray-200 border-2 border-gray-500 rounded-md"
+                  className="px-2 mx-2 w-20 h-8 text-sm bg-gray-200 rounded-md border-2 border-gray-500"
                 >
                   <option value="png">PNG</option>
                   <option value="svg">SVG</option>

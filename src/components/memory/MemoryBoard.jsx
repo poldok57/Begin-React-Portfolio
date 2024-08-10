@@ -179,6 +179,9 @@ export const MemoryBoard = ({ trace = false }) => {
     });
 
     const handleResizeComponent = () => {
+      if (!ref.current) {
+        return;
+      }
       if (ref.current.clientWidth > componentSize.width) {
         // back to initial size
         if (memoWidthParent.current === ref.current.parentElement.clientWidth) {
@@ -228,12 +231,15 @@ export const MemoryBoard = ({ trace = false }) => {
   return (
     <div ref={ref} className="flex overflow-hidden flex-col items-center h-fit">
       <MemoryNbrTry stop={finised} className="mt-5" />
-      {withResizeButtons && (
-        <ResizeButtons
-          className="absolute left-2 top-12 p-1 text-gray-900 bg-gray-100 rounded-lg border border-gray-400 opacity-30 cursor-pointer hover:bg-gray-200 hover:opacity-100"
-          resizingParent={resizingParent}
-        />
-      )}
+      <ResizeButtons
+        className={clsx(
+          "absolute left-2 top-12 p-1 text-gray-900 bg-gray-100 rounded-lg border border-gray-400 opacity-30 cursor-pointer hover:bg-gray-200 hover:opacity-100",
+          {
+            "sr-only": !withResizeButtons,
+          }
+        )}
+        resizingParent={resizingParent}
+      />
       {finised && (
         <button
           className="absolute right-2 top-14 p-1 text-gray-900 bg-gray-100 rounded-lg border border-gray-400 cursor-pointer opacity-55 hover:bg-gray-200 hover:opacity-100 hover:scale-110"

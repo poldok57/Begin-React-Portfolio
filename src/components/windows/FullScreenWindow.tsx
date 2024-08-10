@@ -21,7 +21,7 @@ import { WithResizing } from "./WithResizing";
  * @param {function} props.onClose  - function to close the modal
  * @param {object} props.referrer  - referrer object from button who has opened the modal
  * @param {string} props.title  - title of the modal
- * @param {string} props.bgTitle  - background color of the title bar
+ * @param {string} props.titleBackground  - background color of the title bar
  * @param {ReactNode} props.children  - children of the modal
  */
 interface FullScreenWindowProps {
@@ -29,7 +29,7 @@ interface FullScreenWindowProps {
   isOpen: boolean;
   referrer?: MutableRefObject<HTMLButtonElement | null>;
   title?: string;
-  bgTitle?: string;
+  titleBackground?: string;
   withMinimize?: boolean;
   children: React.ReactNode;
 }
@@ -42,7 +42,7 @@ export const FullScreenWindow = forwardRef<
     isOpen,
     referrer,
     title = null,
-    bgTitle = null,
+    titleBackground = null,
     withMinimize = false,
     children,
   },
@@ -53,7 +53,7 @@ export const FullScreenWindow = forwardRef<
       ? referrer.current.getBoundingClientRect()
       : null;
 
-  const titleBarRef = useRef(null);
+  const withTitleBarRef = useRef(null);
   const randomKey = useRef(generateRandomKey());
   const id = title ? title : randomKey.current;
   const { addWindow } = useWindowActions();
@@ -128,15 +128,15 @@ export const FullScreenWindow = forwardRef<
                 "text-lg rounded border border-gray-500 bg-primary text-paper":
                   title,
               })}
-              ref={titleBarRef}
+              ref={withTitleBarRef}
               withMinimize={withMinimize}
               status={STATUS.MAXIMIZED}
               style={{
                 height: TITLE_HEIGHT,
-                ...(bgTitle
+                ...(titleBackground
                   ? {
-                      backgroundColor: bgTitle,
-                      color: getContrastColor(bgTitle),
+                      backgroundColor: titleBackground,
+                      color: getContrastColor(titleBackground),
                     }
                   : {}),
               }}

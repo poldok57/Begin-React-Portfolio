@@ -43,8 +43,8 @@ export const Draw = () => {
           position: "relative",
           zIndex: 5,
         }}
-        titleBar={true}
-        title="Drawing Control"
+        withTitleBar={true}
+        titleText="Drawing Control"
         titleHidden={false}
         draggable={false}
         resizable={true}

@@ -9,7 +9,7 @@ import clsx from "clsx";
 /**
  * ButtonOpenModal component open a full screen modal
  * @param {string} title - The title of the modal
- * @param {string} bgTitle - The background color of the title bar
+ * @param {string} titleBackground - The background color of the title bar
  * @param {string} children - The content of the modal
  * @param {string} className - The CSS class name for button
  * @param {string} value - The value of the button
@@ -18,14 +18,14 @@ import clsx from "clsx";
  */
 interface ButtonFullScreenProps {
   title?: string;
-  bgTitle?: string;
+  titleBackground?: string;
   children?: React.ReactNode;
   className?: string;
   value?: string;
 }
 export const ButtonOpenFullScreen: React.FC<ButtonFullScreenProps> = ({
   title = "Modal",
-  bgTitle = undefined,
+  titleBackground = undefined,
   children,
   className = "p-2",
   value = null,
@@ -54,7 +54,7 @@ export const ButtonOpenFullScreen: React.FC<ButtonFullScreenProps> = ({
         ref={frameRef}
         referrer={buttonRef}
         title={title}
-        bgTitle={bgTitle}
+        titleBackground={titleBackground}
         withMinimize={true}
         onClose={() => setIsOpen(false)}
       >

@@ -29,14 +29,15 @@ interface WithMousePositionProps {
   resizable?: boolean;
   close?: boolean;
   className?: string | null;
-  titleBar?: boolean;
+  withTitleBar?: boolean;
   titleHidden?: boolean;
-  title?: string;
-  bgTitle?: string | null;
+  titleText?: string;
+  titleBackground?: string | null;
   titleClassName?: string | null;
   titleHeight?: number;
   withMinimize?: boolean;
   withMaximize?: boolean;
+  withToggleLock?: boolean;
 }
 
 /**
@@ -46,14 +47,17 @@ interface WithMousePositionProps {
  * @param {string} props.className  - the class name of the component
  * @param {boolean} draggable - default true - if true, the component is draggable
  * @param {boolean} resizable - default false - if true, the component is resizable
- * @param {boolean} props.titleBar - default false - if true, the component can be moved by the title bar
+ * @param {boolean} props.withTitleBar - default false - if true, the component can be moved by the title bar
  * @param {boolean} props.titleHidden - default true - if true, the title bar is hidden
  * @param {boolean} props.trace - default false - if true, the trace is enabled
  * @param {boolean} props.close - default false - if true, the close button is displayed
- * @param {string} props.title - the title of the title bar
+ * @param {string} props.titleText - the text of the title bar
  * @param {string} props.titleClassName - the class name of the title bar
  * @param {number} props.titleHeight - the height of the title bar
- * @param {string} props.bgTitle - the background color of the title bar
+ * @param {string} props.titleBackground - the background color of the title bar
+ * @param {boolean} props.withToggleLock - default false - if true, the lock button is displayed
+ * @param {boolean} props.withMinimize - default false - if true, the minimize button is displayed
+ * @param {boolean} props.withMaximize - default false - if true, the maximize button is displayed
  * @returns {JSX.Element} - the wrapped component
  */
 export function withMousePosition<P extends object>(
@@ -67,15 +71,15 @@ export function withMousePosition<P extends object>(
     draggable = true,
     resizable = false,
     className = null,
-    titleBar = false,
+    withTitleBar = false,
     titleHidden = true,
-    title = "",
+    titleText = "",
     titleClassName = null,
-    bgTitle = null,
+    titleBackground = null,
     titleHeight = 36,
     withMinimize = false,
     withMaximize = false,
-
+    withToggleLock = true,
     ...props
   }: WithMousePositionProps) {
     const titleRef = useRef(null);
@@ -90,7 +94,7 @@ export function withMousePosition<P extends object>(
     const [isLocked, setLocked] = useState(!draggable);
 
     const randomKey = useRef(generateRandomKey());
-    const idKey = id ? id : title ? title : randomKey.current;
+    const idKey = id ? id : titleText ? titleText : randomKey.current;
 
     const isAlignedRightRef = useRef(false);
     const isAlignedBottomRef = useRef(false);
@@ -107,10 +111,10 @@ export function withMousePosition<P extends object>(
     };
     const canMove = () => canMoveRef.current;
 
-    const selectComponent: (titleBar?: boolean) => SelectComponentResult = (
-      titleBar = false
+    const selectComponent: (withTitleBar?: boolean) => SelectComponentResult = (
+      withTitleBar = false
     ) => {
-      if (titleBar && titleRef?.current) {
+      if (withTitleBar && titleRef?.current) {
         return {
           waitEvent: titleRef.current,
           component: componentRef?.current || null,
@@ -289,7 +293,7 @@ export function withMousePosition<P extends object>(
      * Event for move the component
      */
     useEffect(() => {
-      const { waitEvent } = selectComponent(titleBar);
+      const { waitEvent } = selectComponent(withTitleBar);
       if (isLocked || !waitEvent) {
         return;
       }
@@ -378,7 +382,7 @@ export function withMousePosition<P extends object>(
         waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
         waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
       };
-    }, [isLocked, titleBar]);
+    }, [isLocked, withTitleBar]);
 
     return (
       <div
@@ -387,11 +391,11 @@ export function withMousePosition<P extends object>(
         style={{ ...styleRef.current }}
         className={clsx("hover:z-30", className, {
           "h-fit": resizable,
-          "group/draggable": !titleBar || titleHidden,
+          "group/draggable": !withTitleBar || titleHidden,
           "group/resizable": resizable,
           "border-grey-800 cursor-pointer border shadow-lg": canMove(),
-          "cursor-move": !(isLocked || titleBar),
-          "cursor-default": isLocked || titleBar,
+          "cursor-move": !(isLocked || withTitleBar),
+          "cursor-default": isLocked || withTitleBar,
         })}
       >
         <WithResizing
@@ -407,30 +411,33 @@ export function withMousePosition<P extends object>(
             style={{
               height: titleHeight,
               transform: titleHidden ? "none" : "translateY(-100%)",
-              ...(bgTitle
-                ? { backgroundColor: bgTitle, color: getContrastColor(bgTitle) }
+              ...(titleBackground
+                ? {
+                    backgroundColor: titleBackground,
+                    color: getContrastColor(titleBackground),
+                  }
                 : {}),
             }}
             className={clsx("group-hover/draggable:z-40", titleClassName, {
               "bg-primary rounded border border-gray-500 text-secondary":
-                titleClassName === null && titleBar,
-              "group/draggable": titleBar && !titleHidden,
-              "bg-transparent": !titleBar,
+                titleClassName === null && withTitleBar,
+              "group/draggable": withTitleBar && !titleHidden,
+              "bg-transparent": !withTitleBar,
               "invisible group-hover/draggable:visible":
-                titleBar && titleHidden,
-              "opacity-60": titleBar && titleHidden && !isLocked,
+                withTitleBar && titleHidden,
+              "opacity-60": withTitleBar && titleHidden && !isLocked,
               "opacity-80":
-                titleBar && titleHidden && (withMinimize || withMaximize),
-              "opacity-10": titleBar && titleHidden && isLocked,
-              "cursor-move": titleBar && !isLocked,
+                withTitleBar && titleHidden && (withMinimize || withMaximize),
+              "opacity-10": withTitleBar && titleHidden && isLocked,
+              "cursor-move": withTitleBar && !isLocked,
             })}
             isLocked={isLocked}
-            toggleLocked={toggleLocked}
+            toggleLocked={withToggleLock ? toggleLocked : undefined}
             withMinimize={withMinimize}
             withMaximize={withMaximize}
             close={close}
           >
-            {title}
+            {titleText}
           </TitleBar>
         </WithResizing>
       </div>

@@ -27,11 +27,11 @@ const Home = () => {
         display={true}
         trace={false}
         draggable={true}
-        titleBar={true}
+        withTitleBar={true}
         titleHidden={true}
         withMinimize={true}
-        bgTitle="magenta"
-        title="Alert Message"
+        titleBackground="magenta"
+        titleText="Alert Message"
         style={{ position: "fixed", right: 20, bottom: 60 }}
       />
     </>

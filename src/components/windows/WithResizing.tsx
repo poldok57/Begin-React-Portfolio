@@ -30,7 +30,7 @@ import { EVENT, POSITION } from "./types";
 interface ComponentSizeContext {
   componentSize: Size;
   lockResize: (lock: boolean) => void;
-  resizeComponent: (size: Size) => void;
+  resizeComponent: (size: Size) => Size;
   setMinimumSize: (size: Size) => void;
   hideComponent: () => void;
   showComponent: () => void;
@@ -116,15 +116,23 @@ export const WithResizing: React.FC<WithResizingProps> = ({
   const resizeComponent = (size: Size | Rectangle) => {
     const { component } = selectComponent();
     if (component) {
+      const rect = component.getBoundingClientRect();
       // component.style.width = !size.width ? "auto" : size.width + "px";
       // component.style.height = !size.height ? "auto" : size.height + "px";
+      const newSize = {
+        width: Math.max(size.width ?? rect.width, minimumSize.current.width),
+        height: Math.max(
+          size.height ?? rect.height,
+          minimumSize.current.height
+        ),
+      };
       if (size.width !== undefined)
-        component.style.width =
-          Math.max(size.width, minimumSize.current.width) + "px";
+        component.style.width = newSize.width + "px";
       if (size.height !== undefined)
-        component.style.height =
-          Math.max(size.height, minimumSize.current.height) + "px";
+        component.style.height = newSize.height + "px";
+      return newSize;
     }
+    return size;
   };
 
   const setMinimumSize = (size: Size | null = null) => {
@@ -414,7 +422,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         const mouseCursor = mousePointer(mousePos);
         if (isLocked ? isBorderRightOrBottom(mousePos) : isBorder(mousePos)) {
           if (borderResizeRef.current !== "") {
-            // event.preventDefault();
+            event.preventDefault();
             const newRect = resizeRect(mouseCoord, rect, mousePos, false);
 
             if (trace) {
@@ -424,8 +432,8 @@ export const WithResizing: React.FC<WithResizingProps> = ({
               );
             }
 
-            resizeComponent(newRect as Size);
-            setComponentSize(newRect as Size);
+            const newSize = resizeComponent(newRect as Size);
+            setComponentSize(newSize);
           }
           component.style.cursor = mouseCursor;
         } else {
