@@ -4,6 +4,8 @@ import { useEffect, useState, useRef, LegacyRef } from "react";
 
 import { useComponentSize } from "./WithResizing";
 import { withMousePosition } from "./withMousePosition";
+import clsx from "clsx";
+
 interface ImageResizableProps {
   src: string;
   alt: string;
@@ -16,6 +18,7 @@ interface ImageResizableProps {
   height?: number;
   minWidth?: number;
   minHeight?: number;
+  rounded?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 }
 const ImageHandler: React.FC<ImageResizableProps> = ({
   width,
@@ -25,6 +28,7 @@ const ImageHandler: React.FC<ImageResizableProps> = ({
   src = "",
   alt = "",
   children,
+  rounded = "none",
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { componentSize, setMinimumSize } = useComponentSize();
@@ -87,6 +91,15 @@ const ImageHandler: React.FC<ImageResizableProps> = ({
   return (
     <>
       <Image
+        className={clsx({
+          "rounded-lg": rounded === "lg",
+          "rounded-md": rounded === "md",
+          "rounded-sm": rounded === "sm",
+          "rounded-xl": rounded === "xl",
+          "rounded-2xl": rounded === "2xl",
+          "rounded-3xl": rounded === "3xl",
+          "rounded-full": rounded === "full",
+        })}
         ref={ref as LegacyRef<HTMLImageElement>}
         width={Math.max(size.width, 100)}
         height={Math.max(size.height, 100)}

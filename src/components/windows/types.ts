@@ -5,6 +5,10 @@ export enum EVENT {
   MOUSE_OVER = "mouseover",
   MOUSE_LEAVE = "mouseleave",
   MOUSE_ENTER = "mouseenter",
+  TOUCH_START = "touchstart",
+  TOUCH_END = "touchend",
+  TOUCH_MOVE = "touchmove",
+  TOUCH_CANCEL = "touchcancel",
 }
 export enum POSITION {
   RELATIVE = "relative",

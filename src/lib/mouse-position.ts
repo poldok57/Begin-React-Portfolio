@@ -97,18 +97,6 @@ export const mouseIsInsideRect = (
   );
 };
 
-export const mouseIsInsideBorder = (
-  coord: Coordinate | Area,
-  rect: DOMRect | Rectangle
-): boolean => {
-  return (
-    coord.x > rect.left + margin &&
-    coord.x < rect.right - margin &&
-    coord.y > rect.top + margin &&
-    coord.y < rect.bottom - margin
-  );
-};
-
 export const mouseIsInsideComponent = (
   event: MouseEvent,
   component: HTMLElement | null
@@ -121,13 +109,26 @@ export const mouseIsInsideComponent = (
   return false;
 };
 
+export const mouseIsInsideBorder = (
+  coord: Coordinate | Area,
+  rect: DOMRect | Rectangle
+): boolean => {
+  return (
+    coord.x > rect.left + margin &&
+    coord.x < rect.right - margin &&
+    coord.y > rect.top + margin &&
+    coord.y < rect.bottom - margin
+  );
+};
+
 export const mouseIsInsideBorderComponent = (
   event: MouseEvent,
   component: HTMLElement | null
 ): boolean => {
   if (component) {
     const rect = component.getBoundingClientRect();
-    return mouseIsInsideBorder(event, rect);
+    const coordinates = { x: event.clientX, y: event.clientY };
+    return mouseIsInsideBorder(coordinates, rect);
   }
   return false;
 };

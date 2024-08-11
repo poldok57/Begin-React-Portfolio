@@ -13,7 +13,7 @@ export const GameSelector = () => {
       <ButtonOpenFullScreen
         className="w-28 h-32 text-lg"
         value="Memory"
-        titleText="Test your memory"
+        title="Test your memory"
         // titleBackground="#44ee99"
       >
         <DynamicMemorySection />

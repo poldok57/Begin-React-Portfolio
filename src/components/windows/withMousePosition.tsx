@@ -312,6 +312,43 @@ export function withMousePosition<P extends object>(
       };
 
       /**
+       * Start the drag action
+       */
+      const startDrag = (event: MouseEvent) => {
+        const { component } = selectComponent();
+        if (!component) return;
+        // if the component is resizable, we need to check if the mouse is inside the border of the component
+        // to prevent conflict between the mouse position and the resizing
+        if (
+          resizable &&
+          !mouseIsInsideBorderComponent(event, component) &&
+          !mouseIsInsideBorderComponent(event, waitEvent)
+        ) {
+          if (trace) {
+            console.log(
+              `[${WrappedComponent.name}] startDrag: mouse is NOT inside the border of the component event:`,
+              event,
+              "rect: ",
+              component.getBoundingClientRect()
+            );
+          }
+          return;
+        }
+        if (waitEvent && waitEvent.contains(event.target as Node)) {
+          const coord = { x: event.clientX, y: event.clientY };
+          setCanMove(true);
+
+          setMouseCoordinates(event.clientX, event.clientY);
+
+          // difference between the mouse and the component
+          offsetRef.current = getRectOffset(coord, {
+            left: component.offsetLeft,
+            top: component.offsetTop,
+          });
+        }
+      };
+
+      /**
        * When the mouse is down
        * @param {MouseEvent} event
        */
@@ -328,30 +365,7 @@ export function withMousePosition<P extends object>(
          */
         if (isLocked) return;
 
-        const { component } = selectComponent();
-        // if the component is resizable, we need to check if the mouse is inside the border of the component
-        // to prevent conflict between the mouse position and the resizing
-        if (
-          resizable &&
-          !mouseIsInsideBorderComponent(event, component) &&
-          !mouseIsInsideBorderComponent(event, waitEvent)
-        ) {
-          return;
-        }
-        if (waitEvent && waitEvent.contains(event.target as Node)) {
-          const coord = { x: event.clientX, y: event.clientY };
-          setCanMove(true);
-
-          setMouseCoordinates(event.clientX, event.clientY);
-
-          if (!component) return;
-
-          // difference between the mouse and the component
-          offsetRef.current = getRectOffset(coord, {
-            left: component.offsetLeft,
-            top: component.offsetTop,
-          });
-        }
+        startDrag(event);
       };
 
       /**
@@ -370,17 +384,59 @@ export function withMousePosition<P extends object>(
         }
       };
       /**
+       * Touch events
+       */
+      const handleTouchStart = (event: TouchEvent) => {
+        const touch = event.touches[0];
+        if (trace) {
+          console.log(
+            `[${WrappedComponent.name}] touchStart, isLocked: ${isLocked}`
+          );
+        }
+        if (isLocked) return;
+
+        event.preventDefault();
+
+        startDrag({
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          target: touch.target as EventTarget,
+        } as MouseEvent);
+      };
+
+      const handleTouchMove = (event: TouchEvent) => {
+        const touch = event.touches[0];
+        handleMouseMove({
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        } as MouseEvent);
+      };
+
+      /**
        * add the events listener
        */
       waitEvent.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
       waitEvent.addEventListener(EVENT.MOUSE_UP, mouseUp);
       waitEvent.addEventListener(EVENT.MOUSE_LEAVE, handleMouseLeave);
       waitEvent.addEventListener(EVENT.MOUSE_DOWN, mouseDown);
-
+      waitEvent.addEventListener(EVENT.TOUCH_START, handleTouchStart);
+      waitEvent.addEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
+      waitEvent.addEventListener(EVENT.TOUCH_END, mouseUp as EventListener);
+      waitEvent.addEventListener(EVENT.TOUCH_CANCEL, mouseUp as EventListener);
       return () => {
         waitEvent.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
         waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
         waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);
+        waitEvent.removeEventListener(EVENT.TOUCH_START, handleTouchStart);
+        waitEvent.removeEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
+        waitEvent.removeEventListener(
+          EVENT.TOUCH_END,
+          mouseUp as EventListener
+        );
+        waitEvent.removeEventListener(
+          EVENT.TOUCH_CANCEL,
+          mouseUp as EventListener
+        );
       };
     }, [isLocked, withTitleBar]);
 

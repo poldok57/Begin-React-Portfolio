@@ -2,8 +2,8 @@ import "../src/styles/globals.css";
 import "../src/styles/theme.css";
 
 import { ThemeProvider } from "../src/context/ThemeProvider";
-import { TestImageWP } from "../src/components/atom/TestImage";
 import { Taskbar } from "../src/components/windows/TaskBar";
+import { ImageResizable } from "../src/components/windows/ImageResizable";
 
 const MyApp = ({ Component, pageProps }) => {
   // console.log("redendering MyApp..");
@@ -14,18 +14,27 @@ const MyApp = ({ Component, pageProps }) => {
           <Component {...pageProps} />
         </div>
 
-        <TestImageWP
-          className="absolute rounded-md border-double border-primary"
+        <ImageResizable
+          className="rounded-lg shadow-lg"
           close={true}
           resizable={true}
           style={{
+            position: "absolute",
             left: "50px",
             top: "75px",
-            width: "120px",
-            height: "120px",
           }}
+          width={120}
+          height={120}
+          minWidth={120}
+          minHeight={120}
+          rounded="lg"
+          src="/images/card-18-250.jpg"
           // image_width="120px"
-        />
+        >
+          <div className="text-center rounded opacity-20 bg-paper group-hover/testImage:opacity-100">
+            absolute image
+          </div>
+        </ImageResizable>
       </div>
       <Taskbar />
     </ThemeProvider>

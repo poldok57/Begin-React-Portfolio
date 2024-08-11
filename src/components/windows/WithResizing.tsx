@@ -71,6 +71,15 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
   const componentName = componentRef.current?.id || "WithResizing";
 
+  // Initial position and distance for resizing with touch screen
+  const initialArea = useRef({
+    width: componentRef.current?.offsetWidth || 0,
+    height: componentRef.current?.offsetHeight || 0,
+    left: componentRef.current?.offsetLeft || 0,
+    top: componentRef.current?.offsetTop || 0,
+  });
+  const initialDistance = useRef(0);
+
   const selectComponent = (): { component: HTMLElement | null } => {
     return {
       component: componentRef?.current || null,
@@ -161,6 +170,8 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     // Ajout d'un effet de bordure au composant
     component.style.border = "2px dotted red";
     component.style.background = "lightgray";
+    component.style.transition =
+      "border 0.3s ease-out, background 0.3s ease-out";
   };
   const borderEffectStop = (component: HTMLElement) => {
     setTimeout(() => {
@@ -382,13 +393,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         const mouseCursor = mousePointer(mousePos);
         if (isLocked ? isBorderRightOrBottom(mousePos) : isBorder(mousePos)) {
           borderResizeRef.current = mousePos;
-          // offsetRef.current = getRectOffset(
-          //   { x: event.clientX, y: event.clientY },
-          //   {
-          //     left: component.offsetLeft,
-          //     top: component.offsetTop,
-          //   }
-          // );
+
           event.preventDefault();
           if (setResizing) setResizing(true);
           if (trace)
@@ -405,13 +410,35 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         }
       }
     };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        const mouseEvent = new MouseEvent("mousedown", {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        });
+        handleResizingStart(mouseEvent);
+      } else if (event.touches.length === 2) {
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        initialDistance.current = Math.sqrt(
+          (touch1.clientX - touch2.clientX) ** 2 +
+            (touch1.clientY - touch2.clientY) ** 2
+        );
+        const rect = component.getBoundingClientRect();
+        initialArea.current = {
+          width: rect.width,
+          height: rect.height,
+          left: rect.left,
+          top: rect.top,
+        };
+      }
+    };
+
     const handleResizing = (event: MouseEvent) => {
       const rect = component.getBoundingClientRect();
       const mouseCoord: Coordinate = { x: event.clientX, y: event.clientY };
-
-      if (event.buttons !== 1 && borderResizeRef.current !== "") {
-        handleResizingStop(event, "mouseMove");
-      }
 
       const mousePos =
         borderResizeRef.current !== ""
@@ -441,6 +468,57 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         }
       }
     };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      if (event.buttons === 1) {
+        handleResizing(event);
+      } else if (borderResizeRef.current !== "") {
+        handleResizingStop(event, "mouseMove");
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        const mouseEvent = new MouseEvent("mousemove", {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        });
+        handleResizing(mouseEvent);
+      }
+      if (event.touches.length === 2) {
+        event.preventDefault();
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const distance = Math.sqrt(
+          (touch1.clientX - touch2.clientX) ** 2 +
+            (touch1.clientY - touch2.clientY) ** 2
+        );
+
+        const scale = distance / initialDistance.current;
+
+        const centerX =
+          initialArea.current.left + initialArea.current.width / 2;
+        const centerY =
+          initialArea.current.top + initialArea.current.height / 2;
+        const newRect = {
+          width: initialArea.current.width * scale,
+          height: initialArea.current.height * scale,
+        };
+
+        const newSize = resizeComponent(newRect as Size);
+        setComponentSize(newSize);
+
+        const newLeft = centerX - newRect.width / 2;
+        const newTop = centerY - newRect.height / 2;
+
+        component.style.left = `${newLeft}px`;
+        component.style.top = `${newTop}px`;
+
+        setComponentSize(newSize);
+      }
+    };
+
     const handleResizingStop = (e: MouseEvent, origine = "mouseUp") => {
       restoreAlign(component, borderResizeRef.current);
       borderResizeRef.current = "";
@@ -453,17 +531,39 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       component.style.cursor = "default";
     };
 
+    const handleTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      const mouseEvent = new MouseEvent("mouseup", {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+      handleResizingStop(mouseEvent, "touchEnd");
+      if (initialDistance.current) {
+        const newSize = resizeComponent(initialArea.current);
+        setComponentSize(newSize);
+        initialDistance.current = 0;
+      }
+    };
+
     /**
      * add the events listener
      */
     component.addEventListener(EVENT.MOUSE_DOWN, handleResizingStart);
-    component.addEventListener(EVENT.MOUSE_MOVE, handleResizing);
+    component.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
     document.addEventListener(EVENT.MOUSE_UP, handleResizingStop);
+    component.addEventListener(EVENT.TOUCH_START, handleTouchStart);
+    component.addEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
+    document.addEventListener(EVENT.TOUCH_END, handleTouchEnd);
+    document.addEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
 
     return () => {
       component.removeEventListener(EVENT.MOUSE_MOVE, handleResizingStart);
       component.removeEventListener(EVENT.MOUSE_DOWN, handleResizingStart);
       document.removeEventListener(EVENT.MOUSE_UP, handleResizingStop);
+      component.removeEventListener(EVENT.TOUCH_START, handleTouchStart);
+      component.removeEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
+      document.removeEventListener(EVENT.TOUCH_END, handleTouchEnd);
+      document.removeEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
     };
   }, [isResizable.current, isLocked]);
 
