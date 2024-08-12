@@ -395,7 +395,7 @@ export function withMousePosition<P extends object>(
         }
         if (isLocked) return;
 
-        event.preventDefault();
+        // event.preventDefault();
 
         startDrag({
           clientX: touch.clientX,

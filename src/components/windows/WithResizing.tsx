@@ -78,7 +78,13 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     left: componentRef.current?.offsetLeft || 0,
     top: componentRef.current?.offsetTop || 0,
   });
-  const initialDistance = useRef(0);
+  const initialDistance = useRef({
+    total: 0,
+    x: 0,
+    y: 0,
+    touchX: 0,
+    touchY: 0,
+  });
 
   const selectComponent = (): { component: HTMLElement | null } => {
     return {
@@ -386,7 +392,6 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       const rect = component.getBoundingClientRect();
       const mouseCoord: Coordinate = { x: event.clientX, y: event.clientY };
 
-      // setMouseCoordinates(event.clientX, event.clientY);
       const mousePos = mouseIsOnBorderRect(mouseCoord, rect);
 
       if (mousePos && isResizable.current) {
@@ -422,10 +427,17 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       } else if (event.touches.length === 2) {
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
-        initialDistance.current = Math.sqrt(
-          (touch1.clientX - touch2.clientX) ** 2 +
-            (touch1.clientY - touch2.clientY) ** 2
-        );
+        const distance = {
+          x: Math.abs(touch1.clientX - touch2.clientX),
+          y: Math.abs(touch1.clientY - touch2.clientY),
+          total: Math.sqrt(
+            (touch1.clientX - touch2.clientX) ** 2 +
+              (touch1.clientY - touch2.clientY) ** 2
+          ),
+          touchX: touch1.clientX,
+          touchY: touch1.clientY,
+        };
+        initialDistance.current = distance;
         const rect = component.getBoundingClientRect();
         initialArea.current = {
           width: rect.width,
@@ -495,12 +507,8 @@ export const WithResizing: React.FC<WithResizingProps> = ({
             (touch1.clientY - touch2.clientY) ** 2
         );
 
-        const scale = distance / initialDistance.current;
+        const scale = distance / initialDistance.current.total;
 
-        const centerX =
-          initialArea.current.left + initialArea.current.width / 2;
-        const centerY =
-          initialArea.current.top + initialArea.current.height / 2;
         const newRect = {
           width: initialArea.current.width * scale,
           height: initialArea.current.height * scale,
@@ -508,14 +516,23 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
         const newSize = resizeComponent(newRect as Size);
         setComponentSize(newSize);
-
-        const newLeft = centerX - newRect.width / 2;
-        const newTop = centerY - newRect.height / 2;
+        if (isLocked) {
+          // dont move the component, when is locked
+          return;
+        }
+        const scaleX =
+          initialDistance.current.x / initialDistance.current.total;
+        const scaleY =
+          initialDistance.current.y / initialDistance.current.total;
+        const newLeft =
+          (initialArea.current.left - initialDistance.current.touchX) * scaleX +
+          initialDistance.current.touchX;
+        const newTop =
+          (initialArea.current.top - initialDistance.current.touchY) * scaleY +
+          initialDistance.current.touchY;
 
         component.style.left = `${newLeft}px`;
         component.style.top = `${newTop}px`;
-
-        setComponentSize(newSize);
       }
     };
 
@@ -532,16 +549,18 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     };
 
     const handleTouchEnd = (event: TouchEvent) => {
-      const touch = event.changedTouches[0];
-      const mouseEvent = new MouseEvent("mouseup", {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      });
-      handleResizingStop(mouseEvent, "touchEnd");
-      if (initialDistance.current) {
+      const touch = event.changedTouches;
+      if (touch.length === 1) {
+        const mouseEvent = new MouseEvent("mouseup", {
+          clientX: touch[0].clientX,
+          clientY: touch[0].clientY,
+        });
+
+        handleResizingStop(mouseEvent, "touchEnd");
+      } else if (touch.length === 2 && initialDistance.current.total) {
         const newSize = resizeComponent(initialArea.current);
         setComponentSize(newSize);
-        initialDistance.current = 0;
+        initialDistance.current.total = 0;
       }
     };
 
