@@ -124,7 +124,6 @@ export const MemoryControl = () => {
 
   const handleReset = (e) => {
     e.preventDefault();
-    // Utilisez les valeurs actuelles des refs pour mettre à jour les états
     const size = {
       width: Math.max(parseInt(inputColsRef.current.value), 3),
       height: Math.max(parseInt(inputRowsRef.current.value), 2),
@@ -138,7 +137,7 @@ export const MemoryControl = () => {
 
   return useMemo(() => {
     return (
-      <div className="rounded-md border shadow-lg border-secondary bg-paper">
+      <div className="p-2 rounded-md border shadow-lg border-secondary bg-paper">
         <form onSubmit={handleReset} className="flex justify-between p-2">
           <div className="mx-1 w-full">
             <div className="flex justify-center w-full">

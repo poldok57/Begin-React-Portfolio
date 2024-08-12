@@ -1,15 +1,23 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const THEME_SELECTOR = "document-theme";
 const CSS_DATA_THEME = "data-theme";
 const DEFAULT_THEME = "light";
 
+type ThemeEvent = Event & { detail: { theme: string } };
+
 const ThemeContext = createContext({
   theme: DEFAULT_THEME,
-  getDocumentTheme: () => null,
+  getDocumentTheme: () => DEFAULT_THEME as string,
+  useThemeListener: () => DEFAULT_THEME as string,
+  toggleTheme: () => DEFAULT_THEME as "light" | "dark",
+  setDark: () => {},
+  setLight: () => {},
 });
 
-export const ThemeProvider = ({ children }) => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const getDocumentTheme = () => {
     if (typeof document === "undefined") return DEFAULT_THEME;
     return (
@@ -17,12 +25,12 @@ export const ThemeProvider = ({ children }) => {
     );
   };
 
-  const addEventTheme = (theme) => {
+  const addEventTheme = (theme: string) => {
     const event = new CustomEvent("themeChanged", { detail: { theme } });
     document.dispatchEvent(event);
   };
 
-  const changeTheme = (theme) => {
+  const changeTheme = (theme: string) => {
     document.documentElement.setAttribute(CSS_DATA_THEME, theme);
     window.localStorage.setItem(THEME_SELECTOR, theme);
     // Déclencher un événement personnalisé
@@ -40,7 +48,6 @@ export const ThemeProvider = ({ children }) => {
 
     document.documentElement.setAttribute(CSS_DATA_THEME, localTheme);
     addEventTheme(localTheme);
-    console.log("Theme set to:", localTheme);
   }, []);
 
   const toggleTheme = () => {
@@ -55,14 +62,20 @@ export const ThemeProvider = ({ children }) => {
     const [currentTheme, setCurrentTheme] = useState(getDocumentTheme());
 
     useEffect(() => {
-      const handleThemeChange = (event) => {
+      const handleThemeChange = (event: ThemeEvent) => {
         setCurrentTheme(event.detail.theme);
       };
 
-      document.addEventListener("themeChanged", handleThemeChange);
+      document.addEventListener(
+        "themeChanged",
+        handleThemeChange as EventListener
+      );
 
       return () => {
-        document.removeEventListener("themeChanged", handleThemeChange);
+        document.removeEventListener(
+          "themeChanged",
+          handleThemeChange as EventListener
+        );
       };
     }, []);
     // console.log("useThemeListener, currentTheme:", currentTheme);
@@ -79,9 +92,7 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider id="app" value={values}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={values}>{children}</ThemeContext.Provider>
   );
 };
 

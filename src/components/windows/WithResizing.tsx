@@ -39,12 +39,57 @@ const DEFAULT_SIZE_MIN = { width: 100, height: 60 };
 
 const SizeContext = createContext<ComponentSizeContext | null>(null);
 
+const SizeDisplay: React.FC<{ size: Size }> = ({ size }) => {
+  const [visible, setVisible] = useState(true);
+  const lastSizeRef = useRef<Size>(size);
+
+  if (
+    size.width !== lastSizeRef.current.width ||
+    size.height !== lastSizeRef.current.height
+  ) {
+    setVisible(true);
+    lastSizeRef.current = { ...size };
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [size]);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: -14,
+        right: 2,
+        backgroundColor: "gray",
+        color: "white",
+        fontSize: "0.7rem",
+        padding: "2px 5px",
+        opacity: visible ? 0.9 : 0,
+        transition: visible ? "" : "opacity 4s",
+        zIndex: 1001,
+      }}
+    >
+      {Math.round(size.width)} x {Math.round(size.height)}
+    </div>
+  );
+};
+
 interface WithResizingProps {
   isLocked?: boolean;
   resizable?: boolean;
   trace?: boolean;
   setResizing?: (resizing: boolean) => void | null;
   componentRef: MutableRefObject<HTMLElement | null>;
+  componentName?: string;
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   children: React.ReactNode;
 }
 export const WithResizing: React.FC<WithResizingProps> = ({
@@ -53,23 +98,27 @@ export const WithResizing: React.FC<WithResizingProps> = ({
   trace = false,
   setResizing = null,
   componentRef,
+  componentName = "WithResizing",
+  minWidth,
+  minHeight,
+  maxWidth,
+  maxHeight,
   children,
 }) => {
   // const offsetRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
+  const [sizeDisplay, setSizeDisplay] = useState<boolean>(false);
   const memoDisplayRef = useRef("");
 
   const isAlignedRightRef = useRef(false);
   const isAlignedBottomRef = useRef(false);
 
   const isResizable = useRef(resizable);
-  const minimumSize = useRef(DEFAULT_SIZE_MIN);
+  const minimumSize = useRef({ ...DEFAULT_SIZE_MIN });
   const [componentSize, setComponentSize] = useState<Size>(DEFAULT_SIZE_MIN);
   const memoResizable = resizable;
   const borderResizeRef = useRef("");
   const memoBorder = useRef("");
   const memoBackground = useRef("");
-
-  const componentName = componentRef.current?.id || "WithResizing";
 
   // Initial position and distance for resizing with touch screen
   const initialArea = useRef({
@@ -118,49 +167,64 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     const { component } = selectComponent();
     if (component) {
       const rect = component.getBoundingClientRect();
+      if (trace)
+        console.log(
+          `${componentName} set size: ${rect.width} x ${rect.height} minimum: ${minimumSize.current.width} x ${minimumSize.current.height}`
+        );
       setComponentSize({
         width: Math.max(minimumSize.current.width, rect.width),
         height: Math.max(minimumSize.current.height, rect.height),
       });
-      if (trace)
-        console.log(
-          `${componentName} set size: ${rect.width} x ${rect.height}`
-        );
     }
   };
   const resizeComponent = (size: Size | Rectangle) => {
     const { component } = selectComponent();
-    if (component) {
-      const rect = component.getBoundingClientRect();
-      // component.style.width = !size.width ? "auto" : size.width + "px";
-      // component.style.height = !size.height ? "auto" : size.height + "px";
-      const newSize = {
-        width: Math.max(size.width ?? rect.width, minimumSize.current.width),
-        height: Math.max(
-          size.height ?? rect.height,
-          minimumSize.current.height
-        ),
-      };
-      if (size.width !== undefined)
-        component.style.width = newSize.width + "px";
-      if (size.height !== undefined)
-        component.style.height = newSize.height + "px";
-      return newSize;
+    if (!component) {
+      return size;
     }
-    return size;
+    const rect = component.getBoundingClientRect();
+
+    if (trace)
+      console.log(
+        `${componentName} resizeComponent: size: ${size.width} x ${size.height} rect: ${rect.width} x ${rect.height} minimum: ${minimumSize.current.width} x ${minimumSize.current.height}`
+      );
+    const newSize = {
+      width: Math.max(size.width ?? rect.width, minimumSize.current.width),
+      height: Math.max(size.height ?? rect.height, minimumSize.current.height),
+    };
+    if (maxWidth && newSize.width > maxWidth) newSize.width = maxWidth;
+    if (maxHeight && newSize.height > maxHeight) newSize.height = maxHeight;
+
+    if (size.width !== undefined) component.style.width = newSize.width + "px";
+    if (size.height !== undefined)
+      component.style.height = newSize.height + "px";
+
+    setSizeDisplay(true);
+
+    return newSize;
   };
 
   const setMinimumSize = (size: Size | null = null) => {
+    if (trace) console.log(`${componentName} Set MINIMUM SIZE`);
+
     if (size == null) {
       const { component } = selectComponent();
       if (component) {
         const rect = component.getBoundingClientRect();
         minimumSize.current.width = rect.width;
         minimumSize.current.height = rect.height;
+        if (trace)
+          console.log(
+            `${componentName} Auto-set minimum size: ${rect.width} x ${rect.height}`
+          );
       }
     } else {
       if (size.width !== undefined) minimumSize.current.width = size.width;
       if (size.height !== undefined) minimumSize.current.height = size.height;
+      if (trace)
+        console.log(
+          `${componentName} Set minimum size: ${size.width} x ${size.height}`
+        );
     }
   };
 
@@ -351,6 +415,24 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       style.position === POSITION.FIXED &&
       style.bottom !== "" &&
       style.bottom !== "auto";
+
+    if (minWidth) minimumSize.current.width = minWidth;
+    if (minHeight) minimumSize.current.height = minHeight;
+    if (typeof window !== "undefined") {
+      if (!maxWidth) maxWidth = window.innerWidth;
+      if (!maxHeight) maxHeight = window.innerHeight;
+    }
+
+    if (trace) {
+      console.log(
+        `${componentName} Set initial alignment: ${style.position} ${style.right} ${style.bottom}`
+      );
+      console.log(
+        "----- mminimum size",
+        minimumSize.current,
+        ` - max: ${maxWidth} x ${maxHeight}`
+      );
+    }
   }, []);
 
   // Check resizing of the component
@@ -416,38 +498,6 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       }
     };
 
-    const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        const mouseEvent = new MouseEvent("mousedown", {
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-        });
-        handleResizingStart(mouseEvent);
-      } else if (event.touches.length === 2) {
-        const touch1 = event.touches[0];
-        const touch2 = event.touches[1];
-        const distance = {
-          x: Math.abs(touch1.clientX - touch2.clientX),
-          y: Math.abs(touch1.clientY - touch2.clientY),
-          total: Math.sqrt(
-            (touch1.clientX - touch2.clientX) ** 2 +
-              (touch1.clientY - touch2.clientY) ** 2
-          ),
-          touchX: touch1.clientX,
-          touchY: touch1.clientY,
-        };
-        initialDistance.current = distance;
-        const rect = component.getBoundingClientRect();
-        initialArea.current = {
-          width: rect.width,
-          height: rect.height,
-          left: rect.left,
-          top: rect.top,
-        };
-      }
-    };
-
     const handleResizing = (event: MouseEvent) => {
       const rect = component.getBoundingClientRect();
       const mouseCoord: Coordinate = { x: event.clientX, y: event.clientY };
@@ -489,8 +539,57 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       }
     };
 
-    const handleTouchMove = (event: TouchEvent) => {
+    const handleResizingStop = (e: MouseEvent, origine = "mouseUp") => {
+      restoreAlign(component, borderResizeRef.current);
+      borderResizeRef.current = "";
+      extendMouseMoveStop();
+      borderEffectStop(component);
+      if (setResizing) setResizing(false);
+
+      if (trace && componentRef.current)
+        console.log(`[${componentName}] resize stop, ${origine}`);
+      component.style.cursor = "default";
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (!isResizable.current) return;
+
       if (event.touches.length === 1) {
+        const touch = event.touches[0];
+        const mouseEvent = new MouseEvent("mousedown", {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        });
+        handleResizingStart(mouseEvent);
+      } else if (event.touches.length === 2) {
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        const distance = {
+          x: Math.abs(touch1.clientX - touch2.clientX),
+          y: Math.abs(touch1.clientY - touch2.clientY),
+          total: Math.sqrt(
+            (touch1.clientX - touch2.clientX) ** 2 +
+              (touch1.clientY - touch2.clientY) ** 2
+          ),
+          touchX: touch1.clientX,
+          touchY: touch1.clientY,
+        };
+        initialDistance.current = distance;
+        const rect = component.getBoundingClientRect();
+        initialArea.current = {
+          width: rect.width,
+          height: rect.height,
+          left: rect.left,
+          top: rect.top,
+        };
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!isResizable.current) return;
+
+      if (event.touches.length === 1) {
+        event.preventDefault();
         const touch = event.touches[0];
         const mouseEvent = new MouseEvent("mousemove", {
           clientX: touch.clientX,
@@ -498,7 +597,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         });
         handleResizing(mouseEvent);
       }
-      if (event.touches.length === 2) {
+      if (event.touches.length === 2 && initialDistance.current.total) {
         event.preventDefault();
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
@@ -534,18 +633,6 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         component.style.left = `${newLeft}px`;
         component.style.top = `${newTop}px`;
       }
-    };
-
-    const handleResizingStop = (e: MouseEvent, origine = "mouseUp") => {
-      restoreAlign(component, borderResizeRef.current);
-      borderResizeRef.current = "";
-      extendMouseMoveStop();
-      borderEffectStop(component);
-      if (setResizing) setResizing(false);
-
-      if (trace && componentRef.current)
-        console.log(`[${componentName}] resize stop, ${origine}`);
-      component.style.cursor = "default";
     };
 
     const handleTouchEnd = (event: TouchEvent) => {
@@ -597,6 +684,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         lockResize,
       }}
     >
+      {sizeDisplay && <SizeDisplay size={componentSize} />}
       {children}
 
       {isResizable.current && (

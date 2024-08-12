@@ -6,10 +6,9 @@ import { ShowAlertMessagesWP } from "../alert-messages/ShowAlertMessages";
 export const MemorySection = () => {
   return (
     <MemoryProvider>
-      <div className="flex relative flex-col gap-4 w-full border-gray-800 border-opacity-30 border-dashed lg:flex-row">
+      <div className="flex relative flex-col gap-4 w-full border-gray-800 border-opacity-30 border-dashed min-w-fit lg:flex-row">
         <MemoryControlWP
           className="absolute top-10 right-10 bg-background"
-          trace={false}
           close={false}
           withTitleBar={true}
           titleHidden={false}
@@ -17,6 +16,9 @@ export const MemorySection = () => {
           titleHeight={36}
           draggable={false}
           resizable={true}
+          withMinimize={true}
+          minWidth={380}
+          minHeight={180}
         />
 
         <MemoryBoardWP

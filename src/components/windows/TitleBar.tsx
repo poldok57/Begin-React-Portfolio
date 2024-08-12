@@ -118,7 +118,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       win.bgColor = style?.backgroundColor || null;
       win.color = style?.color || null;
       win.toggleUp = minimizeOff;
-      win.onClose = hideComponent;
+      win.onClose = close ? hideComponent : undefined;
 
       upsertWindow(win);
       toggleWindowSize(ref.current.parentElement as HTMLDivElement, win);

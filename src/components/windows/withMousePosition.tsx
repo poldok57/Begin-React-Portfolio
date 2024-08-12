@@ -38,6 +38,10 @@ interface WithMousePositionProps {
   withMinimize?: boolean;
   withMaximize?: boolean;
   withToggleLock?: boolean;
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
 }
 
 /**
@@ -80,6 +84,10 @@ export function withMousePosition<P extends object>(
     withMinimize = false,
     withMaximize = false,
     withToggleLock = true,
+    minWidth = 0,
+    minHeight = 0,
+    maxWidth = 0,
+    maxHeight = 0,
     ...props
   }: WithMousePositionProps) {
     const titleRef = useRef(null);
@@ -277,14 +285,9 @@ export function withMousePosition<P extends object>(
       );
       if (trace) {
         console.log(
-          `[${WrappedComponent.name}] isAligned: ${
+          `[${WrappedComponent.name}] Align: ${
             isAlignedRightRef.current ? "Right" : "Left"
-          }`
-        );
-        console.log(
-          `[${WrappedComponent.name}] isAlignedBottom: ${
-            isAlignedBottomRef.current ? "Bottom" : "Top"
-          }`
+          } and ${isAlignedBottomRef.current ? "Bottom" : "Top"}`
         );
       }
     }, []);
@@ -456,9 +459,14 @@ export function withMousePosition<P extends object>(
       >
         <WithResizing
           componentRef={componentRef}
+          componentName={`[${WrappedComponent.name}]`}
           isLocked={isLocked}
           resizable={resizable}
           trace={trace}
+          minWidth={minWidth}
+          minHeight={minHeight}
+          maxWidth={maxWidth}
+          maxHeight={maxHeight}
         >
           <WrappedComponent trace={trace} {...(props as P)} />
           <TitleBar

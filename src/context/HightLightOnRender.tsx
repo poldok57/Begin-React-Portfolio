@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
 export const useOnRenderStyle = (bgColor = "#27ae60", off = false) => {
-  const ref = useRef();
-  const refColor = useRef(null);
+  const ref: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
+  const refColor: React.MutableRefObject<string | null> = useRef(null);
 
   useEffect(() => {
     if (off || !ref.current || ref.current.style.backgroundColor === bgColor)
@@ -15,7 +15,9 @@ export const useOnRenderStyle = (bgColor = "#27ae60", off = false) => {
     ref.current.style.transition = "background-color 0.25s";
 
     const timeout = setTimeout(() => {
-      ref.current.style.backgroundColor = refColor.current;
+      if (refColor.current && ref.current) {
+        ref.current.style.backgroundColor = refColor.current;
+      }
     }, 200);
 
     return () => {
@@ -25,7 +27,13 @@ export const useOnRenderStyle = (bgColor = "#27ae60", off = false) => {
 
   return ref;
 };
-export const HightLightOnRender = ({
+
+interface HightLightOnRenderProps {
+  hightLightColor: string;
+  off?: boolean;
+  children: React.ReactNode;
+}
+export const HightLightOnRender: React.FC<HightLightOnRenderProps> = ({
   hightLightColor,
   off = false,
   children,
