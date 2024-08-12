@@ -620,9 +620,9 @@ export const WithResizing: React.FC<WithResizingProps> = ({
           return;
         }
         const scaleX =
-          initialDistance.current.x / initialDistance.current.total;
+          Math.abs(touch1.clientX - touch2.clientX) / initialDistance.current.x;
         const scaleY =
-          initialDistance.current.y / initialDistance.current.total;
+          Math.abs(touch1.clientY - touch2.clientY) / initialDistance.current.y;
         const newLeft =
           (initialArea.current.left - initialDistance.current.touchX) * scaleX +
           initialDistance.current.touchX;
