@@ -18,6 +18,7 @@ const MyApp = ({ Component, pageProps }) => {
           className="rounded-lg shadow-lg"
           close={true}
           resizable={true}
+          trace={true}
           style={{
             position: "absolute",
             left: "50px",
@@ -26,7 +27,8 @@ const MyApp = ({ Component, pageProps }) => {
           width={120}
           height={120}
           minWidth={120}
-          minHeight={120}
+          maxWidth={280}
+          keepRatio={true}
           rounded="lg"
           src="/images/card-18-250.jpg"
           // image_width="120px"

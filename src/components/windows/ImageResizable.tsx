@@ -7,85 +7,69 @@ import { withMousePosition } from "./withMousePosition";
 import clsx from "clsx";
 
 interface ImageResizableProps {
+  trace?: boolean;
   src: string;
   alt: string;
   children?: React.ReactNode;
   className?: string;
+  fill?: boolean;
+  sizes?: string;
   withToggleLock?: boolean;
   resizable?: boolean;
   draggable?: boolean;
   width?: number;
   height?: number;
-  minWidth?: number;
-  minHeight?: number;
+  keepRatio?: boolean;
   rounded?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 }
 const ImageHandler: React.FC<ImageResizableProps> = ({
-  width,
-  height,
-  minWidth,
-  minHeight,
+  trace = false,
+  width = 0,
+  height = 0,
+  fill = true,
+  sizes = "33vw",
   src = "",
   alt = "",
   children,
   rounded = "none",
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const { componentSize, setMinimumSize } = useComponentSize();
-  const [size, setSize] = useState({
-    width: width ?? 120,
-    height: height ?? 120,
-  });
-  const canResizeRef = useRef(false);
-
+  const { componentSize, resizeComponent, setRatio } = useComponentSize();
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  if (minWidth && minHeight) {
-    setMinimumSize({ width: minWidth, height: minHeight });
-  }
+  console.log("ImageResizable", {
+    width,
+    height,
+  });
 
-  // useEffect(() => {
-  //   const img = new Image();
-  //   img.src = src;
-  //   img.onload = () => setImageLoaded(true);
-  // }, []);
-
-  const onLoad = () => {
-    // console.log("onLoad", ref.current);
+  const onLoad = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const img = event.currentTarget;
     setImageLoaded(true);
+    const originalRatio = img.naturalWidth / img.naturalHeight;
+    if (width > 0 && height === 0) {
+      height = width / originalRatio;
+    } else if (height > 0 && width === 0) {
+      width = height * originalRatio;
+    } else if (width === 0 && height === 0) {
+      width = img.naturalWidth;
+      height = img.naturalHeight;
+    }
+    if (trace)
+      console.log(
+        `"${src}" loaded width: ${width}, height: ${height} ratio: ${originalRatio}`
+      );
+    setRatio(originalRatio);
+
+    resizeComponent({
+      width,
+      height,
+    });
   };
 
   useEffect(() => {
     if (!imageLoaded || !ref.current) {
       return;
     }
-    if (canResizeRef.current) {
-      // console.log("onResize", componentSize);
-      setSize({
-        width: Math.max(componentSize.width ?? 10, minWidth ?? 50),
-        height: Math.max(componentSize.height ?? 10, minHeight ?? 50),
-      });
-    }
-
-    const canResize = () => {
-      canResizeRef.current = true;
-    };
-    const canNotResize = () => {
-      canResizeRef.current = false;
-    };
-
-    if (ref.current && ref.current.parentElement) {
-      ref.current.parentElement.addEventListener("mousedown", canResize);
-      ref.current.parentElement.addEventListener("mousemove", canResize);
-      document.addEventListener("mouseup", canNotResize);
-    }
-    return () => {
-      if (ref.current && ref.current.parentElement) {
-        ref.current.parentElement.removeEventListener("mousedown", canResize);
-        ref.current.parentElement.removeEventListener("mousemove", canResize);
-      }
-      document.removeEventListener("mouseup", canNotResize);
-    };
   }, [componentSize, imageLoaded]);
 
   return (
@@ -101,10 +85,12 @@ const ImageHandler: React.FC<ImageResizableProps> = ({
           "rounded-full": rounded === "full",
         })}
         ref={ref as LegacyRef<HTMLImageElement>}
-        width={Math.max(size.width, 100)}
-        height={Math.max(size.height, 100)}
+        // width={Math.max(size.width, 100)}
+        // height={Math.max(size.height, 100)}
         src={src}
         alt={alt}
+        fill={fill}
+        sizes={sizes}
         onLoad={onLoad}
       />
       {children}

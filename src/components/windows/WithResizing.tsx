@@ -32,33 +32,44 @@ interface ComponentSizeContext {
   lockResize: (lock: boolean) => void;
   resizeComponent: (size: Size) => Size;
   setMinimumSize: (size: Size) => void;
+  setComponentSize: (size: Size) => void;
   hideComponent: () => void;
   showComponent: () => void;
+  setRatio: (ratio: number) => void;
 }
 const DEFAULT_SIZE_MIN = { width: 100, height: 60 };
 
 const SizeContext = createContext<ComponentSizeContext | null>(null);
 
 const SizeDisplay: React.FC<{ size: Size }> = ({ size }) => {
-  const [visible, setVisible] = useState(true);
-  const lastSizeRef = useRef<Size>(size);
-
-  if (
-    size.width !== lastSizeRef.current.width ||
-    size.height !== lastSizeRef.current.height
-  ) {
-    setVisible(true);
-    lastSizeRef.current = { ...size };
-  }
+  const [visible, setVisible] = useState(false);
+  const lastSizeRef = useRef<Size | null>(null);
+  const nbInitialRender = useRef(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-    }, 3000);
+    if (nbInitialRender.current < 3) {
+      nbInitialRender.current++;
+      lastSizeRef.current = { ...size };
+      return;
+    }
 
-    return () => clearTimeout(timer);
+    if (
+      lastSizeRef.current &&
+      (size.width !== lastSizeRef.current.width ||
+        size.height !== lastSizeRef.current.height)
+    ) {
+      setVisible(true);
+      lastSizeRef.current = { ...size };
+
+      const timer = setTimeout(() => {
+        setVisible(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
   }, [size]);
 
+  // if (!visible) return null;
   return (
     <div
       style={{
@@ -70,7 +81,7 @@ const SizeDisplay: React.FC<{ size: Size }> = ({ size }) => {
         fontSize: "0.7rem",
         padding: "2px 5px",
         opacity: visible ? 0.9 : 0,
-        transition: visible ? "" : "opacity 4s",
+        transition: visible ? "" : "opacity 2s",
         zIndex: 1001,
       }}
     >
@@ -90,6 +101,8 @@ interface WithResizingProps {
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
+  aspectRatio?: number;
+  keepRatio?: boolean;
   children: React.ReactNode;
 }
 export const WithResizing: React.FC<WithResizingProps> = ({
@@ -103,10 +116,10 @@ export const WithResizing: React.FC<WithResizingProps> = ({
   minHeight,
   maxWidth,
   maxHeight,
+  aspectRatio,
   children,
+  keepRatio = false,
 }) => {
-  // const offsetRef = useRef({ x: 0, y: 0 }); // for the difference between the mouse and the component
-  const [sizeDisplay, setSizeDisplay] = useState<boolean>(false);
   const memoDisplayRef = useRef("");
 
   const isAlignedRightRef = useRef(false);
@@ -119,7 +132,10 @@ export const WithResizing: React.FC<WithResizingProps> = ({
   const borderResizeRef = useRef("");
   const memoBorder = useRef("");
   const memoBackground = useRef("");
+  const lastTap = useRef<number | null>(null);
 
+  const aspectRatioRef = useRef(aspectRatio);
+  // const keepRatio = props.keepRatio;
   // Initial position and distance for resizing with touch screen
   const initialArea = useRef({
     width: componentRef.current?.offsetWidth || 0,
@@ -180,28 +196,72 @@ export const WithResizing: React.FC<WithResizingProps> = ({
   const resizeComponent = (size: Size | Rectangle) => {
     const { component } = selectComponent();
     if (!component) {
+      console.log(`${componentName} resizeComponent: component not found`);
       return size;
     }
     const rect = component.getBoundingClientRect();
 
+    // first call, set the aspect ratio
+    if (!aspectRatioRef.current && keepRatio) {
+      aspectRatioRef.current = rect.width / rect.height;
+      if (trace)
+        console.log(
+          `${componentName} resizeComponent: aspect ratio: ${aspectRatioRef.current}`
+        );
+    }
+
     if (trace)
       console.log(
-        `${componentName} resizeComponent: size: ${size.width} x ${size.height} rect: ${rect.width} x ${rect.height} minimum: ${minimumSize.current.width} x ${minimumSize.current.height}`
+        `${componentName} resizeComponent: size: ${size.width} x ${size.height} rect: ${rect.width} x ${rect.height} minimum: ${minimumSize.current.width} x ${minimumSize.current.height} ratio: ${aspectRatioRef.current} keepRatio: ${keepRatio}`
       );
-    const newSize = {
-      width: Math.max(size.width ?? rect.width, minimumSize.current.width),
-      height: Math.max(size.height ?? rect.height, minimumSize.current.height),
-    };
-    if (maxWidth && newSize.width > maxWidth) newSize.width = maxWidth;
-    if (maxHeight && newSize.height > maxHeight) newSize.height = maxHeight;
 
-    if (size.width !== undefined) component.style.width = newSize.width + "px";
-    if (size.height !== undefined)
-      component.style.height = newSize.height + "px";
+    let newWidth = size.width ?? rect.width;
+    let newHeight = size.height ?? rect.height;
+    newWidth = Math.max(newWidth, minimumSize.current.width);
+    newHeight = Math.max(newHeight, minimumSize.current.height);
 
-    setSizeDisplay(true);
+    if (!keepRatio || !aspectRatioRef.current) {
+      // resize without aspect ratio
+      if (maxWidth && newWidth > maxWidth) newWidth = maxWidth;
+      if (maxHeight && newHeight > maxHeight) newHeight = maxHeight;
 
-    return newSize;
+      if (size.width !== undefined) component.style.width = newWidth + "px";
+      if (size.height !== undefined) component.style.height = newHeight + "px";
+
+      return {
+        width: newWidth,
+        height: newHeight,
+      };
+    }
+
+    // resize with aspect ratio
+    const ratio = aspectRatioRef.current;
+    if (typeof size.width === "undefined") {
+      newWidth = newHeight * ratio;
+    } else if (typeof size.height === "undefined") {
+      newHeight = size.width / ratio;
+    }
+    if (maxWidth && newWidth > maxWidth) {
+      newWidth = maxWidth;
+      newHeight = newWidth / ratio;
+    } else if (newWidth < minimumSize.current.width) {
+      newWidth = minimumSize.current.width;
+      newHeight = newWidth / ratio;
+    } else {
+      newHeight = newWidth / ratio;
+    }
+    if (maxHeight && newHeight > maxHeight) {
+      newHeight = maxHeight;
+      newWidth = newHeight * ratio;
+    } else if (newHeight < minimumSize.current.height) {
+      newHeight = minimumSize.current.height;
+      newWidth = newHeight * ratio;
+    }
+
+    component.style.width = newWidth + "px";
+    component.style.height = newHeight + "px";
+
+    return { width: newWidth, height: newHeight };
   };
 
   const setMinimumSize = (size: Size | null = null) => {
@@ -226,6 +286,14 @@ export const WithResizing: React.FC<WithResizingProps> = ({
           `${componentName} Set minimum size: ${size.width} x ${size.height}`
         );
     }
+  };
+
+  const setRatio = (ratio: number) => {
+    if (trace)
+      console.log(
+        `${componentName} Set ratio: ${ratio} keepRatio: ${keepRatio}`
+      );
+    aspectRatioRef.current = ratio;
   };
 
   const setResizeOn = () => {
@@ -651,6 +719,49 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       }
     };
 
+    const restoreRatio = () => {
+      if (!aspectRatioRef.current) {
+        return;
+      }
+      const rect = component.getBoundingClientRect();
+      const diffWidth = Math.abs(rect.width - componentSize.width);
+      const diffHeight = Math.abs(rect.height - componentSize.height);
+      let newWidth = rect.width;
+      let newHeight = rect.height;
+      if (diffWidth < diffHeight) {
+        newHeight = newWidth * aspectRatioRef.current;
+      } else {
+        newWidth = newHeight * aspectRatioRef.current;
+      }
+
+      const newSize = resizeComponent({
+        width: newWidth,
+        height: newHeight,
+      });
+      setComponentSize(newSize);
+    };
+
+    const handleDoubleClick = (event: MouseEvent) => {
+      if (event.detail === 2) {
+        restoreRatio();
+      }
+    };
+    const handleDoubleTap = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        const now = new Date().getTime();
+        const timeSince = now - (lastTap.current || 0);
+
+        if (timeSince < 600 && timeSince > 0) {
+          if (!aspectRatioRef.current) {
+            return;
+          }
+          restoreRatio();
+        }
+
+        lastTap.current = now;
+      }
+    };
+
     /**
      * add the events listener
      */
@@ -661,6 +772,8 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     component.addEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
     document.addEventListener(EVENT.TOUCH_END, handleTouchEnd);
     document.addEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
+    component.addEventListener("dblclick", handleDoubleClick);
+    component.addEventListener(EVENT.TOUCH_END, handleDoubleTap);
 
     return () => {
       component.removeEventListener(EVENT.MOUSE_MOVE, handleResizingStart);
@@ -670,6 +783,8 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       component.removeEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
       document.removeEventListener(EVENT.TOUCH_END, handleTouchEnd);
       document.removeEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
+      component.removeEventListener("dblclick", handleDoubleClick);
+      component.removeEventListener(EVENT.TOUCH_END, handleDoubleTap);
     };
   }, [isResizable.current, isLocked]);
 
@@ -678,13 +793,15 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       value={{
         componentSize,
         resizeComponent,
+        setComponentSize,
         setMinimumSize,
         hideComponent,
         showComponent,
         lockResize,
+        setRatio,
       }}
     >
-      {sizeDisplay && <SizeDisplay size={componentSize} />}
+      <SizeDisplay size={componentSize} />
       {children}
 
       {isResizable.current && (

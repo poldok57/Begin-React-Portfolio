@@ -467,6 +467,7 @@ export function withMousePosition<P extends object>(
           minHeight={minHeight}
           maxWidth={maxWidth}
           maxHeight={maxHeight}
+          {...props}
         >
           <WrappedComponent trace={trace} {...(props as P)} />
           <TitleBar
