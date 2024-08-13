@@ -18,7 +18,7 @@ const MyApp = ({ Component, pageProps }) => {
           className="rounded-lg shadow-lg"
           close={true}
           resizable={true}
-          trace={true}
+          // trace={true}
           style={{
             position: "absolute",
             left: "50px",
