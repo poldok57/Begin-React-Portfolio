@@ -47,7 +47,7 @@ export const taskbarContainerVariants = cva(
 
 export const taskbarItemVariants = cva(
   [
-    "cursor-pointer relative transition-all duration-200 ease-in-out  items-center hover:scale-110",
+    "cursor-pointer relative transition-all duration-200 ease-in-out items-center hover:scale-110",
     "bg-primary rounded border border-gray-500 text-secondary text-nowrap text-ellipsis overflow-hidden min-w-28",
   ],
   {
@@ -56,7 +56,7 @@ export const taskbarItemVariants = cva(
         horizontal: "h-10 px-2 flex",
         vertical: "w-full py-2 px-4",
         circular:
-          "flex rounded-full opacity-20 hover:opacity-90 hover:border-2 hover:bg-opacity-60 px-2 py-12",
+          "flex flex-col rounded-full opacity-20 hover:opacity-90 hover:border-2 hover:bg-opacity-60 px-2 py-12 text-center justify-center",
       },
       dynamic: {
         true: "hover:h-auto -mb-20 group-hover/dynamic:mb-0 hover:font-bold",

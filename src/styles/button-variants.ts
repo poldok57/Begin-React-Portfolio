@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 
-export type IconSize = "3xl" | "2xl" | "xl" | "md" | "sm" | "xs";
+export type IconSize = "3xl" | "2xl" | "xl" | "lg" | "md" | "sm" | "xs";
 export const iconSizeConvertion = (size: IconSize) => {
   return size === "3xl"
     ? 30
@@ -8,6 +8,8 @@ export const iconSizeConvertion = (size: IconSize) => {
     ? 24
     : size === "xl"
     ? 20
+    : size === "lg"
+    ? 18
     : size === "md"
     ? 16
     : size === "sm"
@@ -23,6 +25,7 @@ export const buttonCloseVariants = cva(
         "3xl": "text-3xl",
         "2xl": "text-2xl",
         xl: "text-xl",
+        lg: "text-lg",
         md: "text-md",
         sm: "text-sm",
         xs: "text-xs",
@@ -59,6 +62,7 @@ export const buttonMaximizeVariants = cva(
         "3xl": "text-3xl",
         "2xl": "text-2xl",
         xl: "text-xl",
+        lg: "text-lg",
         md: "text-md",
         sm: "text-sm",
         xs: "text-xs",

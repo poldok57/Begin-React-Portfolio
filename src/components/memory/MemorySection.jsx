@@ -12,7 +12,7 @@ export const MemorySection = () => {
           close={false}
           withTitleBar={true}
           titleHidden={false}
-          titleText="Reset panel"
+          titleText="Reset"
           titleHeight={36}
           draggable={false}
           resizable={true}

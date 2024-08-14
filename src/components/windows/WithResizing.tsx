@@ -22,10 +22,12 @@ import {
   resizeRect,
 } from "../../lib/mouse-position";
 
-// import clsx from "clsx";
+import { SizeDisplay } from "./SizeDisplay";
+import { isTouchDevice } from "@/lib/utils/device";
 
 import { Size, Rectangle, Coordinate } from "../../lib/canvas/types";
 import { EVENT, POSITION } from "./types";
+import clsx from "clsx";
 
 interface ComponentSizeContext {
   componentSize: Size;
@@ -40,55 +42,6 @@ interface ComponentSizeContext {
 const DEFAULT_SIZE_MIN = { width: 100, height: 60 };
 
 const SizeContext = createContext<ComponentSizeContext | null>(null);
-
-const SizeDisplay: React.FC<{ size: Size }> = ({ size }) => {
-  const [visible, setVisible] = useState(false);
-  const lastSizeRef = useRef<Size | null>(null);
-  const nbInitialRender = useRef(0);
-
-  useEffect(() => {
-    if (nbInitialRender.current < 3) {
-      nbInitialRender.current++;
-      lastSizeRef.current = { ...size };
-      return;
-    }
-
-    if (
-      lastSizeRef.current &&
-      (size.width !== lastSizeRef.current.width ||
-        size.height !== lastSizeRef.current.height)
-    ) {
-      setVisible(true);
-      lastSizeRef.current = { ...size };
-
-      const timer = setTimeout(() => {
-        setVisible(false);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [size]);
-
-  // if (!visible) return null;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: -14,
-        right: 2,
-        backgroundColor: "gray",
-        color: "white",
-        fontSize: "0.7rem",
-        padding: "2px 5px",
-        opacity: visible ? 0.9 : 0,
-        transition: visible ? "" : "opacity 2s",
-        zIndex: 1001,
-      }}
-    >
-      {Math.round(size.width)} x {Math.round(size.height)}
-    </div>
-  );
-};
 
 interface WithResizingProps {
   isLocked?: boolean;
@@ -773,7 +726,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     document.addEventListener(EVENT.TOUCH_END, handleTouchEnd);
     document.addEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
     component.addEventListener("dblclick", handleDoubleClick);
-    component.addEventListener(EVENT.TOUCH_END, handleDoubleTap);
+    component.addEventListener(EVENT.TOUCH_START, handleDoubleTap);
 
     return () => {
       component.removeEventListener(EVENT.MOUSE_MOVE, handleResizingStart);
@@ -784,7 +737,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       document.removeEventListener(EVENT.TOUCH_END, handleTouchEnd);
       document.removeEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
       component.removeEventListener("dblclick", handleDoubleClick);
-      component.removeEventListener(EVENT.TOUCH_END, handleDoubleTap);
+      component.removeEventListener(EVENT.TOUCH_START, handleDoubleTap);
     };
   }, [isResizable.current, isLocked]);
 
@@ -806,10 +759,13 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
       {isResizable.current && (
         <button
-          className="absolute -right-2 -bottom-2 p-1 text-gray-700 bg-gray-300 rounded-xl opacity-0 group-hover/resizable:opacity-40 hover:opacity-80 cursor-nw-resize"
+          className={clsx([
+            "absolute -right-2 -bottom-2 p-1 text-gray-700 bg-gray-300 rounded-xl",
+            "opacity-0 group-hover/resizable:opacity-40 hover:opacity-80 cursor-nw-resize group-focus/resizable:opacity-60",
+          ])}
           onClick={setResizeOn}
         >
-          <MoveDiagonal2 size={14} />
+          <MoveDiagonal2 size={isTouchDevice() ? 20 : 14} />
         </button>
       )}
     </SizeContext.Provider>

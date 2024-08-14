@@ -37,11 +37,6 @@ const ImageHandler: React.FC<ImageResizableProps> = ({
   const { componentSize, resizeComponent, setRatio } = useComponentSize();
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  console.log("ImageResizable", {
-    width,
-    height,
-  });
-
   const onLoad = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const img = event.currentTarget;
     setImageLoaded(true);

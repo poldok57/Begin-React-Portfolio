@@ -14,6 +14,7 @@ import { WindowType } from "./types";
 import { useWindowActions, useMaximizedWindowId } from "./store";
 import { copyDivStyle, toggleWindowSize } from "./window-size";
 import { useComponentSize } from "./WithResizing";
+import { isTouchDevice } from "@/lib/utils/device";
 
 import clsx from "clsx";
 
@@ -73,6 +74,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
 
     const btnRef = referrer ? referrer.current : undefined;
 
+    const btnSize = isTouchDevice() ? "xl" : "md";
     /**
      * Gère la fermeture de la fenêtre
      */
@@ -270,17 +272,21 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
                   <ToggleMinimize
                     isMinimized={false}
                     toggleMinimize={handleMinimize}
+                    size={btnSize}
                   />
                 )}
                 {withMaximize && (
                   <ToggleMaximize
                     isMaximized={currentStatus === STATUS.MAXIMIZED}
                     toggleMaximize={toggleMaximize}
+                    size={btnSize}
                   />
                 )}
               </>
             ) : null}
-            {close || onClose ? <CloseButton onClick={handleClose} /> : null}
+            {close || onClose ? (
+              <CloseButton onClick={handleClose} size={btnSize} />
+            ) : null}
           </div>
         </div>
       </div>
