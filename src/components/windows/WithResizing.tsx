@@ -96,13 +96,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     left: componentRef.current?.offsetLeft || 0,
     top: componentRef.current?.offsetTop || 0,
   });
-  const initialDistance = useRef({
-    total: 0,
-    x: 0,
-    y: 0,
-    touchX: 0,
-    touchY: 0,
-  });
+  const initialDistance = useRef(0);
 
   const selectComponent = (): { component: HTMLElement | null } => {
     return {
@@ -146,6 +140,41 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       });
     }
   };
+
+  const controlRatioLimits = (newWidth: number, newHeight: number) => {
+    if (!keepRatio || !aspectRatioRef.current) {
+      // resize without aspect ratio
+      if (maxWidth && newWidth > maxWidth) newWidth = maxWidth;
+      if (maxHeight && newHeight > maxHeight) newHeight = maxHeight;
+
+      return {
+        width: newWidth,
+        height: newHeight,
+      };
+    }
+
+    // resize with aspect ratio
+    const ratio = aspectRatioRef.current;
+    if (maxWidth && newWidth > maxWidth) {
+      newWidth = maxWidth;
+      newHeight = newWidth / ratio;
+    } else if (newWidth < minimumSize.current.width) {
+      newWidth = minimumSize.current.width;
+      newHeight = newWidth / ratio;
+    } else {
+      newHeight = newWidth / ratio;
+    }
+    if (maxHeight && newHeight > maxHeight) {
+      newHeight = maxHeight;
+      newWidth = newHeight * ratio;
+    } else if (newHeight < minimumSize.current.height) {
+      newHeight = minimumSize.current.height;
+      newWidth = newHeight * ratio;
+    }
+
+    return { width: newWidth, height: newHeight };
+  };
+
   const resizeComponent = (size: Size | Rectangle) => {
     const { component } = selectComponent();
     if (!component) {
@@ -188,33 +217,17 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     }
 
     // resize with aspect ratio
-    const ratio = aspectRatioRef.current;
     if (typeof size.width === "undefined") {
-      newWidth = newHeight * ratio;
+      newWidth = newHeight * aspectRatioRef.current;
     } else if (typeof size.height === "undefined") {
-      newHeight = size.width / ratio;
+      newHeight = size.width / aspectRatioRef.current;
     }
-    if (maxWidth && newWidth > maxWidth) {
-      newWidth = maxWidth;
-      newHeight = newWidth / ratio;
-    } else if (newWidth < minimumSize.current.width) {
-      newWidth = minimumSize.current.width;
-      newHeight = newWidth / ratio;
-    } else {
-      newHeight = newWidth / ratio;
-    }
-    if (maxHeight && newHeight > maxHeight) {
-      newHeight = maxHeight;
-      newWidth = newHeight * ratio;
-    } else if (newHeight < minimumSize.current.height) {
-      newHeight = minimumSize.current.height;
-      newWidth = newHeight * ratio;
-    }
+    const newSize: Size = controlRatioLimits(newWidth, newHeight);
 
-    component.style.width = newWidth + "px";
-    component.style.height = newHeight + "px";
+    component.style.width = newSize.width + "px";
+    component.style.height = newSize.height + "px";
 
-    return { width: newWidth, height: newHeight };
+    return newSize;
   };
 
   const setMinimumSize = (size: Size | null = null) => {
@@ -585,16 +598,10 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       } else if (event.touches.length === 2) {
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
-        const distance = {
-          x: Math.abs(touch1.clientX - touch2.clientX),
-          y: Math.abs(touch1.clientY - touch2.clientY),
-          total: Math.sqrt(
-            (touch1.clientX - touch2.clientX) ** 2 +
-              (touch1.clientY - touch2.clientY) ** 2
-          ),
-          touchX: touch1.clientX,
-          touchY: touch1.clientY,
-        };
+        const distance = Math.sqrt(
+          (touch1.clientX - touch2.clientX) ** 2 +
+            (touch1.clientY - touch2.clientY) ** 2
+        );
         initialDistance.current = distance;
         const rect = component.getBoundingClientRect();
         initialArea.current = {
@@ -618,7 +625,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         });
         handleResizing(mouseEvent);
       }
-      if (event.touches.length === 2 && initialDistance.current.total) {
+      if (event.touches.length === 2 && initialDistance.current) {
         event.preventDefault();
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
@@ -627,29 +634,24 @@ export const WithResizing: React.FC<WithResizingProps> = ({
             (touch1.clientY - touch2.clientY) ** 2
         );
 
-        const scale = distance / initialDistance.current.total;
+        const scale = distance / initialDistance.current;
 
-        const newRect = {
-          width: initialArea.current.width * scale,
-          height: initialArea.current.height * scale,
-        };
+        const width = initialArea.current.width * scale;
+        const height = initialArea.current.height * scale;
 
-        const newSize = resizeComponent(newRect as Size);
+        const newSize1: Size = controlRatioLimits(width, height);
+
+        const newSize: Size = resizeComponent(newSize1);
         setComponentSize(newSize);
         if (isLocked) {
           // dont move the component, when is locked
           return;
         }
-        const scaleX =
-          Math.abs(touch1.clientX - touch2.clientX) / initialDistance.current.x;
-        const scaleY =
-          Math.abs(touch1.clientY - touch2.clientY) / initialDistance.current.y;
-        const newLeft =
-          (initialArea.current.left - initialDistance.current.touchX) * scaleX +
-          initialDistance.current.touchX;
-        const newTop =
-          (initialArea.current.top - initialDistance.current.touchY) * scaleY +
-          initialDistance.current.touchY;
+        const centerX = (touch1.clientX + touch2.clientX) / 2;
+        const centerY = (touch1.clientY + touch2.clientY) / 2;
+
+        const newLeft = centerX - newSize.width / 2;
+        const newTop = centerY - newSize.height / 2;
 
         component.style.left = `${newLeft}px`;
         component.style.top = `${newTop}px`;
@@ -665,10 +667,10 @@ export const WithResizing: React.FC<WithResizingProps> = ({
         });
 
         handleResizingStop(mouseEvent, "touchEnd");
-      } else if (touch.length === 2 && initialDistance.current.total) {
+      } else if (touch.length === 2 && initialDistance.current) {
         const newSize = resizeComponent(initialArea.current);
         setComponentSize(newSize);
-        initialDistance.current.total = 0;
+        initialDistance.current = 0;
       }
     };
 
