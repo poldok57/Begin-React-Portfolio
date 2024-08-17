@@ -194,7 +194,7 @@ export abstract class DrawingHandler {
   abstract changeData(data: AllParams): void;
   abstract initData(data: AllParams): void;
 
-  abstract actionMouseDown(mode: string, event: MouseEvent): returnMouseDown;
+  abstract actionMouseDown(event: MouseEvent): returnMouseDown;
   abstract actionMouseMove(_event: MouseEvent): string | null;
   abstract actionMouseUp(): void;
   abstract actionMouseLeave(): void;

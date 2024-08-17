@@ -221,14 +221,13 @@ export class DrawElement extends DrawingHandler {
    * @param {string} mode - drawing mode
    * @param {MouseEvent} event - mouse event
    */
-  actionMouseDown(mode: string, event: MouseEvent) {
+  actionMouseDown(event: MouseEvent) {
     // if (!this.isFixed()) {
     //   return false;
     // }
     let toReset = false;
     let pointer: string | null = null;
     this.setCoordinates(event);
-    this.setType(mode);
     const mouseOnShape = this.handleMouseOnShape();
     if (mouseOnShape) {
       // console.log("mode", mode, "mouseOnShape: ", mouseOnShape);

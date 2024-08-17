@@ -183,7 +183,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
 
-    const toContinue = drawing.actionMouseDown(currentParams.mode, event);
+    const toContinue = drawing.actionMouseDown(event);
     if (!toContinue) {
       stopExtendMouseEvent();
     }
@@ -391,10 +391,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     setContext(canvasRef.current);
 
     if (!drawing) return;
-    const { toContinue, toReset, pointer } = drawing.actionMouseDown(
-      currentParams.mode,
-      event
-    );
+    drawing.setType(currentParams.mode);
+    const { toContinue, toReset, pointer } = drawing.actionMouseDown(event);
     if (toContinue) {
       extendMouseEvent();
     } else {
@@ -428,8 +426,14 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     const handleDocumentLoaded = () => {
       generalInitialisation();
     };
+
+    if (!canvasMouseRef.current) {
+      return;
+    }
+    const canvasMouse = canvasMouseRef.current;
+
     const handleMouseUp = () => {
-      drawing && drawing.actionMouseUp();
+      drawing?.actionMouseUp();
     };
     const handleMouseDown = (event: MouseEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
@@ -437,16 +441,12 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       actionMouseDown(event);
     };
     const handleMouseMove = (event: MouseEvent) => {
-      if (!canvasMouseRef.current || !drawing) {
-        return;
-      }
-
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
 
-      const pointer = drawing.actionMouseMove(event);
+      const pointer = drawing?.actionMouseMove(event);
 
-      if (pointer !== null) {
-        canvasMouseRef.current.style.cursor = pointer;
+      if (pointer) {
+        canvasMouse.style.cursor = pointer;
       }
     };
 
@@ -473,11 +473,38 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       }
     };
 
-    if (!canvasMouseRef.current) {
-      console.error("canvasMouseRef.current is null");
-      return;
-    }
-    const canvasMouse = canvasMouseRef.current;
+    const handleTouchStart = (event: TouchEvent) => {
+      console.log("touchstart");
+      if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
+
+      event.preventDefault();
+
+      const touch = event.touches[0];
+      const mouseEvent = new MouseEvent("mousedown", {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+      console.log("mouseEvent", mouseEvent);
+      actionMouseDown(mouseEvent);
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (mouseOnCtrlPanel.current === true) return;
+
+      event.preventDefault();
+      const touch = event.touches[0];
+      const mouseEvent = new MouseEvent("mousemove", {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+
+      drawing?.actionMouseMove(mouseEvent);
+    };
+
+    const handleTouchEnd = () => {
+      drawing?.actionMouseUp();
+    };
+
     canvasMouse.style.pointerEvents = "auto";
 
     canvasMouse.addEventListener("mousedown", handleMouseDown);
@@ -485,6 +512,13 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     canvasMouse.addEventListener("mouseup", handleMouseUp);
     canvasMouse.addEventListener("mouseleave", onMouseLeave);
     document.addEventListener("modeChanged", handleChangeMode);
+
+    canvasMouse.addEventListener("touchstart", handleTouchStart);
+    canvasMouse.addEventListener("touchmove", handleTouchMove);
+    canvasMouse.addEventListener("touchend", handleTouchEnd);
+    canvasMouse.addEventListener("touchcancel", handleTouchEnd);
+    //
+    //
     if (document.readyState === "complete") {
       handleDocumentLoaded();
     } else {
@@ -504,9 +538,14 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       document.removeEventListener("modeChanged", handleChangeMode);
       window.removeEventListener("load", handleDocumentLoaded);
 
+      canvasMouse.removeEventListener("touchstart", handleTouchStart);
+      canvasMouse.removeEventListener("touchmove", handleTouchMove);
+      canvasMouse.removeEventListener("touchend", handleTouchEnd);
+      canvasMouse.removeEventListener("touchcancel", handleTouchEnd);
+
       currentParams.mode = DRAWING_MODES.INIT;
     };
-  }, []);
+  }, [canvasMouseRef.current]);
 
   return (
     <div

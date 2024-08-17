@@ -34,10 +34,11 @@ export const Draw = () => {
   };
 
   return (
-    <div className="block relative gap-8">
+    <div className="flex relative flex-col gap-8 justify-center items-center py-5 w-full h-full">
       <DrawCanvas canvasRef={canvasRef} getParams={getDrawingParams} />
       <DrawControlWP
         trace={false}
+        withMinimize={true}
         style={{
           top: "40px",
           position: "relative",

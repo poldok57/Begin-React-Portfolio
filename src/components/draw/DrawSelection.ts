@@ -217,7 +217,7 @@ export class DrawSelection extends DrawingHandler {
    * @param {MouseEvent} event - mouse event
    * @returns {object} - {toReset, toContinue, pointer} - toReset: reset the action, toContinue: continue the action, pointer: cursor pointer
    */
-  actionMouseDown(mode: string, event: MouseEvent): returnMouseDown {
+  actionMouseDown(event: MouseEvent): returnMouseDown {
     // if (!this.isFixed()) {
     //   return false;
     // }

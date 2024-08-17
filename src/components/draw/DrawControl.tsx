@@ -184,7 +184,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       <div
         onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
         onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
-        className="flex flex-col gap-1 p-1 w-auto rounded-md border-2 shadow-xl border-secondary bg-background"
+        className="flex flex-col gap-1 p-1 min-w-fit max-w-[650px]rounded-md border-2 shadow-xl border-secondary bg-background"
       >
         <div className="flex flex-row gap-4">
           <Button

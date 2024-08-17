@@ -5,7 +5,9 @@ import { ThemeProvider } from "../src/context/ThemeProvider";
 import { Taskbar } from "../src/components/windows/TaskBar";
 import { ImageResizable } from "../src/components/windows/ImageResizable";
 
-const MyApp = ({ Component, pageProps }) => {
+import type { AppProps } from "next/app";
+
+const MyApp = ({ Component, pageProps }: AppProps) => {
   // console.log("redendering MyApp..");
   return (
     <ThemeProvider>
@@ -18,6 +20,8 @@ const MyApp = ({ Component, pageProps }) => {
           className="rounded-lg shadow-lg"
           close={true}
           resizable={true}
+          alt="Aline n' Karl
+          "
           // trace={true}
           style={{
             position: "absolute",

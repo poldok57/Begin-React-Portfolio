@@ -1,3 +1,4 @@
+"use client";
 import { Area } from "./types";
 
 const getAlphaLines = (canvas: HTMLCanvasElement): Uint8ClampedArray[] => {
@@ -24,32 +25,32 @@ export const imageSize = (canvas: HTMLCanvasElement | null): Area | null => {
   const lines = getAlphaLines(canvas);
 
   let top: number | null = null;
-  let bottom: number | null = null;
+  let bottom: number | null = height - 1;
   let left: number | null = null;
-  let right: number | null = null;
+  let right: number | null = width - 1;
 
-  for (let y = 0; y < height; y++) {
-    if (lines[y].some((alpha) => alpha > 0)) {
+  for (let y = 0; y < lines.length; y++) {
+    if (lines[y]?.some((alpha) => alpha > 0)) {
       top = y;
       break;
     }
   }
 
-  for (let y = height - 1; y >= top!; y--) {
-    if (lines[y].some((alpha) => alpha > 0)) {
+  for (let y = lines.length - 1; y >= top!; y--) {
+    if (lines[y]?.some((alpha) => alpha > 0)) {
       bottom = y;
       break;
     }
   }
 
   for (let x = 0; x < width; x++) {
-    if (lines.some((line) => line[x] > 0)) {
+    if (lines?.some((line) => line[x] > 0)) {
       left = x;
       break;
     }
   }
 
-  for (let x = width - 1; x >= left!; x--) {
+  for (let x = Math.round(width) - 1; x >= left!; x--) {
     if (lines.some((line) => line[x] > 0)) {
       right = x;
       break;

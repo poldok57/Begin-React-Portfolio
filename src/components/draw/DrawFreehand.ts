@@ -153,11 +153,9 @@ export class DrawFreehand extends DrawingHandler {
    * @param {MouseEvent} event
    * @returns {boolean} to continue or not
    */
-  actionMouseDown(mode: string, event: MouseEvent): returnMouseDown {
+  actionMouseDown(event: MouseEvent): returnMouseDown {
     // color and width painting
     this.setCoordinates(event);
-
-    this.setType(mode);
 
     this.setDrawing(true);
 

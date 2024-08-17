@@ -496,6 +496,29 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     if (!isResizable.current || !component) {
       return;
     }
+
+    const restoreRatio = () => {
+      if (!aspectRatioRef.current) {
+        return;
+      }
+      const rect = component.getBoundingClientRect();
+      const diffWidth = Math.abs(rect.width - componentSize.width);
+      const diffHeight = Math.abs(rect.height - componentSize.height);
+      let newWidth = rect.width;
+      let newHeight = rect.height;
+      if (diffWidth < diffHeight) {
+        newHeight = newWidth * aspectRatioRef.current;
+      } else {
+        newWidth = newHeight * aspectRatioRef.current;
+      }
+
+      const newSize = resizeComponent({
+        width: newWidth,
+        height: newHeight,
+      });
+      setComponentSize(newSize);
+    };
+
     const extendMouseMove = () => {
       document.addEventListener(EVENT.MOUSE_MOVE, handleResizing);
       component.removeEventListener(EVENT.MOUSE_MOVE, handleResizing);
@@ -504,18 +527,16 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       document.removeEventListener(EVENT.MOUSE_MOVE, handleResizing);
       component.addEventListener(EVENT.MOUSE_MOVE, handleResizing);
     };
-    const handleResizingStart = (event: MouseEvent) => {
+    const handleResizingStart = (coord: Coordinate) => {
       const rect = component.getBoundingClientRect();
-      const mouseCoord: Coordinate = { x: event.clientX, y: event.clientY };
 
-      const mousePos = mouseIsOnBorderRect(mouseCoord, rect);
+      const mousePos = mouseIsOnBorderRect(coord, rect);
 
       if (mousePos && isResizable.current) {
         const mouseCursor = mousePointer(mousePos);
         if (isLocked ? isBorderRightOrBottom(mousePos) : isBorder(mousePos)) {
           borderResizeRef.current = mousePos;
 
-          event.preventDefault();
           if (setResizing) setResizing(true);
           if (trace)
             console.log(
@@ -526,9 +547,22 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
           changeAlign(component, mousePos);
           borderEffect(component);
-        } else {
-          component.style.cursor = "default";
+          return mouseCursor;
         }
+        return null;
+      }
+    };
+
+    const handleMouseDown = (event: MouseEvent) => {
+      const mouseCursor = handleResizingStart({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      if (mouseCursor) {
+        event.preventDefault();
+        component.style.cursor = mouseCursor;
+      } else {
+        component.style.cursor = "default";
       }
     };
 
@@ -590,11 +624,13 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
       if (event.touches.length === 1) {
         const touch = event.touches[0];
-        const mouseEvent = new MouseEvent("mousedown", {
-          clientX: touch.clientX,
-          clientY: touch.clientY,
+        const cursor = handleResizingStart({
+          x: touch.clientX,
+          y: touch.clientY,
         });
-        handleResizingStart(mouseEvent);
+        if (cursor) {
+          event.preventDefault();
+        }
       } else if (event.touches.length === 2) {
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
@@ -674,28 +710,6 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       }
     };
 
-    const restoreRatio = () => {
-      if (!aspectRatioRef.current) {
-        return;
-      }
-      const rect = component.getBoundingClientRect();
-      const diffWidth = Math.abs(rect.width - componentSize.width);
-      const diffHeight = Math.abs(rect.height - componentSize.height);
-      let newWidth = rect.width;
-      let newHeight = rect.height;
-      if (diffWidth < diffHeight) {
-        newHeight = newWidth * aspectRatioRef.current;
-      } else {
-        newWidth = newHeight * aspectRatioRef.current;
-      }
-
-      const newSize = resizeComponent({
-        width: newWidth,
-        height: newHeight,
-      });
-      setComponentSize(newSize);
-    };
-
     const handleDoubleClick = (event: MouseEvent) => {
       if (event.detail === 2) {
         restoreRatio();
@@ -705,40 +719,39 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       if (event.touches.length === 1) {
         const now = new Date().getTime();
         const timeSince = now - (lastTap.current || 0);
+        lastTap.current = now;
 
         if (timeSince < 600 && timeSince > 0) {
-          if (!aspectRatioRef.current) {
-            return;
+          if (aspectRatioRef.current) {
+            restoreRatio();
           }
-          restoreRatio();
         }
-
-        lastTap.current = now;
       }
     };
 
     /**
      * add the events listener
      */
-    component.addEventListener(EVENT.MOUSE_DOWN, handleResizingStart);
+    component.addEventListener(EVENT.MOUSE_DOWN, handleMouseDown);
     component.addEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
     document.addEventListener(EVENT.MOUSE_UP, handleResizingStop);
+    component.addEventListener(EVENT.MOUSE_DBL_CLICK, handleDoubleClick);
+
     component.addEventListener(EVENT.TOUCH_START, handleTouchStart);
     component.addEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
     document.addEventListener(EVENT.TOUCH_END, handleTouchEnd);
     document.addEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
-    component.addEventListener("dblclick", handleDoubleClick);
     component.addEventListener(EVENT.TOUCH_START, handleDoubleTap);
 
     return () => {
-      component.removeEventListener(EVENT.MOUSE_MOVE, handleResizingStart);
-      component.removeEventListener(EVENT.MOUSE_DOWN, handleResizingStart);
+      component.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
+      component.removeEventListener(EVENT.MOUSE_DOWN, handleMouseDown);
       document.removeEventListener(EVENT.MOUSE_UP, handleResizingStop);
+      component.removeEventListener(EVENT.MOUSE_DBL_CLICK, handleDoubleClick);
       component.removeEventListener(EVENT.TOUCH_START, handleTouchStart);
       component.removeEventListener(EVENT.TOUCH_MOVE, handleTouchMove);
       document.removeEventListener(EVENT.TOUCH_END, handleTouchEnd);
       document.removeEventListener(EVENT.TOUCH_CANCEL, handleTouchEnd);
-      component.removeEventListener("dblclick", handleDoubleClick);
       component.removeEventListener(EVENT.TOUCH_START, handleDoubleTap);
     };
   }, [isResizable.current, isLocked]);

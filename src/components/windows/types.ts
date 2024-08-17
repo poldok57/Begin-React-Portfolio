@@ -5,6 +5,7 @@ export enum EVENT {
   MOUSE_OVER = "mouseover",
   MOUSE_LEAVE = "mouseleave",
   MOUSE_ENTER = "mouseenter",
+  MOUSE_DBL_CLICK = "dblclick",
   TOUCH_START = "touchstart",
   TOUCH_END = "touchend",
   TOUCH_MOVE = "touchmove",

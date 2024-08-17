@@ -186,7 +186,7 @@ export class DrawLine extends DrawingHandler {
    * @param {MouseEvent} event
    * @returns {boolean} to continue or not
    */
-  actionMouseDown(mode: string, event: MouseEvent): returnMouseDown {
+  actionMouseDown(event: MouseEvent): returnMouseDown {
     // first point must be inside the canvas
     if (
       !mouseIsInsideComponent(event, this.mCanvas) &&
@@ -199,9 +199,7 @@ export class DrawLine extends DrawingHandler {
     let toContinue = false;
     const pointer = "none";
 
-    this.setType(mode);
-
-    switch (mode) {
+    switch (this.getType()) {
       case DRAWING_MODES.LINE:
         if (this.line.drawLine()) {
           this.saveCanvasPicture(this.line.getCoordinates() as Coordinate);
