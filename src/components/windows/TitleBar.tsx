@@ -15,6 +15,7 @@ import { useWindowActions, useMaximizedWindowId } from "./store";
 import { copyDivStyle, toggleWindowSize } from "./window-size";
 import { useComponentSize } from "./WithResizing";
 import { isTouchDevice } from "@/lib/utils/device";
+import { isTouch } from "@/lib/utils/device";
 
 import clsx from "clsx";
 
@@ -75,6 +76,8 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     const btnRef = referrer ? referrer.current : undefined;
 
     const btnSize = isTouchDevice() ? "xl" : "md";
+
+    const isTouch = isTouchDevice();
     /**
      * Gère la fermeture de la fenêtre
      */
@@ -251,7 +254,10 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         <div
           className={clsx(
             "flex absolute flex-row gap-4 justify-between items-center p-1 w-full h-full",
-            "opacity-20 group-hover/draggable:opacity-100"
+            "opacity-20 group-hover/draggable:opacity-100",
+            {
+              "opacity-85": isTouch,
+            }
           )}
         >
           <div>

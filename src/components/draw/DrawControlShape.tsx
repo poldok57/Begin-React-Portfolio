@@ -5,13 +5,13 @@ import { AiOutlineRadiusUpright } from "react-icons/ai";
 import { AiOutlineRadiusBottomright } from "react-icons/ai";
 import { WiMoonFirstQuarter } from "react-icons/wi";
 import { Button } from "../atom/Button";
+import { RangeInput } from "../atom/RangeInput";
 import ToggleSwitch from "../atom/ToggleSwitch";
 
 import {
   DRAWING_MODES,
   isDrawingSelect,
   isDrawingShape,
-  isDrawingSquare,
   Params,
   GroupParams,
   AllParams,
@@ -26,6 +26,7 @@ interface DrawControlShapeProps {
   handleModeChange: (mode: string) => void;
   handleChangeRadius: (value: number) => void;
   setWithText: (value: boolean) => void;
+  isTouch?: boolean;
 }
 
 export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
@@ -35,6 +36,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
   handleModeChange,
   handleChangeRadius,
   setWithText,
+  isTouch = false,
 }) => {
   const [withBorder, setWithBorder] = useState(drawingParams.shape.withBorder);
   const handleShape = (param: Params) => {
@@ -52,7 +54,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
 
   return (
     <div
-      className={clsx("flex flex-col border-2 border-secondary p-2", {
+      className={clsx("flex flex-col p-2 border-2 border-secondary", {
         "bg-paper": isDrawingShape(mode),
       })}
     >
@@ -98,7 +100,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
           <label
             htmlFor="toggle-filled"
             className={clsx(
-              "flex flex-col items-center justify-center font-bold",
+              "flex flex-col justify-center items-center font-bold",
               {
                 hidden: !isDrawingShape(mode),
               }
@@ -113,30 +115,21 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
               }
             />
           </label>
-          <label
-            htmlFor="draw-radius-picker"
-            className={clsx("flex flex-col items-center justify-center", {
-              hidden: !isDrawingSquare(mode),
-            })}
-          >
-            Radius
-            <input
-              className={inputRangeVariants({ width: "16", size: "xs" })}
-              id="draw-radius-picker"
-              type="range"
-              defaultValue={drawingParams.shape.radius}
-              min="0"
-              max="50"
-              step="1"
-              onChange={(event) =>
-                handleChangeRadius(parseInt(event.target.value))
-              }
-            />
-          </label>
+          <RangeInput
+            className={inputRangeVariants({ width: "16", size: "xs" })}
+            id="draw-radius-picker"
+            label="Radius"
+            value={drawingParams.shape.radius}
+            min="0"
+            max="50"
+            step="2"
+            onChange={(value) => handleChangeRadius(value)}
+            isTouch={isTouch}
+          />
           <label
             htmlFor="toggle-text"
             className={clsx(
-              "flex flex-col items-center justify-center font-bold",
+              "flex flex-col justify-center items-center font-bold",
               {
                 hidden: !isDrawingShape(mode),
               }
@@ -155,11 +148,12 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
         className={clsx("mt-1 flex flex-row  border-t border-secondary p-2", {
           hidden: !isDrawingShape(mode) && !isDrawingSelect(mode),
           "bg-paper": isDrawingSelect(mode),
+          "gap-4": isTouch,
         })}
       >
         <label
           htmlFor="toggle-border"
-          className="flex flex-col items-center justify-center font-bold"
+          className="flex flex-col justify-center items-center font-bold"
         >
           Border
           <ToggleSwitch
@@ -174,7 +168,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
         <div className={clsx("flex flex-row gap-5", { hidden: !withBorder })}>
           <label
             htmlFor="border-color-picker"
-            className="flex items-center justify-center gap-2"
+            className="flex gap-2 justify-center items-center"
           >
             color
             <input
@@ -184,63 +178,42 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
               onChange={(e) => handleBorder({ color: e.target.value })}
             />
           </label>
-          <label
-            htmlFor="border-size-picker"
-            className="flex flex-col items-center justify-center gap-1"
-          >
-            width
-            <input
-              className={inputRangeVariants({ width: "10", size: "xs" })}
-              id="border-size-picker"
-              type="range"
-              defaultValue={drawingParams.border.lineWidth}
-              min="1"
-              max="20"
-              step="0.5"
-              onChange={(e) =>
-                handleBorder({ lineWidth: parseFloat(e.target.value) })
-              }
-              style={{ width: "50px" }}
-            />
-          </label>
-          <label
-            htmlFor="border-interval-picker"
-            className="flex flex-col items-center justify-center gap-1"
-          >
-            Interval
-            <input
-              className={inputRangeVariants({ width: "10", size: "xs" })}
-              id="border-interval-picker"
-              type="range"
-              defaultValue={drawingParams.border.interval}
-              min="0"
-              max="20"
-              step="1"
-              onChange={(e) =>
-                handleBorder({ interval: parseInt(e.target.value) })
-              }
-              style={{ width: "50px" }}
-            />
-          </label>
-          <label
-            htmlFor="border-opacity-picker"
-            className="flex flex-col items-center justify-center gap-1"
-          >
-            Opacity
-            <input
-              className={inputRangeVariants({ width: "8", size: "xs" })}
-              id="border-opacity-picker"
-              type="range"
-              defaultValue={drawingParams.border.opacity * 100}
-              min="0"
-              max="100"
-              step="10"
-              onChange={(e) =>
-                handleBorder({ opacity: parseInt(e.target.value) / 100 })
-              }
-              style={{ width: "50px" }}
-            />
-          </label>
+          <RangeInput
+            className={inputRangeVariants({ width: "10", size: "xs" })}
+            id="border-size-picker"
+            label="Width"
+            value={drawingParams.border.lineWidth}
+            min="0.5"
+            max="20"
+            step="0.5"
+            onChange={(value) => handleBorder({ lineWidth: value })}
+            style={{ width: "50px" }}
+            isTouch={isTouch}
+          />
+          <RangeInput
+            className={inputRangeVariants({ width: "10", size: "xs" })}
+            id="border-interval-picker"
+            label="Interval"
+            value={drawingParams.border.interval || 0}
+            min="0"
+            max="20"
+            step="1"
+            onChange={(value) => handleBorder({ interval: value })}
+            style={{ width: "50px" }}
+            isTouch={isTouch}
+          />
+          <RangeInput
+            className={inputRangeVariants({ width: "8", size: "xs" })}
+            id="border-opacity-picker"
+            label="Opacity"
+            value={drawingParams.border.opacity * 100}
+            min="0"
+            max="100"
+            step="10"
+            onChange={(value) => handleBorder({ opacity: value / 100 })}
+            style={{ width: "50px" }}
+            isTouch={isTouch}
+          />
         </div>
       </div>
     </div>

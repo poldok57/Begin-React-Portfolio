@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "../atom/Button";
+import { RangeInput } from "../atom/RangeInput";
 import { TbRotate2 } from "react-icons/tb";
 import { TbRotateClockwise2 } from "react-icons/tb";
 
@@ -18,6 +19,7 @@ interface DrawControlTextProps {
   hidden: boolean;
   drawingParams: AllParams;
   handleTextParams: (params: GroupParams) => void;
+  isTouch?: boolean;
 }
 
 export const DrawControlText: React.FC<DrawControlTextProps> = ({
@@ -25,6 +27,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
   hidden,
   drawingParams,
   handleTextParams,
+  isTouch = false,
 }) => {
   const [italic, setItalic] = useState(drawingParams.text.italic);
 
@@ -49,14 +52,18 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
         "bg-paper": mode === DRAWING_MODES.TEXT,
       })}
     >
-      <div className="flex flex-row gap-2">
+      <div
+        className={clsx("flex flex-row gap-2", {
+          "gap-4": isTouch,
+        })}
+      >
         <label
           htmlFor="text-font-selector"
-          className="flex items-center justify-center gap-2"
+          className="flex gap-2 justify-center items-center"
         >
           Font
           <select
-            className="w-32 p-2 border-2 rounded-md border-primary bg-paper focus:ring-blue-500"
+            className="p-2 w-32 rounded-md border-2 border-primary bg-paper focus:ring-blue-500"
             id="text-font-selector"
             defaultValue={drawingParams.text.font}
             onChange={(event) => handleText({ font: event.target.value })}
@@ -73,38 +80,28 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             ))}
           </select>
         </label>
-        <label
-          htmlFor="text-size-picker"
-          className="flex items-center justify-center gap-2"
-        >
-          Size
-          <input
-            className={inputRangeVariants({ width: "20", size: "sm" })}
-            id="text-size-picker"
-            type="range"
-            defaultValue={drawingParams.text.fontSize}
-            min="12"
-            max="64"
-            step="2"
-            onChange={(event) => handleText({ fontSize: event.target.value })}
-          />
-        </label>
-        <label
-          htmlFor="text-size-picker"
-          className="flex items-center justify-center gap-2"
-        >
-          Bold
-          <input
-            className={inputRangeVariants({ width: "12", size: "sm" })}
-            id="text-bold-picker"
-            type="range"
-            defaultValue={drawingParams.text.bold}
-            min="100"
-            max="900"
-            step="100"
-            onChange={(event) => handleText({ bold: event.target.value })}
-          />
-        </label>
+        <RangeInput
+          className={inputRangeVariants({ width: "20", size: "sm" })}
+          id="text-size-picker"
+          value={drawingParams.text.fontSize}
+          onChange={(value) => handleText({ fontSize: value })}
+          min="12"
+          max="64"
+          step="2"
+          label="Size"
+          isTouch={isTouch}
+        />
+        <RangeInput
+          className={inputRangeVariants({ width: "12", size: "sm" })}
+          id="text-bold-picker"
+          value={drawingParams.text.bold}
+          min="100"
+          max="900"
+          step="100"
+          onChange={(value) => handleText({ bold: value })}
+          label="Bold"
+          isTouch={isTouch}
+        />
         <Button
           className="px-2"
           selected={italic}
@@ -120,20 +117,20 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
       <div className="flex flex-row gap-2">
         <label
           htmlFor="text"
-          className="flex items-center justify-center gap-2"
+          className="flex gap-2 justify-center items-center"
         >
           Text
           <input
             id="text"
             type="text"
-            className="p-2 border-2 rounded-md border-primary bg-paper"
+            className="p-2 rounded-md border-2 border-primary bg-paper"
             defaultValue={drawingParams.text.text}
             onChange={(event) => handleText({ text: event.target.value })}
           />
         </label>
         <label
           htmlFor="text-color-picker"
-          className="flex items-center justify-center gap-4"
+          className="flex gap-4 justify-center items-center"
         >
           Color
           <input

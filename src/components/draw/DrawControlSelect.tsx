@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { BsCircleHalf } from "react-icons/bs";
 import clsx from "clsx";
 import { Button } from "../atom/Button";
+import { RangeInput } from "../atom/RangeInput";
 import {
   DRAWING_MODES,
   isDrawingSelect,
@@ -18,6 +19,7 @@ interface DrawControlSelectProps {
   handleChangeRadius: (value: number) => void;
   handleImage: (action: string) => void;
   addEventDetail: (detail: EventModeAction) => void;
+  isTouch?: boolean;
 }
 
 export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
@@ -27,6 +29,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
   handleChangeRadius,
   handleImage,
   addEventDetail,
+  isTouch = false,
 }) => {
   const [isBlackWhite, setBlackWhite] = useState(false);
   const dialogRef: MutableRefObject<HTMLDialogElement | null> = useRef(null);
@@ -63,7 +66,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
 
   return (
     <div
-      className={clsx("flex flex-col border-2 border-secondary p-2", {
+      className={clsx("flex flex-col p-2 border-2 border-secondary", {
         "bg-paper": isDrawingSelect(mode),
         hidden: !isDrawingSelect(mode),
       })}
@@ -92,7 +95,6 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
         >
           Cut
         </Button>
-
         <ButtonConfirmModal
           className="z-10 px-2 text-white bg-blue-500 hover:bg-blue-600"
           value="Upload image"
@@ -103,41 +105,33 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           <input
             formMethod="dialog"
             className={clsx(
-              "h-fit w-72 rounded-md border-2 border-blue-300 bg-white py-0 pr-2 text-sm",
+              "py-0 pr-2 w-72 text-sm bg-white rounded-md border-2 border-blue-300 h-fit",
               "file:mr-4 file:rounded-l-md file:border file:bg-blue-500 file:py-2 file:px-2 file:font-semibold file:text-white hover:file:bg-blue-600"
             )}
             type="file"
             onChange={handleFileChange}
           />
         </ButtonConfirmModal>
-        <label
-          className={clsx("flex flex-col items-center justify-center gap-1", {
-            hidden: mode !== DRAWING_MODES.IMAGE,
-          })}
-          htmlFor="transparency-picker"
-        >
-          Detouring
-          <input
-            className="w-20 h-4 transition-opacity bg-gray-300 outline-none opacity-70 hover:opacity-100"
+        {mode === DRAWING_MODES.IMAGE && (
+          <RangeInput
+            className="w-20 h-4 bg-gray-300 opacity-70 transition-opacity outline-none hover:opacity-100"
             id="transparency-picker"
-            type="range"
-            defaultValue={0}
+            label="Detouring"
+            value={0}
             min="0"
             max="200"
             step="3"
-            onChange={(event) =>
-              addEventActionValue(
-                DRAWING_MODES.TRANSPARENCY,
-                event.target.value
-              )
+            onChange={(value) =>
+              addEventActionValue(DRAWING_MODES.TRANSPARENCY, value)
             }
+            isTouch={isTouch}
           />
-        </label>
+        )}
         <Button
-          className={clsx("px-2 py-1  font-bold", {
-            "bg-gradient-to-r from-green-400 via-blue-500 to-red-600  text-white hover:from-red-700 hover:via-green-500 hover:to-blue-600":
+          className={clsx("px-2 py-1 font-bold", {
+            "text-white bg-gradient-to-r from-green-400 via-blue-500 to-red-600 hover:from-red-700 hover:via-green-500 hover:to-blue-600":
               !isBlackWhite,
-            "bg-gradient-to-r from-gray-800 to-gray-200  hover:from-black  hover:to-white":
+            "bg-gradient-to-r from-gray-800 to-gray-200 hover:from-black hover:to-white":
               isBlackWhite,
           })}
           onClick={() => {
@@ -147,26 +141,17 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
         >
           <BsCircleHalf />
         </Button>
-        <label
-          htmlFor="select-radius-picker"
-          className={clsx("flex flex-col items-center justify-center gap-1", {
-            hidden: mode !== DRAWING_MODES.IMAGE,
-          })}
-        >
-          Radius
-          <input
-            className="w-20 h-2 transition-opacity bg-gray-300 outline-none opacity-70 hover:opacity-100"
-            id="select-radius-picker"
-            type="range"
-            defaultValue={0}
-            min="0"
-            max="150"
-            step="1"
-            onChange={(event) =>
-              handleChangeRadius(parseInt(event.target.value))
-            }
-          />
-        </label>
+        <RangeInput
+          className="w-20 h-2 bg-gray-300 opacity-70 transition-opacity outline-none hover:opacity-100"
+          id="select-radius-picker"
+          label="Radius"
+          value={0}
+          min="0"
+          max="150"
+          step="1"
+          onChange={(value) => handleChangeRadius(value)}
+          isTouch={isTouch}
+        />
       </div>
     </div>
   );

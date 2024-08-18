@@ -1,10 +1,11 @@
-export const isTouchDevice = (trace: boolean = false) => {
+export const isTouchDevice = (trace: boolean = false): boolean => {
   if (typeof window === "undefined") return false;
 
-  const isTouchDevice =
+  const isTouchDevice: boolean =
     "ontouchstart" in window ||
     navigator.maxTouchPoints > 0 ||
-    ("msMaxTouchPoints" in navigator && navigator.msMaxTouchPoints);
+    (("msMaxTouchPoints" in navigator &&
+      navigator.msMaxTouchPoints) as boolean);
 
   if (trace) {
     if (isTouchDevice) {

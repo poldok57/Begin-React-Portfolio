@@ -1,5 +1,6 @@
 import React, { useRef, useMemo, useState, useEffect } from "react";
 import { withMousePosition } from "../windows/withMousePosition";
+import { isTouchDevice } from "@/lib/utils/device";
 import { MdTimeline } from "react-icons/md";
 // import { MdRadioButtonUnchecked } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
@@ -49,6 +50,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
+  const isTouch: boolean = isTouchDevice();
 
   const addEvent = (detail: EventDetail) => {
     const event = new CustomEvent("modeChanged", detail);
@@ -173,6 +175,12 @@ export const DrawControl: React.FC<DrawControlProps> = ({
 
   useEffect(() => {
     modeRef.current = mode;
+
+    if (isTouchDevice()) {
+      // touch device, no keyboard events
+      return;
+    }
+
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -258,6 +266,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleChangeRatio={handleChangeRatio}
           handleChangeRadius={handleChangeRadius}
           addEventDetail={addEventDetail}
+          isTouch={isTouch}
         />
         <DrawControlLine
           mode={mode}
@@ -265,6 +274,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           drawingParams={drawingParams}
           opacity={opacity}
           setOpacity={handleOpacity}
+          isTouch={isTouch}
         />
         <DrawControlShape
           mode={mode}
@@ -273,12 +283,14 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleModeChange={handleModeChange}
           handleChangeRadius={handleChangeRadius}
           setWithText={setWithText}
+          isTouch={isTouch}
         />
         <DrawControlText
           mode={mode}
           hidden={mode != DRAWING_MODES.TEXT && withText === false}
           drawingParams={drawingParams}
           handleTextParams={handleParamChange}
+          isTouch={isTouch}
         />
 
         <div className="flex relative gap-4 m-auto">
