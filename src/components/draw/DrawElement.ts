@@ -7,16 +7,13 @@ import {
   ParamsText,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
-import { BORDER } from "../../lib/mouse-position";
+import { BORDER, isOnTurnButton } from "../../lib/mouse-position";
 import { showElement } from "../../lib/canvas/canvas-elements";
 import { resizingElement } from "../../lib/canvas/canvas-resize";
 
 import { Coordinate, Area } from "../../lib/canvas/types";
 
-import {
-  DrawingHandler,
-  returnMouseDown,
-} from "../../lib/canvas/DrawingHandler";
+import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
 import { alertMessage } from "../alert-messages/alertMessage";
 import { isInsideSquare } from "../../lib/square-position";
 
@@ -304,5 +301,36 @@ export class DrawElement extends DrawingHandler {
     this.setResizing(null);
     this.clearTemporyCanvas();
     this.eraseOffset();
+  }
+
+  /// egalise the size of the square
+  actionMouseDblClick(_event: MouseEvent): void {
+    // check position of the mouse, if mouse is on a button, do nothing
+    const mouseOnShape = this.handleMouseOnShape();
+    if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
+      return;
+    }
+
+    const diagonal = Math.sqrt(
+      Math.pow(this.data.size.width, 2) + Math.pow(this.data.size.height, 2)
+    );
+    const newSize = diagonal / Math.sqrt(2);
+
+    const centerX = this.data.size.x + this.data.size.width / 2;
+    const centerY = this.data.size.y + this.data.size.height / 2;
+
+    this.data.size.width = newSize;
+    this.data.size.height = newSize;
+
+    // center the square at same place
+    this.data.size.x = centerX - newSize / 2;
+    this.data.size.y = centerY - newSize / 2;
+    // if the element is rond, set rotation to 0
+    if (this.data.type === DRAWING_MODES.CIRCLE) {
+      this.data.rotation = 0;
+    }
+
+    this.clearTemporyCanvas();
+    showElement(this.ctxTempory, this.data, true, null);
   }
 }

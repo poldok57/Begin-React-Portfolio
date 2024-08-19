@@ -82,7 +82,7 @@ export const RangeInput: React.FC<{
         {isTouch && (
           <button
             onClick={() => handleIncrement(-parseFloat(step))}
-            className="z-10 p-1 text-white rounded-lg opacity-40 bg-secondary focus:opacity-100"
+            className="z-[1] p-1 text-white rounded-lg opacity-40 bg-secondary focus:opacity-100"
           >
             <Minus size={22} />
           </button>
@@ -101,7 +101,7 @@ export const RangeInput: React.FC<{
         {isTouch && (
           <button
             onClick={() => handleIncrement(parseFloat(step))}
-            className="z-10 p-1 text-white rounded-lg opacity-40 bg-secondary focus:opacity-100"
+            className="z-[1] p-1 text-white rounded-lg opacity-40 bg-secondary focus:opacity-100"
           >
             <Plus size={22} />
           </button>

@@ -6,10 +6,7 @@ import {
   hightLightMouseCursor,
 } from "../../lib/canvas/canvas-basic";
 import { CanvasLine } from "../../lib/canvas/CanvasLine";
-import {
-  DrawingHandler,
-  returnMouseDown,
-} from "../../lib/canvas/DrawingHandler";
+import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
 
 import {
   DRAWING_MODES,

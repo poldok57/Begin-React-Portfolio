@@ -9,7 +9,7 @@ import {
   AllParams,
   ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
-import { BORDER } from "../../lib/mouse-position";
+import { BORDER, isOnTurnButton } from "../../lib/mouse-position";
 import { showElement } from "../../lib/canvas/canvas-elements";
 import { resizingElement } from "../../lib/canvas/canvas-resize";
 import { isInsideSquare } from "../../lib/square-position";
@@ -19,10 +19,7 @@ import {
   calculateSize,
 } from "../../lib/canvas/canvas-images";
 
-import {
-  DrawingHandler,
-  returnMouseDown,
-} from "../../lib/canvas/DrawingHandler";
+import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
 import { alertMessage } from "../alert-messages/alertMessage";
 import { imageSize, cutOutArea } from "../../lib/canvas/canvas-size";
 import {
@@ -42,6 +39,8 @@ export class DrawSelection extends DrawingHandler {
     type: DRAWING_MODES.SELECT,
   } as ShapeDefinition;
   private selectedArea: Area | null = null;
+  // original size of the selection or loaded image
+  private originalSize: Size | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
@@ -185,6 +184,7 @@ export class DrawSelection extends DrawingHandler {
       area = { ...this.data.size };
     }
     this.selectedArea = area;
+    this.originalSize = { ...area };
     return area;
   }
   getSelectedArea() {
@@ -497,6 +497,7 @@ export class DrawSelection extends DrawingHandler {
       area.ratio = ratio;
       this.setDataSize(area);
       this.setRotation(0);
+      this.originalSize = { ...area };
 
       this.setType(DRAWING_MODES.IMAGE);
       this.refreshDrawing(0, BORDER.INSIDE);
@@ -505,4 +506,48 @@ export class DrawSelection extends DrawingHandler {
       alertMessage("Error loading the file");
     };
   }
+
+  actionMouseDblClick = (_event: MouseEvent) => {
+    const mouseOnShape = this.handleMouseOnShape();
+    if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
+      return;
+    }
+    if (!this.originalSize) {
+      return;
+    }
+    const originalRatio = this.originalSize.width / this.originalSize.height;
+    const currentRatio = this.data.size.width / this.data.size.height;
+    // current center
+    const centreX = this.data.size.x + this.data.size.width / 2;
+    const centreY = this.data.size.y + this.data.size.height / 2;
+    if (currentRatio === originalRatio) {
+      this.setRotation(0);
+      // return to the original size
+      this.data.size.width = this.originalSize.width;
+      this.data.size.height = this.originalSize.height;
+      this.data.size.x = centreX - this.originalSize.width / 2;
+      this.data.size.y = centreY - this.originalSize.height / 2;
+      this.refreshDrawing(1, BORDER.INSIDE);
+
+      return;
+    }
+
+    // calculate the current diagonal
+    const currentDiagonal = Math.sqrt(
+      Math.pow(this.data.size.width, 2) + Math.pow(this.data.size.height, 2)
+    );
+
+    // Calculate the new dimensions keeping the diagonal and the original ratio
+    const newHeight =
+      currentDiagonal / Math.sqrt(1 + Math.pow(originalRatio, 2));
+    const newWidth = newHeight * originalRatio;
+
+    // update the dimensions keeping the center
+    this.data.size.width = newWidth;
+    this.data.size.height = newHeight;
+    this.data.size.x = centreX - newWidth / 2;
+    this.data.size.y = centreY - newHeight / 2;
+    // this.setRotation(0);
+    this.refreshDrawing(1, BORDER.INSIDE);
+  };
 }

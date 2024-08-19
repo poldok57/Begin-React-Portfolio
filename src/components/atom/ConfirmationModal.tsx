@@ -25,7 +25,7 @@ export const ConfirmationModal = forwardRef<
       ref={ref}
       open={isModalOpen}
       className={clsx(
-        "shadow-xl animate-in fade-in-50 bg-transparent",
+        "shadow-xl animate-in fade-in-50 bg-transparent z-50",
         {
           "absolute -top-1 -translate-y-full": position === "over",
           "absolute  translate-y-12": position === "under",
@@ -36,7 +36,7 @@ export const ConfirmationModal = forwardRef<
     >
       <div
         className={clsx(
-          "card gap-3 rounded-2xl h-fit border-2 border-red-700 bg-paper px-3 py-2 shadow-xl",
+          "gap-3 px-3 py-2 rounded-2xl border-2 border-red-700 shadow-xl card h-fit bg-paper",
           className
         )}
       >

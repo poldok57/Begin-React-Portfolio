@@ -6,10 +6,7 @@ import {
   hatchedCircle,
   hightLightMouseCursor,
 } from "../../lib/canvas/canvas-basic";
-import {
-  DrawingHandler,
-  returnMouseDown,
-} from "../../lib/canvas/DrawingHandler";
+import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
 
 import {
   DRAWING_MODES,

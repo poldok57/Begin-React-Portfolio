@@ -1,4 +1,5 @@
 import { Area, Rectangle, Coordinate, RectPosition } from "./canvas/types";
+import { isTouchDevice } from "./utils/device";
 
 export const BORDER = {
   RIGHT: "brd-right",
@@ -20,6 +21,9 @@ export const BORDER = {
 
 const BADGE_RADIUS = 10;
 const MIDDLE_BTN_RADIUS = 12;
+const BADGE_RADIUS_TOUCH = 15;
+const MIDDLE_BTN_RADIUS_TOUCH = 18;
+
 let margin = 6;
 
 export const setMargin = (newMargin: number): void => {
@@ -87,13 +91,15 @@ export const getRectPosition = (
 
 export const mouseIsInsideRect = (
   coord: Coordinate | Area,
-  rect: DOMRect | Rectangle
+  rect: DOMRect | Rectangle,
+  extend = false
 ): boolean => {
+  const overhang = !extend ? 0 : isTouchDevice() ? margin : margin / 2;
   return (
-    coord.x >= rect.left &&
-    coord.x <= rect.right &&
-    coord.y >= rect.top &&
-    coord.y <= rect.bottom
+    coord.x >= rect.left - overhang &&
+    coord.x <= rect.right + overhang &&
+    coord.y >= rect.top - overhang &&
+    coord.y <= rect.bottom + overhang
   );
 };
 
@@ -173,13 +179,14 @@ export const badgePosition = (
   const x = rect.x ?? rect.left!;
   const y = Math.max(rect.y ?? rect.top!, 0);
   const w = rect.width ?? rect.right! - rect.left!;
+  const badgeRadius = isTouchDevice() ? BADGE_RADIUS_TOUCH : BADGE_RADIUS;
   const badge = {
-    width: BADGE_RADIUS * 2,
-    height: BADGE_RADIUS * 2,
-    left: Math.max(x + w - BADGE_RADIUS * 2, x + 55),
+    width: badgeRadius * 2,
+    height: badgeRadius * 2,
+    left: Math.max(x + w - badgeRadius * 2, x + 55),
     top: y,
-    bottom: y + BADGE_RADIUS * 2,
-    radius: BADGE_RADIUS,
+    bottom: y + badgeRadius * 2,
+    radius: badgeRadius,
     right: 0,
     centerX: 0,
     centerY: 0,
@@ -216,19 +223,22 @@ export const middleButtonPosition = (rect: {
   const y = rect.y ?? rect.top!;
   const w = rect.width ?? rect.right! - rect.left!;
   const h = rect.height ?? rect.bottom! - rect.top!;
+  const btnRadius = isTouchDevice()
+    ? MIDDLE_BTN_RADIUS_TOUCH
+    : MIDDLE_BTN_RADIUS;
   const middleButton: MiddleButton = {
-    left: x + w / 2 - MIDDLE_BTN_RADIUS * 2,
-    right: x + w / 2 + MIDDLE_BTN_RADIUS * 2,
+    left: x + w / 2 - btnRadius * 2,
+    right: x + w / 2 + btnRadius * 2,
     middle: x + w / 2,
-    top: y + Math.max(h / 2 - MIDDLE_BTN_RADIUS, 30),
-    axeX1: x + w / 2 - 1 - MIDDLE_BTN_RADIUS,
-    axeX2: x + w / 2 + 1 + MIDDLE_BTN_RADIUS,
-    radius: MIDDLE_BTN_RADIUS,
+    top: y + Math.max(h / 2 - btnRadius, 30),
+    axeX1: x + w / 2 - 1 - btnRadius,
+    axeX2: x + w / 2 + 1 + btnRadius,
+    radius: btnRadius,
     axeY: 0,
     bottom: 0,
   } as MiddleButton;
-  middleButton.axeY = middleButton.top + MIDDLE_BTN_RADIUS;
-  middleButton.bottom = middleButton.top + MIDDLE_BTN_RADIUS * 2;
+  middleButton.axeY = middleButton.top + btnRadius;
+  middleButton.bottom = middleButton.top + btnRadius * 2;
 
   return middleButton;
 };

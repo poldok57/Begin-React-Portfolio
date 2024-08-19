@@ -1,4 +1,4 @@
-import { BORDER, badgePosition } from "../mouse-position";
+import { BORDER, badgePosition, isBorder } from "../mouse-position";
 import { Area } from "./types";
 import {
   SHAPE_TYPE,
@@ -336,6 +336,14 @@ const drawText = (ctx: CanvasRenderingContext2D, square: ShapeDefinition) => {
   }
 };
 
+const drawShadowRectangle = (ctx: CanvasRenderingContext2D, square: Area) => {
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = "rgba(132,132,192,0.6)";
+  ctx.rect(square.x, square.y, square.width, square.height);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(172,172,192,0.20)";
+  ctx.fill();
+};
 /**
  * draw buttons from shape on the canvas
  * @param {CanvasRenderingContext2D} ctx
@@ -352,11 +360,19 @@ const drawButtonsAndLines = (
     const alpha: number = ctx.globalAlpha;
     ctx.globalAlpha = 0.8;
     ctx.beginPath();
-    ctx.strokeStyle = "silver";
-    ctx.lineWidth = 1;
+    if (border && isBorder(border)) {
+      ctx.strokeStyle = "#c44";
+      ctx.lineWidth = 1;
+    } else {
+      ctx.strokeStyle = "silver";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 2]);
+    }
+
     ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
     ctx.stroke();
     ctx.globalAlpha = alpha;
+    ctx.setLineDash([]);
   }
 
   if (square.withCornerButton) {
@@ -402,9 +418,7 @@ const drawButtonsAndLines = (
     case SHAPE_TYPE.CIRCLE:
       // show the rectangle around the ellipse
       if (square.rotation !== 0 && sSize.width != sSize.height) {
-        ctx.lineWidth = 0.5;
-        ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
-        ctx.stroke();
+        drawShadowRectangle(ctx, sSize);
       }
       break;
 
@@ -412,12 +426,10 @@ const drawButtonsAndLines = (
       // show the rectangle around the shape
       if (
         square.shape &&
-        square.shape.radius > 10 &&
+        square.shape.radius >= 10 &&
         square.shape.withBorder === false
       ) {
-        ctx.lineWidth = 0.5;
-        ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
-        ctx.stroke();
+        drawShadowRectangle(ctx, sSize);
       }
       break;
   }

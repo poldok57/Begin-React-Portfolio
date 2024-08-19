@@ -1,7 +1,10 @@
-import { Coordinate, Area, ArgsMouseOnShape } from "./types";
-import { getCoordinates, clearCanvasByCtx } from "./canvas-tools";
-import { showElement } from "./canvas-elements";
-import { mousePointer, isInside } from "../mouse-position";
+import { Coordinate, Area, ArgsMouseOnShape } from "../../lib/canvas/types";
+import {
+  getCoordinates,
+  clearCanvasByCtx,
+} from "../../lib/canvas/canvas-tools";
+import { showElement } from "../../lib/canvas/canvas-elements";
+import { mousePointer, isInside } from "../../lib/mouse-position";
 import {
   addPictureToHistory,
   CanvasPicture,
@@ -13,8 +16,8 @@ import {
   ShapeDefinition,
   AllParams,
   ParamsGeneral,
-} from "./canvas-defines";
-import { isOnSquareBorder } from "../square-position";
+} from "../../lib/canvas/canvas-defines";
+import { isOnSquareBorder } from "../../lib/square-position";
 
 export type returnMouseDown = {
   toContinue: boolean;
@@ -189,6 +192,8 @@ export abstract class DrawingHandler {
   actionKeyDown(_event: KeyboardEvent): void {}
   actionAbort(): void {}
   actionValid(): void {}
+
+  actionMouseDblClick(_event: MouseEvent): void {}
 
   abstract endAction(nextMode?: string): void;
   abstract changeData(data: AllParams): void;

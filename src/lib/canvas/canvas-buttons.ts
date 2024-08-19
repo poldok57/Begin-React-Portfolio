@@ -205,7 +205,7 @@ export const drawMiddleButtons = (
     middleButton.axeX2,
     middleButton.axeY,
     middleButton.radius,
-    Math.PI / 2,
+    -Math.PI / 2,
     Math.PI * 1.75,
     true,
     "#101010",

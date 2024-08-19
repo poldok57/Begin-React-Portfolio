@@ -15,7 +15,6 @@ import { useWindowActions, useMaximizedWindowId } from "./store";
 import { copyDivStyle, toggleWindowSize } from "./window-size";
 import { useComponentSize } from "./WithResizing";
 import { isTouchDevice } from "@/lib/utils/device";
-import { isTouch } from "@/lib/utils/device";
 
 import clsx from "clsx";
 

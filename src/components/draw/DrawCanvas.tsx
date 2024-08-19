@@ -22,7 +22,7 @@ import { DrawLine } from "./DrawLine";
 import { DrawElement } from "./DrawElement";
 import { DrawSelection } from "./DrawSelection";
 import { DrawFreehand } from "./DrawFreehand";
-import { DrawingHandler } from "../../lib/canvas/DrawingHandler";
+import { DrawingHandler } from "./DrawingHandler";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -450,6 +450,10 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       }
     };
 
+    const handleMouseDblClick = (event: MouseEvent) => {
+      drawing?.actionMouseDblClick(event);
+    };
+
     const handleChangeMode = (e: Event) => {
       const event = e as EventDetail;
       const newMode = event.detail.mode;
@@ -504,6 +508,27 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     const handleTouchEnd = () => {
       drawing?.actionMouseUp();
     };
+    const handleDoubleTap = (() => {
+      let lastTap = 0;
+      const delay = 300; // délai en millisecondes pour détecter un double tap
+
+      return (event: TouchEvent) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+
+        if (tapLength < delay && tapLength > 0) {
+          event.preventDefault();
+          const touch = event.touches[0];
+          const mouseEvent = new MouseEvent("dblclick", {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+          });
+          handleMouseDblClick(mouseEvent);
+        }
+
+        lastTap = currentTime;
+      };
+    })();
 
     canvasMouse.style.pointerEvents = "auto";
 
@@ -511,12 +536,14 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     canvasMouse.addEventListener("mousemove", handleMouseMove);
     canvasMouse.addEventListener("mouseup", handleMouseUp);
     canvasMouse.addEventListener("mouseleave", onMouseLeave);
+    canvasMouse.addEventListener("dblclick", handleMouseDblClick);
     document.addEventListener("modeChanged", handleChangeMode);
 
     canvasMouse.addEventListener("touchstart", handleTouchStart);
     canvasMouse.addEventListener("touchmove", handleTouchMove);
     canvasMouse.addEventListener("touchend", handleTouchEnd);
     canvasMouse.addEventListener("touchcancel", handleTouchEnd);
+    canvasMouse.addEventListener("touchstart", handleDoubleTap);
     //
     //
     if (document.readyState === "complete") {
@@ -534,7 +561,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       canvasMouse.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("mouseup", handleMouseUp);
       canvasMouse.removeEventListener("mouseleave", onMouseLeave);
-
+      canvasMouse.removeEventListener("dblclick", handleMouseDblClick);
       document.removeEventListener("modeChanged", handleChangeMode);
       window.removeEventListener("load", handleDocumentLoaded);
 
@@ -542,6 +569,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       canvasMouse.removeEventListener("touchmove", handleTouchMove);
       canvasMouse.removeEventListener("touchend", handleTouchEnd);
       canvasMouse.removeEventListener("touchcancel", handleTouchEnd);
+      canvasMouse.removeEventListener("touchstart", handleDoubleTap);
 
       currentParams.mode = DRAWING_MODES.INIT;
     };

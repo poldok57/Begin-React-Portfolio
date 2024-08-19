@@ -70,7 +70,7 @@ export const isOnSquareBorder = ({
     }
   }
 
-  if (!mouseIsInsideRect(coordinate, rect)) return null;
+  if (!mouseIsInsideRect(coordinate, rect, true)) return null;
 
   if (!withResize) {
     // for text mode, no need to resize
