@@ -6,7 +6,7 @@ import {
   ShapeDefinition,
   ParamsGeneral,
 } from "./canvas-defines";
-import { drawBadge, drawMiddleButtons } from "./canvas-buttons";
+import { drawBadge, drawTurningButtons } from "./canvas-buttons";
 import { drawDashedRectangle } from "./canvas-dashed-rect";
 
 const TEXT_PADDING = 20;
@@ -383,8 +383,8 @@ const drawButtonsAndLines = (
   /**
    * draw the middle button used to rotate the shape
    */
-  if (square.withMiddleButtons) {
-    drawMiddleButtons(ctx, sSize, border);
+  if (square.withTurningButtons) {
+    drawTurningButtons(ctx, sSize, border);
   }
 
   const rotation =

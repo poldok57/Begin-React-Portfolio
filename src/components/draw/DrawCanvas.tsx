@@ -28,11 +28,15 @@ const TEMPORTY_OPACITY = 0.6;
 
 interface DrawCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  mode: string;
+  setMode: (mode: string) => void;
   getParams: () => AllParams;
 }
 // Draw on Canvas
 export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   canvasRef,
+  mode,
+  setMode,
   getParams,
 }) => {
   const canvasMouseRef: React.RefObject<HTMLCanvasElement | undefined> =
@@ -44,13 +48,10 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
 
   let currentParams = getParams();
-
-  let drawLine: DrawLine | null = null;
-  let drawFreehand: DrawFreehand | null = null;
-  let drawElement: DrawElement | null = null;
-  let drawSelection: DrawSelection | null = null;
-  let drawing: DrawingHandler | null = null;
-
+  // drawing handler
+  const drawingRef = useRef<DrawingHandler | null>(null);
+  const lineRef = useRef<DrawLine | null>(null);
+  const selectionRef = useRef<DrawSelection | null>(null);
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -67,11 +68,12 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
 
     if (!item || !item.image) {
       clearCanvasByCtx(ctx);
-      if (drawLine !== null) drawLine.setStartCoordinates(null);
+      if (lineRef.current !== null) lineRef.current.setStartCoordinates(null);
       return;
     }
     ctx.putImageData(item.image, 0, 0);
-    if (drawLine !== null) drawLine.setStartCoordinates(item.coordinates);
+    if (lineRef.current !== null)
+      lineRef.current.setStartCoordinates(item.coordinates);
   };
 
   /**
@@ -105,54 +107,50 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       throw new Error("Canvas is null");
     }
 
-    let drawing;
+    let drawingHdl;
+    let newHandler = false;
     if (isDrawingLine(mode)) {
-      if (drawLine === null) {
-        drawLine = new DrawLine(canvasRef.current);
-        drawLine.initData(currentParams);
+      if (lineRef.current === null) {
+        lineRef.current = new DrawLine(canvasRef.current);
       }
-      drawing = drawLine;
+      newHandler = true; // new initialization for color and width
+      drawingHdl = lineRef.current;
     } else if (isDrawingFreehand(mode)) {
-      if (drawFreehand === null) {
-        drawFreehand = new DrawFreehand(canvasRef.current);
-        drawFreehand.initData(currentParams);
-      }
-      drawing = drawFreehand;
+      drawingHdl = new DrawFreehand(canvasRef.current);
+      newHandler = true;
     } else if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {
-      if (drawElement === null) {
-        drawElement = new DrawElement(canvasRef.current);
-        drawElement.initData(currentParams);
-      }
-      drawing = drawElement;
+      drawingHdl = new DrawElement(canvasRef.current);
+      newHandler = true;
     } else if (isDrawingSelect(mode)) {
-      if (drawSelection === null) {
-        drawSelection = new DrawSelection(canvasRef.current);
-        drawSelection.initData(currentParams);
+      if (selectionRef.current === null) {
+        selectionRef.current = new DrawSelection(canvasRef.current);
+        newHandler = true;
       }
-      drawing = drawSelection;
+      drawingHdl = selectionRef.current;
     } else {
       throw new Error("Drawing mode not found : " + mode);
     }
-    drawing.setType(mode);
-    drawing.setCanvas(canvasRef.current);
-    drawing.setMouseCanvas(canvasMouseRef.current as HTMLCanvasElement);
-    drawing.setTemporyCanvas(canvasTemporyRef.current as HTMLCanvasElement);
-    return drawing;
+    if (newHandler) {
+      drawingHdl.initData(currentParams);
+      drawingHdl.setCanvas(canvasRef.current);
+      drawingHdl.setMouseCanvas(canvasMouseRef.current as HTMLCanvasElement);
+      drawingHdl.setTemporyCanvas(
+        canvasTemporyRef.current as HTMLCanvasElement
+      );
+    }
+    drawingHdl.setType(mode);
+    return drawingHdl;
   };
 
   const generalInitialisation = () => {
     // Initialize canvas
     currentParams = getParams();
-    currentParams.mode = DRAWING_MODES.DRAW;
-
-    // initialise mouse and tempory canvas
-    setContext(canvasMouseRef.current as HTMLCanvasElement);
-    setContext(canvasTemporyRef.current as HTMLCanvasElement, TEMPORTY_OPACITY);
+    setMode(DRAWING_MODES.DRAW);
 
     // default drawing handler
-    drawing = selectDrawingHandler(currentParams.mode);
+    drawingRef.current = selectDrawingHandler(DRAWING_MODES.DRAW);
 
-    if (drawSelection !== null) drawSelection.eraseSelectedArea();
+    if (selectionRef.current !== null) selectionRef.current.eraseSelectedArea();
 
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
@@ -168,11 +166,11 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     ) {
       return;
     }
-    drawing && drawing.actionMouseUp();
+    drawingRef.current?.actionMouseUp();
   };
 
   const handleMouseDownExtend = (event: MouseEvent) => {
-    if (!drawing || !canvasMouseRef.current) return;
+    if (!drawingRef.current || !canvasMouseRef.current) return;
     // the event is inside the canvas, let event on the canvas to be handled
     if (canvasMouseRef.current.contains(event.target as Node)) {
       return;
@@ -183,7 +181,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       return;
     }
 
-    const toContinue = drawing.actionMouseDown(event);
+    const toContinue = drawingRef.current.actionMouseDown(event);
     if (!toContinue) {
       stopExtendMouseEvent();
     }
@@ -197,22 +195,23 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     ) {
       return;
     }
-    drawing && drawing.actionMouseMove(event);
+    drawingRef.current?.actionMouseMove(event);
   };
 
   /**
    * Extend mouse event to the document
    */
   const extendMouseEvent = () => {
-    if (!drawing || drawing.isExtendedMouseArea()) return;
-    drawing.setExtendedMouseArea(true);
+    if (!drawingRef.current || drawingRef.current.isExtendedMouseArea()) return;
+    drawingRef.current.setExtendedMouseArea(true);
     document.addEventListener("mousedown", handleMouseDownExtend);
     document.addEventListener("mousemove", handleMouseMoveExtend);
     document.addEventListener("mouseup", handleMouseUpExtend);
   };
   const stopExtendMouseEvent = () => {
-    if (!drawing || !drawing.isExtendedMouseArea()) return;
-    drawing.setExtendedMouseArea(false);
+    if (!drawingRef.current || !drawingRef.current.isExtendedMouseArea())
+      return;
+    drawingRef.current.setExtendedMouseArea(false);
     document.removeEventListener("mousedown", handleMouseDownExtend);
     document.removeEventListener("mousemove", handleMouseMoveExtend);
     document.removeEventListener("mouseup", handleMouseUpExtend);
@@ -223,10 +222,10 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
    */
   const drawingParamChanged = () => {
     currentParams = getParams();
-    if (!drawing) return;
+    if (!drawingRef.current) return;
 
-    drawing.changeData(currentParams);
-    drawing.refreshDrawing(currentParams.general.opacity);
+    drawingRef.current.changeData(currentParams);
+    drawingRef.current.refreshDrawing(currentParams.general.opacity);
   };
 
   /**
@@ -240,8 +239,12 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       generalInitialisation();
       return;
     }
+    currentParams.mode = newMode;
+
     // end previous action then changing mode
-    if (drawing) drawing.endAction(newMode);
+    if (drawingRef.current) {
+      drawingRef.current.endAction(newMode);
+    }
     stopExtendMouseEvent();
     if (canvasRef.current) {
       const context = canvasRef.current.getContext("2d");
@@ -250,15 +253,18 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
         context.globalCompositeOperation =
           newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
     }
+    // set the tempory canvas
+    if (canvasTemporyRef.current) {
+      setContext(
+        canvasTemporyRef.current as HTMLCanvasElement,
+        TEMPORTY_OPACITY
+      );
+    }
 
     // set the new drawing mode
-    drawing = selectDrawingHandler(newMode);
-    drawing.setType(newMode);
-    drawing.changeData(currentParams);
-
-    drawing.startAction();
-
-    drawing.refreshDrawing();
+    drawingRef.current = selectDrawingHandler(newMode);
+    drawingRef.current.startAction();
+    drawingRef.current.refreshDrawing();
   };
 
   const handleActionEvent = (event: EventDetail) => {
@@ -266,7 +272,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     const filename = event.detail?.filename;
     const value = event.detail?.value;
 
-    if (!canvasRef.current || !drawing) {
+    if (!canvasRef.current || !drawingRef.current) {
       return;
     }
 
@@ -278,7 +284,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
         break;
       case DRAWING_MODES.CONTROL_PANEL.IN:
         mouseOnCtrlPanel.current = true;
-        drawing.actionMouseLeave();
+        drawingRef.current.actionMouseLeave();
         break;
 
       case DRAWING_MODES.CONTROL_PANEL.OUT:
@@ -289,75 +295,75 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
         previousPicture(canvasRef.current);
         break;
       case DRAWING_MODES.ABORT:
-        drawing.actionAbort();
+        drawingRef.current.actionAbort();
         break;
       case DRAWING_MODES.VALID:
-        drawing.actionValid();
+        drawingRef.current.actionValid();
         break;
       case DRAWING_MODES.SAVE:
-        if (drawSelection === null) {
+        if (selectionRef.current === null) {
           selectDrawingHandler(DRAWING_MODES.SELECT);
         }
-        drawSelection &&
-          drawSelection.saveCanvas(filename, event.detail?.format);
+        selectionRef.current?.saveCanvas(filename, event.detail?.format);
         break;
       case DRAWING_MODES.LOAD:
         {
+          // console.log("LOAD", event.detail, "type", currentParams.mode);
           const name = event.detail.name || "your file";
 
-          if (drawSelection === null) {
+          if (selectionRef.current === null) {
             selectDrawingHandler(DRAWING_MODES.IMAGE);
           }
-          drawSelection && drawSelection.loadCanvas(filename, name);
+          selectionRef.current?.loadCanvas(filename, name);
           // correction of mouse position
           mouseOnCtrlPanel.current = false;
         }
         break;
       case DRAWING_MODES.COPY:
-        if (drawSelection === null) {
+        if (selectionRef.current === null) {
           return;
         }
         alertMessage("Copy the selection");
-        drawSelection.copySelection();
+        selectionRef.current.copySelection();
         break;
       case DRAWING_MODES.PASTE:
-        if (drawSelection === null) {
+        if (selectionRef.current === null) {
           return;
         }
         alertMessage("Paste the selection");
-        drawSelection.pasteSelection();
+        selectionRef.current.pasteSelection();
         break;
       case DRAWING_MODES.DELETE:
-        if (drawSelection === null) {
+        if (selectionRef.current === null) {
           return;
         }
         alertMessage("Delete the selection");
-        drawSelection.deleteSelection();
+        selectionRef.current.deleteSelection();
         break;
       case DRAWING_MODES.CUT:
-        if (drawSelection === null) {
-          console.log("drawSelection is null");
+        if (selectionRef.current === null) {
+          console.log("selectionRef.current is null");
           return;
         }
         alertMessage("Cut the selection");
-        drawSelection.cutSelection();
+        selectionRef.current.cutSelection();
         break;
       case DRAWING_MODES.TRANSPARENCY:
-        if (drawSelection !== null) {
+        if (selectionRef.current !== null) {
           alertMessage("Transparency (" + value + ") on selection");
-          drawSelection.transparencySelection(value as number);
+          selectionRef.current.transparencySelection(value as number);
         }
         break;
       case DRAWING_MODES.IMAGE_RADIUS:
-        if (drawSelection !== null) {
+        if (selectionRef.current !== null) {
           alertMessage("Radius (" + value + ") on selection");
-          drawSelection.radiusSelection(value as number);
+          selectionRef.current.radiusSelection(value as number);
         }
         break;
       case DRAWING_MODES.BLACK_WHITE:
-        if (drawSelection !== null) {
+        if (selectionRef.current !== null) {
           alertMessage("Black and white on selection");
-          drawSelection.blackWhiteSelection(value as boolean);
+          selectionRef.current.blackWhiteSelection(value as boolean);
         }
         break;
       default:
@@ -390,50 +396,48 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     currentParams = getParams();
     setContext(canvasRef.current);
 
-    if (!drawing) return;
-    drawing.setType(currentParams.mode);
-    const { toContinue, toReset, pointer } = drawing.actionMouseDown(event);
+    if (!drawingRef.current) return;
+    drawingRef.current.setType(currentParams.mode);
+    const { toContinue, toReset, pointer } =
+      drawingRef.current.actionMouseDown(event);
     if (toContinue) {
       extendMouseEvent();
     } else {
       stopExtendMouseEvent();
     }
-    if (toReset && drawing) {
-      drawing.endAction();
+    if (toReset && drawingRef.current) {
+      drawingRef.current.endAction();
       // restart with basic drawing mode
       const chgtMode = DRAWING_MODES.DRAW;
-      drawing.initData(currentParams);
       currentParams.mode = chgtMode;
-      drawing = selectDrawingHandler(chgtMode);
+      setMode(chgtMode);
+
+      drawingRef.current = selectDrawingHandler(chgtMode);
+      drawingRef.current.initData(currentParams);
     }
     if (pointer !== null && canvasMouseRef.current) {
       canvasMouseRef.current.style.cursor = pointer;
     }
 
-    alertMessage(
-      `Start ${currentParams.mode} : + color:${currentParams.general.color}`
-    );
+    alertMessage(`Start (${currentParams.mode})`);
   };
 
   /**
    * erase canavasOver (temporary canvas) when mouse leave the canvas
    */
   const onMouseLeave = () => {
-    drawing && drawing.actionMouseLeave();
+    drawingRef.current && drawingRef.current.actionMouseLeave();
   };
 
   useEffect(() => {
-    const handleDocumentLoaded = () => {
-      generalInitialisation();
-    };
-
     if (!canvasMouseRef.current) {
       return;
     }
     const canvasMouse = canvasMouseRef.current;
+    setContext(canvasMouse);
 
     const handleMouseUp = () => {
-      drawing?.actionMouseUp();
+      drawingRef.current?.actionMouseUp();
     };
     const handleMouseDown = (event: MouseEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
@@ -443,7 +447,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     const handleMouseMove = (event: MouseEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
 
-      const pointer = drawing?.actionMouseMove(event);
+      const pointer = drawingRef.current?.actionMouseMove(event);
 
       if (pointer) {
         canvasMouse.style.cursor = pointer;
@@ -451,7 +455,9 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     };
 
     const handleMouseDblClick = (event: MouseEvent) => {
-      drawing?.actionMouseDblClick(event);
+      if (event.detail === 2) {
+        drawingRef.current?.actionMouseDblClick();
+      }
     };
 
     const handleChangeMode = (e: Event) => {
@@ -469,8 +475,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
         default:
           if (isDrawingMode(newMode)) {
             // drawing modes --------------------------
-            clearTemporyCanvas();
-            actionChangeMode(newMode);
+            // clearTemporyCanvas();
+            // actionChangeMode(newMode);
           } else {
             console.error("Mode not found : ", newMode);
           }
@@ -478,7 +484,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     };
 
     const handleTouchStart = (event: TouchEvent) => {
-      console.log("touchstart");
+      // console.log("touchstart");
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
 
       event.preventDefault();
@@ -502,13 +508,13 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
         clientY: touch.clientY,
       });
 
-      drawing?.actionMouseMove(mouseEvent);
+      drawingRef.current?.actionMouseMove(mouseEvent);
     };
 
     const handleTouchEnd = () => {
-      drawing?.actionMouseUp();
+      drawingRef.current?.actionMouseUp();
     };
-    const handleDoubleTap = (() => {
+    const handleDoubleTap = () => {
       let lastTap = 0;
       const delay = 300; // délai en millisecondes pour détecter un double tap
 
@@ -518,17 +524,12 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
 
         if (tapLength < delay && tapLength > 0) {
           event.preventDefault();
-          const touch = event.touches[0];
-          const mouseEvent = new MouseEvent("dblclick", {
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-          });
-          handleMouseDblClick(mouseEvent);
+          drawingRef.current?.actionMouseDblClick();
         }
 
         lastTap = currentTime;
       };
-    })();
+    };
 
     canvasMouse.style.pointerEvents = "auto";
 
@@ -544,13 +545,6 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     canvasMouse.addEventListener("touchend", handleTouchEnd);
     canvasMouse.addEventListener("touchcancel", handleTouchEnd);
     canvasMouse.addEventListener("touchstart", handleDoubleTap);
-    //
-    //
-    if (document.readyState === "complete") {
-      handleDocumentLoaded();
-    } else {
-      window.addEventListener("load", handleDocumentLoaded);
-    }
 
     return () => {
       // mouse controls can be applied to the document
@@ -563,17 +557,19 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       canvasMouse.removeEventListener("mouseleave", onMouseLeave);
       canvasMouse.removeEventListener("dblclick", handleMouseDblClick);
       document.removeEventListener("modeChanged", handleChangeMode);
-      window.removeEventListener("load", handleDocumentLoaded);
 
       canvasMouse.removeEventListener("touchstart", handleTouchStart);
       canvasMouse.removeEventListener("touchmove", handleTouchMove);
       canvasMouse.removeEventListener("touchend", handleTouchEnd);
       canvasMouse.removeEventListener("touchcancel", handleTouchEnd);
       canvasMouse.removeEventListener("touchstart", handleDoubleTap);
-
-      currentParams.mode = DRAWING_MODES.INIT;
     };
   }, [canvasMouseRef.current]);
+
+  useEffect(() => {
+    actionChangeMode(mode);
+    clearTemporyCanvas();
+  }, [mode]);
 
   return (
     <div

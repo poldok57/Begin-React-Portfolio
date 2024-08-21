@@ -74,7 +74,7 @@ export const RangeInput: React.FC<{
 
   return (
     <div className="flex flex-col items-center">
-      <label htmlFor={id} className="mb-1">
+      <label htmlFor={id} className="mb-1 text-sm text-nowrap">
         {label}{" "}
         <FormattedRapport value={inputValue} max={max} decimal={decimalCount} />
       </label>

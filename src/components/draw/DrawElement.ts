@@ -1,4 +1,4 @@
-import { getCoordinates } from "../../lib/canvas/canvas-tools";
+import { getMouseCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   AllParams,
@@ -40,7 +40,7 @@ export class DrawElement extends DrawingHandler {
     this.data = {
       ...this.data,
       ...{
-        withMiddleButtons: false,
+        withTurningButtons: false,
         withCornerButton: true,
         type: DRAWING_MODES.SQUARE,
         rotation: 0,
@@ -56,7 +56,7 @@ export class DrawElement extends DrawingHandler {
     if (!e) return { x: 0, y: 0 };
     if (!canvas) canvas = this.mCanvas;
 
-    this.coordinates = getCoordinates(e, canvas);
+    this.coordinates = getMouseCoordinates(e, canvas);
     if (this.coordinates && this.offset && !this.fixed) {
       const x = this.coordinates.x + this.offset.x;
       const y = this.coordinates.y + this.offset.y;
@@ -126,7 +126,7 @@ export class DrawElement extends DrawingHandler {
     this.data.type = param.mode;
     this.data.lockRatio = param.lockRatio;
 
-    this.setWithMiddleButtons();
+    this.setWithTurningButtons();
   }
 
   getData(): ShapeDefinition {
@@ -145,7 +145,7 @@ export class DrawElement extends DrawingHandler {
   /**
    * Function to set the value of the middle button
    */
-  setWithMiddleButtons(): void {
+  setWithTurningButtons(): void {
     const square = this.data;
     const sSize = square.size;
     // don't show the middle button if the shape is a circle without text
@@ -155,10 +155,10 @@ export class DrawElement extends DrawingHandler {
         sSize.width === sSize.height &&
         !square.shape.withText)
     ) {
-      this.data.withMiddleButtons = false;
+      this.data.withTurningButtons = false;
       return;
     }
-    this.data.withMiddleButtons = true;
+    this.data.withTurningButtons = true;
   }
 
   /**
@@ -181,7 +181,7 @@ export class DrawElement extends DrawingHandler {
     if (newCoord) {
       // this.addData(newCoord);
       this.setDataSize(newCoord);
-      this.setWithMiddleButtons();
+      this.setWithTurningButtons();
     }
   }
 
@@ -304,7 +304,7 @@ export class DrawElement extends DrawingHandler {
   }
 
   /// egalise the size of the square
-  actionMouseDblClick(_event: MouseEvent): void {
+  actionMouseDblClick(): void {
     // check position of the mouse, if mouse is on a button, do nothing
     const mouseOnShape = this.handleMouseOnShape();
     if (mouseOnShape && isOnTurnButton(mouseOnShape)) {

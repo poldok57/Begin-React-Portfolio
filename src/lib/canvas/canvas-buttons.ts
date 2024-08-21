@@ -193,7 +193,7 @@ export function drawCircularArrow(
   ctx.fill();
 }
 
-export const drawMiddleButtons = (
+export const drawTurningButtons = (
   ctx: CanvasRenderingContext2D,
   squareSize: Area,
   border: string | null

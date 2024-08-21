@@ -1,6 +1,6 @@
 import { Coordinate } from "./types";
 
-export const getCoordinates: (
+export const getMouseCoordinates: (
   event: MouseEvent,
   canvas: HTMLCanvasElement | null
 ) => Coordinate | null = (event, canvas) => {

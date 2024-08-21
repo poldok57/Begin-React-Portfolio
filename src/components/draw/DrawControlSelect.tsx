@@ -58,6 +58,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
 
       handleChangeRatio(true);
       setMode(DRAWING_MODES.IMAGE);
+      // close the dialog box after the file is uploaded
       if (dialogRef.current) {
         dialogRef.current.close();
       }

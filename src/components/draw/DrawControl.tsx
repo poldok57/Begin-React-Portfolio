@@ -7,8 +7,7 @@ import { SlActionUndo } from "react-icons/sl";
 import { AiOutlineLoading } from "react-icons/ai";
 import { CiEraser } from "react-icons/ci";
 import { PiSelectionPlusLight } from "react-icons/pi";
-import { MdAspectRatio } from "react-icons/md";
-import clsx from "clsx";
+// import clsx from "clsx";
 
 import { Button } from "../atom/Button";
 import {
@@ -27,21 +26,25 @@ import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../alert-messages/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
+import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";
 
 interface DrawControlProps {
   setParams: (params: GroupParams) => void;
-  changeMode: (mode: string) => void;
+  mode: string;
+  setMode: (mode: string) => void;
+  // changeMode: (mode: string) => void;
   drawingParams: AllParams;
 }
 
 export const DrawControl: React.FC<DrawControlProps> = ({
   setParams,
-  changeMode,
+  mode,
+  setMode,
+  // changeMode,
   drawingParams,
 }) => {
-  const [mode, setMode] = useState(drawingParams.mode);
   const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
   const [lockRatio, setLockRatio] = useState(false);
@@ -83,9 +86,10 @@ export const DrawControl: React.FC<DrawControlProps> = ({
 
   const handleConfirmReset = () => {
     alertMessage("Reset confirmed");
-    changeMode(DRAWING_MODES.INIT);
+    // changeMode(DRAWING_MODES.INIT); // mode send to DrawCanvas
     addEventAction(DRAWING_MODES.INIT);
-    setMode(DRAWING_MODES.DRAW);
+    // Mode for the control panel
+    setMode(DRAWING_MODES.INIT);
     eraseHistory();
   };
 
@@ -101,13 +105,11 @@ export const DrawControl: React.FC<DrawControlProps> = ({
 
   const handleModeChange = (newMode: string) => {
     setMode(newMode);
-    changeMode(newMode);
     addEventMode(newMode);
   };
 
   const handleImage = (mode: string) => {
     setMode(DRAWING_MODES.IMAGE);
-    changeMode(DRAWING_MODES.IMAGE);
     addEventAction(mode);
   };
 
@@ -192,7 +194,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       <div
         onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
         onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
-        className="flex flex-col gap-1 p-1 min-w-fit max-w-[650px]rounded-md border-2 shadow-xl border-secondary bg-background"
+        className="flex flex-col gap-1 p-1 min-w-[590px] max-w-[650px] rounded-md border-2 shadow-xl border-secondary bg-background"
       >
         <div className="flex flex-row gap-4">
           <Button
@@ -246,18 +248,21 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           >
             <PiSelectionPlusLight size="20px" />
           </Button>
-          <Button
-            className={clsx("px-5", {
-              hidden: !(isDrawingShape(mode) || isDrawingSelect(mode)),
-              "bg-green-600 hover:bg-green-400": !lockRatio,
-              "bg-red-600 hover:bg-red-400": lockRatio,
-            })}
-            title={!lockRatio ? "Lock ratio" : "Ratio locked"}
-            selected={lockRatio}
-            onClick={() => handleChangeRatio(!lockRatio)}
-          >
-            <MdAspectRatio size="20px" />
-          </Button>
+          {(isDrawingShape(mode) || isDrawingSelect(mode)) && (
+            <label
+              htmlFor="toggle-ratio"
+              className="flex flex-col justify-center items-center text-sm text-nowrap"
+            >
+              {lockRatio ? "Ratio locked" : "Lock ratio"}
+              <ToggleSwitch
+                id="toggle-ratio"
+                defaultChecked={drawingParams.lockRatio}
+                onChange={(event) => {
+                  handleChangeRatio(event.target.checked);
+                }}
+              />
+            </label>
+          )}
         </div>
         <DrawControlSelect
           mode={mode}
@@ -347,7 +352,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, changeMode, lockRatio, opacity]);
+  }, [mode, withText, drawingParams, , lockRatio, opacity]);
 };
 
 export const DrawControlWP = withMousePosition(DrawControl);

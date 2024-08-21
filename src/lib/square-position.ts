@@ -44,7 +44,7 @@ export const isOnSquareBorder = ({
   area,
   withResize = true,
   withCornerButton = true,
-  withMiddleButtons = true,
+  withTurningButtons = true,
   maxWidth = 0,
 }: ArgsMouseOnShape) => {
   const rect = {
@@ -61,7 +61,7 @@ export const isOnSquareBorder = ({
       return BORDER.ON_BUTTON;
     }
   }
-  if (withMiddleButtons) {
+  if (withTurningButtons) {
     const middleButton = middleButtonPosition(rect);
     if (mouseIsInsideRect(coordinate, middleButton)) {
       if (coordinate.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;

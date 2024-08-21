@@ -1,6 +1,6 @@
 import { Coordinate, Area, ArgsMouseOnShape } from "../../lib/canvas/types";
 import {
-  getCoordinates,
+  getMouseCoordinates,
   clearCanvasByCtx,
 } from "../../lib/canvas/canvas-tools";
 import { showElement } from "../../lib/canvas/canvas-elements";
@@ -37,7 +37,7 @@ export abstract class DrawingHandler {
     type: DRAWING_MODES.DRAW,
     rotation: 0,
     lockRatio: false,
-    withMiddleButtons: false,
+    withTurningButtons: false,
     withCornerButton: false,
     withResize: true,
     size: { x: 0, y: 0, width: 0, height: 0 },
@@ -101,7 +101,7 @@ export abstract class DrawingHandler {
   setCoordinates(event: MouseEvent) {
     if (!event || !this.mCanvas) return { x: 0, y: 0 };
 
-    this.coordinates = getCoordinates(event, this.mCanvas);
+    this.coordinates = getMouseCoordinates(event, this.mCanvas);
     return this.coordinates;
   }
 
@@ -115,8 +115,8 @@ export abstract class DrawingHandler {
   getType() {
     return this.data.type;
   }
-  setWithMiddleButtons(value: boolean) {
-    this.data.withMiddleButtons = value;
+  setWithTurningButtons(value: boolean) {
+    this.data.withTurningButtons = value;
   }
   setWithCornerButton(value: boolean) {
     this.data.withCornerButton = value;
@@ -149,7 +149,7 @@ export abstract class DrawingHandler {
       area: this.data.size,
       withResize: this.data.withResize,
       withCornerButton: this.data.withCornerButton,
-      withMiddleButtons: this.data.withMiddleButtons,
+      withTurningButtons: this.data.withTurningButtons,
       maxWidth: this.mCanvas.width,
     };
 
@@ -193,7 +193,7 @@ export abstract class DrawingHandler {
   actionAbort(): void {}
   actionValid(): void {}
 
-  actionMouseDblClick(_event: MouseEvent): void {}
+  actionMouseDblClick(): void {}
 
   abstract endAction(nextMode?: string): void;
   abstract changeData(data: AllParams): void;

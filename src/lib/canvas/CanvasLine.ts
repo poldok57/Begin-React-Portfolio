@@ -1,4 +1,4 @@
-import { getCoordinates } from "./canvas-tools";
+import { getMouseCoordinates } from "./canvas-tools";
 import { basicLine, crossLine } from "./canvas-basic";
 import { Coordinate } from "./types";
 
@@ -32,7 +32,7 @@ export class CanvasLine {
     if (!event) return { x: 0, y: 0 };
     if (!canvas) canvas = this.mCanvas;
 
-    this.coordinates = getCoordinates(event, canvas);
+    this.coordinates = getMouseCoordinates(event, canvas);
     return this.coordinates;
   }
 

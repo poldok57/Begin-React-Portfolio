@@ -10,9 +10,10 @@ export const DrawSection = () => {
   return (
     <SectionWrapper title="Dessine-moi un bouton !">
       <ButtonOpenFullScreen
-        className="w-28 h-32 text-lg bg-teal-500"
+        className="w-28 h-32 text-lg bg-teal-500 hover:bg-teal-400 active:bg-teal-300"
         value="Drawing tool"
         title="Draw me a button"
+        titleBackground="#0d9488"
       >
         <DynamicDrawSection />
       </ButtonOpenFullScreen>

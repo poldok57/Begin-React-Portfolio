@@ -129,7 +129,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
           <label
             htmlFor="toggle-text"
             className={clsx(
-              "flex flex-col justify-center items-center font-bold",
+              "flex flex-col justify-center items-center font-bold text-nowrap",
               {
                 hidden: !isDrawingShape(mode),
               }
@@ -153,7 +153,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
       >
         <label
           htmlFor="toggle-border"
-          className="flex flex-col justify-center items-center font-bold"
+          className="flex flex-col justify-center items-center text-sm font-bold"
         >
           Border
           <ToggleSwitch
@@ -165,10 +165,18 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
             }}
           />
         </label>
-        <div className={clsx("flex flex-row gap-5", { hidden: !withBorder })}>
+        <div
+          className={clsx(
+            "flex flex-row gap-5 justify-between p-2 ml-3 border border-secondary border-opacity-15",
+            {
+              hidden: !withBorder,
+              "gap-6": isTouch,
+            }
+          )}
+        >
           <label
             htmlFor="border-color-picker"
-            className="flex gap-2 justify-center items-center"
+            className="flex flex-col gap-1 justify-center items-center"
           >
             color
             <input

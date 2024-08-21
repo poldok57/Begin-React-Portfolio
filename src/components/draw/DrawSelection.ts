@@ -1,5 +1,5 @@
 import { Area, Size, Coordinate } from "../../lib/canvas/types";
-import { getCoordinates } from "../../lib/canvas/canvas-tools";
+import { getMouseCoordinates } from "../../lib/canvas/canvas-tools";
 import {
   makeWhiteTransparent,
   makeWhiteTransparent2,
@@ -55,7 +55,7 @@ export class DrawSelection extends DrawingHandler {
     this.data = {
       ...this.data,
       ...{
-        withMiddleButtons: false,
+        withTurningButtons: false,
         withCornerButton: false,
         type: DRAWING_MODES.SQUARE,
         rotation: 0,
@@ -67,7 +67,7 @@ export class DrawSelection extends DrawingHandler {
     if (!event) return { x: 0, y: 0 };
     if (!canvas) canvas = this.mCanvas;
 
-    this.coordinates = getCoordinates(event, canvas);
+    this.coordinates = getMouseCoordinates(event, canvas);
     if (this.coordinates && this.offset && !this.fixed) {
       const x = this.coordinates.x + this.offset.x;
       const y = this.coordinates.y + this.offset.y;
@@ -114,7 +114,7 @@ export class DrawSelection extends DrawingHandler {
     this.data.canvasImage = null;
     this.data.canvasImageTransparent = null;
     this.fixed = false;
-    this.setWithMiddleButtons(true);
+    this.setWithTurningButtons(true);
   }
   changeData(data: AllParams) {
     this.setDataGeneral(data.general);
@@ -130,10 +130,10 @@ export class DrawSelection extends DrawingHandler {
   setType(type: string) {
     this.data.type = type;
     if (type === DRAWING_MODES.SELECT) {
-      this.setWithMiddleButtons(false);
+      this.setWithTurningButtons(false);
       this.setWithCornerButton(false);
     } else {
-      this.setWithMiddleButtons(true);
+      this.setWithTurningButtons(true);
       this.setWithCornerButton(true);
     }
   }
@@ -330,12 +330,12 @@ export class DrawSelection extends DrawingHandler {
         const rect = imageSize(this.mCanvas);
         this.memorizeSelectedArea(rect);
 
-        this.setWithMiddleButtons(false);
+        this.setWithTurningButtons(false);
         this.setWithCornerButton(false);
         this.data.canvasImageTransparent = null;
         break;
       case DRAWING_MODES.IMAGE:
-        this.setWithMiddleButtons(true);
+        this.setWithTurningButtons(true);
         this.setWithCornerButton(true);
         this.data.canvasImageTransparent = null;
     }
@@ -349,7 +349,7 @@ export class DrawSelection extends DrawingHandler {
     this.data.canvasImage = copyInVirtualCanvas(this.context, area);
     this.setType(DRAWING_MODES.IMAGE);
     this.setRotation(0);
-    console.log("copySelection: refreshDrawing");
+    console.log("copySelection:", area, " refreshDrawing");
     this.refreshDrawing(1, BORDER.INSIDE);
   }
   /**
@@ -507,7 +507,7 @@ export class DrawSelection extends DrawingHandler {
     };
   }
 
-  actionMouseDblClick = (_event: MouseEvent) => {
+  actionMouseDblClick = () => {
     const mouseOnShape = this.handleMouseOnShape();
     if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
       return;

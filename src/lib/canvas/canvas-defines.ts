@@ -148,7 +148,7 @@ export interface ThingsToDraw {
   lockRatio: boolean;
   size: Area;
   general: ParamsGeneral;
-  withMiddleButtons: boolean;
+  withTurningButtons: boolean;
   withCornerButton: boolean;
   withResize: boolean;
 }

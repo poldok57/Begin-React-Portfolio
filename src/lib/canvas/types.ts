@@ -29,7 +29,7 @@ export type ArgsMouseOnShape = {
   area: Area;
   withResize: boolean;
   withCornerButton: boolean | null;
-  withMiddleButtons: boolean | null;
+  withTurningButtons: boolean | null;
   maxWidth: number;
 };
 
