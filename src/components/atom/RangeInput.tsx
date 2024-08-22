@@ -7,16 +7,17 @@ const FormattedRapport: React.FC<{
   max: string;
   decimal: number;
 }> = ({ value, max, decimal }) => {
-  const maxDigits = max === "100" ? 2 : max.toString().length;
+  const maxDigits =
+    parseFloat(max) <= 1 ? 1 : max === "100" ? 2 : max.toString().length;
   const valueDigits =
     decimal === 0
       ? value.toString().length
       : Math.floor(value).toString().length;
 
   return (
-    <>
+    <span style={{ opacity: 0.6 }}>
       {valueDigits < maxDigits ? (
-        <span style={{ opacity: 0.2 }}>
+        <span style={{ opacity: 0.3 }}>
           {"0".repeat(maxDigits - valueDigits)}
         </span>
       ) : null}
@@ -25,7 +26,7 @@ const FormattedRapport: React.FC<{
         ? "." + "0".repeat(decimal)
         : null}
       {max !== "100" ? "/" + max : null}
-    </>
+    </span>
   );
 };
 
@@ -94,7 +95,7 @@ export const RangeInput: React.FC<{
           min={min}
           max={max}
           step={step}
-          onChange={(e) => handleChange(parseInt(e.target.value))}
+          onChange={(e) => handleChange(parseFloat(e.target.value))}
           className={clsx(className, "-mx-3")}
           style={style}
         />

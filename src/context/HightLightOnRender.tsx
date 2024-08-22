@@ -28,8 +28,8 @@ export const useOnRenderStyle = (bgColor = "#27ae60", off = false) => {
   return ref;
 };
 
-interface HightLightOnRenderProps {
-  hightLightColor: string;
+interface HightLightOnRenderProps extends React.HTMLAttributes<HTMLDivElement> {
+  hightLightColor?: string;
   off?: boolean;
   children: React.ReactNode;
 }

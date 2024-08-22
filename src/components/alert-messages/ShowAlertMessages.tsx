@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { useMessageStore } from "../../lib/stores/useMessageStore";
-import { withMousePosition } from "../windows/withMousePosition";
-import { useComponentSize } from "../windows/WithResizing";
+import { useMessageStore } from "@/lib/stores/useMessageStore";
+import { withMousePosition } from "@/components/windows/withMousePosition";
+import { useComponentSize } from "@/components/windows/WithResizing";
 
-import { Button } from "../atom/Button";
+import { Button } from "@/components/atom/Button";
 import { MdCopyAll } from "react-icons/md";
 import clsx from "clsx";
 
@@ -154,7 +154,6 @@ export const ShowAlertMessages: React.FC<ShowAlertMessagesProps> = ({
 }) => {
   const { messages, clearMessages } = useMessageStore((state) => ({
     messages: state.messages,
-    addMessage: state.addMessage,
     clearMessages: state.clearMessages,
   }));
 

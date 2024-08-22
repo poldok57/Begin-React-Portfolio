@@ -4,7 +4,8 @@ import { DrawSection } from "../src/components/Chapters";
 import { Footer } from "../src/components/Footer";
 import { Header } from "../src/components/Header";
 import { HeroSection } from "../src/components/hero";
-import { ProjectSection } from "../src/components/project";
+// import { ProjectSection } from "../src/components/project";
+import { CasinoSection } from "../src/components/Chapters/CasinoSection";
 import { GameSelector } from "../src/components/Chapters/GameSelector";
 import { ShowAlertMessagesWP } from "../src/components/alert-messages/ShowAlertMessages";
 
@@ -17,9 +18,11 @@ const Home = () => {
       <div className="flex flex-col gap-y-32">
         <Header />
         <HeroSection />
-        <ProjectSection />
+        <CasinoSection />
+        {/* <ProjectSection /> */}
         <GameSelector />
         <DrawSection />
+
         <CommentSection />
         <Footer />
       </div>

@@ -52,6 +52,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const drawingRef = useRef<DrawingHandler | null>(null);
   const lineRef = useRef<DrawLine | null>(null);
   const selectionRef = useRef<DrawSelection | null>(null);
+  const elementRef = useRef<DrawElement | null>(null);
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -119,8 +120,11 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       drawingHdl = new DrawFreehand(canvasRef.current);
       newHandler = true;
     } else if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {
-      drawingHdl = new DrawElement(canvasRef.current);
-      newHandler = true;
+      if (elementRef.current === null) {
+        elementRef.current = new DrawElement(canvasRef.current);
+        newHandler = true;
+      }
+      drawingHdl = elementRef.current;
     } else if (isDrawingSelect(mode)) {
       if (selectionRef.current === null) {
         selectionRef.current = new DrawSelection(canvasRef.current);
@@ -473,11 +477,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
           break;
 
         default:
-          if (isDrawingMode(newMode)) {
-            // drawing modes --------------------------
-            // clearTemporyCanvas();
-            // actionChangeMode(newMode);
-          } else {
+          if (!isDrawingMode(newMode)) {
             console.error("Mode not found : ", newMode);
           }
       }
@@ -568,7 +568,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
 
   useEffect(() => {
     actionChangeMode(mode);
-    clearTemporyCanvas();
+    // clearTemporyCanvas();
   }, [mode]);
 
   return (

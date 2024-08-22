@@ -9,7 +9,17 @@ import { useId } from "react";
  * @returns {JSX.Element}
  * @constructor
  */
-export const TextField = ({ label, component, ...props }) => {
+interface TextFieldProps
+  extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
+  label: string;
+  component?: "input" | "textarea";
+}
+
+export const TextField: React.FC<TextFieldProps> = ({
+  label,
+  component,
+  ...props
+}) => {
   const id = useId();
 
   const Component = component || "input";
@@ -24,7 +34,7 @@ export const TextField = ({ label, component, ...props }) => {
       </label>
 
       <Component
-        className="mt-1 w-full rounded border-2 border-primary border-opacity-50 bg-transparent p-3 text-sm focus:border-opacity-100 focus:bg-paper"
+        className="p-3 mt-1 w-full text-sm bg-transparent rounded border-2 border-opacity-50 border-primary focus:border-opacity-100 focus:bg-paper"
         id={id}
         {...props}
       />

@@ -52,11 +52,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
         "bg-paper": mode === DRAWING_MODES.TEXT,
       })}
     >
-      <div
-        className={clsx("flex flex-row gap-2", {
-          "gap-4": isTouch,
-        })}
-      >
+      <div className={clsx("flex flex-row gap-3 justify-between")}>
         <label
           htmlFor="text-font-selector"
           className="flex gap-2 justify-center items-center"
@@ -114,7 +110,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           Italic
         </Button>
       </div>
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row gap-4 justify-between">
         <label
           htmlFor="text"
           className="flex gap-2 justify-center items-center"
@@ -123,14 +119,14 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           <input
             id="text"
             type="text"
-            className="p-2 rounded-md border-2 border-primary bg-paper"
+            className="p-2 w-72 rounded-md border-2 border-primary bg-paper"
             defaultValue={drawingParams.text.text}
             onChange={(event) => handleText({ text: event.target.value })}
           />
         </label>
         <label
           htmlFor="text-color-picker"
-          className="flex gap-4 justify-center items-center"
+          className="flex flex-col gap-1 justify-center items-center"
         >
           Color
           <input
@@ -140,18 +136,20 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             onChange={(e) => handleText({ color: e.target.value })}
           />
         </label>
-        <Button
-          className="px-3 py-1"
-          onClick={() => handleTextRotation(-Math.PI / 16)}
-        >
-          <TbRotate2 size="20px" />
-        </Button>
-        <Button
-          className="px-3 py-1"
-          onClick={() => handleTextRotation(Math.PI / 16)}
-        >
-          <TbRotateClockwise2 size="20px" />
-        </Button>
+        <div className="flex flex-row gap-3">
+          <Button
+            className="px-3 py-1"
+            onClick={() => handleTextRotation(-Math.PI / 16)}
+          >
+            <TbRotate2 size="20px" />
+          </Button>
+          <Button
+            className="px-3 py-1"
+            onClick={() => handleTextRotation(Math.PI / 16)}
+          >
+            <TbRotateClockwise2 size="20px" />
+          </Button>
+        </div>
       </div>
     </div>
   );

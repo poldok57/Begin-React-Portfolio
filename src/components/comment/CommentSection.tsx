@@ -1,6 +1,6 @@
 import { SectionWrapper } from "../atom/SectionWrapper";
 import { Loader } from "../atom/Loader/Loader";
-import { Comment } from "./Comment";
+import { Comment, CommentType, CommentProps } from "./Comment";
 import { CommentForm } from "./CommentForm";
 import { useFetch } from "../../hooks/useFetch";
 import { commentsUrl } from "../../lib/api-url";
@@ -9,6 +9,10 @@ import { withMousePosition } from "../windows/withMousePosition";
 
 import clsx from "clsx";
 
+interface DBComment extends CommentProps {
+  id: number | string;
+}
+
 export const CommentLoader = () => {
   const {
     data: comments,
@@ -16,9 +20,9 @@ export const CommentLoader = () => {
     isLoaded,
     status,
     run,
-  } = useFetch(commentsUrl, {});
+  } = useFetch(commentsUrl, null);
 
-  const handleAddComment = (newComment) => {
+  const handleAddComment = (newComment: CommentType) => {
     return addComment(commentsUrl, newComment, () => run());
   };
 
@@ -48,7 +52,7 @@ export const CommentLoader = () => {
         {isLoaded && (
           <>
             <div className="grid grid-cols-1 gap-4 justify-center w-full sm:grid-cols-2 lg:grid-cols-3">
-              {comments.map((comment) => (
+              {comments.map((comment: DBComment) => (
                 <Comment key={comment.id} {...comment} />
               ))}
             </div>
@@ -70,7 +74,7 @@ export const CommentSection = () => {
       withMaximize={true}
       withMinimize={true}
       close={true}
-      fixed={true}
+      draggable={true}
     />
   );
 };

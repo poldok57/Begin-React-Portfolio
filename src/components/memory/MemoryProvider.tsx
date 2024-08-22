@@ -1,20 +1,44 @@
-import { createContext, useContext, useState, useRef, useEffect } from "react";
 import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+  ReactNode,
+} from "react";
+import {
+  Card,
   CARD_STATE,
   getInitialMemory,
   isMemoryFinished,
   isPairCards,
-} from "../../lib/memory";
+} from "@/lib/memory";
+
+export type Size = { width: number; height: number };
 
 import { GAME_STATUS } from "../../lib/memory";
 import { alertMessage } from "../alert-messages/alertMessage";
 
 const DEFAULT_WIDTH = 80;
 
-const MemoryContext = createContext({ startTime: 0, getNbrTry: () => 0 });
+const MemoryContext = createContext({
+  startTime: 0 as number,
+  getNbrTry: () => 0 as number,
+  isGameFinished: () => false as boolean,
+  onClick: (_idx: number) => false as boolean,
+  getCards: () => [] as Card[],
+  getSize: () => ({ width: 0, height: 0 } as Size),
+  getWidthCards: () => 0 as number,
+  setWidthCards: (_width: number) => {},
+  resetGame: (_size: Size, _type?: string) => {},
+});
 
-export const MemoryProvider = ({ children, ...props }) => {
-  // const [nbrTry, setNbrTry] = useState(0);
+export const MemoryProvider = ({
+  children,
+  ...props
+}: {
+  children: ReactNode;
+}) => {
   const [size, setSize] = useState({ width: 5, height: 4 });
   const [cards, setCards] = useState(() =>
     getInitialMemory(size.width * size.height)
@@ -23,9 +47,9 @@ export const MemoryProvider = ({ children, ...props }) => {
 
   const gameStatusRef = useRef(GAME_STATUS.PLAYING);
   const nbrTryRef = useRef(0);
-  const startTimeRef = useRef(0);
-  const firstCard = useRef();
-  const timeoutRef = useRef(null);
+  const startTimeRef = useRef<number | undefined>(undefined);
+  const firstCard = useRef(0);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const getCards = () => {
     return cards;
@@ -34,20 +58,20 @@ export const MemoryProvider = ({ children, ...props }) => {
     return widthCards;
   };
   const getNbrTry = () => {
-    return nbrTryRef.current;
+    return nbrTryRef.current ?? 0;
   };
-  const changeCardState = (cardIdx, state) => {
+  const changeCardState = (cardIdx: number | number[], state: string) => {
     setCards((curr) => {
       if (typeof cardIdx === "number") {
         curr[cardIdx].state = state;
         return [...curr];
       }
-      cardIdx.map((i) => (curr[i].state = state));
+      cardIdx.map((i: number) => (curr[i].state = state));
       return [...curr];
     });
   };
 
-  const isPairCardsByIdx = (idx1, idx2) => {
+  const isPairCardsByIdx = (idx1: number, idx2: number) => {
     return isPairCards(cards[idx1], cards[idx2]);
   };
 
@@ -77,12 +101,12 @@ export const MemoryProvider = ({ children, ...props }) => {
 
   const incrementTry = () => {
     if (nbrTryRef.current === 0) {
-      startTimeRef.current = new Date();
+      startTimeRef.current = Date.now();
     }
     nbrTryRef.current++;
   };
 
-  const resetGame = (size, type = "images") => {
+  const resetGame = (size: Size, type = "images") => {
     setSize(size);
     setCards(() => getInitialMemory(size.width * size.height, type));
     nbrTryRef.current = 0;
@@ -100,7 +124,7 @@ export const MemoryProvider = ({ children, ...props }) => {
   };
 
   //  ---- onClick ----
-  const onClick = (idx) => {
+  const onClick = (idx: number) => {
     if (cards[idx].state !== CARD_STATE.HIDE) {
       return false;
     }
@@ -164,7 +188,7 @@ export const MemoryProvider = ({ children, ...props }) => {
   // ---- end; onClick ----
 
   const values = {
-    startTime: startTimeRef.current,
+    startTime: startTimeRef.current ?? 0,
 
     getNbrTry,
     isGameFinished,

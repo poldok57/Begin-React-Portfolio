@@ -3,7 +3,7 @@
  * @param array Array to be shuffled
  * @returns {*[]}
  */
-export const shuffle = (array) => {
+export const shuffle = <T>(array: T[]) => {
   let m = array.length,
     t,
     i;
@@ -25,6 +25,12 @@ export const shuffle = (array) => {
 export const PREVIEW_TIMEOUT = 5000;
 export const HIDE_TIMEOUT = 5000;
 export const PREVIEW_FIRSTCART = 20000;
+
+export type Card = {
+  id: string;
+  emoji: string;
+  state: string;
+};
 
 const animals = [
   "🐶",
@@ -104,11 +110,13 @@ export const getInitialMemory = (maxi = 0, typeImages = "images") => {
 
   selectedImages = selectedImages.slice(0, nbr);
 
-  return shuffle([...selectedImages, ...selectedImages]).map((v, i) => ({
-    id: `card-${v}-${i}`,
-    emoji: v,
-    state: CARD_STATE.HIDE,
-  }));
+  return shuffle([...selectedImages, ...selectedImages]).map(
+    (v: string, i: number) => ({
+      id: `card-${v}-${i}`,
+      emoji: v,
+      state: CARD_STATE.HIDE,
+    })
+  );
 };
 
 export const GAME_STATUS = {
@@ -123,10 +131,10 @@ export const GAME_ACTION = {
   Clear: "Clear",
 };
 
-export const isPairCards = (card1, card2) => {
+export const isPairCards = (card1: Card, card2: Card) => {
   return card1.emoji === card2.emoji;
 };
 
-export const isMemoryFinished = (cards) => {
+export const isMemoryFinished = (cards: Card[]) => {
   return cards.every((card) => card.state === CARD_STATE.FIND);
 };

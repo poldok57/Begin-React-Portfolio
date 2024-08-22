@@ -273,6 +273,13 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           addEventDetail={addEventDetail}
           isTouch={isTouch}
         />
+        <DrawControlText
+          mode={mode}
+          hidden={mode != DRAWING_MODES.TEXT && withText === false}
+          drawingParams={drawingParams}
+          handleTextParams={handleParamChange}
+          isTouch={isTouch}
+        />
         <DrawControlLine
           mode={mode}
           handleParamChange={handleParamChange}
@@ -288,13 +295,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleModeChange={handleModeChange}
           handleChangeRadius={handleChangeRadius}
           setWithText={setWithText}
-          isTouch={isTouch}
-        />
-        <DrawControlText
-          mode={mode}
-          hidden={mode != DRAWING_MODES.TEXT && withText === false}
-          drawingParams={drawingParams}
-          handleTextParams={handleParamChange}
           isTouch={isTouch}
         />
 

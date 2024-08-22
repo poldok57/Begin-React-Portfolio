@@ -1,9 +1,11 @@
 import dynamic from "next/dynamic";
-import { SectionWrapper } from "../atom/SectionWrapper";
-import { ButtonOpenFullScreen } from "../windows/ButtonOpenFullScreen";
+import { SectionWrapper } from "@/components/atom/SectionWrapper";
+import { CenteredLoader } from "@/components/atom/Loader/Loader";
+import { ButtonOpenFullScreen } from "@/components/windows/ButtonOpenFullScreen";
 
 // dynamic import Memory Section
 const DynamicMemorySection = dynamic(() => import("../memory"), {
+  loading: () => <CenteredLoader />,
   ssr: false,
 });
 

@@ -1,9 +1,18 @@
 import { Typography } from "../atom/Typography";
 
-export const Comment = ({ username, comment, createdAt }) => {
+export interface CommentType {
+  username: string;
+  comment: string;
+}
+export interface CommentProps extends CommentType {
+  createdAt: string | number | Date;
+}
+
+export const Comment = ({ username, comment, createdAt }: CommentProps) => {
   const createdAtDate = new Date(createdAt);
 
-  const twoDigits = (number) => (Number(number) < 10 ? `0${number}` : number);
+  const twoDigits = (number: string | number) =>
+    Number(number) < 10 ? `0${number}` : number;
   const formattedDate = `${twoDigits(createdAtDate.getHours())}:${twoDigits(
     createdAtDate.getMinutes()
   )} - ${twoDigits(createdAtDate.getDate())}/${twoDigits(

@@ -38,6 +38,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       className={clsx("flex flex-row gap-4 border border-secondary p-2", {
         "bg-paper": isDrawingAllLines(mode) || mode === DRAWING_MODES.IMAGE,
         "gap-8": isTouch,
+        hidden: mode === DRAWING_MODES.TEXT,
       })}
     >
       <label

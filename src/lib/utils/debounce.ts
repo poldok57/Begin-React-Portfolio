@@ -1,6 +1,6 @@
 export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
-  delay: number
+  delay: number = 600
 ) => {
   let timeout: NodeJS.Timeout;
 

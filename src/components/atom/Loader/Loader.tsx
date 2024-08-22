@@ -14,3 +14,11 @@ export const Loader = () => {
     </div>
   );
 };
+
+export const CenteredLoader = () => {
+  return (
+    <div className="flex justify-center items-center w-full h-screen">
+      <Loader />
+    </div>
+  );
+};

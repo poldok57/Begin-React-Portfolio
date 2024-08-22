@@ -16,14 +16,21 @@ const VERTICAL_MARGIN = 85;
 const HORIZONTAL_MARGIN = 10;
 const CARD_MARGIN = 12;
 
-const ResizeButtons = ({
+interface ResizeButtonsProps {
+  className?: string;
+  resizingParent: (variable: number) => void;
+  direction?: "row" | "col";
+  size?: number;
+  step?: number;
+}
+const ResizeButtons: React.FC<ResizeButtonsProps> = ({
   className,
   resizingParent,
   direction = "row",
   size = 16,
   step = 5,
 }) => {
-  const handleResize = (variable) => {
+  const handleResize = (variable: number) => {
     resizingParent(variable);
   };
 
@@ -60,24 +67,23 @@ export const MemoryBoard = ({ trace = false }) => {
     setWidthCards,
     isGameFinished,
     resetGame,
-    withResizeButtons = false,
   } = useMemoryContext();
 
   const { componentSize, resizeComponent, setMinimumSize } = useComponentSize();
 
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   const cards = getCards();
   const finisedRef = useRef(false);
   const size = getSize();
   const widthCards = getWidthCards();
-  const memoConfig = useRef(null);
+  const memoConfig = useRef(0);
   const configChange = useRef(false);
   const sizingChange = useRef(false);
   const memoWidthCards = useRef(widthCards);
-  const memoWidthParent = useRef(null);
+  const memoWidthParent = useRef(0);
 
-  const resizingParent = (variable) => {
+  const resizingParent = (variable: number) => {
     if (!ref.current) {
       return;
     }
@@ -97,7 +103,7 @@ export const MemoryBoard = ({ trace = false }) => {
   };
 
   // memo all confiuried size in one number
-  let configId = 256 * widthCards + 16 * size.width + size.height;
+  const configId = 256 * widthCards + 16 * size.width + size.height;
 
   if (memoConfig.current !== configId) {
     configChange.current = true;
@@ -167,19 +173,24 @@ export const MemoryBoard = ({ trace = false }) => {
         if (!configChange.current) {
           const handleResizeCards = () => {
             setWidthCards(cardSize);
-            if (memoWidthCards.current === cardSize && !sizingChange.current) {
-              ref.current.parentElement.style.width = null;
+            if (
+              memoWidthCards.current === cardSize &&
+              !sizingChange.current &&
+              ref.current &&
+              ref.current.parentElement
+            ) {
+              ref.current.parentElement.style.width = "";
             }
           };
           const debouncedResizeCards = debounce(handleResizeCards, 500);
-          debouncedResizeCards(cardSize);
+          debouncedResizeCards();
         }
         configChange.current = false;
       }
     });
 
     const handleResizeComponent = () => {
-      if (!ref.current) {
+      if (!ref.current || !ref.current.parentElement) {
         return;
       }
       if (ref.current.clientWidth > componentSize.width) {
@@ -189,7 +200,7 @@ export const MemoryBoard = ({ trace = false }) => {
         } // else ref.current.parentElement.style.width = null;
       }
       if (ref.current.clientHeight > componentSize.height) {
-        ref.current.parentElement.style.height = null;
+        ref.current.parentElement.style.height = "";
       }
       // init sizingChange
       sizingChange.current = false;
@@ -198,7 +209,9 @@ export const MemoryBoard = ({ trace = false }) => {
     const debouncedResizeComponent = debounce(handleResizeComponent, 1000);
     debouncedResizeComponent();
 
-    resizeObserver.observe(ref.current.parentElement);
+    if (ref.current && ref.current.parentElement) {
+      resizeObserver.observe(ref.current.parentElement);
+    }
 
     return () => {
       resizeObserver.disconnect();
@@ -215,7 +228,7 @@ export const MemoryBoard = ({ trace = false }) => {
     );
   }
   let info = " ";
-  const finised = isGameFinished(cards);
+  const finised = isGameFinished();
   if (finised) {
     if (!finisedRef.current) {
       alertMessage("Game finished !!!");
@@ -232,12 +245,10 @@ export const MemoryBoard = ({ trace = false }) => {
     <div ref={ref} className="flex overflow-hidden flex-col items-center h-fit">
       <MemoryNbrTry stop={finised} className="mt-5" />
       <ResizeButtons
-        className={clsx(
+        className={clsx([
           "absolute left-2 top-12 p-1 text-gray-900 bg-gray-100 rounded-lg border border-gray-400 opacity-30 cursor-pointer hover:bg-gray-200 hover:opacity-100",
-          {
-            "sr-only": !withResizeButtons,
-          }
-        )}
+          "sr-only",
+        ])}
         resizingParent={resizingParent}
       />
       {finised && (

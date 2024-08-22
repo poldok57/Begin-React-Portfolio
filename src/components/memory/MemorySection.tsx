@@ -42,7 +42,7 @@ export const MemorySection = () => {
         titleHidden={true}
         withMinimize={true}
         titleBackground="pink"
-        titleText="Game Message"
+        titleText="Game Messages"
         style={{ position: "fixed", right: 20, bottom: 30 }}
       />
     </MemoryProvider>

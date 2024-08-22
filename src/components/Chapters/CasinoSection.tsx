@@ -3,21 +3,21 @@ import { SectionWrapper } from "@/components/atom/SectionWrapper";
 import { CenteredLoader } from "@/components/atom/Loader/Loader";
 import { ButtonOpenFullScreen } from "../windows/ButtonOpenFullScreen";
 import dynamic from "next/dynamic";
-const DynamicDrawSection = dynamic(() => import("../draw"), {
+const RoomCreat = dynamic(() => import("../room"), {
   loading: () => <CenteredLoader />,
   ssr: false,
 });
 
-export const DrawSection = () => {
+export const CasinoSection = () => {
   return (
-    <SectionWrapper title="Dessine-moi un bouton !">
+    <SectionWrapper title="Faites vos jeux !">
       <ButtonOpenFullScreen
-        className="w-28 h-32 text-lg bg-teal-500 hover:bg-teal-400 active:bg-teal-300"
-        value="Drawing tool"
-        title="Draw me a button"
-        titleBackground="#0d9488"
+        className="w-28 h-32 text-lg bg-amber-500 text-slate-900 hover:bg-amber-400 active:bg-amber-300"
+        value="Room"
+        title="Rooms manager"
+        titleBackground="#d97706"
       >
-        <DynamicDrawSection />
+        <RoomCreat />
       </ButtonOpenFullScreen>
     </SectionWrapper>
   );

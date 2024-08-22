@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export const MemoryNbrTry = ({ stop = false, ...props }) => {
   const { getNbrTry, startTime } = useMemoryContext();
-  const [duree, setDuree] = useState(0);
+  const [duree, setDuree] = useState("");
 
   useEffect(() => {
     if (stop) {
@@ -11,14 +11,16 @@ export const MemoryNbrTry = ({ stop = false, ...props }) => {
     }
     const interval = setInterval(() => {
       if (!startTime) return;
-      const t = Math.floor((new Date() - startTime) / 1000);
+      const t = Math.floor((Date.now() - startTime) / 1000);
+
       const h = Math.floor(t / 3600);
-      let m = Math.floor((t % 3600) / 60);
-      let s = t % 60;
-      if (m < 10) m = "0" + m;
-      if (s < 10) s = "0" + s;
-      let stringTime = m + ":" + s;
-      if (h) stringTime = h + ":" + stringTime;
+      const m = Math.floor((t % 3600) / 60);
+      const s = t % 60;
+
+      const stringTime = `${h > 0 ? h + ":" : ""}${m
+        .toString()
+        .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+
       // set duration in time format
       setDuree(stringTime);
       // setDuree(Math.floor(t / 1000));

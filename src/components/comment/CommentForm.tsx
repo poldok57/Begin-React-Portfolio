@@ -7,18 +7,24 @@ import { Button } from "../atom/Button";
 
 import { commentsUrl } from "../../lib/api-url";
 
-export const CommentForm = ({ addComment }) => {
+type CommentFormProps = {
+  addComment: (comment: { username: string; comment: string }) => Promise<void>;
+};
+
+export const CommentForm = ({ addComment }: CommentFormProps) => {
   const errorMessage = useRef({
     username: "",
     comment: "",
   });
-  const [errorSending, setErrorSending] = useState(false);
+  const [errorSending, setErrorSending] = useState<string | null>(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const username = e.target.username.value;
-    const comment = e.target.comment.value;
-
+    const form = e.currentTarget;
+    const username = (form.elements.namedItem("username") as HTMLInputElement)
+      .value;
+    const comment = (form.elements.namedItem("comment") as HTMLInputElement)
+      .value;
     errorMessage.current.comment = "";
     errorMessage.current.username = "";
 
@@ -49,7 +55,7 @@ export const CommentForm = ({ addComment }) => {
     addComment({ username, comment })
       .then(() => {
         setErrorSending(null);
-        e.target.reset();
+        (e.target as HTMLFormElement).reset();
       })
       .catch((error) => {
         setErrorSending("Something wrong happend: " + error.error);
@@ -63,7 +69,7 @@ export const CommentForm = ({ addComment }) => {
       action={commentsUrl}
       id="commentForm"
       method="POST"
-      className="flex flex-col w-full gap-4 md:px-8"
+      className="flex flex-col gap-4 w-full md:px-8"
       onSubmit={(e) => handleSubmit(e)}
     >
       {errorSending && <ErrorMessage> {errorSending} </ErrorMessage>}
@@ -86,9 +92,7 @@ export const CommentForm = ({ addComment }) => {
       {errorMessage.current.comment && (
         <ErrorMessage> {errorMessage.current.comment} </ErrorMessage>
       )}
-      <Button position="over" type="submit">
-        Submit
-      </Button>
+      <Button type="submit">Submit</Button>
     </form>
   );
 };

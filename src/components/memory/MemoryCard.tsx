@@ -2,24 +2,24 @@ import clsx from "clsx";
 import { useRef } from "react";
 import { HightLightOnRender } from "../../context/HightLightOnRender";
 import styles from "./MemoryCard.module.css";
-import { CARD_STATE } from "../../lib/memory";
+import { CARD_STATE, Card } from "../../lib/memory";
 import { useTheme } from "../../context/ThemeProvider";
 import { useMemoryContext } from "./MemoryProvider";
 import Image from "next/image";
 
-export const MemoryCard = ({ card, idx }) => {
+export const MemoryCard = ({ card, idx }: { card: Card; idx: number }) => {
   // const [showLayer, setShowLayer] = useState(false);
-  const timerRef = useRef();
+  const timerRef = useRef<NodeJS.Timeout>();
   const isReturned =
     card.state === CARD_STATE.RETURNED || card.state === CARD_STATE.FIND;
   const { onClick, getWidthCards } = useMemoryContext();
 
-  const hightLightImage = (e) => {
+  const hightLightImage = (e: React.MouseEvent<HTMLImageElement>) => {
     // add class hightlight to target
-    e.target.classList.add(styles.highlight);
+    (e.target as HTMLElement).classList.add(styles.highlight);
   };
-  const removeHightLight = (e) => {
-    e.target.classList.remove(styles.highlight);
+  const removeHightLight = (e: React.MouseEvent<HTMLImageElement>) => {
+    (e.target as HTMLElement).classList.remove(styles.highlight);
   };
 
   // si le nom de l'emoji commence par un '/' ou un '.' alors c'est une image
