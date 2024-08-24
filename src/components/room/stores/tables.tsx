@@ -15,20 +15,20 @@ export const useTableDataStore = create<TableDataState>()(
   persist(
     (set) => ({
       tables: [],
-      addTable: (table) =>
+      addTable: (table) => {
+        const newTable = {
+          ...table,
+          id:
+            table.id ||
+            `tbl_${Date.now().toString().slice(5, 11)}_${Math.random()
+              .toString(36)
+              .slice(2, 11)}`,
+        };
         set((state) => ({
-          tables: [
-            ...state.tables,
-            {
-              ...table,
-              id:
-                table.id ||
-                `tbl_${Date.now().toString().slice(5, 11)}_${Math.random()
-                  .toString(36)
-                  .slice(2, 11)}`,
-            },
-          ],
-        })),
+          tables: [...state.tables, newTable],
+        }));
+        return newTable.id;
+      },
       updateTable: (id, updatedTable) =>
         set((state) => ({
           tables: state.tables.map((table) =>

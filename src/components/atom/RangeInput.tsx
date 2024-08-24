@@ -2,6 +2,13 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import clsx from "clsx";
 
+const getDecimalCount = (num: string) => {
+  if (num.includes(".")) {
+    return num.split(".")[1].length;
+  }
+  return 0;
+};
+
 const FormattedRapport: React.FC<{
   value: number;
   max: string;
@@ -9,32 +16,33 @@ const FormattedRapport: React.FC<{
 }> = ({ value, max, decimal }) => {
   const maxDigits =
     parseFloat(max) <= 1 ? 1 : max === "100" ? 2 : max.toString().length;
-  const valueDigits =
-    decimal === 0
-      ? value.toString().length
-      : Math.floor(value).toString().length;
+  const strNumber = value.toString();
+  const strInteger = strNumber.split(".")[0];
+  const nbDigits = strInteger.length;
+  const nbDecimal = getDecimalCount(strNumber);
+
+  let strDecimal = "";
+  if (decimal > 0) {
+    strDecimal = strNumber.split(".")[1] || "";
+
+    if (nbDecimal > 0 && nbDecimal > decimal) {
+      strDecimal = strDecimal.slice(0, decimal);
+    } else {
+      strDecimal += "0".repeat(decimal - nbDecimal);
+    }
+    strDecimal = "." + strDecimal;
+  }
 
   return (
     <span style={{ opacity: 0.6 }}>
-      {valueDigits < maxDigits ? (
-        <span style={{ opacity: 0.3 }}>
-          {"0".repeat(maxDigits - valueDigits)}
-        </span>
+      {nbDigits < maxDigits ? (
+        <span style={{ opacity: 0.3 }}>{"0".repeat(maxDigits - nbDigits)}</span>
       ) : null}
-      {value.toString()}
-      {decimal > 0 && !value.toString().includes(".")
-        ? "." + "0".repeat(decimal)
-        : null}
+      {strInteger + strDecimal}
+
       {max !== "100" ? "/" + max : null}
     </span>
   );
-};
-
-const getDecimalCount = (num: string) => {
-  if (num.includes(".")) {
-    return num.split(".")[1].length;
-  }
-  return 0;
 };
 
 export const RangeInput: React.FC<{
@@ -61,6 +69,7 @@ export const RangeInput: React.FC<{
   isTouch = false,
 }) => {
   const [inputValue, setInputValue] = useState(value);
+  const decimalCount = getDecimalCount(step.toString());
 
   const handleChange = (newValue: number) => {
     newValue = Math.min(newValue, parseFloat(max));
@@ -68,10 +77,12 @@ export const RangeInput: React.FC<{
     setInputValue(newValue);
     onChange(newValue);
   };
-  const handleIncrement = (step: number) =>
-    handleChange(Math.min(inputValue + step, parseFloat(max)));
-
-  const decimalCount = getDecimalCount(step);
+  const handleIncrement = (step: number) => {
+    // console.log("value:", inputValue, "step:", step);
+    const newValue = Number((inputValue + step).toFixed(decimalCount));
+    // console.log("new value:", newValue);
+    handleChange(newValue);
+  };
 
   return (
     <div className="flex flex-col items-center">

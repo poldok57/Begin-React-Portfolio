@@ -38,7 +38,7 @@ export const PokerTable: React.FC<TableProps> = ({
   heightRatio = 0.28,
   concaveRatio = 0.07,
   textRatio = 0.3,
-  textPosition = 0,
+  // textPosition = 0,
   opacity = 0.4,
 }) => {
   const flash = flashDuration > 0;
@@ -47,11 +47,14 @@ export const PokerTable: React.FC<TableProps> = ({
   const subTextSize = textSize * 0.25;
 
   // Dimensions de la table
-  const radius = size * heightRatio;
+  const radius = size * heightRatio - strokeWidth;
   const longSide = size - 2 * (strokeWidth + radius);
   const concaveRadius = size * concaveRatio; // rayon des quarts de cercle concaves pour le croupier
 
   const concaveRadiusY = (concaveRadius * 2) / 3;
+  const concaveLarge = Math.max(longSide - concaveRadius * 3.5, size * 0.12);
+  const concaveSide = (longSide - concaveLarge) / 2 - concaveRadius;
+
   const cashierWidth = Math.min(
     Math.max(longSide - concaveRadius * 3, size * 0.2),
     radius
@@ -88,9 +91,9 @@ export const PokerTable: React.FC<TableProps> = ({
         a ${radius},${radius} 0 0,1 0,${-radius * 2}` +
           `h ${longSide}` +
           `a ${radius},${radius} 0 0,1 0,${radius * 2}` +
-          `h ${(-concaveRadius * 3) / 4}` +
+          `h ${-concaveSide}` +
           `a ${concaveRadius},${concaveRadiusY} 0 0,0 ${-concaveRadius},${-concaveRadiusY}` +
-          `h ${-longSide + concaveRadius * 3.5}` +
+          `h ${-concaveLarge}` +
           `a ${concaveRadius},${concaveRadiusY} 0 0,0 ${-concaveRadius},${concaveRadiusY}` +
           `z`
         }
@@ -107,36 +110,48 @@ export const PokerTable: React.FC<TableProps> = ({
         fill={borderColor}
         opacity={opacity}
       />
-      {/* Numéro de la table */}
-      <text
-        x="50%"
-        y={
-          2 * radius -
-          concaveRadiusY -
-          textSize / 3 +
-          Math.min(-cashierHeight + textPosition * radius, 0)
-        }
-        fontSize={textSize}
-        fill={numberColor}
-        dominantBaseline="middle"
-        textAnchor="middle"
+      {/* Table number */}
+      <g
+        transform={`rotate(${-rotation}, ${size / 2}, ${radius + strokeWidth})`}
       >
-        {tableNumber}
-      </text>
-      {/* Texte supplémentaire */}
-      {subTextSize > 9 && (
         <text
-          ref={textRef}
           x="50%"
-          y={adjustedFontSize + strokeWidth}
-          fontSize={adjustedFontSize}
-          fill={textColor}
+          y={
+            "60%"
+            // 2 * radius -
+            // concaveRadiusY -
+            // textSize / 3 +
+            // Math.min(-cashierHeight + textPosition * radius, 0)
+          }
+          fontSize={textSize}
+          fill={numberColor}
           dominantBaseline="middle"
           textAnchor="middle"
         >
-          {tableText}
+          {tableNumber}
         </text>
-      )}
+        {/* Groupe name */}
+        {subTextSize > 9 && (
+          <text
+            ref={textRef}
+            x="50%"
+            y={
+              adjustedFontSize +
+              (rotation > 130 && rotation < 230
+                ? concaveRadiusY + strokeWidth * 0.5
+                : rotation >= 325 || rotation <= 30
+                ? strokeWidth * 1.25
+                : 0)
+            }
+            fontSize={adjustedFontSize}
+            fill={textColor}
+            dominantBaseline="middle"
+            textAnchor="middle"
+          >
+            {tableText}
+          </text>
+        )}
+      </g>
     </SvgWrapper>
   );
 };

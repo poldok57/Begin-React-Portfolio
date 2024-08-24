@@ -17,7 +17,7 @@ export interface TableSettings {
   heightRatio?: number;
   concaveRatio?: number;
   textRatio?: number;
-  textPosition?: number;
+  // textPosition?: number;
   opacity?: number;
 }
 
@@ -39,5 +39,5 @@ export interface GroupTable {
   title?: string;
   tables?: Table[];
   colors: TableColors;
-  config?: TableSettings;
+  settings?: TableSettings;
 }
