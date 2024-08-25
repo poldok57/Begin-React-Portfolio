@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { TableColors, TableSettings } from "./types";
 import { PokerTable } from "./PokerTable";
 import { RangeInput } from "@/components/atom/RangeInput";
