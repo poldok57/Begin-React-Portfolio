@@ -26,12 +26,6 @@ export const RoomCreat = () => {
           />
           <SettingsOff size={100} />
           <Image
-            src="/svg/settings-off2.svg"
-            alt="settings"
-            width={100}
-            height={100}
-          />
-          <Image
             src="/svg/circle-off.svg"
             alt="settings"
             width={100}

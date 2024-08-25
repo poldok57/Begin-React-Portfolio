@@ -1,8 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { GroupTable, TableSettings } from "./types";
+import { GroupTable, TableColors, TableSettings } from "./types";
 import { ShowTable } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
+
+const DEFAULT_COLORS = {
+  borderColor: "#333333",
+  fillColor: "#aaaaaa",
+  numberColor: "#000000",
+  textColor: "#111199",
+};
 
 const ModifyColor = ({
   label,
@@ -48,7 +55,7 @@ export const GroupCreat = () => {
   const { addGroup, updateGroup, groups } = useGroupStore();
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-
+  const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
   const getGroup = (id: string) => {
     return groups.find((group) => group.id === id);
   };
@@ -59,20 +66,21 @@ export const GroupCreat = () => {
     event.preventDefault();
 
     const input = event.target as HTMLFormElement;
+    const colors: TableColors = {
+      borderColor: input.borderColor.value,
+      fillColor: input.fillColor.value,
+      numberColor: input.numberColor.value,
+      textColor: input.textColor.value,
+    };
     const group = {
       id: input.currentId.value,
       title: input.titleGroup.value,
-      colors: {
-        borderColor: input.borderColor.value,
-        fillColor: input.fillColor.value,
-        numberColor: input.numberColor.value,
-        textColor: input.textColor.value,
-      },
+      colors: colors,
     };
     if (currentId === null) {
       const newId = addGroup(group);
       setCurrentId(newId);
-      currentGroupRef.current = getGroup(newId);
+      currentGroupRef.current = { ...group, ...getGroup(newId) };
       console.log("newId:", newId);
     } else {
       updateGroup(currentId, group);
@@ -96,27 +104,39 @@ export const GroupCreat = () => {
       currentGroupRef.current = undefined;
       return;
     }
-    setCurrentId(selectId);
-    currentGroupRef.current = getGroup(selectId);
-    setTitle(currentGroupRef.current?.title ?? "");
-    console.log("currentGroup:", currentGroupRef.current);
+    const selectedGroup = getGroup(selectId);
+    if (selectedGroup) {
+      setCurrentId(selectId);
+      currentGroupRef.current = { ...selectedGroup };
+      setTitle(selectedGroup?.title ?? "");
+      setColors(selectedGroup?.colors ?? DEFAULT_COLORS);
+      console.log("currentGroup:", currentGroupRef.current);
+    } else {
+      console.error("Groupe non trouvé");
+    }
   };
   const changeColor = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
+
+    const newColors = {
+      ...colors,
+      [name]: value,
+    };
+    setColors(newColors);
+
     if (!currentGroupRef.current) {
       return;
     }
-    currentGroupRef.current.colors[
-      name as keyof typeof currentGroupRef.current.colors
-    ] = value;
+    currentGroupRef.current.colors = newColors;
+
     console.log(`Couleur ${name} mise à jour:`, value);
   };
   const changeTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
+    setTitle(value);
     if (!currentGroupRef.current) {
       return;
     }
-    setTitle(value);
     currentGroupRef.current.title = value;
   };
 
@@ -150,7 +170,7 @@ export const GroupCreat = () => {
         </p>
         <div>
           <ShowTable
-            colors={currentGroupRef.current?.colors}
+            colors={colors}
             title={currentGroupRef.current?.title}
             settings={currentGroupRef.current?.settings}
             saveSettings={saveSettings}
@@ -178,29 +198,29 @@ export const GroupCreat = () => {
             <ModifyColor
               label="Border color"
               name="borderColor"
-              value={currentGroupRef.current?.colors.borderColor}
-              defaultValue="#333333"
+              value={colors.borderColor}
+              defaultValue={DEFAULT_COLORS.borderColor}
               onChange={changeColor}
             />
             <ModifyColor
               label="Background color"
               name="fillColor"
-              value={currentGroupRef.current?.colors.fillColor}
-              defaultValue="#aaaaaa"
+              value={colors.fillColor}
+              defaultValue={DEFAULT_COLORS.fillColor}
               onChange={changeColor}
             />
             <ModifyColor
               label="Number color"
               name="numberColor"
-              value={currentGroupRef.current?.colors.numberColor}
-              defaultValue="#000000"
+              value={colors.numberColor}
+              defaultValue={DEFAULT_COLORS.numberColor}
               onChange={changeColor}
             />
             <ModifyColor
               label="Text color"
               name="textColor"
-              value={currentGroupRef.current?.colors.textColor}
-              defaultValue="#111199"
+              value={colors.textColor}
+              defaultValue={DEFAULT_COLORS.textColor}
               onChange={changeColor}
             />
 

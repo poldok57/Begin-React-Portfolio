@@ -52,7 +52,7 @@ export const PokerTable: React.FC<TableProps> = ({
   const concaveRadius = size * concaveRatio; // rayon des quarts de cercle concaves pour le croupier
 
   const concaveRadiusY = (concaveRadius * 2) / 3;
-  const concaveLarge = Math.max(longSide - concaveRadius * 3.5, size * 0.12);
+  const concaveLarge = Math.max(longSide - concaveRadius * 3.5, size * 0.1);
   const concaveSide = (longSide - concaveLarge) / 2 - concaveRadius;
 
   const cashierWidth = Math.min(

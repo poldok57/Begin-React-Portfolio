@@ -51,10 +51,6 @@ export const ShowTable: React.FC<ShowTableProps> = ({
     setSize((prevSize) => Math.max(50, Math.min(500, prevSize + increment)));
   };
 
-  useEffect(() => {
-    console.log("colors:", colors);
-  }, [colors]);
-
   return (
     <div className="flex flex-col gap-1 items-center">
       <div className="flex mt-3 z-[1] mx-3 justify-between border-b-2 border-gray-200 pb-1 w-full">
@@ -153,7 +149,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             id="heightRatio"
             label="Height"
             value={tableSettings.heightRatio || 0}
-            min="0.2"
+            min="0.24"
             max="0.36"
             step="0.02"
             onChange={(v) => handleSettingsChange("heightRatio", v)}
