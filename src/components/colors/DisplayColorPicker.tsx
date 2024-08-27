@@ -11,6 +11,7 @@ interface DisplayColorPickerProps {
   setColor: (fieldName: string, value: string) => void;
   color: string;
   themeColors?: string[];
+  themeName?: string;
   memoColor: string;
   fieldName: string;
   label: string;
@@ -22,6 +23,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   setColor,
   color,
   themeColors,
+  themeName = "Theme colors",
   memoColor,
   fieldName,
   label,
@@ -160,7 +162,9 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
               />
               {windowHeight > 750 && themeColors ? (
                 <>
-                  Theme colors
+                  {themeName && (
+                    <span className="text-sm font-bold">{themeName}</span>
+                  )}
                   <GithubPicker
                     width="220px"
                     colors={themeColors}

@@ -100,8 +100,9 @@ export const PokerTable: React.FC<TableProps> = ({
         fill={fillColor}
         stroke={borderColor}
         strokeWidth={strokeWidth}
+        strokeLinejoin="round"
       />
-      {/* Rectangle de la caisse du croupier */}
+      {/* Rectangle for cashier */}
       <rect
         x={(size - cashierWidth) / 2}
         y={radius * 2 - concaveRadiusY - cashierHeight}

@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { TableColors, TableSettings } from "./types";
 import { PokerTable } from "./PokerTable";
 import { RangeInput } from "@/components/atom/RangeInput";
-import { RotateCcw, RotateCw, Minus, Plus, Settings, Save } from "lucide-react";
+import {
+  RotateCcw,
+  RotateCw,
+  Minus,
+  Plus,
+  Settings,
+  Save,
+  ListRestart,
+} from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
 
@@ -16,9 +24,10 @@ const DEFAULT_SETTINGS = {
 
 interface ShowTableProps {
   colors: TableColors | undefined;
-  settings?: TableSettings;
+  settings?: TableSettings | null;
   title: string | undefined;
   saveSettings: (settings: TableSettings) => void;
+  resetTable?: () => void;
   isTouch: boolean;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
@@ -26,6 +35,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   settings,
   title,
   saveSettings,
+  resetTable,
   isTouch,
 }) => {
   // states for size and rotation
@@ -122,6 +132,18 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               <Settings size={btnSize} />
             )}
           </button>
+          {resetTable && (
+            <button
+              className={clsx("btn btn-circle", {
+                "btn-sm": !isTouch,
+                hidden: openSettings || title,
+              })}
+              title="Reset table"
+              onClick={resetTable}
+            >
+              <ListRestart size={btnSize} />
+            </button>
+          )}
           <button
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
@@ -188,17 +210,6 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             isTouch={isTouch}
           />
 
-          {/* <RangeInput
-            className="w-20 h-4"
-            id="textPosition"
-            label="Position"
-            value={tableSettings.textPosition || 0}
-            min="0"
-            max="0.8"
-            step="0.01"
-            onChange={(v) => handleSettingsChange("textPosition", v)}
-            isTouch={isTouch}
-          /> */}
           <RangeInput
             className="w-20 h-4"
             id="opacity"

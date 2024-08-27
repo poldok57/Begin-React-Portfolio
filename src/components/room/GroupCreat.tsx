@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { GroupTable, TableColors, TableSettings } from "./types";
 import { ShowTable } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
 import { InputColor } from "../colors/InputColor";
+import { Palette, ArrowBigUpDash } from "lucide-react";
 
 const DEFAULT_COLORS = {
   borderColor: "#333333",
@@ -17,11 +18,13 @@ const ModifyColor = ({
   name,
   value,
   defaultValue,
+  themeColors,
   onChange,
 }: {
   label: string;
   name: string;
   value?: string;
+  themeColors?: string[];
   defaultValue: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => {
@@ -40,19 +43,13 @@ const ModifyColor = ({
       <label htmlFor="borderColor" className="ml-auto label">
         <span className="label-text">{label}</span>
       </label>
-      {/* <input
-        type="color"
-        id={name}
-        name={name}
-        value={color}
-        onChange={handleChange}
-        className="w-40 h-10 input input-bordered"
-      /> */}
+
       <InputColor
         label={label}
         fieldName={name}
         color={color}
-        onChange={onChange}
+        themeColors={themeColors}
+        onChange={handleChange}
         className="w-40 h-10 input input-bordered"
       />
     </div>
@@ -64,63 +61,61 @@ export const GroupCreat = () => {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
+  const [settings, setSettings] = useState<TableSettings | null>(null);
+  const [showColors, setShowColors] = useState(false);
   const getGroup = (id: string) => {
     return groups.find((group) => group.id === id);
   };
-  const currentGroupRef = useRef<GroupTable | undefined>(undefined);
   const isTouch = isTouchDevice();
+  const btnSize = isTouch ? 20 : 16;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const input = event.target as HTMLFormElement;
-    const colors: TableColors = {
-      borderColor: input.borderColor.value,
-      fillColor: input.fillColor.value,
-      numberColor: input.numberColor.value,
-      textColor: input.textColor.value,
-    };
-    const group = {
+
+    const group: GroupTable = {
       id: input.currentId.value,
       title: input.titleGroup.value,
-      colors: colors,
+      colors: { ...colors },
+      settings: undefined,
     };
     if (currentId === null) {
+      if (settings) {
+        group.settings = settings;
+      }
       const newId = addGroup(group);
       setCurrentId(newId);
-      currentGroupRef.current = { ...group, ...getGroup(newId) };
-      console.log("newId:", newId);
     } else {
       updateGroup(currentId, group);
     }
   };
-  const saveSettings = (settings: TableSettings) => {
-    console.log("settings:", settings);
-    if (!currentGroupRef.current) {
-      return;
+  const saveSettings = (newSettings: TableSettings) => {
+    // console.log("settings:", settings);
+    setSettings(newSettings);
+
+    if (currentId) {
+      updateGroup(currentId, {
+        settings: newSettings,
+      });
     }
-    currentGroupRef.current.settings = { ...settings };
-    updateGroup(currentGroupRef.current.id, {
-      settings: settings,
-    });
   };
 
   const selectGroup = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectId = event.target.value;
-    console.log("selected event:", selectId);
+    // console.log("selected event:", selectId);
     if (selectId === "new") {
       setCurrentId(null);
       setTitle("");
-      currentGroupRef.current = undefined;
+      setShowColors(true);
       return;
     }
     const selectedGroup = getGroup(selectId);
     if (selectedGroup) {
       setCurrentId(selectId);
-      currentGroupRef.current = { ...selectedGroup };
       setTitle(selectedGroup?.title ?? "");
       setColors(selectedGroup?.colors ?? DEFAULT_COLORS);
-      console.log("currentGroup:", currentGroupRef.current);
+      setSettings(selectedGroup?.settings ?? null);
     } else {
       console.error("Groupe non trouvé");
     }
@@ -133,22 +128,27 @@ export const GroupCreat = () => {
       [name]: value,
     };
     setColors(newColors);
-
-    if (!currentGroupRef.current) {
-      return;
-    }
-    currentGroupRef.current.colors = newColors;
-
-    console.log(`Couleur ${name} mise à jour:`, value);
   };
   const changeTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setTitle(value);
-    if (!currentGroupRef.current) {
-      return;
-    }
-    currentGroupRef.current.title = value;
   };
+
+  const resetTable = () => {
+    setTitle("");
+    setColors(DEFAULT_COLORS);
+    setSettings(null);
+    setCurrentId(null);
+    setShowColors(false);
+  };
+
+  const themeColors: string[] = ["#000000", "#ffffff"];
+  if (colors.borderColor) {
+    themeColors.push(colors.borderColor);
+  }
+  if (colors.fillColor) {
+    themeColors.push(colors.fillColor);
+  }
 
   return (
     <div className="w-96 shadow-xl card bg-base-100">
@@ -181,9 +181,10 @@ export const GroupCreat = () => {
         <div>
           <ShowTable
             colors={colors}
-            title={currentGroupRef.current?.title}
-            settings={currentGroupRef.current?.settings}
+            title={title}
+            settings={settings}
             saveSettings={saveSettings}
+            resetTable={resetTable}
             isTouch={isTouch}
           />
         </div>
@@ -192,7 +193,21 @@ export const GroupCreat = () => {
             <input type="hidden" name="currentId" value={currentId ?? ""} />
             <div className="form-control">
               <label htmlFor="title" className="label">
-                <span className="label-text">Name</span>
+                <div className="flex justify-between items-center w-full">
+                  <span className="font-semibold label-text">Name</span>
+
+                  <button
+                    type="button"
+                    className="btn btn-circle btn-sm"
+                    onClick={() => setShowColors(!showColors)}
+                  >
+                    {showColors ? (
+                      <ArrowBigUpDash size={btnSize} />
+                    ) : (
+                      <Palette size={btnSize} />
+                    )}
+                  </button>
+                </div>
               </label>
               <input
                 className="input input-bordered"
@@ -205,35 +220,42 @@ export const GroupCreat = () => {
                 required
               />
             </div>
-            <ModifyColor
-              label="Border color"
-              name="borderColor"
-              value={colors.borderColor}
-              defaultValue={DEFAULT_COLORS.borderColor}
-              onChange={changeColor}
-            />
-            <ModifyColor
-              label="Background color"
-              name="fillColor"
-              value={colors.fillColor}
-              defaultValue={DEFAULT_COLORS.fillColor}
-              onChange={changeColor}
-            />
-            <ModifyColor
-              label="Number color"
-              name="numberColor"
-              value={colors.numberColor}
-              defaultValue={DEFAULT_COLORS.numberColor}
-              onChange={changeColor}
-            />
-            <ModifyColor
-              label="Text color"
-              name="textColor"
-              value={colors.textColor}
-              defaultValue={DEFAULT_COLORS.textColor}
-              onChange={changeColor}
-            />
-
+            {showColors && (
+              <>
+                <ModifyColor
+                  label="Border color"
+                  name="borderColor"
+                  value={colors.borderColor}
+                  defaultValue={DEFAULT_COLORS.borderColor}
+                  // themeColors={themeColors}
+                  onChange={changeColor}
+                />
+                <ModifyColor
+                  label="Background color"
+                  name="fillColor"
+                  value={colors.fillColor}
+                  defaultValue={DEFAULT_COLORS.fillColor}
+                  themeColors={themeColors}
+                  onChange={changeColor}
+                />
+                <ModifyColor
+                  label="Number color"
+                  name="numberColor"
+                  value={colors.numberColor}
+                  defaultValue={DEFAULT_COLORS.numberColor}
+                  themeColors={themeColors}
+                  onChange={changeColor}
+                />
+                <ModifyColor
+                  label="Text color"
+                  name="textColor"
+                  value={colors.textColor}
+                  defaultValue={DEFAULT_COLORS.textColor}
+                  themeColors={themeColors}
+                  onChange={changeColor}
+                />
+              </>
+            )}
             <div className="justify-end card-actions">
               <button className="btn btn-primary" type="submit">
                 {currentId === null ? "Creat" : "Update"}

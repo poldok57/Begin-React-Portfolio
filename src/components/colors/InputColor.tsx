@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { DisplayColorPicker } from "./DisplayColorPicker";
+import clsx from "clsx";
 
 interface InputColorProps {
   label: string;
   fieldName: string;
   color: string;
+  themeColors?: string[];
   className: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -13,6 +15,7 @@ export const InputColor: React.FC<InputColorProps> = ({
   label,
   fieldName,
   color,
+  themeColors,
   onChange,
   className,
 }) => {
@@ -36,7 +39,7 @@ export const InputColor: React.FC<InputColorProps> = ({
   return (
     <>
       <div
-        className={className}
+        className={clsx(className, "cursor-pointer")}
         style={{ backgroundColor: divColor }}
         onClick={() => setShowPicker(true)}
       ></div>
@@ -46,6 +49,8 @@ export const InputColor: React.FC<InputColorProps> = ({
           memoColor={color}
           fieldName={fieldName}
           label={label}
+          themeColors={themeColors}
+          themeName={"Table colors"}
           setColor={handleChange}
           withCloseBtn={true}
           withTransparent={false}
