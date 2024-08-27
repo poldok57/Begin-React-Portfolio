@@ -29,10 +29,14 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   closeColorPicker,
   withTransparent = true,
 }) => {
-  const pickerRef = useRef<HTMLDivElement>(null);
+  const pickerRef = useRef<HTMLDialogElement>(null);
   const [showSwatches, setShowSwatches] = useState(false);
   const handleCopyColor = () => {
     navigator.clipboard.writeText(memoColor);
+  };
+  const handleClose = () => {
+    pickerRef.current?.close();
+    closeColorPicker();
   };
   const windowHeight = window.innerHeight;
 
@@ -44,7 +48,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
         pickerRef.current &&
         !pickerRef.current.contains(event.target as Node)
       ) {
-        closeColorPicker();
+        handleClose();
       }
     };
 
@@ -60,7 +64,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        closeColorPicker();
+        handleClose();
       }
     };
 
@@ -72,8 +76,13 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   }, []);
 
   return (
-    <div
-      className="flex z-20 flex-col gap-2 items-center p-2 rounded-lg border w-fit bg-base-200 border-base-200"
+    <dialog
+      open={true}
+      className={clsx(
+        "flex z-20 flex-col gap-2 items-center p-2 rounded-lg border w-fit bg-base-200 border-base-200",
+        "-translate-y-full translate-x-32"
+        // "absolute  translate-y-12": position === "under",
+      )}
       ref={pickerRef}
     >
       <div className="flex flex-row gap-2 justify-between items-center w-full">
@@ -89,13 +98,13 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
               "translate-x-1 -translate-y-1",
               "transition-opacity duration-300",
             ])}
-            onClick={closeColorPicker}
+            onClick={handleClose}
           >
             <X size={16} />
           </button>
         )}
       </div>
-      <ul className="w-full menu menu-horizontal bg-base-200 rounded-box">
+      <ul className="gap-2 w-full menu menu-horizontal bg-base-200 rounded-box">
         <li>
           <a
             className={clsx({
@@ -192,6 +201,6 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
           </div>
         </>
       )}
-    </div>
+    </dialog>
   );
 };
