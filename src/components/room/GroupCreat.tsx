@@ -3,6 +3,7 @@ import { GroupTable, TableColors, TableSettings } from "./types";
 import { ShowTable } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
+import { InputColor } from "../colors/InputColor";
 
 const DEFAULT_COLORS = {
   borderColor: "#333333",
@@ -39,12 +40,19 @@ const ModifyColor = ({
       <label htmlFor="borderColor" className="ml-auto label">
         <span className="label-text">{label}</span>
       </label>
-      <input
+      {/* <input
         type="color"
         id={name}
         name={name}
         value={color}
         onChange={handleChange}
+        className="w-40 h-10 input input-bordered"
+      /> */}
+      <InputColor
+        label={label}
+        fieldName={name}
+        color={color}
+        onChange={onChange}
         className="w-40 h-10 input input-bordered"
       />
     </div>
@@ -91,8 +99,10 @@ export const GroupCreat = () => {
     if (!currentGroupRef.current) {
       return;
     }
-    currentGroupRef.current.settings = settings;
-    updateGroup(currentGroupRef.current.id, currentGroupRef.current);
+    currentGroupRef.current.settings = { ...settings };
+    updateGroup(currentGroupRef.current.id, {
+      settings: settings,
+    });
   };
 
   const selectGroup = (event: React.ChangeEvent<HTMLSelectElement>) => {

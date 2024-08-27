@@ -1,10 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TableColors, TableSettings } from "./types";
 import { PokerTable } from "./PokerTable";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { RotateCcw, RotateCw, Minus, Plus, Settings, Save } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
+
+const DEFAULT_SETTINGS = {
+  widthLine: 0.025,
+  heightRatio: 0.28,
+  concaveRatio: 0.07,
+  textRatio: 0.3,
+  opacity: 0.4,
+};
 
 interface ShowTableProps {
   colors: TableColors | undefined;
@@ -24,16 +32,8 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   const [size, setSize] = useState(200);
   const [rotation, setRotation] = useState(0);
   const [openSettings, setOpenSettings] = useState(false);
-  const [tableSettings, setTableSettings] = useState<TableSettings>(
-    settings || {
-      widthLine: 0.025,
-      heightRatio: 0.28,
-      concaveRatio: 0.07,
-      textRatio: 0.3,
-      // textPosition: 0,
-      opacity: 0.4,
-    }
-  );
+  const [tableSettings, setTableSettings] =
+    useState<TableSettings>(DEFAULT_SETTINGS);
   const btnSize = isTouch ? 20 : 16;
   const handleSettingsChange = (name: string, value: number) => {
     // console.log("name:", name, "value:", value);
@@ -50,6 +50,10 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   const changeSize = (increment: number) => {
     setSize((prevSize) => Math.max(50, Math.min(500, prevSize + increment)));
   };
+
+  useEffect(() => {
+    setTableSettings(settings || DEFAULT_SETTINGS);
+  }, [settings]);
 
   return (
     <div className="flex flex-col gap-1 items-center">

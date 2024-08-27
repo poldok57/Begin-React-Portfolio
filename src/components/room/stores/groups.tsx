@@ -14,7 +14,7 @@ interface GroupState {
 export const useGroupStore = create<GroupState>()(
   persist(
     (set) => ({
-      groups: [],
+      groups: [] as GroupTable[],
       addGroup: (group) => {
         const newGroup = {
           ...group,
