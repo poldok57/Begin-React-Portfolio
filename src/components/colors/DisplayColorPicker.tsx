@@ -151,7 +151,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
         <>
           {showSwatches ? (
             <SwatchesPicker
-              width="242px"
+              width={242}
               onChange={(color: Colors) => setColor(fieldName, color.hex)}
             />
           ) : (
@@ -175,7 +175,6 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
               <SliderPicker
                 className="w-11/12"
                 color={color}
-                disableAlpha={true}
                 onChange={(color: Colors) => setColor(fieldName, color.hex)}
               />
             </>
