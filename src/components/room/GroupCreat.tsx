@@ -107,7 +107,7 @@ export const GroupCreat = () => {
     // console.log("selected event:", selectId);
     if (selectId === "new") {
       setCurrentId(null);
-      setTitle("");
+      resetTable();
       setShowColors(true);
       return;
     }
@@ -263,7 +263,9 @@ export const GroupCreat = () => {
                   className="p-2 m-1 btn btn-sm"
                   position="right"
                   onConfirm={() => {
+                    resetTable();
                     deleteGroup(currentId);
+                    setCurrentId(null);
                   }}
                 >
                   <button className="btn btn-warning btn-sm">
