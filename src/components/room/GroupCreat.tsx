@@ -4,7 +4,8 @@ import { ShowTable } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
 import { InputColor } from "../colors/InputColor";
-import { Palette, ArrowBigUpDash } from "lucide-react";
+import { Palette, ArrowBigUpDash, Trash2 } from "lucide-react";
+import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 
 const DEFAULT_COLORS = {
   borderColor: "#333333",
@@ -57,7 +58,7 @@ const ModifyColor = ({
 };
 
 export const GroupCreat = () => {
-  const { addGroup, updateGroup, groups } = useGroupStore();
+  const { addGroup, updateGroup, deleteGroup, groups } = useGroupStore();
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
@@ -256,7 +257,23 @@ export const GroupCreat = () => {
                 />
               </>
             )}
-            <div className="justify-end card-actions">
+            <div className="justify-between items-center card-actions">
+              {currentId ? (
+                <DeleteWithConfirm
+                  className="p-2 m-1 btn btn-sm"
+                  position="right"
+                  onConfirm={() => {
+                    deleteGroup(currentId);
+                  }}
+                >
+                  <button className="btn btn-warning btn-sm">
+                    <Trash2 size={btnSize} />
+                  </button>
+                </DeleteWithConfirm>
+              ) : (
+                <></>
+              )}
+
               <button className="btn btn-primary" type="submit">
                 {currentId === null ? "Creat" : "Update"}
               </button>
