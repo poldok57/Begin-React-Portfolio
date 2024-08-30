@@ -1,3 +1,16 @@
+export enum TableType {
+  poker = "poker",
+  blackjack = "blackjack",
+  roulette = "roulette",
+  craps = "craps",
+  slot = "slot",
+  other = "other",
+}
+
+export interface Position {
+  x: number;
+  y: number;
+}
 export interface Table {
   size?: number;
   rotation?: number;
@@ -27,11 +40,11 @@ export interface TableProps extends Table, TableColors, TableSettings {
 
 export interface TableData extends Table {
   id: string;
-  position: {
-    x: number;
-    y: number;
-  };
   groupId?: string;
+  type: TableType;
+  selected: boolean;
+  position?: Position;
+  settings?: TableSettings;
 }
 
 export interface GroupTable {
