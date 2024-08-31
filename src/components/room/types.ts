@@ -8,8 +8,8 @@ export enum TableType {
 }
 
 export interface Position {
-  x: number;
-  y: number;
+  top: number;
+  left: number;
 }
 export interface Table {
   size?: number;

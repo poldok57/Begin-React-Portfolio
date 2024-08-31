@@ -8,6 +8,9 @@ interface TableDataState {
   tables: TableData[];
   addTable: (table: TableData) => void;
   updateTable: (id: string, updatedTable: Partial<TableData>) => void;
+  updateSelectedTable: (updatedTable: Partial<TableData>) => void;
+  rotationSelectedTable: (angle: number) => void;
+  sizeSelectedTable: (size: number) => void;
   deleteTable: (id: string) => void;
 }
 
@@ -33,6 +36,28 @@ export const useTableDataStore = create<TableDataState>()(
         set((state) => ({
           tables: state.tables.map((table) =>
             table.id === id ? { ...table, ...updatedTable } : table
+          ),
+        })),
+      updateSelectedTable: (updatedTable: Partial<TableData>) =>
+        set((state) => ({
+          tables: state.tables.map((table) =>
+            table.selected ? { ...table, ...updatedTable } : table
+          ),
+        })),
+      rotationSelectedTable: (angle: number) =>
+        set((state) => ({
+          tables: state.tables.map((table) =>
+            table.selected
+              ? { ...table, rotation: (table.rotation || 0) + angle }
+              : table
+          ),
+        })),
+      sizeSelectedTable: (size: number) =>
+        set((state) => ({
+          tables: state.tables.map((table) =>
+            table.selected
+              ? { ...table, size: (table.size || 100) + size }
+              : table
           ),
         })),
       deleteTable: (id) =>

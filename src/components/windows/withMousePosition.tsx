@@ -14,7 +14,7 @@ import { isAlignedRight, isAlignedBottom } from "../../lib/utils/position";
 
 import clsx from "clsx";
 
-import { Coordinate } from "../../lib/canvas/types";
+import { Coordinate, RectPosition } from "../../lib/canvas/types";
 import { EVENT, POSITION } from "./types";
 
 interface SelectComponentResult {
@@ -42,6 +42,7 @@ interface WithMousePositionProps {
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
+  onMove?: (id: string, position: RectPosition) => void;
 }
 
 /**
@@ -62,6 +63,7 @@ interface WithMousePositionProps {
  * @param {boolean} props.withToggleLock - default false - if true, the lock button is displayed
  * @param {boolean} props.withMinimize - default false - if true, the minimize button is displayed
  * @param {boolean} props.withMaximize - default false - if true, the maximize button is displayed
+ * @param {function} props.onMove - the function to call when the component is moved
  * @returns {JSX.Element} - the wrapped component
  */
 export function withMousePosition<P extends object>(
@@ -88,6 +90,7 @@ export function withMousePosition<P extends object>(
     minHeight = 0,
     maxWidth = 0,
     maxHeight = 0,
+    onMove,
     ...props
   }: WithMousePositionProps) {
     const titleRef = useRef(null);
@@ -248,6 +251,20 @@ export function withMousePosition<P extends object>(
         );
     };
 
+    const handleOnMove = () => {
+      const { component } = selectComponent();
+      if (!component || !id || !onMove) return;
+      const position = {
+        left: component.offsetLeft,
+        top: component.offsetTop,
+      };
+      if (trace)
+        console.log(
+          `[${WrappedComponent.name}] handleOnMove: ${id} ${position}`
+        );
+      onMove?.(id, position);
+    };
+
     useEffect(() => {
       /**
        * test if the component is aligned right or bottom
@@ -378,6 +395,7 @@ export function withMousePosition<P extends object>(
       const mouseUp = (event: MouseEvent) => {
         setCanMove(false);
         setMouseCoordinates(event.clientX, event.clientY);
+        handleOnMove();
       };
 
       const handleMouseLeave = (event: MouseEvent) => {
