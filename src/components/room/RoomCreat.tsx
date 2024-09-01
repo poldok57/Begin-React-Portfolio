@@ -1,146 +1,15 @@
-import React, { useEffect, useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/atom/Button";
 import { GroupCreat } from "./GroupCreat";
-import {
-  TableData,
-  TableType,
-  TableSettings,
-  TableColors,
-  Position,
-} from "./types";
-import { PokerTable } from "./PokerTable";
-import { useGroupStore } from "./stores/groups";
+import { TableData, TableType, Position } from "./types";
 import { useTableDataStore } from "./stores/tables";
-import {
-  RotateCcw,
-  RotateCw,
-  Minus,
-  Plus,
-  Trash2,
-  Settings,
-} from "lucide-react";
+import { RotateCcw, RotateCw, Minus, Plus, Settings } from "lucide-react";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useThrottle } from "@/hooks/useThrottle";
 import { withMousePosition } from "@/components/windows/withMousePosition";
+import { RoomTable } from "./RoomTable";
 
-import clsx from "clsx";
-
-const GROUND_ID = "back-ground";
-interface RoomTableProps {
-  table: TableData;
-  index: number;
-  btnSize: number;
-  style: React.CSSProperties;
-  onDelete: (id: string) => void;
-  onUpdate: (id: string, props: Partial<TableData>) => void;
-  changeSelected: (id: string, selected: boolean) => void;
-}
-
-const RoomTable = ({
-  table,
-  btnSize,
-  onDelete,
-  changeSelected,
-}: RoomTableProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const group = useGroupStore((state) => state.groups).find(
-    (g) => g.id === table.groupId
-  );
-
-  const settings: TableSettings = {
-    ...table.settings,
-    ...(group ? group.settings : {}),
-  };
-  const colors: TableColors = {
-    ...(group ? group.colors : {}),
-  };
-
-  const handleClickOutside = useCallback(
-    (event: MouseEvent) => {
-      const ground = document.getElementById(GROUND_ID);
-      if (
-        ref.current &&
-        ground &&
-        ground.contains(event.target as Node) &&
-        !ref.current.contains(event.target as Node) &&
-        !event.shiftKey &&
-        !event.ctrlKey
-      ) {
-        changeSelected(table.id, false);
-      }
-    },
-    [table.id]
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        changeSelected(table.id, false);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleClickOutside]);
-  const [isGreenBorder, setIsGreenBorder] = useState(false);
-
-  useEffect(() => {
-    if (isGreenBorder) {
-      const ground = document.getElementById(GROUND_ID);
-      if (ground) {
-        ground.style.border = "2px solid green";
-        ground.style.backgroundColor = "rgba(190, 255, 190, 0.3)";
-        ground.style.borderRadius = "10px";
-        ground.style.boxShadow = "0 0 10px 0 rgba(0, 0, 0, 0.5)";
-        ground.style.transform = "scale(1.05)";
-        ground.style.transition = "all 0.3s ease-in-out";
-      }
-
-      const timer = setTimeout(() => {
-        setIsGreenBorder(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [isGreenBorder]);
-
-  return (
-    <div
-      ref={ref}
-      className={clsx("p-0 m-0 border-2", {
-        "border-dotted border-red-500": table.selected,
-        "border-transparent": !table.selected,
-      })}
-      onClick={() => {
-        changeSelected(table.id, true);
-        setIsGreenBorder(true);
-      }}
-    >
-      <PokerTable
-        size={table.size ?? 100}
-        rotation={table.rotation ?? 0}
-        tableNumber={table.tableNumber ?? ""}
-        tableText={table.tableText ?? ""}
-        {...settings}
-        {...colors}
-      />
-      {table.selected && (
-        <>
-          <div className="absolute -right-5 -bottom-5">
-            <button
-              className="btn btn-circle btn-sm"
-              onClick={() => onDelete(table.id)}
-            >
-              <Trash2 size={btnSize} />
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+export const GROUND_ID = "back-ground";
 
 const RoomTableWP = withMousePosition(RoomTable);
 
@@ -154,6 +23,7 @@ export const RoomCreat = () => {
   } = useTableDataStore((state) => state);
 
   const btnSize = isTouchDevice() ? 20 : 16;
+  const tables = useTableDataStore((state) => state.tables);
 
   const handleAddTable = useThrottle(() => {
     const newTable: TableData = {
@@ -171,16 +41,191 @@ export const RoomCreat = () => {
   const handleDelete = (id: string) => {
     deleteTable(id);
   };
-  const handleUpdate = (id: string, props: Partial<TableData>) => {
-    updateTable(id, props);
-  };
+  // const handleUpdate = (id: string, props: Partial<TableData>) => {
+  //   updateTable(id, props);
+  // };
   const handleMove = (id: string, position: Position) => {
     updateTable(id, { position });
   };
   const handleChangeSelected = (id: string, selected: boolean) => {
     updateTable(id, { selected });
   };
-  const tables = useTableDataStore((state) => state.tables);
+
+  // const [isSelecting, setIsSelecting] = useState(false);
+  // const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
+  //   null
+  // );
+
+  const isSelecting = useRef(false);
+  const startPos = useRef<{ x: number; y: number } | null>(null);
+  const isSelectingProgress = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const groundRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: MouseEvent) => {
+    if (!groundRef.current) {
+      console.error("groundRef is not defined");
+      return;
+    }
+    const { left, top } = groundRef.current.getBoundingClientRect();
+    isSelecting.current = true;
+    startPos.current = {
+      x: e.clientX - left,
+      y: e.clientY - top,
+    };
+    isSelectingProgress.current = true;
+
+    if (containerRef.current) {
+      containerRef.current.style.display = "block";
+      containerRef.current.style.position = "absolute";
+      containerRef.current.style.left = `${e.clientX}px`;
+      containerRef.current.style.top = `${e.clientY}px`;
+    }
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!groundRef.current) {
+      return;
+    }
+    const { left, top } = groundRef.current.getBoundingClientRect();
+    if (isSelecting.current && startPos.current && containerRef.current) {
+      const width = e.clientX - left - startPos.current.x;
+      const height = e.clientY - top - startPos.current.y;
+      containerRef.current.style.width = `${Math.abs(width)}px`;
+      containerRef.current.style.height = `${Math.abs(height)}px`;
+      containerRef.current.style.left = `${
+        width < 0 ? e.clientX - left : startPos.current.x
+      }px`;
+      containerRef.current.style.top = `${
+        height < 0 ? e.clientY - top : startPos.current.y
+      }px`;
+    }
+  };
+
+  const handleMouseUp = (e: MouseEvent) => {
+    isSelecting.current = false;
+    isSelectingProgress.current = false;
+    if (
+      !isSelecting.current ||
+      !startPos.current ||
+      !containerRef.current ||
+      !groundRef.current ||
+      tables.length <= 0
+    ) {
+      return;
+    }
+
+    const { left, top } = groundRef.current.getBoundingClientRect();
+    const endPos = {
+      x: e.clientX - left,
+      y: e.clientY - top,
+    };
+
+    const rect = {
+      left: Math.min(startPos.current.x, endPos.x),
+      top: Math.min(startPos.current.y, endPos.y),
+      right: Math.max(startPos.current.x, endPos.x),
+      bottom: Math.max(startPos.current.y, endPos.y),
+    };
+
+    tables.forEach((table) => {
+      const tableLeft = table.position?.left ?? 0;
+      const tableTop = table.position?.top ?? 0;
+      const tableRight = tableLeft + (table.size ?? 0);
+      const tableBottom = tableTop + (table.size ?? 0);
+
+      const isInside =
+        tableLeft >= rect.left &&
+        tableRight <= rect.right &&
+        tableTop >= rect.top &&
+        tableBottom <= rect.bottom;
+
+      updateTable(table.id, { selected: isInside });
+      console.log("table", table.tableNumber, "isInside", isInside);
+    });
+  };
+
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (
+      containerRef.current &&
+      !containerRef.current.contains(e.target as Node) &&
+      !isSelectingProgress.current
+    ) {
+      containerRef.current.style.display = "none";
+      isSelecting.current = false;
+      startPos.current = null;
+    }
+  }, []);
+
+  const handleTouchStart = (e: TouchEvent) => {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      handleMouseDown({
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      } as MouseEvent);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      handleMouseMove({
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      } as MouseEvent);
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    handleMouseUp(e as unknown as MouseEvent);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        tables.forEach((table) => {
+          updateTable(table.id, { selected: false });
+        });
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    if (groundRef.current) {
+      groundRef.current.addEventListener("mousedown", handleMouseDown);
+      groundRef.current.addEventListener("mousemove", handleMouseMove);
+      groundRef.current.addEventListener("mouseup", handleMouseUp);
+      groundRef.current.addEventListener("mouseleave", handleMouseUp);
+
+      groundRef.current.addEventListener("touchstart", handleTouchStart);
+      groundRef.current.addEventListener("touchmove", handleTouchMove);
+      groundRef.current.addEventListener("touchend", handleTouchEnd);
+      groundRef.current.addEventListener("touchcancel", handleTouchEnd);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      groundRef.current?.removeEventListener("mousedown", handleMouseDown);
+      groundRef.current?.removeEventListener("mousemove", handleMouseMove);
+      groundRef.current?.removeEventListener("mouseup", handleMouseUp);
+      groundRef.current?.removeEventListener("mouseleave", handleMouseUp);
+      groundRef.current?.removeEventListener("touchstart", handleTouchStart);
+      groundRef.current?.removeEventListener("touchmove", handleTouchMove);
+      groundRef.current?.removeEventListener("touchend", handleTouchEnd);
+      groundRef.current?.removeEventListener("touchcancel", handleTouchEnd);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.style.position = "absolute";
+      containerRef.current.style.border = "2px dashed gray";
+      containerRef.current.style.backgroundColor = "rgba(128, 128, 128, 0.2)";
+      containerRef.current.style.pointerEvents = "none";
+    }
+  }, []);
+
   return (
     <div
       className="flex w-full bg-background"
@@ -235,47 +280,30 @@ export const RoomCreat = () => {
             </div>
           </div>
         </div>
-        <div className="relative w-full h-full" id={GROUND_ID}>
+        <div ref={groundRef} className="relative w-full h-full" id={GROUND_ID}>
+          <div
+            ref={containerRef}
+            id="container"
+            style={{ display: "hidden" }}
+          ></div>
           {tables.map((table, index) => {
             const left = table?.position?.left ?? 50 + index * 10;
             const top = table?.position?.top ?? 50 + index * 10;
-            // if (table.selected)
-            {
-              return (
-                <RoomTableWP
-                  className="absolute"
-                  key={table.id}
-                  id={table.id}
-                  table={table}
-                  index={index}
-                  btnSize={btnSize}
-                  onDelete={handleDelete}
-                  onUpdate={handleUpdate}
-                  onMove={handleMove}
-                  changeSelected={handleChangeSelected}
-                  draggable={true}
-                  // resizable={true}
-                  trace={true}
-                  withTitleBar={false}
-                  withToggleLock={false}
-                  titleText={table.tableText}
-                  style={{
-                    position: "absolute",
-                    left: `${left}px`,
-                    top: `${top}px`,
-                  }}
-                />
-              );
-            }
             return (
-              <RoomTable
+              <RoomTableWP
+                className="absolute"
                 key={table.id}
+                id={table.id}
                 table={table}
-                index={index}
                 btnSize={btnSize}
                 onDelete={handleDelete}
-                onUpdate={handleUpdate}
+                onMove={handleMove}
                 changeSelected={handleChangeSelected}
+                draggable={true}
+                trace={false}
+                withTitleBar={false}
+                withToggleLock={false}
+                titleText={table.tableText}
                 style={{
                   position: "absolute",
                   left: `${left}px`,

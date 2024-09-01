@@ -326,7 +326,7 @@ export function withMousePosition<P extends object>(
           setCanMove(false);
           return;
         }
-
+        event.preventDefault();
         setMouseCoordinates(event.clientX, event.clientY);
         calculNewPosition();
       };
