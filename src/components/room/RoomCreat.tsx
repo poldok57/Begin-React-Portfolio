@@ -51,11 +51,6 @@ export const RoomCreat = () => {
     updateTable(id, { selected });
   };
 
-  // const [isSelecting, setIsSelecting] = useState(false);
-  // const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(
-  //   null
-  // );
-
   const isSelecting = useRef(false);
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const isSelectingProgress = useRef(false);
@@ -67,12 +62,20 @@ export const RoomCreat = () => {
       console.error("groundRef is not defined");
       return;
     }
+    if (
+      containerRef.current &&
+      containerRef.current.contains(e.target as Node)
+    ) {
+      console.log("Click on container");
+      return;
+    }
     const { left, top } = groundRef.current.getBoundingClientRect();
     isSelecting.current = true;
     startPos.current = {
       x: e.clientX - left,
       y: e.clientY - top,
     };
+
     isSelectingProgress.current = true;
 
     if (containerRef.current) {
@@ -80,31 +83,45 @@ export const RoomCreat = () => {
       containerRef.current.style.position = "absolute";
       containerRef.current.style.left = `${e.clientX}px`;
       containerRef.current.style.top = `${e.clientY}px`;
+
+      console.log("resize container");
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleClickContainer = (e: MouseEvent) => {
+    console.log("Click on container event !", e);
+  };
+
+  const handleResizeContainer = (
+    e: MouseEvent | TouchEvent,
+    clientX: number,
+    clientY: number
+  ) => {
     if (!groundRef.current) {
       return;
     }
     const { left, top } = groundRef.current.getBoundingClientRect();
     if (isSelecting.current && startPos.current && containerRef.current) {
-      const width = e.clientX - left - startPos.current.x;
-      const height = e.clientY - top - startPos.current.y;
+      e.preventDefault();
+
+      const width = clientX - left - startPos.current.x;
+      const height = clientY - top - startPos.current.y;
       containerRef.current.style.width = `${Math.abs(width)}px`;
       containerRef.current.style.height = `${Math.abs(height)}px`;
       containerRef.current.style.left = `${
-        width < 0 ? e.clientX - left : startPos.current.x
+        width < 0 ? clientX - left : startPos.current.x
       }px`;
       containerRef.current.style.top = `${
-        height < 0 ? e.clientY - top : startPos.current.y
+        height < 0 ? clientY - top : startPos.current.y
       }px`;
     }
   };
 
-  const handleMouseUp = (e: MouseEvent) => {
-    isSelecting.current = false;
-    isSelectingProgress.current = false;
+  const handleMouseMove = (e: MouseEvent) => {
+    handleResizeContainer(e, e.clientX, e.clientY);
+  };
+
+  const handleMouseUp = () => {
     if (
       !isSelecting.current ||
       !startPos.current ||
@@ -112,40 +129,33 @@ export const RoomCreat = () => {
       !groundRef.current ||
       tables.length <= 0
     ) {
+      // console.log("no selection");
       return;
     }
 
-    const { left, top } = groundRef.current.getBoundingClientRect();
-    const endPos = {
-      x: e.clientX - left,
-      y: e.clientY - top,
-    };
+    isSelecting.current = false;
+    isSelectingProgress.current = false;
 
-    const rect = {
-      left: Math.min(startPos.current.x, endPos.x),
-      top: Math.min(startPos.current.y, endPos.y),
-      right: Math.max(startPos.current.x, endPos.x),
-      bottom: Math.max(startPos.current.y, endPos.y),
-    };
+    const rect = containerRef.current.getBoundingClientRect();
 
     tables.forEach((table) => {
-      const tableLeft = table.position?.left ?? 0;
-      const tableTop = table.position?.top ?? 0;
-      const tableRight = tableLeft + (table.size ?? 0);
-      const tableBottom = tableTop + (table.size ?? 0);
+      const tableElement = document.getElementById(table.id);
+      if (tableElement) {
+        const tableRect = tableElement.getBoundingClientRect();
 
-      const isInside =
-        tableLeft >= rect.left &&
-        tableRight <= rect.right &&
-        tableTop >= rect.top &&
-        tableBottom <= rect.bottom;
+        const isInside =
+          tableRect.left >= rect.left &&
+          tableRect.right <= rect.right &&
+          tableRect.top >= rect.top &&
+          tableRect.bottom <= rect.bottom;
 
-      updateTable(table.id, { selected: isInside });
-      console.log("table", table.tableNumber, "isInside", isInside);
+        updateTable(table.id, { selected: isInside });
+      }
     });
   };
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
+    console.log("handle Click outside");
     if (
       containerRef.current &&
       !containerRef.current.contains(e.target as Node) &&
@@ -154,6 +164,15 @@ export const RoomCreat = () => {
       containerRef.current.style.display = "none";
       isSelecting.current = false;
       startPos.current = null;
+
+      console.log("Click outside");
+    } else {
+      if (
+        containerRef.current &&
+        containerRef.current.contains(e.target as Node)
+      ) {
+        console.log("Click inside");
+      }
     }
   }, []);
 
@@ -169,16 +188,12 @@ export const RoomCreat = () => {
 
   const handleTouchMove = (e: TouchEvent) => {
     if (e.touches.length > 0) {
-      const touch = e.touches[0];
-      handleMouseMove({
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      } as MouseEvent);
+      handleResizeContainer(e, e.touches[0].clientX, e.touches[0].clientY);
     }
   };
 
   const handleTouchEnd = (e: TouchEvent) => {
-    handleMouseUp(e as unknown as MouseEvent);
+    handleMouseUp();
   };
 
   useEffect(() => {
@@ -203,6 +218,9 @@ export const RoomCreat = () => {
       groundRef.current.addEventListener("touchend", handleTouchEnd);
       groundRef.current.addEventListener("touchcancel", handleTouchEnd);
     }
+    if (containerRef.current) {
+      containerRef.current.addEventListener("mousedown", handleClickContainer);
+    }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       groundRef.current?.removeEventListener("mousedown", handleMouseDown);
@@ -214,6 +232,7 @@ export const RoomCreat = () => {
       groundRef.current?.removeEventListener("touchend", handleTouchEnd);
       groundRef.current?.removeEventListener("touchcancel", handleTouchEnd);
       document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 

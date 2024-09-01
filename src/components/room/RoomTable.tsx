@@ -104,9 +104,10 @@ export const RoomTable = ({
         "border-dotted border-red-500": table.selected,
         "border-transparent": !table.selected,
       })}
-      onClick={() => {
+      onClick={(event) => {
         changeSelected(table.id, true);
         setIsGreenBorder(true);
+        event.stopPropagation();
       }}
     >
       <PokerTable
