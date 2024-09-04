@@ -464,6 +464,11 @@ export function withMousePosition<P extends object>(
       };
     }, [isLocked, withTitleBar]);
 
+    // useEffect(() => {
+    //   styleRef.current = { ...style };
+    //   console.log(`[${WrappedComponent.name}] useEffect`, styleRef.current);
+    // }, [style]);
+
     return (
       <div
         ref={componentRef}

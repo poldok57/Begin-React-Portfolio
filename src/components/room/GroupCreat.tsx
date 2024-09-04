@@ -1,60 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { GroupTable, TableColors, TableSettings } from "./types";
 import { ShowTable } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
-import { InputColor } from "../colors/InputColor";
 import { Palette, ArrowBigUpDash, Trash2 } from "lucide-react";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
+import { ModifyColor } from "./ModifyColor";
 
 const DEFAULT_COLORS = {
   borderColor: "#333333",
   fillColor: "#aaaaaa",
   numberColor: "#000000",
   textColor: "#111199",
-};
-
-const ModifyColor = ({
-  label,
-  name,
-  value,
-  defaultValue,
-  themeColors,
-  onChange,
-}: {
-  label: string;
-  name: string;
-  value?: string;
-  themeColors?: string[];
-  defaultValue: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) => {
-  const [color, setColor] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setColor(e.target.value);
-    onChange(e);
-  };
-  useEffect(() => {
-    setColor(value || defaultValue);
-  }, [value, defaultValue]);
-
-  return (
-    <div className="flex flex-row justify-between form-control">
-      <label htmlFor="borderColor" className="ml-auto label">
-        <span className="label-text">{label}</span>
-      </label>
-
-      <InputColor
-        label={label}
-        fieldName={name}
-        color={color}
-        themeColors={themeColors}
-        onChange={handleChange}
-        className="w-40 h-10 input input-bordered"
-      />
-    </div>
-  );
 };
 
 export const GroupCreat = () => {

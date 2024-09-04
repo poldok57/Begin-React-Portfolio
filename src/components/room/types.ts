@@ -7,10 +7,19 @@ export enum TableType {
   other = "other",
 }
 
-export interface Position {
-  top: number;
-  left: number;
+export enum DesignType {
+  background = "background",
+  line = "line",
+  arc = "arc",
+  text = "text",
+  image = "image",
 }
+
+import {
+  RectPosition as Position,
+  Rectangle,
+  Coordinate,
+} from "@/lib/canvas/types";
 export interface Table {
   size?: number;
   rotation?: number;
@@ -44,6 +53,7 @@ export interface TableData extends Table {
   type: TableType;
   selected: boolean;
   position?: Position;
+  offset?: Position;
   settings?: TableSettings;
 }
 
@@ -53,4 +63,16 @@ export interface GroupTable {
   tables?: Table[];
   colors: TableColors;
   settings?: TableSettings;
+}
+
+export interface DesignElement {
+  id: string;
+  type: DesignType;
+  name: string;
+  rect: Rectangle;
+  color: string;
+  opacity?: number;
+  point1?: Coordinate;
+  point2?: Coordinate;
+  point3?: Coordinate;
 }
