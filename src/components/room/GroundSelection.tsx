@@ -128,6 +128,10 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     if (!backgroundCanvasRef.current) {
       return;
     }
+    const { left: offsetLeft, top: offsetTop } =
+      backgroundCanvasRef.current.getBoundingClientRect();
+    console.log("offsetLeft", offsetLeft);
+
     const ctx = backgroundCanvasRef.current.getContext("2d");
     if (!ctx) {
       return;
@@ -155,8 +159,8 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           }
           ctx.fillStyle = element.color;
           ctx.fillRect(
-            element.rect.left,
-            element.rect.top,
+            element.rect.left - offsetLeft,
+            element.rect.top - offsetTop,
             element.rect.width,
             element.rect.height
           );
@@ -164,8 +168,8 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           ctx.strokeStyle = "#888888";
           ctx.lineWidth = 2;
           ctx.strokeRect(
-            element.rect.left,
-            element.rect.top,
+            element.rect.left - offsetLeft,
+            element.rect.top - offsetTop,
             element.rect.width,
             element.rect.height
           );
@@ -254,13 +258,13 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       <canvas
         ref={backgroundCanvasRef}
         id="background-canvas"
-        className="absolute top-0 left-0 w-full h-full"
+        className="absolute top-0 left-0 w-full h-full border border-gray-500"
         // style={{ zIndex: 1 }}
       />
       <canvas
         ref={temporaryCanvasRef}
         id="temporary-canvas"
-        className="absolute top-0 left-0 w-full h-full"
+        className="absolute top-0 left-0 w-full h-full border border-blue-500"
         // style={{ zIndex: 2 }}
       />
       <div

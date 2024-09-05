@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { GroupCreat } from "./GroupCreat";
-import { RectPosition as Position } from "@/lib/canvas/types";
+import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
 import { DesignElement, DesignType, TableData } from "./types";
 import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
-import { Rectangle } from "@/lib/canvas/types";
 import { RoomMenu } from "./RoomMenu";
 import { GroundSelection } from "./GroundSelection";
 
@@ -33,7 +32,7 @@ export const RoomCreat = () => {
   };
   const handleChangeSelected = (id: string, selected: boolean) => {
     if (selectedArea.current) {
-      console.log("No change status ... area is selected");
+      // console.log("No change status ... area is selected");
       return;
     }
     updateTable(id, { selected });

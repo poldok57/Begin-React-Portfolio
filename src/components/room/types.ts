@@ -20,6 +20,7 @@ import {
   Rectangle,
   Coordinate,
 } from "@/lib/canvas/types";
+
 export interface Table {
   size?: number;
   rotation?: number;

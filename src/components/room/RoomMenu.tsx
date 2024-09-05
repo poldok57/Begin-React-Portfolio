@@ -5,7 +5,8 @@ import { RotateCcw, RotateCw, Minus, Plus, Settings } from "lucide-react";
 import { useTableDataStore } from "./stores/tables";
 import { useThrottle } from "@/hooks/useThrottle";
 import { ModifyColor } from "./ModifyColor";
-import { TableType } from "./types"; // Assurez-vous d'importer le type correct
+import { TableType } from "./types";
+import { X } from "lucide-react";
 
 interface RoomMenuProps {
   btnSize: number;
@@ -16,8 +17,14 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   btnSize,
   reccordBackround,
 }) => {
-  const { addTable, rotationSelectedTable, sizeSelectedTable, tables } =
-    useTableDataStore((state) => state);
+  const {
+    addTable,
+    rotationSelectedTable,
+    sizeSelectedTable,
+    tables,
+    designElements,
+    deleteDesignElement,
+  } = useTableDataStore((state) => state);
   const [background, setBackground] = useState("#000000");
   const [name, setName] = useState("");
   const [opacity, setOpacity] = useState(50);
@@ -46,6 +53,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
     addTable(newTable);
   }, 1000);
 
+  let nbr = 1;
   return (
     <div className="flex flex-col gap-2 p-2">
       <h1>RoomCreate</h1>
@@ -112,7 +120,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
             name="background"
             defaultValue={"#000000"}
             onChange={handleBackgroundColorChange}
-            className="w-20 h-4"
+            className="w-16 h-6"
           />
           <RangeInput
             id="opacity"
@@ -122,10 +130,39 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
             min="0"
             max="100"
             step="5"
-            className="w-16 h-4 range range-sm"
+            className="w-16 h-4 bg-gray-200 range range-sm"
           />
           <Button type="submit">Save Color</Button>
         </form>
+      </div>
+      <h3>Éléments de design ({designElements.length})</h3>
+
+      <div className="h-[120px] flex flex-col overflow-y-auto bg-base-200 rounded-lg p-2">
+        {designElements.length > 0 ? (
+          designElements.map((element) => (
+            <div
+              key={element.id}
+              className="flex flex-row justify-between items-center p-2 mb-2 w-full rounded-md"
+              style={{
+                backgroundColor: element.color,
+                opacity: (element.opacity ?? 100) / 100,
+              }}
+            >
+              {nbr++}
+              <span className="text-base-content">
+                {element.type}: {element.name}
+              </span>
+              <button
+                className="btn btn-circle btn-xs bg-base-100"
+                onClick={() => deleteDesignElement(element.id)}
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="text-base-content">Aucun élément de design</p>
+        )}
       </div>
     </div>
   );
