@@ -16,9 +16,8 @@ const MARGIN = 10;
 const RoomTableWP = withMousePosition(RoomTable);
 
 export const RoomCreat = () => {
-  const { updateTable, deleteTable, addDesignElement } = useTableDataStore(
-    (state) => state
-  );
+  const { updateTable, deleteTable, addDesignElement, getTable } =
+    useTableDataStore((state) => state);
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
@@ -107,6 +106,50 @@ export const RoomCreat = () => {
     });
   };
 
+  const handleHorizontalMove = (left: number, listId: string[]) => {
+    // console.log("handleHorizontalMove", left, listId);
+    listId.forEach((id) => {
+      const tableElement = document.getElementById(id);
+      if (tableElement) {
+        const table = getTable(id);
+        if (!table) {
+          return;
+        }
+        const { width } = tableElement.getBoundingClientRect();
+        const position = {
+          left: left - width / 2,
+          top: table.position?.top ?? 0,
+        };
+        updateTable(id, { position });
+
+        tableElement.style.left = `${position.left}px`;
+        tableElement.style.top = `${position.top}px`;
+      }
+    });
+  };
+
+  const handleVerticalMove = (top: number, listId: string[]) => {
+    console.log("handleVerticalMove", top, listId);
+    listId.forEach((id) => {
+      const tableElement = document.getElementById(id);
+      if (tableElement) {
+        const table = getTable(id);
+        if (!table) {
+          return;
+        }
+        const { height } = tableElement.getBoundingClientRect();
+        const position = {
+          left: table.position?.left ?? 0,
+          top: top - height / 2,
+        };
+        updateTable(id, { position });
+
+        tableElement.style.left = `${position.left}px`;
+        tableElement.style.top = `${position.top}px`;
+      }
+    });
+  };
+
   const handleRecordBackground = (
     color: string,
     name: string,
@@ -168,6 +211,8 @@ export const RoomCreat = () => {
           onSelectionStart={onZoneSelectedStart}
           onSelectionMove={onZoneSelectedMove}
           onSelectionEnd={onZoneSelectedEnd}
+          onHorizontalMove={handleHorizontalMove}
+          onVerticalMove={handleVerticalMove}
         >
           {tables.map((table, index) => {
             const left = table?.position?.left ?? 50 + index * 10;

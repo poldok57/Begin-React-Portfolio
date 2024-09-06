@@ -7,6 +7,7 @@ import { useThrottle } from "@/hooks/useThrottle";
 import { ModifyColor } from "./ModifyColor";
 import { TableType } from "./types";
 import { X } from "lucide-react";
+import clsx from "clsx";
 
 interface RoomMenuProps {
   btnSize: number;
@@ -24,6 +25,8 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
     tables,
     designElements,
     deleteDesignElement,
+    selectedDesignElement,
+    setSelectedDesignElement,
   } = useTableDataStore((state) => state);
   const [background, setBackground] = useState("#000000");
   const [name, setName] = useState("");
@@ -53,7 +56,6 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
     addTable(newTable);
   }, 1000);
 
-  let nbr = 1;
   return (
     <div className="flex flex-col gap-2 p-2">
       <h1>RoomCreate</h1>
@@ -135,26 +137,39 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
           <Button type="submit">Save Color</Button>
         </form>
       </div>
-      <h3>Éléments de design ({designElements.length})</h3>
+      <h3>Design elements ({designElements.length})</h3>
 
-      <div className="h-[120px] flex flex-col overflow-y-auto bg-base-200 rounded-lg p-2">
+      <div className="flex overflow-y-auto flex-col p-2 h-32 rounded-lg bg-base-200">
         {designElements.length > 0 ? (
           designElements.map((element) => (
             <div
               key={element.id}
-              className="flex flex-row justify-between items-center p-2 mb-2 w-full rounded-md"
+              className={clsx(
+                "flex flex-row justify-between items-center p-1 mb-1 w-full rounded-md",
+                {
+                  "border-2 border-red-500 border-dashed border-opacity-100":
+                    selectedDesignElement === element.id,
+                }
+              )}
               style={{
                 backgroundColor: element.color,
-                opacity: (element.opacity ?? 100) / 100,
+                opacity: element.opacity ?? 1,
               }}
             >
-              {nbr++}
-              <span className="text-base-content">
+              <span
+                className="text-sm text-base-content"
+                onClick={() => setSelectedDesignElement(element.id)}
+              >
                 {element.type}: {element.name}
               </span>
               <button
                 className="btn btn-circle btn-xs bg-base-100"
-                onClick={() => deleteDesignElement(element.id)}
+                onClick={() => {
+                  deleteDesignElement(element.id);
+                  if (selectedDesignElement === element.id) {
+                    setSelectedDesignElement(null);
+                  }
+                }}
               >
                 <X size={12} />
               </button>

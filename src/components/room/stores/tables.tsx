@@ -7,24 +7,28 @@ import { generateUniqueId } from "./unique-id";
 
 interface TableDataState {
   tables: TableData[];
+  designElements: DesignElement[];
+  selectedDesignElement: string | null;
   addTable: (table: TableData) => void;
+  getTable: (id: string) => TableData | undefined;
   updateTable: (id: string, updatedTable: Partial<TableData>) => void;
   updateSelectedTable: (updatedTable: Partial<TableData>) => void;
   rotationSelectedTable: (angle: number) => void;
   sizeSelectedTable: (size: number) => void;
   deleteTable: (id: string) => void;
-  designElements: DesignElement[];
   addDesignElement: (designElement: DesignElement) => void;
   deleteDesignElement: (id: string) => void;
+  setSelectedDesignElement: (id: string | null) => void;
 }
 
 interface TableDataWithIndex extends TableData {
   [key: string]: unknown;
 }
 
-const tableStore: StateCreator<TableDataState> = (set) => ({
+const tableStore: StateCreator<TableDataState> = (set, get) => ({
   tables: [],
   designElements: [],
+  selectedDesignElement: null,
   addTable: (table) => {
     const newTable = {
       ...table,
@@ -34,6 +38,9 @@ const tableStore: StateCreator<TableDataState> = (set) => ({
       tables: [...state.tables, newTable],
     }));
     return newTable.id;
+  },
+  getTable: (id: string) => {
+    return get().tables.find((table) => table.id === id);
   },
   updateTable: (id, updatedTable) =>
     set(
@@ -94,6 +101,10 @@ const tableStore: StateCreator<TableDataState> = (set) => ({
       designElements: state.designElements.filter(
         (designElement) => designElement.id !== id
       ),
+    })),
+  setSelectedDesignElement: (id: string | null) =>
+    set(() => ({
+      selectedDesignElement: id,
     })),
 });
 

@@ -30,7 +30,7 @@ export const ModifyColor = ({
 
   return (
     <div className="flex flex-row justify-between form-control">
-      <label htmlFor="borderColor" className="ml-auto label">
+      <label className="items-center ml-auto text-center label">
         <span className="label-text">{label}</span>
       </label>
 

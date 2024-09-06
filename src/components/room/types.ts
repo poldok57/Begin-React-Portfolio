@@ -73,6 +73,7 @@ export interface DesignElement {
   rect: Rectangle;
   color: string;
   opacity?: number;
+  lineWidth?: number;
   point1?: Coordinate;
   point2?: Coordinate;
   point3?: Coordinate;
