@@ -40,6 +40,15 @@ export const RoomCreat = () => {
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
 
+  const moveTable = (id: string, position: Position) => {
+    updateTable(id, { position });
+    const tableElement = document.getElementById(id);
+    if (tableElement) {
+      tableElement.style.left = `${position.left}px`;
+      tableElement.style.top = `${position.top}px`;
+    }
+  };
+
   const onZoneSelectedStart = (_clientX: number, _clientY: number) => {
     selectedArea.current = true;
   };
@@ -53,14 +62,7 @@ export const RoomCreat = () => {
           left: Math.round(clientX + table.offset.left),
           top: Math.round(clientY + table.offset.top),
         };
-        updateTable(table.id, { position });
-
-        const tableElement = document.getElementById(table.id);
-        if (tableElement) {
-          tableElement.style.position = "absolute";
-          tableElement.style.left = `${position.left}px`;
-          tableElement.style.top = `${position.top}px`;
-        }
+        moveTable(table.id, position);
       }
     });
   };
@@ -120,10 +122,7 @@ export const RoomCreat = () => {
           left: left - width / 2,
           top: table.position?.top ?? 0,
         };
-        updateTable(id, { position });
-
-        tableElement.style.left = `${position.left}px`;
-        tableElement.style.top = `${position.top}px`;
+        moveTable(id, position);
       }
     });
   };
@@ -142,10 +141,7 @@ export const RoomCreat = () => {
           left: table.position?.left ?? 0,
           top: top - height / 2,
         };
-        updateTable(id, { position });
-
-        tableElement.style.left = `${position.left}px`;
-        tableElement.style.top = `${position.top}px`;
+        moveTable(id, position);
       }
     });
   };

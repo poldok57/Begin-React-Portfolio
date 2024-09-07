@@ -81,7 +81,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
     <dialog
       open={true}
       className={clsx(
-        "flex z-20 flex-col gap-2 items-center p-2 rounded-lg shadow-xl border w-fit bg-base-200 border-base-200",
+        "flex z-[100] flex-col gap-2 items-center p-2 rounded-lg shadow-xl border w-fit bg-base-200 border-base-200",
         "-translate-y-full translate-x-32"
         // "absolute  translate-y-12": position === "under",
       )}

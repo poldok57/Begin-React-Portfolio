@@ -29,7 +29,7 @@ export const ModifyColor = ({
   }, [value, defaultValue]);
 
   return (
-    <div className="flex flex-row justify-between form-control">
+    <div className="flex flex-row justify-between items-center form-control">
       <label className="items-center ml-auto text-center label">
         <span className="label-text">{label}</span>
       </label>

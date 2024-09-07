@@ -168,9 +168,10 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     const ctx = temporaryCanvasRef.current.getContext("2d");
     if (!ctx) return;
 
+    ctx.globalAlpha = 0.8;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.5;
     ctx.setLineDash([10, 5, 3, 5]);
 
     // Lignes verticales
@@ -423,7 +424,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   const equalizeSpaces = (type: "vertical" | "horizontal") => {
     const axes =
       type === "vertical" ? verticalAxis.current : horizontalAxis.current;
-    if (axes.length < 2) return;
+    if (axes.length <= 2) return;
 
     const firstAxis = Math.min(...axes);
     const lastAxis = Math.max(...axes);
@@ -541,6 +542,20 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     };
   }, []);
 
+  const { left, top, width, height } =
+    containerRef.current?.getBoundingClientRect() || {
+      left: 0,
+      top: 0,
+      width: 0,
+      height: 0,
+    };
+  const ground = groundRef.current?.getBoundingClientRect() || {
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  };
+
   return (
     <div ref={groundRef} id={id} className="relative w-full h-full">
       <canvas
@@ -562,18 +577,30 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       />
       {showAlignmentLines && (
         <>
-          <button
-            className="absolute top-0 left-1/2 px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1/2 translate-y-1"
-            onClick={() => equalizeSpaces("vertical")}
-          >
-            =
-          </button>
-          <button
-            className="absolute right-0 top-1/2 px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
-            onClick={() => equalizeSpaces("horizontal")}
-          >
-            =
-          </button>
+          {verticalAxis.current.length > 2 && (
+            <button
+              className="absolute px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1/2 translate-y-1"
+              onClick={() => equalizeSpaces("vertical")}
+              style={{
+                left: left - 15 + width / 2 - ground.left,
+                top: top + 2 - ground.top,
+              }}
+            >
+              =
+            </button>
+          )}
+          {horizontalAxis.current.length > 2 && (
+            <button
+              className="absolute px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
+              onClick={() => equalizeSpaces("horizontal")}
+              style={{
+                left: left + 5 - ground.left,
+                top: top - 15 + height / 2 - ground.top,
+              }}
+            >
+              =
+            </button>
+          )}
         </>
       )}
       {children}
