@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { GroupCreat } from "./GroupCreat";
 import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
 import { DesignElement, DesignType, TableData } from "./types";
@@ -24,6 +24,7 @@ export const RoomCreat = () => {
   const handleDelete = (id: string) => {
     deleteTable(id);
   };
+  const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const selectedRect = useRef<Rectangle | null>(null);
 
   const handleMove = (id: string, position: Position) => {
@@ -108,6 +109,13 @@ export const RoomCreat = () => {
     });
   };
 
+  const addSelectedRect = (rect: Rectangle) => {
+    selectedRect.current = rect;
+    setPreSelection(rect);
+    onZoneSelectedEnd(rect);
+    // console.log("selectedRect", selectedRect.current);
+  };
+
   const handleHorizontalMove = (left: number, listId: string[]) => {
     // console.log("handleHorizontalMove", left, listId);
     listId.forEach((id) => {
@@ -128,7 +136,6 @@ export const RoomCreat = () => {
   };
 
   const handleVerticalMove = (top: number, listId: string[]) => {
-    console.log("handleVerticalMove", top, listId);
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
       if (tableElement) {
@@ -155,7 +162,7 @@ export const RoomCreat = () => {
       return;
     }
 
-    console.log("rect:", selectedRect.current);
+    // console.log("rect:", selectedRect.current);
     const { left, top, width, height } = selectedRect.current;
 
     const background: DesignElement = {
@@ -184,6 +191,7 @@ export const RoomCreat = () => {
         tables.forEach((table) => {
           updateTable(table.id, { selected: false });
         });
+        setPreSelection(null);
       }
     };
 
@@ -201,7 +209,11 @@ export const RoomCreat = () => {
     >
       <div className="flex flex-row w-full">
         <GroupCreat />
-        <RoomMenu btnSize={btnSize} reccordBackround={handleRecordBackground} />
+        <RoomMenu
+          btnSize={btnSize}
+          reccordBackround={handleRecordBackground}
+          addSelectedRect={addSelectedRect}
+        />
         <GroundSelection
           id={GROUND_ID}
           onSelectionStart={onZoneSelectedStart}
@@ -209,6 +221,7 @@ export const RoomCreat = () => {
           onSelectionEnd={onZoneSelectedEnd}
           onHorizontalMove={handleHorizontalMove}
           onVerticalMove={handleVerticalMove}
+          preSelection={preSelection}
         >
           {tables.map((table, index) => {
             const left = table?.position?.left ?? 50 + index * 10;

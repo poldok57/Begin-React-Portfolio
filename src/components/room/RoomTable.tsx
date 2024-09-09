@@ -123,7 +123,9 @@ export const RoomTable = ({
           <div className="absolute -right-5 -bottom-5">
             <button
               className="btn btn-circle btn-sm"
-              onClick={() => onDelete(table.id)}
+              onClick={() => {
+                onDelete(table.id);
+              }}
             >
               <Trash2 size={btnSize} />
             </button>

@@ -4,9 +4,16 @@ import { SelectionItems } from "./SelectionItems";
 import { useTableDataStore } from "./stores/tables";
 import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
+import { Rectangle } from "@/lib/canvas/types";
 import clsx from "clsx";
 
-export const RoomAddTables = ({ className }: { className: string }) => {
+export const RoomAddTables = ({
+  className,
+  addSelectedRect,
+}: {
+  className: string;
+  addSelectedRect: (rect: Rectangle) => void;
+}) => {
   const [openSelection, setOpenSelection] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{
     width: number;
@@ -20,16 +27,20 @@ export const RoomAddTables = ({ className }: { className: string }) => {
   };
 
   const DEFAULT_TABLE_SIZE = 100;
+  const positionTable = (x: number, y: number) => {
+    return {
+      left: DEFAULT_TABLE_SIZE * (1 + 1.5 * x),
+      top: DEFAULT_TABLE_SIZE * (1 + y),
+    };
+  };
+
   const handleAddTable = (x: number, y: number, tableNumber: number) => {
     const newTable = {
       id: "",
       type: "poker" as TableType,
       selected: true,
       size: DEFAULT_TABLE_SIZE,
-      position: {
-        left: DEFAULT_TABLE_SIZE * (1 + 1.5 * x),
-        top: DEFAULT_TABLE_SIZE * (1 + y),
-      },
+      position: positionTable(x, y),
       rotation: 0,
       tableNumber: `${tableNumber}`,
       tableText: `Table ${tableNumber}`,
@@ -46,6 +57,20 @@ export const RoomAddTables = ({ className }: { className: string }) => {
           tableNumber++;
         }
       }
+      const start = positionTable(0, 0);
+      const end = positionTable(selectedItems.width, selectedItems.height);
+      const left = start.left - 20;
+      const top = start.top - 20;
+      const width = end.left - start.left;
+      const height = end.top - start.top;
+      addSelectedRect({
+        left,
+        top,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
+      });
     }
     setOpenSelection(false);
   };

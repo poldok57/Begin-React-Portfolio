@@ -11,6 +11,7 @@ interface GroundSelectionProps {
   onHorizontalMove: (left: number, listId: string[]) => void;
   onVerticalMove: (top: number, listId: string[]) => void;
   id: string;
+  preSelection: Rectangle | null;
   children: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   onHorizontalMove,
   onVerticalMove,
   id,
+  preSelection,
   children,
 }) => {
   const isSelectingRef = useRef(false);
@@ -33,6 +35,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   const { designElements, selectedDesignElement } = useTableDataStore(
     (state) => state
   );
+  const tableSelectedRef = useRef(false);
   const verticalAxis = useRef<number[]>([]);
   const horizontalAxis = useRef<number[]>([]);
   const selectedAlignmentLine = useRef<{
@@ -64,6 +67,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
     const { left, top } = groundRef.current.getBoundingClientRect();
     isSelectingRef.current = true;
+    tableSelectedRef.current = false;
     startPos.current = { left: clientX - left, top: clientY - top };
 
     containerRef.current.style.display = "block";
@@ -98,7 +102,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       );
     });
 
-    const tolerance = 15; // Tolérance en pixels pour l'alignement
+    const tolerance = 5; // Tolérance en pixels pour l'alignement
 
     elements.forEach((el) => {
       const rect = el.getBoundingClientRect();
@@ -107,7 +111,9 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
       // Alignement vertical
       const foundVerticalGroup = alignmentGroups.current.vertical.find(
-        (group) => Math.abs(group.position - centerX) <= tolerance
+        (group) =>
+          rect.left + tolerance < group.position &&
+          rect.right - tolerance > group.position
       );
 
       if (foundVerticalGroup) {
@@ -126,7 +132,9 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
       // Alignement horizontal
       const foundHorizontalGroup = alignmentGroups.current.horizontal.find(
-        (group) => Math.abs(group.position - centerY) <= tolerance
+        (group) =>
+          rect.top + tolerance < group.position &&
+          rect.bottom - tolerance > group.position
       );
 
       if (foundHorizontalGroup) {
@@ -239,6 +247,9 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       return;
     }
 
+    if (tableSelectedRef.current) {
+      return;
+    }
     onSelectionEnd(rect);
     const alignments = findAlignments();
     verticalAxis.current = alignments.vertical;
@@ -247,6 +258,8 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     setShowAlignmentLines(
       alignments.vertical.length > 0 || alignments.horizontal.length > 0
     );
+
+    tableSelectedRef.current = true;
   };
 
   const resizeCanvas = () => {
@@ -492,6 +505,19 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
     drawElementsOnCanvas();
   }, [designElements, selectedDesignElement]);
+
+  useEffect(() => {
+    if (!preSelection || !containerRef.current) {
+      return; // no preSelection
+    }
+    const { left, top, width, height } = preSelection;
+
+    containerRef.current.style.left = `${left}px`;
+    containerRef.current.style.top = `${top}px`;
+    containerRef.current.style.width = `${width}px`;
+    containerRef.current.style.height = `${height}px`;
+    containerRef.current.style.display = "block";
+  }, [preSelection]);
 
   useEffect(() => {
     const ground = groundRef.current;

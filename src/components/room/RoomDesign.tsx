@@ -72,11 +72,11 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                 }}
               />
               <ModifyColor
-                label="Couleur"
+                label="Color:"
                 name="background"
                 defaultValue={"#fad0c3"}
                 onChange={handleBackgroundColorChange}
-                className="z-10 w-16 h-6"
+                className="z-10 w-20 h-6"
               />
               <RangeInput
                 id="opacity"

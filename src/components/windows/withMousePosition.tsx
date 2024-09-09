@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import {
-  mouseIsInsideComponent,
-  mouseIsInsideBorderComponent,
+  mouseIsInsideRect,
+  mouseIsInsideBorder,
   getRectOffset,
 } from "../../lib/mouse-position";
 import { creatPlaceholder } from "../../lib/component-move";
@@ -318,31 +318,42 @@ export function withMousePosition<P extends object>(
         return;
       }
 
-      const handleMouseMove = (event: MouseEvent) => {
+      const handleMove = (
+        event: MouseEvent | TouchEvent,
+        coord: Coordinate
+      ) => {
         if (!canMove()) {
           return;
         }
-        if (!mouseIsInsideComponent(event, waitEvent)) {
+        const rect = waitEvent.getBoundingClientRect();
+        if (!mouseIsInsideRect(coord, rect)) {
           setCanMove(false);
           return;
         }
         event.preventDefault();
-        setMouseCoordinates(event.clientX, event.clientY);
+        setMouseCoordinates(coord.x, coord.y);
         calculNewPosition();
+      };
+
+      const handleMouseMove = (event: MouseEvent) => {
+        handleMove(event, { x: event.clientX, y: event.clientY });
       };
 
       /**
        * Start the drag action
        */
-      const startDrag = (event: MouseEvent) => {
+      const startDrag = (event: MouseEvent | TouchEvent, coord: Coordinate) => {
         const { component } = selectComponent();
         if (!component) return;
+
+        const rectComponent = component.getBoundingClientRect();
+        const rectWaitEvent = waitEvent.getBoundingClientRect();
         // if the component is resizable, we need to check if the mouse is inside the border of the component
         // to prevent conflict between the mouse position and the resizing
         if (
           resizable &&
-          !mouseIsInsideBorderComponent(event, component) &&
-          !mouseIsInsideBorderComponent(event, waitEvent)
+          !mouseIsInsideBorder(coord, rectComponent) &&
+          !mouseIsInsideBorder(coord, rectWaitEvent)
         ) {
           if (trace) {
             console.log(
@@ -355,10 +366,9 @@ export function withMousePosition<P extends object>(
           return;
         }
         if (waitEvent && waitEvent.contains(event.target as Node)) {
-          const coord = { x: event.clientX, y: event.clientY };
           setCanMove(true);
 
-          setMouseCoordinates(event.clientX, event.clientY);
+          setMouseCoordinates(coord.x, coord.y);
 
           // difference between the mouse and the component
           offsetRef.current = getRectOffset(coord, {
@@ -388,7 +398,7 @@ export function withMousePosition<P extends object>(
          */
         if (isLocked) return;
 
-        startDrag(event);
+        startDrag(event, { x: event.clientX, y: event.clientY });
       };
 
       /**
@@ -421,18 +431,17 @@ export function withMousePosition<P extends object>(
 
         // event.preventDefault();
 
-        startDrag({
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          target: touch.target as EventTarget,
-        } as MouseEvent);
+        startDrag(event, {
+          x: touch.clientX,
+          y: touch.clientY,
+        });
       };
 
       const handleTouchMove = (event: TouchEvent) => {
         const touch = event.touches[0];
-        handleMouseMove({
-          clientX: touch.clientX,
-          clientY: touch.clientY,
+        handleMove(event, {
+          x: touch.clientX,
+          y: touch.clientY,
         } as MouseEvent);
       };
 
