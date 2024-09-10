@@ -54,7 +54,7 @@ export interface TableData extends Table {
   type: TableType;
   selected: boolean;
   position?: Position;
-  offset?: Position;
+  offset?: Position | null;
   settings?: TableSettings;
 }
 

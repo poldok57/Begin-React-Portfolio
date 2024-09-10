@@ -4,15 +4,18 @@ import { SelectionItems } from "./SelectionItems";
 import { useTableDataStore } from "./stores/tables";
 import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
-import { Rectangle } from "@/lib/canvas/types";
+import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import clsx from "clsx";
+import { LucideIcon } from "lucide-react";
 
 export const RoomAddTables = ({
   className,
   addSelectedRect,
+  resetSelectedTables,
 }: {
   className: string;
   addSelectedRect: (rect: Rectangle) => void;
+  resetSelectedTables: () => void;
 }) => {
   const [openSelection, setOpenSelection] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{
@@ -34,13 +37,25 @@ export const RoomAddTables = ({
     };
   };
 
-  const handleAddTable = (x: number, y: number, tableNumber: number) => {
+  const handleAddTable = (
+    x: number,
+    y: number,
+    tableNumber: number,
+    selectedRect: Rectangle
+  ) => {
+    const position: Position = positionTable(x, y);
+    const offset: Position = {
+      left: position.left - selectedRect.left,
+      top: position.top - selectedRect.top,
+    };
+
     const newTable = {
       id: "",
       type: "poker" as TableType,
       selected: true,
       size: DEFAULT_TABLE_SIZE,
-      position: positionTable(x, y),
+      position,
+      offset,
       rotation: 0,
       tableNumber: `${tableNumber}`,
       tableText: `Table ${tableNumber}`,
@@ -49,29 +64,35 @@ export const RoomAddTables = ({
   };
 
   const handleAddTables = () => {
-    let tableNumber = tables.length + 1;
-    if (selectedItems) {
-      for (let y = 0; y < selectedItems.height; y++) {
-        for (let x = 0; x < selectedItems.width; x++) {
-          handleAddTable(x, y, tableNumber);
-          tableNumber++;
-        }
-      }
-      const start = positionTable(0, 0);
-      const end = positionTable(selectedItems.width, selectedItems.height);
-      const left = start.left - 20;
-      const top = start.top - 20;
-      const width = end.left - start.left;
-      const height = end.top - start.top;
-      addSelectedRect({
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-      });
+    if (!selectedItems) {
+      return;
     }
+    const start = positionTable(0, 0);
+    const end = positionTable(selectedItems.width, selectedItems.height);
+    const left = start.left - 20;
+    const top = start.top - 20;
+    const width = end.left - start.left;
+    const height = end.top - start.top;
+    const selectedRect: Rectangle = {
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height,
+    };
+
+    resetSelectedTables();
+
+    let tableNumber = tables.length + 1;
+    for (let y = 0; y < selectedItems.height; y++) {
+      for (let x = 0; x < selectedItems.width; x++) {
+        handleAddTable(x, y, tableNumber, selectedRect);
+        tableNumber++;
+      }
+    }
+    addSelectedRect(selectedRect);
+
     setOpenSelection(false);
   };
 
@@ -85,10 +106,7 @@ export const RoomAddTables = ({
           selectedItems={selectedItems}
           addTables={handleAddTables}
           Component={
-            RectangleHorizontal as React.FC<{
-              size: number;
-              className: string;
-            }>
+            RectangleHorizontal as React.FC<{ size: number; className: string }>
           }
         />
       )}

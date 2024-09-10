@@ -68,10 +68,25 @@ export const RoomCreat = () => {
     });
   };
 
+  const upDateSelectedTables = (tables: TableData[] | null = null) => {
+    if (!tables) {
+      tables = useTableDataStore.getState().tables;
+    }
+
+    selectedTablesRef.current = tables.filter((table) => table.selected);
+  };
+
+  const resetSelectedTables = () => {
+    tables.forEach((table) => {
+      updateTable(table.id, { offset: null, selected: false });
+    });
+    selectedTablesRef.current = [];
+  };
+
   const onZoneSelectedEnd = (rect: Rectangle | null) => {
     if (!rect) {
       tables.forEach((table) => {
-        updateTable(table.id, { offset: undefined, selected: false });
+        updateTable(table.id, { offset: null, selected: false });
       });
       selectedRect.current = null;
       selectedArea.current = false;
@@ -94,26 +109,26 @@ export const RoomCreat = () => {
           tableRect.bottom <= rect.bottom + MARGIN;
 
         const offset = {
-          left: tableRect.left - rect.left,
-          top: tableRect.top - rect.top,
+          left: Math.round(tableRect.left - rect.left),
+          top: Math.round(tableRect.top - rect.top),
         };
         return { ...table, selected: isInside, offset };
       }
       return table;
     });
 
-    selectedTablesRef.current = updatedTables.filter((table) => table.selected);
-
     updatedTables.forEach((table) => {
       updateTable(table.id, { selected: table.selected, offset: table.offset });
     });
+
+    upDateSelectedTables(updatedTables);
   };
 
   const addSelectedRect = (rect: Rectangle) => {
     selectedRect.current = rect;
     setPreSelection(rect);
-    onZoneSelectedEnd(rect);
-    // console.log("selectedRect", selectedRect.current);
+
+    upDateSelectedTables();
   };
 
   const handleHorizontalMove = (left: number, listId: string[]) => {
@@ -188,9 +203,7 @@ export const RoomCreat = () => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        tables.forEach((table) => {
-          updateTable(table.id, { selected: false });
-        });
+        resetSelectedTables();
         setPreSelection(null);
       }
     };
@@ -213,6 +226,7 @@ export const RoomCreat = () => {
           btnSize={btnSize}
           reccordBackround={handleRecordBackground}
           addSelectedRect={addSelectedRect}
+          resetSelectedTables={resetSelectedTables}
         />
         <GroundSelection
           id={GROUND_ID}

@@ -1,10 +1,4 @@
-import React, {
-  useEffect,
-  useCallback,
-  useRef,
-  useState,
-  MutableRefObject,
-} from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 import { PokerTable } from "./PokerTable";
 import { TableData, TableSettings, TableColors } from "./types";
 import { useGroupStore } from "./stores/groups";
@@ -31,8 +25,7 @@ export const RoomTable = ({
     (g) => g.id === table.groupId
   );
   const ground = document.getElementById(GROUND_ID);
-  const memoGroundStyle: MutableRefObject<React.CSSProperties | null> =
-    useRef(null);
+  useRef(null);
 
   const settings: TableSettings = {
     ...table.settings,
@@ -65,38 +58,6 @@ export const RoomTable = ({
     };
   }, [handleClickOutside, table.id, changeSelected]);
 
-  const [isGreenBorder, setIsGreenBorder] = useState(false);
-
-  useEffect(() => {
-    if (!ground) {
-      return;
-    }
-
-    if (isGreenBorder) {
-      if (!memoGroundStyle.current) {
-        memoGroundStyle.current = {
-          border: ground.style.border,
-          backgroundColor: ground.style.backgroundColor,
-          borderRadius: ground.style.borderRadius,
-          boxShadow: ground.style.boxShadow,
-          transition: ground.style.transition,
-        };
-      }
-      ground.style.border = "2px solid green";
-      ground.style.backgroundColor = "rgba(190, 255, 190, 0.3)";
-      ground.style.borderRadius = "10px";
-      ground.style.boxShadow = "0 0 5px 0 rgba(0, 0, 0, 0.5)";
-      ground.style.transition = "all 0.2s ease-in-out";
-
-      const timer = setTimeout(() => {
-        setIsGreenBorder(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    } else if (memoGroundStyle.current) {
-      Object.assign(ground.style, memoGroundStyle.current);
-    }
-  }, [isGreenBorder]);
-
   return (
     <div
       ref={ref}
@@ -106,7 +67,6 @@ export const RoomTable = ({
       })}
       onClick={(event) => {
         changeSelected(table.id, true);
-        setIsGreenBorder(true);
         event.stopPropagation();
       }}
     >

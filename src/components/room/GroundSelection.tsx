@@ -57,6 +57,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         containerRef.current
       )
     ) {
+      // Clic inside the container start moving the container
       areaOffsetRef.current = {
         left: containerRef.current.offsetLeft - clientX,
         top: containerRef.current.offsetTop - clientY,
@@ -65,6 +66,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       return;
     }
 
+    // clic outside the container start selecting new position of the container
     const { left, top } = groundRef.current.getBoundingClientRect();
     isSelectingRef.current = true;
     tableSelectedRef.current = false;
@@ -102,7 +104,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       );
     });
 
-    const tolerance = 5; // Tolérance en pixels pour l'alignement
+    const tolerance = 5; // tolerance for alignment
 
     elements.forEach((el) => {
       const rect = el.getBoundingClientRect();
@@ -210,6 +212,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       containerRef.current.style.left = `${newLeft}px`;
       containerRef.current.style.top = `${newTop}px`;
       onSelectionMove(newLeft, newTop);
+
       return;
     }
 
@@ -320,19 +323,18 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     });
   };
 
-  const handleMouseDown = (e: MouseEvent) => {
-    e.preventDefault();
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
+  const clicOnLine = (mouseX: number, mouseY: number) => {
+    // clic on a vertical line
     const clickedVerticalLine = verticalAxis.current.find(
       (x) => Math.abs(x - mouseX) <= 5
     );
 
+    // clic on a horizontal line
     const clickedHorizontalLine = horizontalAxis.current.find(
       (y) => Math.abs(y - mouseY) <= 5
     );
 
+    // clic on a vertical line
     if (clickedVerticalLine !== undefined) {
       selectedAlignmentLine.current = {
         type: "vertical",
@@ -346,9 +348,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           left: 0,
         };
         const elementIds = selectedGroup.elements.map((el) => el.id);
-        onHorizontalMove(e.clientX - left, elementIds);
+        onHorizontalMove(mouseX - left, elementIds);
       }
-    } else if (clickedHorizontalLine !== undefined) {
+      return true;
+    }
+    if (clickedHorizontalLine !== undefined) {
+      // clic on a horizontal line
       selectedAlignmentLine.current = {
         type: "horizontal",
         position: clickedHorizontalLine,
@@ -361,77 +366,98 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           top: 0,
         };
         const elementIds = selectedGroup.elements.map((el) => el.id);
-        onVerticalMove(e.clientY - top, elementIds);
+        onVerticalMove(mouseY - top, elementIds);
       }
-    } else {
-      handleStart(e.clientX, e.clientY);
+      return true;
+    }
+    return false;
+  };
+
+  const handleMouseDown = (e: MouseEvent) => {
+    e.preventDefault();
+
+    if (clicOnLine(e.clientX, e.clientY)) {
+      return;
+    }
+
+    // clic outside the container start selecting new position of the container
+    handleStart(e.clientX, e.clientY);
+  };
+
+  const moveLine = (mouseX: number, mouseY: number) => {
+    if (selectedAlignmentLine.current === null) {
+      return false;
+    }
+    // Gérer le déplacement de la ligne d'alignement
+    const selectedGroup =
+      selectedAlignmentLine.current.type === "vertical"
+        ? alignmentGroups.current.vertical.find(
+            (group) =>
+              group.position === selectedAlignmentLine.current?.position
+          )
+        : alignmentGroups.current.horizontal.find(
+            (group) =>
+              group.position === selectedAlignmentLine.current?.position
+          );
+
+    if (selectedGroup) {
+      const { left, top } = groundRef.current?.getBoundingClientRect() || {
+        left: 0,
+        top: 0,
+      };
+      const elementIds = selectedGroup.elements.map((el) => el.id);
+      if (selectedAlignmentLine.current.type === "vertical") {
+        onHorizontalMove(mouseX - left, elementIds);
+      } else {
+        onVerticalMove(mouseY - top, elementIds);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const cursorStyle = (mouseX: number, mouseY: number) => {
+    if (!temporaryCanvasRef.current || !groundRef.current) return;
+
+    const isNearVerticalLine = verticalAxis.current.some(
+      (x) => Math.abs(x - mouseX) <= 5
+    );
+    const isNearHorizontalLine = horizontalAxis.current.some(
+      (y) => Math.abs(y - mouseY) <= 5
+    );
+
+    let cursorStyle = "default";
+    if (isNearVerticalLine) {
+      cursorStyle = "ew-resize";
+    } else if (isNearHorizontalLine) {
+      cursorStyle = "ns-resize";
+    }
+
+    if (cursorStyle !== temporaryCanvasRef.current.style.cursor) {
+      temporaryCanvasRef.current.style.cursor = cursorStyle;
+      if (containerRef.current) {
+        containerRef.current.style.cursor =
+          cursorStyle === "default" ? "move" : cursorStyle;
+      }
     }
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!temporaryCanvasRef.current || !groundRef.current) return;
 
-    const mouseX = e.clientX;
-    const mouseY = e.clientY;
-
-    if (selectedAlignmentLine.current !== null) {
-      // Gérer le déplacement de la ligne d'alignement
-      const selectedGroup =
-        selectedAlignmentLine.current.type === "vertical"
-          ? alignmentGroups.current.vertical.find(
-              (group) =>
-                group.position === selectedAlignmentLine.current?.position
-            )
-          : alignmentGroups.current.horizontal.find(
-              (group) =>
-                group.position === selectedAlignmentLine.current?.position
-            );
-
-      if (selectedGroup) {
-        const { left, top } = groundRef.current?.getBoundingClientRect() || {
-          left: 0,
-          top: 0,
-        };
-        const elementIds = selectedGroup.elements.map((el) => el.id);
-        if (selectedAlignmentLine.current.type === "vertical") {
-          onHorizontalMove(e.clientX - left, elementIds);
-        } else {
-          onVerticalMove(e.clientY - top, elementIds);
-        }
-      }
-    } else {
-      const isNearVerticalLine = verticalAxis.current.some(
-        (x) => Math.abs(x - mouseX) <= 5
-      );
-      const isNearHorizontalLine = horizontalAxis.current.some(
-        (y) => Math.abs(y - mouseY) <= 5
-      );
-
-      let cursorStyle = "default";
-      if (isNearVerticalLine) {
-        cursorStyle = "ew-resize";
-      } else if (isNearHorizontalLine) {
-        cursorStyle = "ns-resize";
-      }
-
-      if (cursorStyle !== temporaryCanvasRef.current.style.cursor) {
-        temporaryCanvasRef.current.style.cursor = cursorStyle;
-        if (containerRef.current) {
-          containerRef.current.style.cursor =
-            cursorStyle === "default" ? "move" : cursorStyle;
-        }
-      }
-
-      handleMove(e.clientX, e.clientY);
+    if (moveLine(e.clientX, e.clientY)) {
+      return;
     }
+
+    cursorStyle(e.clientX, e.clientY);
+    handleMove(e.clientX, e.clientY);
   };
 
   const handleMouseUp = () => {
     if (selectedAlignmentLine.current !== null) {
       selectedAlignmentLine.current = null;
-    } else {
-      handleEnd();
     }
+    handleEnd();
   };
 
   const equalizeSpaces = (type: "vertical" | "horizontal") => {
@@ -533,11 +559,18 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
       e.preventDefault();
+      if (clicOnLine(touch.clientX, touch.clientY)) {
+        return;
+      }
       handleStart(touch.clientX, touch.clientY);
     };
+
     const handleTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
       e.preventDefault();
+      if (moveLine(touch.clientX, touch.clientY)) {
+        return;
+      }
       handleMove(touch.clientX, touch.clientY);
     };
 
@@ -555,7 +588,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
     ground.addEventListener("touchstart", handleTouchStart);
     document.addEventListener("touchmove", handleTouchMove);
-    document.addEventListener("touchend", handleEnd);
+    document.addEventListener("touchend", handleMouseUp);
 
     return () => {
       ground.removeEventListener("mousedown", handleMouseDown);
@@ -563,7 +596,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("touchend", handleEnd);
+      document.removeEventListener("touchend", handleMouseUp);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
