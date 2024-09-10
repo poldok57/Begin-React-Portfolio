@@ -1,11 +1,9 @@
-import React, { useEffect, useCallback, useRef } from "react";
+import React, { useRef } from "react";
 import { PokerTable } from "./PokerTable";
 import { TableData, TableSettings, TableColors } from "./types";
 import { useGroupStore } from "./stores/groups";
 import { Trash2 } from "lucide-react";
 import clsx from "clsx";
-
-import { GROUND_ID } from "./RoomCreat";
 
 interface RoomTableProps {
   table: TableData;
@@ -24,7 +22,6 @@ export const RoomTable = ({
   const group = useGroupStore((state) => state.groups).find(
     (g) => g.id === table.groupId
   );
-  const ground = document.getElementById(GROUND_ID);
   useRef(null);
 
   const settings: TableSettings = {
@@ -35,29 +32,6 @@ export const RoomTable = ({
     ...(group ? group.colors : {}),
   };
 
-  const handleClickOutside = useCallback(
-    (event: MouseEvent) => {
-      if (
-        ref.current &&
-        ground &&
-        ground.contains(event.target as Node) &&
-        !ref.current.contains(event.target as Node) &&
-        !event.shiftKey &&
-        !event.ctrlKey
-      ) {
-        changeSelected(table.id, false);
-      }
-    },
-    [table.id, changeSelected]
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [handleClickOutside, table.id, changeSelected]);
-
   return (
     <div
       ref={ref}
@@ -66,7 +40,7 @@ export const RoomTable = ({
         "border-transparent": !table.selected,
       })}
       onClick={(event) => {
-        changeSelected(table.id, true);
+        changeSelected(table.id, !table.selected);
         event.stopPropagation();
       }}
     >

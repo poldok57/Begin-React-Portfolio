@@ -175,28 +175,32 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       top: 0,
     };
 
-    const ctx = temporaryCanvasRef.current.getContext("2d");
-    if (!ctx) return;
+    // get container rect
+    const LINE_OVERLAP = 30;
+    const container = containerRef.current?.getBoundingClientRect();
 
-    ctx.globalAlpha = 0.8;
+    const ctx = temporaryCanvasRef.current.getContext("2d");
+    if (!ctx || !container) return;
+
+    ctx.globalAlpha = 1;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
     ctx.lineWidth = 0.5;
     ctx.setLineDash([10, 5, 3, 5]);
 
     // Lignes verticales
     alignments.vertical.forEach((x) => {
       ctx.beginPath();
-      ctx.moveTo(x - left, 0);
-      ctx.lineTo(x - left, ctx.canvas.height);
+      ctx.moveTo(x - left, container.top - LINE_OVERLAP - top);
+      ctx.lineTo(x - left, container.bottom + LINE_OVERLAP - top);
       ctx.stroke();
     });
 
     // Lignes horizontales
     alignments.horizontal.forEach((y) => {
       ctx.beginPath();
-      ctx.moveTo(0, y - top);
-      ctx.lineTo(ctx.canvas.width, y - top);
+      ctx.moveTo(container.left - LINE_OVERLAP - left, y - top);
+      ctx.lineTo(container.right + LINE_OVERLAP - left, y - top);
       ctx.stroke();
     });
 
@@ -207,15 +211,30 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     if (!groundRef.current || !containerRef.current) return;
 
     if (areaOffsetRef.current) {
+      // move container
       const newLeft = clientX + areaOffsetRef.current.left;
       const newTop = clientY + areaOffsetRef.current.top;
+      const deltaX = newLeft - parseInt(containerRef.current.style.left);
+      const deltaY = newTop - parseInt(containerRef.current.style.top);
+
       containerRef.current.style.left = `${newLeft}px`;
       containerRef.current.style.top = `${newTop}px`;
       onSelectionMove(newLeft, newTop);
 
+      // Move alignment lines
+      verticalAxis.current = verticalAxis.current.map((x) => x + deltaX);
+      horizontalAxis.current = horizontalAxis.current.map((y) => y + deltaY);
+
+      // Redraw alignment lines
+      drawAlignmentLines({
+        vertical: verticalAxis.current,
+        horizontal: horizontalAxis.current,
+      });
+
       return;
     }
 
+    // select first corner of the container
     if (isSelectingRef.current && startPos.current) {
       const { left, top } = groundRef.current.getBoundingClientRect();
       const width = clientX - left - startPos.current.left;
@@ -242,7 +261,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
     const rect = containerRef.current.getBoundingClientRect();
     if (rect.width < 10 || rect.height < 10) {
-      // too small
+      // too small act like a end of selection
       onSelectionEnd(null);
       containerRef.current.style.display = "none";
       clearTemporaryCanvas();
@@ -348,6 +367,8 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           left: 0,
         };
         const elementIds = selectedGroup.elements.map((el) => el.id);
+
+        // console.log("horizontal move elementIds", elementIds);
         onHorizontalMove(mouseX - left, elementIds);
       }
       return true;
@@ -388,32 +409,53 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     if (selectedAlignmentLine.current === null) {
       return false;
     }
-    // Gérer le déplacement de la ligne d'alignement
-    const selectedGroup =
-      selectedAlignmentLine.current.type === "vertical"
-        ? alignmentGroups.current.vertical.find(
-            (group) =>
-              group.position === selectedAlignmentLine.current?.position
-          )
-        : alignmentGroups.current.horizontal.find(
-            (group) =>
-              group.position === selectedAlignmentLine.current?.position
-          );
 
-    if (selectedGroup) {
-      const { left, top } = groundRef.current?.getBoundingClientRect() || {
-        left: 0,
-        top: 0,
-      };
-      const elementIds = selectedGroup.elements.map((el) => el.id);
-      if (selectedAlignmentLine.current.type === "vertical") {
-        onHorizontalMove(mouseX - left, elementIds);
-      } else {
-        onVerticalMove(mouseY - top, elementIds);
+    const { left, top } = groundRef.current?.getBoundingClientRect() || {
+      left: 0,
+      top: 0,
+    };
+
+    if (selectedAlignmentLine.current.type === "vertical") {
+      const newPosition = mouseX;
+      const index = verticalAxis.current.findIndex(
+        (x) => x === selectedAlignmentLine.current?.position
+      );
+      if (index !== -1) {
+        verticalAxis.current[index] = newPosition;
+        const group = alignmentGroups.current.vertical[index];
+        if (group) {
+          group.position = newPosition; // Mettre à jour la position dans le groupe
+          const elementIds = group.elements.map((el) => el.id);
+          onHorizontalMove(newPosition - left, elementIds);
+        }
+        // Mettre à jour la position de la ligne sélectionnée
+        selectedAlignmentLine.current.position = newPosition;
       }
-      return true;
+    } else {
+      const newPosition = mouseY;
+      const index = horizontalAxis.current.findIndex(
+        (y) => y === selectedAlignmentLine.current?.position
+      );
+      if (index !== -1) {
+        horizontalAxis.current[index] = newPosition;
+        const group = alignmentGroups.current.horizontal[index];
+        if (group) {
+          group.position = newPosition; // Mettre à jour la position dans le groupe
+          const elementIds = group.elements.map((el) => el.id);
+          onVerticalMove(newPosition - top, elementIds);
+        }
+        // Mettre à jour la position de la ligne sélectionnée
+        selectedAlignmentLine.current.position = newPosition;
+      }
     }
-    return false;
+
+    // Redessiner les lignes d'alignement
+    drawAlignmentLines({
+      vertical: verticalAxis.current,
+      horizontal: horizontalAxis.current,
+    });
+
+    return true;
   };
 
   const cursorStyle = (mouseX: number, mouseY: number) => {
@@ -515,7 +557,6 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     if (ctx) {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
-    // Supprimez cette ligne : setShowAlignmentLines(false);
   };
 
   useEffect(() => {
@@ -621,13 +662,11 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         ref={backgroundCanvasRef}
         id="background-canvas"
         className="absolute top-0 left-0 w-full h-full border-gray-500 border-1"
-        // style={{ zIndex: 1 }}
       />
       <canvas
         ref={temporaryCanvasRef}
         id="temporary-canvas"
         className="absolute top-0 left-0 w-full h-full"
-        // style={{ zIndex: 2 }}
       />
       <div
         ref={containerRef}

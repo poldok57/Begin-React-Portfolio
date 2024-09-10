@@ -26,35 +26,36 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
   const height = cellSize * eleHeight;
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         handleClose();
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [handleClose]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
+  const handleStart = (clientX: number, clientY: number) => {
+    const startX = clientX;
+    const startY = clientY;
     setShowAddBtn(false);
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (moveX: number, moveY: number) => {
       const newWidth = Math.min(
         Math.max(
-          Math.round((eleWidth * cellSize + e.clientX - startX) / cellSize),
+          Math.round((eleWidth * cellSize + moveX - startX) / cellSize),
           1
         ),
         12
       );
       const newHeight = Math.min(
         Math.max(
-          Math.round((eleHeight * cellSize + e.clientY - startY) / cellSize),
+          Math.round((eleHeight * cellSize + moveY - startY) / cellSize),
           1
         ),
         12
@@ -65,14 +66,38 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
       });
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setShowAddBtn(true);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
     };
+
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      handleMove(touch.clientX, touch.clientY);
+    };
+
+    const handleMouseUp = handleEnd;
+    const handleTouchEnd = handleEnd;
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleStart(e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    handleStart(touch.clientX, touch.clientY);
   };
 
   return (
@@ -113,6 +138,7 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
             cursor: "se-resize",
           }}
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
         />
         {showAddBtn && (
           <button

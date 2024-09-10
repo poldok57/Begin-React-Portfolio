@@ -32,7 +32,6 @@ export const RoomCreat = () => {
   };
   const handleChangeSelected = (id: string, selected: boolean) => {
     if (selectedArea.current) {
-      // console.log("No change status ... area is selected");
       return;
     }
     updateTable(id, { selected });
@@ -41,8 +40,16 @@ export const RoomCreat = () => {
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
 
-  const moveTable = (id: string, position: Position) => {
-    updateTable(id, { position });
+  const moveTable = (
+    id: string,
+    position: Position,
+    offset: Position | null = null
+  ) => {
+    if (offset) {
+      updateTable(id, { position, offset });
+    } else {
+      updateTable(id, { position });
+    }
     const tableElement = document.getElementById(id);
     if (tableElement) {
       tableElement.style.left = `${position.left}px`;
@@ -131,8 +138,7 @@ export const RoomCreat = () => {
     upDateSelectedTables();
   };
 
-  const handleHorizontalMove = (left: number, listId: string[]) => {
-    // console.log("handleHorizontalMove", left, listId);
+  const handleHorizontalMove = (newLeft: number, listId: string[]) => {
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
       if (tableElement) {
@@ -141,16 +147,29 @@ export const RoomCreat = () => {
           return;
         }
         const { width } = tableElement.getBoundingClientRect();
+
+        const newLeftPosition = Math.round(newLeft - width / 2);
         const position = {
-          left: left - width / 2,
+          left: newLeftPosition,
           top: table.position?.top ?? 0,
         };
-        moveTable(id, position);
+        let newOffset: Position | null = null;
+        if (table.offset) {
+          newOffset = {
+            left: Math.round(
+              table.offset.left + newLeftPosition - (table.position?.left ?? 0)
+            ),
+            top: table.offset.top,
+          };
+        }
+
+        moveTable(id, position, newOffset);
       }
     });
+    upDateSelectedTables();
   };
 
-  const handleVerticalMove = (top: number, listId: string[]) => {
+  const handleVerticalMove = (newTop: number, listId: string[]) => {
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
       if (tableElement) {
@@ -159,13 +178,24 @@ export const RoomCreat = () => {
           return;
         }
         const { height } = tableElement.getBoundingClientRect();
+        const newTopPosition = Math.round(newTop - height / 2);
         const position = {
           left: table.position?.left ?? 0,
-          top: top - height / 2,
+          top: newTopPosition,
         };
-        moveTable(id, position);
+        let newOffset: Position | null = null;
+        if (table.offset) {
+          newOffset = {
+            left: table.offset.left,
+            top: Math.round(
+              table.offset.top + newTopPosition - (table.position?.top ?? 0)
+            ),
+          };
+        }
+        moveTable(id, position, newOffset);
       }
     });
+    upDateSelectedTables();
   };
 
   const handleRecordBackground = (
@@ -177,7 +207,6 @@ export const RoomCreat = () => {
       return;
     }
 
-    // console.log("rect:", selectedRect.current);
     const { left, top, width, height } = selectedRect.current;
 
     const background: DesignElement = {
@@ -196,8 +225,6 @@ export const RoomCreat = () => {
       opacity: opacity <= 1 ? opacity : opacity / 100,
     };
     addDesignElement(background);
-
-    console.log(color, name);
   };
 
   useEffect(() => {

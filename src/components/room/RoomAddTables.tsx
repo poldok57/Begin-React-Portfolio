@@ -6,7 +6,6 @@ import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import clsx from "clsx";
-import { LucideIcon } from "lucide-react";
 
 export const RoomAddTables = ({
   className,
