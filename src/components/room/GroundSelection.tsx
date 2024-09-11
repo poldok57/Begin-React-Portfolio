@@ -13,7 +13,10 @@ interface GroundSelectionProps {
   id: string;
   preSelection: Rectangle | null;
   children: React.ReactNode;
+  scale?: number;
 }
+
+const LINE_OVERLAP = 30;
 
 export const GroundSelection: React.FC<GroundSelectionProps> = ({
   onSelectionStart,
@@ -24,6 +27,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   id,
   preSelection,
   children,
+  scale = 1,
 }) => {
   const isSelectingRef = useRef(false);
   const startPos = useRef<Position | null>(null);
@@ -32,6 +36,10 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   const areaOffsetRef = useRef<Position | null>(null);
   const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const temporaryCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasSize = useRef<{ width: number; height: number }>({
+    width: 1000,
+    height: 600,
+  });
   const { designElements, selectedDesignElement } = useTableDataStore(
     (state) => state
   );
@@ -47,6 +55,17 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     horizontal: { position: number; elements: HTMLDivElement[] }[];
   }>({ vertical: [], horizontal: [] });
   const [showAlignmentLines, setShowAlignmentLines] = useState(false);
+
+  const isInOverlapContainer = (x: number, y: number) => {
+    if (!containerRef.current) return false;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    return (
+      x >= containerRect.left - LINE_OVERLAP &&
+      x <= containerRect.right + LINE_OVERLAP &&
+      y >= containerRect.top - LINE_OVERLAP &&
+      y <= containerRect.bottom + LINE_OVERLAP
+    );
+  };
 
   const handleStart = (clientX: number, clientY: number) => {
     if (!groundRef.current || !containerRef.current) return;
@@ -176,7 +195,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     };
 
     // get container rect
-    const LINE_OVERLAP = 30;
+
     const container = containerRef.current?.getBoundingClientRect();
 
     const ctx = temporaryCanvasRef.current.getContext("2d");
@@ -284,13 +303,19 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     tableSelectedRef.current = true;
   };
 
-  const resizeCanvas = () => {
+  const resizeCanvas = (scale: number) => {
     if (
       backgroundCanvasRef.current &&
       temporaryCanvasRef.current &&
       groundRef.current
     ) {
       const { width, height } = groundRef.current.getBoundingClientRect();
+      canvasSize.current = {
+        width: scale > 1 ? Math.round(scale * width) : width,
+        height: scale > 1 ? Math.round(scale * height) : height,
+      };
+
+      console.log("canvasSize", canvasSize.current);
 
       [backgroundCanvasRef.current, temporaryCanvasRef.current].forEach(
         (canvas) => {
@@ -311,27 +336,11 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     if (!ctx) {
       return;
     }
-    ctx.clearRect(
-      0,
-      0,
-      backgroundCanvasRef.current.width,
-      backgroundCanvasRef.current.height
-    );
-    const temporaryCtx = temporaryCanvasRef.current?.getContext("2d") || null;
 
-    if (temporaryCtx) {
-      temporaryCtx.clearRect(
-        0,
-        0,
-        temporaryCtx.canvas.width,
-        temporaryCtx.canvas.height
-      );
-    }
+    const temporaryCtx = temporaryCanvasRef.current?.getContext("2d") || null;
 
     const { left, top } = backgroundCanvasRef.current.getBoundingClientRect();
     const offset = { left, top };
-
-    // console.log("designElements: length", designElements.length);
 
     drawAllDesignElements({
       ctx,
@@ -339,10 +348,15 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       elements: designElements,
       offset,
       selectedElementId: selectedDesignElement,
+      scale,
     });
   };
 
   const clicOnLine = (mouseX: number, mouseY: number) => {
+    if (!isInOverlapContainer(mouseX, mouseY)) {
+      return false;
+    }
+
     // clic on a vertical line
     const clickedVerticalLine = verticalAxis.current.find(
       (x) => Math.abs(x - mouseX) <= 5
@@ -428,7 +442,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           const elementIds = group.elements.map((el) => el.id);
           onHorizontalMove(newPosition - left, elementIds);
         }
-        // Mettre à jour la position de la ligne sélectionnée
+        // update selectedAlignmentLine position
         selectedAlignmentLine.current.position = newPosition;
       }
     } else {
@@ -444,12 +458,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
           const elementIds = group.elements.map((el) => el.id);
           onVerticalMove(newPosition - top, elementIds);
         }
-        // Mettre à jour la position de la ligne sélectionnée
+        // update selectedAlignmentLine position
         selectedAlignmentLine.current.position = newPosition;
       }
     }
 
-    // Redessiner les lignes d'alignement
+    // redraw alignment lines
     drawAlignmentLines({
       vertical: verticalAxis.current,
       horizontal: horizontalAxis.current,
@@ -459,7 +473,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   };
 
   const cursorStyle = (mouseX: number, mouseY: number) => {
-    if (!temporaryCanvasRef.current || !groundRef.current) return;
+    if (
+      !temporaryCanvasRef.current ||
+      !groundRef.current ||
+      !containerRef.current
+    )
+      return;
 
     const isNearVerticalLine = verticalAxis.current.some(
       (x) => Math.abs(x - mouseX) <= 5
@@ -469,10 +488,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     );
 
     let cursorStyle = "default";
-    if (isNearVerticalLine) {
-      cursorStyle = "ew-resize";
-    } else if (isNearHorizontalLine) {
-      cursorStyle = "ns-resize";
+    if (isInOverlapContainer(mouseX, mouseY)) {
+      if (isNearVerticalLine) {
+        cursorStyle = "ew-resize";
+      } else if (isNearHorizontalLine) {
+        cursorStyle = "ns-resize";
+      }
     }
 
     if (cursorStyle !== temporaryCanvasRef.current.style.cursor) {
@@ -536,7 +557,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       }
     });
 
-    // Mettre à jour les axes et redessiner les lignes
+    // update axes and redraw alignment lines
     if (type === "vertical") {
       verticalAxis.current = newAxes;
     } else {
@@ -547,7 +568,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       horizontal: horizontalAxis.current,
     });
 
-    // Assurez-vous que showAlignmentLines reste true
+    // ensure showAlignmentLines is true
     setShowAlignmentLines(true);
   };
 
@@ -560,10 +581,11 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   };
 
   useEffect(() => {
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    return () => window.removeEventListener("resize", resizeCanvas);
-  }, []);
+    resizeCanvas(scale);
+    window.addEventListener("resize", () => resizeCanvas(scale));
+    return () =>
+      window.removeEventListener("resize", () => resizeCanvas(scale));
+  }, [scale]);
 
   useEffect(() => {
     if (!backgroundCanvasRef.current) {
@@ -571,7 +593,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     }
 
     drawElementsOnCanvas();
-  }, [designElements, selectedDesignElement]);
+  }, [designElements, selectedDesignElement, scale]);
 
   useEffect(() => {
     if (!preSelection || !containerRef.current) {
@@ -621,6 +643,8 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         if (containerRef.current) {
           containerRef.current.style.display = "none";
         }
+        selectedAlignmentLine.current = null;
+        setShowAlignmentLines(false);
         clearTemporaryCanvas();
       }
     };
@@ -657,10 +681,16 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   };
 
   return (
-    <div ref={groundRef} id={id} className="relative w-full h-full">
+    <div
+      ref={groundRef}
+      id={id}
+      className="overflow-auto relative w-full h-full"
+    >
       <canvas
         ref={backgroundCanvasRef}
         id="background-canvas"
+        width={canvasSize.current.width}
+        height={canvasSize.current.height}
         className="absolute top-0 left-0 w-full h-full border-gray-500 border-1"
       />
       <canvas

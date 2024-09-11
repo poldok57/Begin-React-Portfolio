@@ -74,8 +74,13 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
       document.removeEventListener("touchend", handleTouchEnd);
     };
 
-    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      handleMove(e.clientX, e.clientY);
+    };
+
     const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
       const touch = e.touches[0];
       handleMove(touch.clientX, touch.clientY);
     };

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { GroupCreat } from "./GroupCreat";
 import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
 import { DesignElement, DesignType, TableData } from "./types";
@@ -14,6 +14,7 @@ export const GROUND_ID = "back-ground";
 const MARGIN = 10;
 
 const RoomTableWP = withMousePosition(RoomTable);
+export const RoomMenuWP = withMousePosition(RoomMenu);
 
 export const RoomCreat = () => {
   const { updateTable, deleteTable, addDesignElement, getTable } =
@@ -24,12 +25,30 @@ export const RoomCreat = () => {
   const handleDelete = (id: string) => {
     deleteTable(id);
   };
+
+  const scaleRef = useRef<number>(1);
+
+  const handleScaleChange = useCallback((newScale: number) => {
+    scaleRef.current = newScale;
+    // Forcer une mise à jour du composant
+    forceUpdate();
+  }, []);
+
+  // Fonction pour forcer une mise à jour du composant
+  const [, updateState] = useState<object>();
+  const forceUpdate = useCallback(() => updateState({}), []);
+
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const selectedRect = useRef<Rectangle | null>(null);
 
   const handleMove = (id: string, position: Position) => {
-    updateTable(id, { position });
+    const scalePosition = {
+      left: position.left / scaleRef.current,
+      top: position.top / scaleRef.current,
+    };
+    updateTable(id, { position: scalePosition });
   };
+
   const handleChangeSelected = (id: string, selected: boolean) => {
     if (selectedArea.current) {
       return;
@@ -45,10 +64,18 @@ export const RoomCreat = () => {
     position: Position,
     offset: Position | null = null
   ) => {
+    const scalePosition = {
+      left: position.left / scaleRef.current,
+      top: position.top / scaleRef.current,
+    };
+    const scaleOffset = {
+      left: offset?.left ?? 0 / scaleRef.current,
+      top: offset?.top ?? 0 / scaleRef.current,
+    };
     if (offset) {
-      updateTable(id, { position, offset });
+      updateTable(id, { position: scalePosition, offset: scaleOffset });
     } else {
-      updateTable(id, { position });
+      updateTable(id, { position: scalePosition });
     }
     const tableElement = document.getElementById(id);
     if (tableElement) {
@@ -151,7 +178,7 @@ export const RoomCreat = () => {
         const newLeftPosition = Math.round(newLeft - width / 2);
         const position = {
           left: newLeftPosition,
-          top: table.position?.top ?? 0,
+          top: (table.position?.top ?? 0) * scaleRef.current,
         };
         let newOffset: Position | null = null;
         if (table.offset) {
@@ -180,7 +207,7 @@ export const RoomCreat = () => {
         const { height } = tableElement.getBoundingClientRect();
         const newTopPosition = Math.round(newTop - height / 2);
         const position = {
-          left: table.position?.left ?? 0,
+          left: (table.position?.left ?? 0) * scaleRef.current,
           top: newTopPosition,
         };
         let newOffset: Position | null = null;
@@ -249,11 +276,20 @@ export const RoomCreat = () => {
     >
       <div className="flex flex-row w-full">
         <GroupCreat />
-        <RoomMenu
+        <RoomMenuWP
+          className="absolute top-0 left-0 z-10"
+          withTitleBar={true}
+          titleText="Room config"
+          titleHidden={false}
+          titleBackground={"#cc66ff"}
+          withMinimize={true}
+          draggable={true}
           btnSize={btnSize}
           reccordBackround={handleRecordBackground}
           addSelectedRect={addSelectedRect}
           resetSelectedTables={resetSelectedTables}
+          scale={scaleRef.current}
+          setScale={handleScaleChange}
         />
         <GroundSelection
           id={GROUND_ID}
@@ -263,10 +299,13 @@ export const RoomCreat = () => {
           onHorizontalMove={handleHorizontalMove}
           onVerticalMove={handleVerticalMove}
           preSelection={preSelection}
+          scale={scaleRef.current}
         >
           {tables.map((table, index) => {
-            const left = table?.position?.left ?? 50 + index * 10;
-            const top = table?.position?.top ?? 50 + index * 10;
+            const left =
+              (table?.position?.left ?? 50 + index * 10) * scaleRef.current;
+            const top =
+              (table?.position?.top ?? 50 + index * 10) * scaleRef.current;
             return (
               <RoomTableWP
                 key={table.id}
@@ -286,6 +325,7 @@ export const RoomCreat = () => {
                   left: `${left}px`,
                   top: `${top}px`,
                 }}
+                scale={scaleRef.current}
               />
             );
           })}

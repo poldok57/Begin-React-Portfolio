@@ -215,7 +215,7 @@ export const GroupCreat = () => {
               </>
             )}
             <div className="justify-between items-center card-actions">
-              {currentId ? (
+              {currentId && (
                 <DeleteWithConfirm
                   className="p-2 m-1 btn btn-sm"
                   position="right"
@@ -229,8 +229,6 @@ export const GroupCreat = () => {
                     <Trash2 size={btnSize} />
                   </button>
                 </DeleteWithConfirm>
-              ) : (
-                <></>
               )}
 
               <button className="btn btn-primary" type="submit">

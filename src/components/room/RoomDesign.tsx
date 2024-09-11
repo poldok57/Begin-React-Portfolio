@@ -5,15 +5,16 @@ import { X } from "lucide-react";
 import { useTableDataStore } from "./stores/tables";
 import { ModifyColor } from "./ModifyColor";
 import clsx from "clsx";
-import { isTouchDevice } from "@/lib/utils/device";
 
 interface RoomDesignProps {
   className: string;
+  isTouch: boolean;
   reccordBackround: (color: string, name: string, opacity: number) => void;
 }
 
 export const RoomDesign: React.FC<RoomDesignProps> = ({
   className,
+  isTouch,
   reccordBackround,
 }) => {
   const {
@@ -28,7 +29,10 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   const [name, setName] = useState("");
   const [opacity, setOpacity] = useState(50);
   const ref = useRef<HTMLDivElement>(null);
-  const isTouch = isTouchDevice();
+  const [menuPosition, setMenuPosition] = useState<React.CSSProperties>({
+    top: "100%",
+  });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
@@ -41,6 +45,26 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (!ref.current) return;
+      const rectDiv = ref.current.getBoundingClientRect();
+      const menu = document.getElementById("menu-design");
+      if (menu) {
+        const rect = menu.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight) {
+          setMenuPosition({
+            top: "auto",
+            left: "20%",
+            bottom: `${rectDiv.top - window.innerHeight + 60}px`,
+          });
+        } else {
+          setMenuPosition({ top: "100%", bottom: "auto" });
+        }
+      }
+    }
+  }, [isOpen]);
 
   const handleBackgroundColorChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -57,7 +81,11 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
     <div className={clsx("relative", className)} ref={ref}>
       <Button onClick={() => setIsOpen(!isOpen)}>Room design</Button>
       {isOpen && (
-        <div className="absolute left-4 top-full z-40 p-2 mt-2 w-56 bg-white rounded-lg shadow-lg">
+        <div
+          id="menu-design"
+          className="absolute left-4 z-40 p-2 mt-2 w-56 bg-white rounded-lg shadow-lg"
+          style={menuPosition}
+        >
           <div className="flex flex-col gap-3 mb-5 border-b-2 border-base-300">
             <h2 className="justify-center w-full text-lg font-bold">
               Room design
@@ -134,7 +162,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                       onClick={() => {
                         deleteDesignElement(element.id);
                         if (selectedDesignElement === element.id) {
-                          setSelectedDesignElement(null);
+                          setSelectedDesignElement("");
                         }
                       }}
                     >

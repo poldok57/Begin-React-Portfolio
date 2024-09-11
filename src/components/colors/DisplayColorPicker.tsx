@@ -85,6 +85,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
         "translate-x-3/4 -translate-y-1/2"
       )}
       ref={pickerRef}
+      onMouseOver={(e) => e.stopPropagation()}
     >
       <div className="flex flex-row gap-2 justify-between items-center w-full">
         <div className="flex flex-grow justify-center">

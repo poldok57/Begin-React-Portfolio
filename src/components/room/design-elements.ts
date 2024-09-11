@@ -4,7 +4,8 @@ import { DesignElement, DesignType } from "./types";
 const drawDesignElement = (
   ctx: CanvasRenderingContext2D,
   element: DesignElement,
-  offset: Position
+  offset: Position,
+  scale: number
 ) => {
   ctx.globalAlpha = element.opacity || 1;
   switch (element.type) {
@@ -19,19 +20,19 @@ const drawDesignElement = (
       }
       ctx.fillStyle = element.color;
       ctx.fillRect(
-        element.rect.left - offset.left,
-        element.rect.top - offset.top,
-        element.rect.width,
-        element.rect.height
+        (element.rect.left - offset.left) * scale,
+        (element.rect.top - offset.top) * scale,
+        element.rect.width * scale,
+        element.rect.height * scale
       );
       // Ajouter un bord noir
       ctx.strokeStyle = "#888888";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        element.rect.left - offset.left,
-        element.rect.top - offset.top,
-        element.rect.width,
-        element.rect.height
+        (element.rect.left - offset.left) * scale,
+        (element.rect.top - offset.top) * scale,
+        element.rect.width * scale,
+        element.rect.height * scale
       );
       break;
     case DesignType.line:
@@ -41,8 +42,8 @@ const drawDesignElement = (
       ctx.strokeStyle = element.color;
       ctx.lineWidth = element.rect.width;
       ctx.beginPath();
-      ctx.moveTo(element.point1.x, element.point1.y);
-      ctx.lineTo(element.point2.x, element.point2.y);
+      ctx.moveTo(element.point1.x * scale, element.point1.y * scale);
+      ctx.lineTo(element.point2.x * scale, element.point2.y * scale);
       ctx.stroke();
       break;
     case DesignType.arc:
@@ -52,12 +53,12 @@ const drawDesignElement = (
       ctx.strokeStyle = element.color;
       ctx.lineWidth = element.rect.width;
       ctx.beginPath();
-      ctx.moveTo(element.point1.x, element.point1.y);
+      ctx.moveTo(element.point1.x * scale, element.point1.y * scale);
       ctx.quadraticCurveTo(
-        element.point2.x,
-        element.point2.y,
-        element.point3.x,
-        element.point3.y
+        element.point2.x * scale,
+        element.point2.y * scale,
+        element.point3.x * scale,
+        element.point3.y * scale
       );
       ctx.stroke();
       break;
@@ -67,7 +68,8 @@ const drawDesignElement = (
 const hightLightSelectedElement = (
   ctx: CanvasRenderingContext2D,
   element: DesignElement,
-  offset: Position
+  offset: Position,
+  scale: number
 ) => {
   const margin = 5;
   // Dessiner un trait pointillé avec une marge extérieure
@@ -88,10 +90,10 @@ const hightLightSelectedElement = (
       ctx.strokeStyle = "red";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        element.rect.left - offset.left - margin,
-        element.rect.top - offset.top - margin,
-        element.rect.width + 2 * margin,
-        element.rect.height + 2 * margin
+        (element.rect.left - offset.left) * scale - margin,
+        (element.rect.top - offset.top) * scale - margin,
+        (element.rect.width + 2 * margin) * scale,
+        (element.rect.height + 2 * margin) * scale
       );
       ctx.setLineDash([]); // Réinitialiser le style de ligne
       break;
@@ -107,8 +109,8 @@ const hightLightSelectedElement = (
         ? element.lineWidth + 2 * margin
         : 1 + 2 * margin;
       ctx.beginPath();
-      ctx.moveTo(element.point1.x, element.point1.y);
-      ctx.lineTo(element.point2.x, element.point2.y);
+      ctx.moveTo(element.point1.x * scale, element.point1.y * scale);
+      ctx.lineTo(element.point2.x * scale, element.point2.y * scale);
       ctx.stroke();
       break;
     case DesignType.arc:
@@ -124,10 +126,10 @@ const hightLightSelectedElement = (
       ctx.beginPath();
       ctx.moveTo(element.point1.x, element.point1.y);
       ctx.quadraticCurveTo(
-        element.point2.x,
-        element.point2.y,
-        element.point3.x,
-        element.point3.y
+        element.point2.x * scale,
+        element.point2.y * scale,
+        element.point3.x * scale,
+        element.point3.y * scale
       );
       ctx.stroke();
       break;
@@ -140,6 +142,7 @@ interface DrawAllDesignElementsProps {
   elements: DesignElement[];
   offset: Position;
   selectedElementId: string | null;
+  scale?: number;
 }
 
 export const drawAllDesignElements = ({
@@ -148,11 +151,22 @@ export const drawAllDesignElements = ({
   offset,
   selectedElementId,
   temporaryCtx,
+  scale = 1,
 }: DrawAllDesignElementsProps) => {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  if (temporaryCtx) {
+    temporaryCtx.clearRect(
+      0,
+      0,
+      temporaryCtx.canvas.width,
+      temporaryCtx.canvas.height
+    );
+  }
+
   elements.forEach((element) => {
-    drawDesignElement(ctx, element, offset);
+    drawDesignElement(ctx, element, offset, scale);
     if (element.id === selectedElementId) {
-      hightLightSelectedElement(temporaryCtx ?? ctx, element, offset);
+      hightLightSelectedElement(temporaryCtx ?? ctx, element, offset, scale);
     }
   });
 };

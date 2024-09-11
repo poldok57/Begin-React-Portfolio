@@ -2,13 +2,17 @@ import React from "react";
 import { RoomAddTables } from "./RoomAddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
-import { withMousePosition } from "../windows/withMousePosition";
 import { Rectangle } from "@/lib/canvas/types";
+import { RangeInput } from "@/components/atom/RangeInput";
+import { isTouchDevice } from "@/lib/utils/device";
+
 interface RoomMenuProps {
   btnSize: number;
   reccordBackround: (color: string, name: string, opacity: number) => void;
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
+  scale: number;
+  setScale: (scale: number) => void;
 }
 
 export const RoomMenu: React.FC<RoomMenuProps> = ({
@@ -16,9 +20,15 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   reccordBackround,
   addSelectedRect,
   resetSelectedTables,
+  scale,
+  setScale,
 }) => {
+  const isTouch = isTouchDevice();
   return (
-    <div className="flex flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300">
+    <div
+      className="flex flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
+      onMouseOver={(e) => e.stopPropagation()}
+    >
       <RoomAddTables
         className="flex flex-col p-1 w-full rounded-lg"
         addSelectedRect={addSelectedRect}
@@ -31,9 +41,19 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       <RoomDesign
         className="flex flex-col p-1 w-full rounded-lg"
         reccordBackround={reccordBackround}
+        isTouch={isTouch}
+      />
+      <RangeInput
+        id="scale"
+        label="Scale"
+        value={scale}
+        min="0.4"
+        max="2"
+        step="0.1"
+        className="w-full h-4"
+        isTouch={isTouch}
+        onChange={(value: number) => setScale(value)}
       />
     </div>
   );
 };
-
-export const RoomMenuWP = withMousePosition(RoomMenu);

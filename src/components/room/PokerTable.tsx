@@ -27,8 +27,8 @@ const SvgWrapper = styled.svg<SvgWrapperProps>`
 export const PokerTable: React.FC<TableProps> = ({
   size = 300,
   rotation = 0,
-  borderColor = "black",
-  fillColor = "green",
+  borderColor = "#404040",
+  fillColor = "#aaaaaa",
   tableNumber = "1",
   tableText = "Table",
   numberColor = "white",
@@ -73,7 +73,7 @@ export const PokerTable: React.FC<TableProps> = ({
         setAdjustedFontSize(subTextSize);
       }
     }
-  }, [tableText, subTextSize, strokeWidth, longSide]);
+  }, [tableText, subTextSize, strokeWidth, size, longSide]);
 
   return (
     <SvgWrapper

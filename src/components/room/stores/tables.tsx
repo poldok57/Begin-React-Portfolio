@@ -16,6 +16,7 @@ interface TableDataState {
   rotationSelectedTable: (angle: number) => void;
   sizeSelectedTable: (size: number) => void;
   deleteTable: (id: string) => void;
+  deleteSelectedTable: () => void;
   addDesignElement: (designElement: DesignElement) => void;
   deleteDesignElement: (id: string) => void;
   setSelectedDesignElement: (id: string | null) => void;
@@ -85,6 +86,10 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
   deleteTable: (id) =>
     set((state) => ({
       tables: state.tables.filter((table) => table.id !== id),
+    })),
+  deleteSelectedTable: () =>
+    set((state) => ({
+      tables: state.tables.filter((table) => !table.selected),
     })),
   addDesignElement: (designElement: DesignElement) => {
     const newDesignElement = {

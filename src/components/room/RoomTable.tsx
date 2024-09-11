@@ -8,6 +8,7 @@ import clsx from "clsx";
 interface RoomTableProps {
   table: TableData;
   btnSize: number;
+  scale?: number;
   onDelete: (id: string) => void;
   changeSelected: (id: string, selected: boolean) => void;
 }
@@ -15,6 +16,7 @@ interface RoomTableProps {
 export const RoomTable = ({
   table,
   btnSize,
+  scale = 1,
   onDelete,
   changeSelected,
 }: RoomTableProps) => {
@@ -32,6 +34,12 @@ export const RoomTable = ({
     ...(group ? group.colors : {}),
   };
 
+  const [localSize, setLocalSize] = React.useState(table.size ?? 100);
+
+  React.useEffect(() => {
+    setLocalSize((table.size ?? 100) * scale);
+  }, [scale, table.size]);
+
   return (
     <div
       ref={ref}
@@ -45,7 +53,7 @@ export const RoomTable = ({
       }}
     >
       <PokerTable
-        size={table.size ?? 100}
+        size={localSize}
         rotation={table.rotation ?? 0}
         tableNumber={table.tableNumber ?? ""}
         tableText={table.tableText ?? ""}
