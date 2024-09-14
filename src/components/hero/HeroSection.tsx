@@ -26,9 +26,9 @@ export const HeroSection = () => {
     <div className="flex relative flex-col m-auto w-full max-w-4xl">
       <ImageResizable
         className="top-0 right-0 h-fit md:absolute"
-        withToggleLock={false}
+        withToggleLock={true}
         resizable={true}
-        draggable={true}
+        draggable={false}
         minWidth={120}
         minHeight={120}
         width={300}

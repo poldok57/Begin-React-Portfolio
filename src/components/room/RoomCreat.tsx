@@ -5,68 +5,18 @@ import { DesignElement, DesignType, TableData } from "./types";
 import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { withMousePosition } from "@/components/windows/withMousePosition";
-import { RoomTable } from "./RoomTable";
 import { RoomMenu } from "./RoomMenu";
 import { GroundSelection } from "./GroundSelection";
 import { RoomProvider, useScale } from "./RoomProvider";
+import { ListTables } from "./ListTables";
 
 export const GROUND_ID = "back-ground";
 export const CONTAINER_ID = "ground-container";
 
 const MARGIN = 10;
 
-const RoomTableWP = withMousePosition(RoomTable);
 const RoomMenuWP = withMousePosition(RoomMenu);
 const GroupCreatWP = withMousePosition(GroupCreat);
-
-interface ListTablesProps {
-  tables: TableData[];
-  btnSize: number;
-  handleMove: (id: string, position: Position) => void;
-}
-
-const ListTables = React.memo(
-  ({ tables, btnSize, handleMove }: ListTablesProps) => {
-    const { scale } = useScale();
-    const { updateTable, deleteTable } = useTableDataStore((state) => state);
-
-    const handleChangeSelected = useCallback(
-      (id: string, selected: boolean) => {
-        updateTable(id, { selected });
-      },
-      [updateTable]
-    );
-
-    return tables.map((table: TableData) => {
-      const left = table.position.left * scale;
-      const top = table.position.top * scale;
-      return (
-        <RoomTableWP
-          key={table.id}
-          id={table.id}
-          table={table}
-          btnSize={btnSize}
-          onDelete={deleteTable}
-          onMove={handleMove}
-          changeSelected={handleChangeSelected}
-          draggable={true}
-          trace={false}
-          withTitleBar={false}
-          withToggleLock={false}
-          titleText={table.tableText}
-          style={{
-            position: "absolute",
-            left: `${left}px`,
-            top: `${top}px`,
-          }}
-          scale={scale}
-        />
-      );
-    });
-  }
-);
-
-ListTables.displayName = "ListTables";
 
 export const RoomCreatTools = () => {
   const { updateTable, addDesignElement, getTable } = useTableDataStore(
@@ -76,19 +26,6 @@ export const RoomCreatTools = () => {
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
   const { scale, getScale } = useScale();
-
-  const handleMove = useCallback(
-    (id: string, position: Position) => {
-      const currentScale = getScale();
-      console.log("handleMove", id, position, "scale:", currentScale);
-      const scalePosition = {
-        left: position.left / currentScale,
-        top: position.top / currentScale,
-      };
-      updateTable(id, { position: scalePosition });
-    },
-    [updateTable, getScale, scale]
-  );
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const selectedRect = useRef<Rectangle | null>(null);
@@ -328,6 +265,10 @@ export const RoomCreatTools = () => {
     addDesignElement(background);
   };
 
+  // const handleTableActivation = (id: string) => {
+  //   setActiveTable(id === activeTable ? null : id);
+  // };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -364,7 +305,7 @@ export const RoomCreatTools = () => {
           draggable={true}
         />
         <RoomMenuWP
-          className="absolute left-0 bottom-10 z-10"
+          className="absolute top-2 left-40 z-10"
           withTitleBar={true}
           titleText="Room config"
           titleHidden={false}
@@ -389,7 +330,8 @@ export const RoomCreatTools = () => {
           <ListTables
             tables={tables}
             btnSize={btnSize}
-            handleMove={handleMove}
+            // activeTable={activeTable}
+            // onTableActivation={handleTableActivation}
           />
         </GroundSelection>
       </div>

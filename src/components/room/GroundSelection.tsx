@@ -361,7 +361,6 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       scrollTop: 0,
     };
     const offset = { left: left + scrollLeft, top: top + scrollTop };
-    console.log("offset from ground", offset);
 
     drawAllDesignElements({
       ctx,
@@ -388,6 +387,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         type: "vertical",
         position: clickedVerticalLine,
       };
+      moveLine(mouseX, mouseY);
       return true;
     }
 
@@ -402,13 +402,14 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         type: "horizontal",
         position: clickedHorizontalLine,
       };
+      moveLine(mouseX, mouseY);
       return true;
     }
     return false;
   };
 
   const handleMouseDown = (e: MouseEvent) => {
-    e.preventDefault();
+    // e.preventDefault();
 
     // Tenir compte du scroll de la fenêtre pour calculer la position de la souris
     const clientX = e.clientX;
@@ -423,49 +424,56 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     handleStart(clientX, clientY);
   };
 
+  const getOffset = (axe: "x" | "y") => {
+    if (!groundRef.current) {
+      return 0;
+    }
+    if (axe === "x") {
+      return (
+        groundRef.current.scrollLeft -
+        groundRef.current.getBoundingClientRect().left
+      );
+    }
+    return (
+      groundRef.current.scrollTop -
+      groundRef.current.getBoundingClientRect().top
+    );
+  };
+
   const moveLine = (mouseX: number, mouseY: number) => {
     if (selectedAlignmentLine.current === null) {
       return false;
     }
 
-    const { left, top } = groundRef.current?.getBoundingClientRect() || {
-      left: 0,
-      top: 0,
-    };
-    const scrollX = groundRef.current?.scrollLeft || 0;
-    const scrollY = groundRef.current?.scrollTop || 0;
-
     if (selectedAlignmentLine.current.type === "vertical") {
-      const newPosition = mouseX;
       const index = verticalAxis.current.findIndex(
         (x) => x === selectedAlignmentLine.current?.position
       );
       if (index !== -1) {
-        verticalAxis.current[index] = newPosition;
+        verticalAxis.current[index] = mouseX;
         const group = alignmentGroups.current.vertical[index];
         if (group) {
-          group.position = newPosition; // Update position in group
+          group.position = mouseX; // Update position in group
           const elementIds = group.elements.map((el) => el.id);
-          onHorizontalMove(newPosition + scrollX - left, elementIds);
+          onHorizontalMove(mouseX + getOffset("x"), elementIds);
         }
         // update selectedAlignmentLine position
-        selectedAlignmentLine.current.position = newPosition;
+        selectedAlignmentLine.current.position = mouseX;
       }
     } else {
-      const newPosition = mouseY;
       const index = horizontalAxis.current.findIndex(
         (y) => y === selectedAlignmentLine.current?.position
       );
       if (index !== -1) {
-        horizontalAxis.current[index] = newPosition;
+        horizontalAxis.current[index] = mouseY;
         const group = alignmentGroups.current.horizontal[index];
         if (group) {
-          group.position = newPosition; // Mettre à jour la position dans le groupe
+          group.position = mouseY; // Mettre à jour la position dans le groupe
           const elementIds = group.elements.map((el) => el.id);
-          onVerticalMove(newPosition + scrollY - top, elementIds);
+          onVerticalMove(mouseY + getOffset("y"), elementIds);
         }
         // update selectedAlignmentLine position
-        selectedAlignmentLine.current.position = newPosition;
+        selectedAlignmentLine.current.position = mouseY;
       }
     }
 
@@ -639,7 +647,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
-      e.preventDefault();
+      // e.preventDefault();
       if (clicOnLine(touch.clientX, touch.clientY)) {
         return;
       }
@@ -648,7 +656,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
     const handleTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
-      e.preventDefault();
+      // e.preventDefault();
       if (moveLine(touch.clientX, touch.clientY)) {
         return;
       }

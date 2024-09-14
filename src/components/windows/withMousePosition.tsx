@@ -375,7 +375,6 @@ export function withMousePosition<P extends object>(
             left: component.offsetLeft,
             top: component.offsetTop,
           });
-
           event.stopPropagation();
         }
       };
@@ -390,8 +389,6 @@ export function withMousePosition<P extends object>(
             `[${WrappedComponent.name}] mouseDown, isLocked: ${isLocked}`
           );
         }
-        event.preventDefault();
-        event.stopPropagation();
         /**
          * if where is a title bar, we need to move the component
          * when the mouse is down on the title bar

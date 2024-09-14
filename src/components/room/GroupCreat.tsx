@@ -3,16 +3,11 @@ import { GroupTable, TableColors, TableSettings } from "./types";
 import { ShowTable } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
-import {
-  Palette,
-  ArrowBigUpDash,
-  Trash2,
-  Pencil,
-  PencilOff,
-} from "lucide-react";
+import { useTableDataStore } from "./stores/tables";
+import { Palette, ArrowBigUpDash, Trash2, Pencil } from "lucide-react";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { ModifyColor } from "./ModifyColor";
-import { PokerTable } from "./PokerTable";
+import { PokerTable } from "./svg/PokerTable";
 import clsx from "clsx";
 
 const DEFAULT_COLORS = {
@@ -24,6 +19,7 @@ const DEFAULT_COLORS = {
 
 export const GroupCreat = () => {
   const { addGroup, updateGroup, deleteGroup, groups } = useGroupStore();
+  const { updateSelectedTable, countSelectedTables } = useTableDataStore();
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
@@ -74,6 +70,7 @@ export const GroupCreat = () => {
     if (selectId === "new") {
       setCurrentId(null);
       resetTable();
+      setEditing(true);
       setShowColors(true);
       return;
     }
@@ -151,7 +148,7 @@ export const GroupCreat = () => {
           </select>
         </p>
         {!editing ? (
-          <div className="flex relative justify-center p-2 h-fit">
+          <div className="flex relative flex-col justify-center items-center p-2 mx-auto mt-1 w-full rounded-lg border border-opacity-50 h-fit border-secondary">
             <PokerTable
               size={120}
               rotation={0}
@@ -160,8 +157,15 @@ export const GroupCreat = () => {
               tableNumber="88"
               tableText={title}
             />
+
             <button
-              className="absolute right-2 bottom-2 btn btn-circle btn-sm"
+              className="mt-4 btn btn-sm"
+              onClick={() => updateSelectedTable({ groupId: currentId })}
+            >
+              Selected tables: {countSelectedTables()}
+            </button>
+            <button
+              className="absolute top-2 right-2 btn btn-circle btn-sm"
               onClick={() => setEditing(true)}
             >
               <Pencil size={btnSize} />
@@ -169,22 +173,16 @@ export const GroupCreat = () => {
           </div>
         ) : (
           <>
-            <div className="relative p-2 h-fit">
+            <div className="relative p-2 mt-3 h-fit">
               <ShowTable
                 colors={colors}
                 title={title}
                 settings={settings}
                 saveSettings={saveSettings}
-                resetTable={resetTable}
+                resetTable={currentId ? undefined : resetTable}
                 isTouch={isTouch}
-                editing={editing}
+                onClose={() => setEditing(false)}
               />
-              <button
-                className="absolute right-2 bottom-2 btn btn-circle btn-sm"
-                onClick={() => setEditing(false)}
-              >
-                <PencilOff size={btnSize} />
-              </button>
             </div>
             <div className="p-2 rounded-lg border shadow-lg border-primary bg-paper">
               <form className="space-y-2 min-w-72" onSubmit={handleSubmit}>

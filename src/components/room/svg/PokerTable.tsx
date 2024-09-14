@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { SVGProps } from "react";
-import { TableProps } from "./types";
+import { TableProps } from "../types";
 
 // Animation flash
 const flashAnimation = keyframes`

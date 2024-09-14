@@ -233,65 +233,82 @@ export const DialogContent: React.FC<DialogContentProps> = ({
   const ref = useRef(null);
   const open = true; //dialogRef.current?.open;
 
-  const handleClickOutside = (e: Event) => {
-    if (!(e instanceof MouseEvent)) return;
-    const element: HTMLElement | null = ref.current as HTMLElement | null;
-    if (element && !element.contains(e.target as Node)) {
-      if (dialogRef.current) {
-        dialogRef.current.close();
-      }
-    }
-  };
-
-  useEventListener({
-    isEnabled: open,
-    type: "mousedown",
-    handler: handleClickOutside,
-  });
-
-  useEventListener({
-    isEnabled: open,
-    type: "touchstart",
-    handler: handleClickOutside,
-  });
-
-  useEventListener({
-    isEnabled: open,
-    type: "keydown",
-    handler: (event: Event) => {
-      if (event instanceof KeyboardEvent && event.key === "Escape") {
+  useEffect(() => {
+    if (!dialogRef.current) return;
+    // not necessary on modal
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         if (dialogRef.current) {
           dialogRef.current.close();
+          console.log("Escape & close");
         }
       }
-    },
-  });
+    };
+    const handleClickOutside = (e: Event) => {
+      console.log("handleClickOutside");
+      if (!(e instanceof MouseEvent)) return;
+      const element: HTMLElement | null = ref.current as HTMLElement | null;
+      if (element && !element.contains(e.target as Node)) {
+        if (dialogRef.current) {
+          dialogRef.current.close();
+          console.log("clic & close");
+        }
+      }
+    };
+
+    const handleClick = (event: Event) => {
+      if (dialogRef.current && dialogRef.current === event.target) {
+        dialogRef.current.close();
+      }
+    };
+
+    if (open && !blur) {
+      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    if (open && blur) {
+      dialogRef.current.addEventListener("mousedown", handleClick);
+      dialogRef.current.addEventListener("touchstart", handleClick);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      dialogRef.current?.removeEventListener("mousedown", handleClick);
+    };
+  }, [open, dialogRef]);
 
   useFocusTrap(ref, open || false);
 
   return (
-    <dialog
-      ref={dialogRef}
-      className={clsx(
-        "shadow-xl animate-in fade-in-50",
-        {
-          "relative -translate-y-full": position === "over",
-          relative: position === "under",
-          modal: blur,
-        },
-        className
-      )}
-    >
-      {className ? (
-        <div ref={ref} className="card">
-          {children}
-        </div>
-      ) : (
-        <div ref={ref} className="card card-body">
-          {children}
-        </div>
-      )}
-    </dialog>
+    <>
+      <div className="modal-backdrop"></div>
+
+      <dialog
+        ref={dialogRef}
+        className={clsx(
+          "shadow-xl animate-in fade-in-50",
+          {
+            "relative -translate-y-full": position === "over",
+            relative: position === "under",
+            modal: blur,
+          },
+          className
+        )}
+      >
+        {className ? (
+          <div ref={ref} className="card">
+            {children}
+          </div>
+        ) : (
+          <div ref={ref} className="card card-body">
+            {children}
+          </div>
+        )}
+      </dialog>
+    </>
   );
 };
 

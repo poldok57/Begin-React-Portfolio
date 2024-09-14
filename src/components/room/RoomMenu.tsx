@@ -27,6 +27,8 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
     <div
       className="flex flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
       onMouseOver={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => e.stopPropagation()}
+      onMouseLeave={(e) => e.stopPropagation()}
     >
       <RoomAddTables
         className="flex flex-col p-1 w-full rounded-lg"
@@ -36,6 +38,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       <UpdateSelectedTables
         className="flex flex-col p-1 w-full rounded-lg"
         btnSize={btnSize}
+        isTouch={isTouch}
       />
       <RoomDesign
         className="flex flex-col p-1 w-full rounded-lg"

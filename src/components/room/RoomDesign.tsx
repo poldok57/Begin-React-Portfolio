@@ -36,19 +36,6 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   });
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
     if (isOpen) {
       if (!ref.current) return;
       const rectDiv = ref.current.getBoundingClientRect();
@@ -88,14 +75,32 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
           className="absolute left-4 z-40 p-2 mt-2 w-56 bg-white rounded-lg shadow-lg"
           style={menuPosition}
         >
+          <button
+            className="absolute top-0 right-0 btn btn-circle btn-sm"
+            onClick={() => setIsOpen(false)}
+          >
+            <X size={12} />
+          </button>
           <div className="flex flex-col gap-3 mb-5 border-b-2 border-base-300">
             <h2 className="justify-center w-full text-lg font-bold">
               Room design
             </h2>
-
             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
               <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
                 <legend>Background</legend>
+                <ModifyColor
+                  label="Color:"
+                  name="background"
+                  defaultValue={"#fad0c3"}
+                  onChange={handleBackgroundColorChange}
+                  className="z-10 w-24 h-6"
+                />
+                <Button type="submit">Save background</Button>
+              </fieldset>
+            </form>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+              <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
+                <legend>Square</legend>
                 {withName && (
                   <div className="flex justify-between items-center">
                     <label htmlFor="backgroundName" className="mr-2">
@@ -132,7 +137,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                   className="w-20 h-4"
                   isTouch={isTouch}
                 />
-                <Button type="submit">Save background</Button>
+                <Button type="submit">Save square</Button>
               </fieldset>
             </form>
           </div>
@@ -156,7 +161,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                     }}
                   >
                     <span
-                      className="text-sm text-base-content"
+                      className="text-sm cursor-pointer text-base-content"
                       onClick={() => setSelectedDesignElement(element.id)}
                     >
                       {element.type}: {element.name}
@@ -175,7 +180,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                   </div>
                 ))
               ) : (
-                <p className="text-base-content">Aucun élément de design</p>
+                <p className="text-base-content">No design elements</p>
               )}
             </div>
           </fieldset>

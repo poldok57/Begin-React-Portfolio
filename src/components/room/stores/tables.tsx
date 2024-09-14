@@ -13,6 +13,7 @@ interface TableDataState {
   getTable: (id: string) => TableData | undefined;
   updateTable: (id: string, updatedTable: Partial<TableData>) => void;
   updateSelectedTable: (updatedTable: Partial<TableData>) => void;
+  countSelectedTables: () => number;
   rotationSelectedTable: (angle: number) => void;
   sizeSelectedTable: (size: number) => void;
   deleteTable: (id: string) => void;
@@ -69,6 +70,9 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
         table.selected ? { ...table, ...updatedTable } : table
       ),
     })),
+  countSelectedTables: () => {
+    return get().tables.filter((table) => table.selected).length;
+  },
   rotationSelectedTable: (angle: number) =>
     set((state) => ({
       tables: state.tables.map((table) =>

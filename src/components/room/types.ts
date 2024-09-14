@@ -9,6 +9,7 @@ export enum TableType {
 
 export enum DesignType {
   background = "background",
+  square = "square",
   line = "line",
   arc = "arc",
   text = "text",
@@ -50,12 +51,12 @@ export interface TableProps extends Table, TableColors, TableSettings {
 
 export interface TableData extends Table {
   id: string;
-  groupId?: string;
+  groupId?: string | null;
   type: TableType;
   selected: boolean;
   position: Position;
   offset?: Position | null;
-  settings?: TableSettings;
+  settings?: TableSettings | null;
 }
 
 export interface GroupTable {

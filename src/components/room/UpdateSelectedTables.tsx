@@ -6,37 +6,54 @@ import {
   Plus,
   Settings,
   Trash2,
+  X,
 } from "lucide-react";
+
+import { TableSettings } from "./types";
 import { useTableDataStore } from "./stores/tables";
 import { Button } from "@/components/atom/Button";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
+import { ShowTable } from "./ShowTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogOpen,
+  DialogClose,
+} from "@/components/atom/Dialog";
+
 import clsx from "clsx";
 
 interface UpdateSelectedTablesProps {
   btnSize: number;
   className: string;
+  isTouch: boolean;
 }
 
 export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   className,
   btnSize,
+  isTouch,
 }) => {
   const {
     rotationSelectedTable,
     sizeSelectedTable,
     deleteSelectedTable,
+    updateSelectedTable,
     tables,
-  } = useTableDataStore((state) => ({
-    rotationSelectedTable: state.rotationSelectedTable,
-    sizeSelectedTable: state.sizeSelectedTable,
-    deleteSelectedTable: state.deleteSelectedTable,
-    tables: state.tables,
-  }));
+  } = useTableDataStore();
+
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const selectedTables = tables.filter((table) => table.selected);
   const selectedTablesCount = selectedTables.length;
+  const [editSettings, setEditSettings] = useState<TableSettings | null>(null);
+
+  const saveSettings = (newSettings: TableSettings | null) => {
+    setEditSettings(newSettings);
+
+    updateSelectedTable({ settings: newSettings });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -94,14 +111,32 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
               </button>
             </div>
             <div className="flex justify-center">
-              <button
-                className="btn btn-circle btn-sm"
-                onClick={() => {
-                  /* Logique pour modifier les paramètres */
-                }}
-              >
-                <Settings size={btnSize} />
-              </button>
+              <Dialog blur={true}>
+                <DialogOpen>
+                  <button className="btn btn-circle btn-sm">
+                    <Settings size={btnSize} />
+                  </button>
+                </DialogOpen>
+                <DialogContent position="modal">
+                  <DialogClose>
+                    <button className="absolute top-5 right-5 btn btn-circle btn-sm">
+                      <X size={btnSize} />
+                    </button>
+                  </DialogClose>
+                  <ShowTable
+                    className="p-4 rounded-lg bg-background"
+                    colors={null}
+                    settings={editSettings}
+                    title="selected table"
+                    saveSettings={saveSettings}
+                    resetTable={() => {
+                      saveSettings(null);
+                    }}
+                    editing={true}
+                    isTouch={isTouch}
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
             <div className="flex justify-center">
               <DeleteWithConfirm

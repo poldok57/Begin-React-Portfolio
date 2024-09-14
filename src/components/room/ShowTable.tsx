@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TableColors, TableSettings } from "./types";
-import { PokerTable } from "./PokerTable";
+import { PokerTable } from "./svg/PokerTable";
 import { RangeInput } from "@/components/atom/RangeInput";
 import {
   RotateCcw,
@@ -10,6 +10,7 @@ import {
   Settings,
   Save,
   ListRestart,
+  PencilOff,
 } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
@@ -24,13 +25,15 @@ const DEFAULT_SETTINGS = {
 };
 
 interface ShowTableProps {
-  colors: TableColors | undefined;
+  colors?: TableColors | null;
   settings?: TableSettings | null;
   title: string | undefined;
   saveSettings: (settings: TableSettings) => void;
   resetTable?: () => void;
+  onClose?: () => void;
   isTouch: boolean;
-  editing: boolean;
+  editing?: boolean;
+  className?: string;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
   colors,
@@ -39,11 +42,14 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   saveSettings,
   resetTable,
   isTouch,
+  onClose,
+  editing = false,
+  className,
 }) => {
   // states for size and rotation
   const [size, setSize] = useState(200);
   const [rotation, setRotation] = useState(0);
-  const [openSettings, setOpenSettings] = useState(false);
+  const [openSettings, setOpenSettings] = useState(editing);
   const [tableSettings, setTableSettings] =
     useState<TableSettings>(DEFAULT_SETTINGS);
   const btnSize = isTouch ? 20 : 16;
@@ -68,8 +74,13 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   }, [settings]);
 
   return (
-    <div className="flex flex-col gap-1 items-center">
-      <div className="flex mt-3 z-[1] mx-3 justify-between border-b-2 border-gray-200 pb-1 w-full">
+    <div
+      className={clsx("flex flex-col gap-1 items-center", className)}
+      onMouseOver={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => e.stopPropagation()}
+      onMouseLeave={(e) => e.stopPropagation()}
+    >
+      <div className="flex z-[1] mx-3 justify-between border-b-2 border-gray-200 pb-1 w-full">
         <div className="flex flex-row gap-3">
           <button
             onClick={() => changeRotation(-15)}
@@ -134,11 +145,21 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               <Settings size={btnSize} />
             )}
           </button>
-          {resetTable && (
+          {onClose && !openSettings && (
             <button
               className={clsx("btn btn-circle", {
                 "btn-sm": !isTouch,
-                hidden: openSettings || title,
+              })}
+              onClick={onClose}
+            >
+              <PencilOff size={btnSize} />
+            </button>
+          )}
+          {resetTable && (
+            <button
+              className={clsx("absolute bottom-1 left-5 btn btn-circle", {
+                "btn-sm": !isTouch,
+                hidden: openSettings,
               })}
               title="Reset table"
               onClick={resetTable}

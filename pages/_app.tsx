@@ -20,6 +20,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           className="rounded-lg shadow-lg"
           close={true}
           resizable={true}
+          draggable={false}
           alt="Aline n' Karl
           "
           // trace={true}
