@@ -8,83 +8,142 @@ import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
 import { RoomMenu } from "./RoomMenu";
 import { GroundSelection } from "./GroundSelection";
+import { RoomProvider, useScale } from "./RoomProvider";
 
 export const GROUND_ID = "back-ground";
+export const CONTAINER_ID = "ground-container";
 
 const MARGIN = 10;
 
 const RoomTableWP = withMousePosition(RoomTable);
-export const RoomMenuWP = withMousePosition(RoomMenu);
+const RoomMenuWP = withMousePosition(RoomMenu);
+const GroupCreatWP = withMousePosition(GroupCreat);
 
-export const RoomCreat = () => {
-  const { updateTable, deleteTable, addDesignElement, getTable } =
-    useTableDataStore((state) => state);
+interface ListTablesProps {
+  tables: TableData[];
+  btnSize: number;
+  handleMove: (id: string, position: Position) => void;
+}
+
+const ListTables = React.memo(
+  ({ tables, btnSize, handleMove }: ListTablesProps) => {
+    const { scale } = useScale();
+    const { updateTable, deleteTable } = useTableDataStore((state) => state);
+
+    const handleChangeSelected = useCallback(
+      (id: string, selected: boolean) => {
+        updateTable(id, { selected });
+      },
+      [updateTable]
+    );
+
+    return tables.map((table: TableData) => {
+      const left = table.position.left * scale;
+      const top = table.position.top * scale;
+      return (
+        <RoomTableWP
+          key={table.id}
+          id={table.id}
+          table={table}
+          btnSize={btnSize}
+          onDelete={deleteTable}
+          onMove={handleMove}
+          changeSelected={handleChangeSelected}
+          draggable={true}
+          trace={false}
+          withTitleBar={false}
+          withToggleLock={false}
+          titleText={table.tableText}
+          style={{
+            position: "absolute",
+            left: `${left}px`,
+            top: `${top}px`,
+          }}
+          scale={scale}
+        />
+      );
+    });
+  }
+);
+
+ListTables.displayName = "ListTables";
+
+export const RoomCreatTools = () => {
+  const { updateTable, addDesignElement, getTable } = useTableDataStore(
+    (state) => state
+  );
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
-  const handleDelete = (id: string) => {
-    deleteTable(id);
-  };
+  const { scale, getScale } = useScale();
 
-  const scaleRef = useRef<number>(1);
-
-  const handleScaleChange = useCallback((newScale: number) => {
-    scaleRef.current = newScale;
-    // Forcer une mise à jour du composant
-    forceUpdate();
-  }, []);
-
-  // Fonction pour forcer une mise à jour du composant
-  const [, updateState] = useState<object>();
-  const forceUpdate = useCallback(() => updateState({}), []);
+  const handleMove = useCallback(
+    (id: string, position: Position) => {
+      const currentScale = getScale();
+      console.log("handleMove", id, position, "scale:", currentScale);
+      const scalePosition = {
+        left: position.left / currentScale,
+        top: position.top / currentScale,
+      };
+      updateTable(id, { position: scalePosition });
+    },
+    [updateTable, getScale, scale]
+  );
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const selectedRect = useRef<Rectangle | null>(null);
+  const groundRect = useRef<Rectangle | null>(null);
 
-  const handleMove = (id: string, position: Position) => {
-    const scalePosition = {
-      left: position.left / scaleRef.current,
-      top: position.top / scaleRef.current,
-    };
-    updateTable(id, { position: scalePosition });
-  };
-
-  const handleChangeSelected = (id: string, selected: boolean) => {
-    if (selectedArea.current) {
-      return;
+  const setGroundRect = () => {
+    const ground = document.getElementById(GROUND_ID);
+    if (ground) {
+      const groundRectangle = ground.getBoundingClientRect();
+      groundRect.current = {
+        left: groundRectangle.left,
+        top: groundRectangle.top,
+        width: groundRectangle.width,
+        height: groundRectangle.height,
+        right: groundRectangle.right,
+        bottom: groundRectangle.bottom,
+      };
     }
-    updateTable(id, { selected });
   };
 
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
 
-  const moveTable = (
-    id: string,
-    position: Position,
-    offset: Position | null = null
-  ) => {
-    const scalePosition = {
-      left: position.left / scaleRef.current,
-      top: position.top / scaleRef.current,
-    };
-    const scaleOffset = {
-      left: offset?.left ?? 0 / scaleRef.current,
-      top: offset?.top ?? 0 / scaleRef.current,
-    };
-    if (offset) {
-      updateTable(id, { position: scalePosition, offset: scaleOffset });
-    } else {
-      updateTable(id, { position: scalePosition });
-    }
-    const tableElement = document.getElementById(id);
-    if (tableElement) {
-      tableElement.style.left = `${position.left}px`;
-      tableElement.style.top = `${position.top}px`;
-    }
-  };
+  const moveTable = useCallback(
+    (
+      table: TableData,
+      position: { left?: number; top?: number },
+      offset: Position | null = null
+    ) => {
+      const currentScale = getScale();
+      const scalePosition = {
+        left:
+          position.left === undefined
+            ? table.position.left
+            : position.left / currentScale,
+        top:
+          position.top === undefined
+            ? table.position.top
+            : position.top / currentScale,
+      };
+      if (offset) {
+        updateTable(table.id, { position: scalePosition, offset: offset });
+      } else {
+        updateTable(table.id, { position: scalePosition });
+      }
+      const tableElement = document.getElementById(table.id);
+      if (tableElement) {
+        tableElement.style.left = `${scalePosition.left * currentScale}px`;
+        tableElement.style.top = `${scalePosition.top * currentScale}px`;
+      }
+    },
+    [updateTable, getScale]
+  );
 
-  const onZoneSelectedStart = (_clientX: number, _clientY: number) => {
+  const onZoneSelectedStart = () => {
     selectedArea.current = true;
   };
 
@@ -97,7 +156,7 @@ export const RoomCreat = () => {
           left: Math.round(clientX + table.offset.left),
           top: Math.round(clientY + table.offset.top),
         };
-        moveTable(table.id, position);
+        moveTable(table, position);
       }
     });
   };
@@ -127,9 +186,11 @@ export const RoomCreat = () => {
 
       return;
     }
+
+    setGroundRect();
+
     selectedRect.current = rect;
 
-    // get a fresh copy of the tables array from the store
     const freshTables = useTableDataStore.getState().tables;
 
     const updatedTables = freshTables.map((table) => {
@@ -166,6 +227,13 @@ export const RoomCreat = () => {
   };
 
   const handleHorizontalMove = (newLeft: number, listId: string[]) => {
+    const container = document.getElementById(CONTAINER_ID);
+    let containerLeft: number = 0;
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      containerLeft = containerRect.left;
+    }
+
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
       if (tableElement) {
@@ -177,26 +245,33 @@ export const RoomCreat = () => {
 
         const newLeftPosition = Math.round(newLeft - width / 2);
         const position = {
-          left: newLeftPosition,
-          top: (table.position?.top ?? 0) * scaleRef.current,
+          left: Math.round(newLeftPosition),
         };
         let newOffset: Position | null = null;
-        if (table.offset) {
+        if (table.offset && container) {
           newOffset = {
             left: Math.round(
-              table.offset.left + newLeftPosition - (table.position?.left ?? 0)
+              newLeftPosition -
+                (containerLeft - (groundRect.current?.left || 0))
             ),
             top: table.offset.top,
           };
         }
 
-        moveTable(id, position, newOffset);
+        moveTable(table, position, newOffset);
       }
     });
     upDateSelectedTables();
   };
 
   const handleVerticalMove = (newTop: number, listId: string[]) => {
+    const container = document.getElementById(CONTAINER_ID);
+    let containerTop: number = 0;
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      containerTop = containerRect.top;
+    }
+
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
       if (tableElement) {
@@ -207,19 +282,18 @@ export const RoomCreat = () => {
         const { height } = tableElement.getBoundingClientRect();
         const newTopPosition = Math.round(newTop - height / 2);
         const position = {
-          left: (table.position?.left ?? 0) * scaleRef.current,
-          top: newTopPosition,
+          top: Math.round(newTopPosition),
         };
         let newOffset: Position | null = null;
         if (table.offset) {
           newOffset = {
             left: table.offset.left,
             top: Math.round(
-              table.offset.top + newTopPosition - (table.position?.top ?? 0)
+              newTopPosition - (containerTop - (groundRect.current?.top || 0))
             ),
           };
         }
-        moveTable(id, position, newOffset);
+        moveTable(table, position, newOffset);
       }
     });
     upDateSelectedTables();
@@ -274,10 +348,23 @@ export const RoomCreat = () => {
       className="flex w-full bg-background"
       style={{ height: "calc(100vh - 70px)" }}
     >
+      <div className="absolute top-2 right-2 px-2 py-1 bg-gray-200 rounded border border-gray-300">
+        <span className="text-sm font-semibold">
+          Scale : {scale.toFixed(2)}
+        </span>
+      </div>
       <div className="flex flex-row w-full">
-        <GroupCreat />
-        <RoomMenuWP
+        <GroupCreatWP
           className="absolute top-0 left-0 z-10"
+          withTitleBar={true}
+          titleText="Group creat"
+          titleHidden={false}
+          titleBackground={"#99ee66"}
+          withMinimize={true}
+          draggable={true}
+        />
+        <RoomMenuWP
+          className="absolute left-0 bottom-10 z-10"
           withTitleBar={true}
           titleText="Room config"
           titleHidden={false}
@@ -288,49 +375,31 @@ export const RoomCreat = () => {
           reccordBackround={handleRecordBackground}
           addSelectedRect={addSelectedRect}
           resetSelectedTables={resetSelectedTables}
-          scale={scaleRef.current}
-          setScale={handleScaleChange}
         />
         <GroundSelection
           id={GROUND_ID}
+          idContainer={CONTAINER_ID}
           onSelectionStart={onZoneSelectedStart}
           onSelectionMove={onZoneSelectedMove}
           onSelectionEnd={onZoneSelectedEnd}
           onHorizontalMove={handleHorizontalMove}
           onVerticalMove={handleVerticalMove}
           preSelection={preSelection}
-          scale={scaleRef.current}
         >
-          {tables.map((table, index) => {
-            const left =
-              (table?.position?.left ?? 50 + index * 10) * scaleRef.current;
-            const top =
-              (table?.position?.top ?? 50 + index * 10) * scaleRef.current;
-            return (
-              <RoomTableWP
-                key={table.id}
-                id={table.id}
-                table={table}
-                btnSize={btnSize}
-                onDelete={handleDelete}
-                onMove={handleMove}
-                changeSelected={handleChangeSelected}
-                draggable={true}
-                trace={false}
-                withTitleBar={false}
-                withToggleLock={false}
-                titleText={table.tableText}
-                style={{
-                  position: "absolute",
-                  left: `${left}px`,
-                  top: `${top}px`,
-                }}
-                scale={scaleRef.current}
-              />
-            );
-          })}
+          <ListTables
+            tables={tables}
+            btnSize={btnSize}
+            handleMove={handleMove}
+          />
         </GroundSelection>
       </div>
     </div>
   );
 };
+
+// Wrap the component with ScaleProvider
+export const RoomCreat = () => (
+  <RoomProvider>
+    <RoomCreatTools />
+  </RoomProvider>
+);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import {
-  mouseIsInsideRect,
+  coordinateIsInsideRect,
   mouseIsInsideBorder,
   getRectOffset,
 } from "../../lib/mouse-position";
@@ -326,7 +326,7 @@ export function withMousePosition<P extends object>(
           return;
         }
         const rect = waitEvent.getBoundingClientRect();
-        if (!mouseIsInsideRect(coord, rect)) {
+        if (!coordinateIsInsideRect(coord, rect)) {
           setCanMove(false);
           return;
         }

@@ -5,14 +5,13 @@ import { RoomDesign } from "./RoomDesign";
 import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
+import { useScale } from "./RoomProvider";
 
 interface RoomMenuProps {
   btnSize: number;
   reccordBackround: (color: string, name: string, opacity: number) => void;
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
-  scale: number;
-  setScale: (scale: number) => void;
 }
 
 export const RoomMenu: React.FC<RoomMenuProps> = ({
@@ -20,10 +19,10 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   reccordBackround,
   addSelectedRect,
   resetSelectedTables,
-  scale,
-  setScale,
 }) => {
   const isTouch = isTouchDevice();
+  const { scale, setScale } = useScale();
+
   return (
     <div
       className="flex flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"

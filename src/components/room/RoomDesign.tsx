@@ -9,6 +9,7 @@ import clsx from "clsx";
 interface RoomDesignProps {
   className: string;
   isTouch: boolean;
+  withName?: boolean;
   reccordBackround: (color: string, name: string, opacity: number) => void;
 }
 
@@ -16,6 +17,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   className,
   isTouch,
   reccordBackround,
+  withName = false,
 }) => {
   const {
     designElements,
@@ -94,22 +96,24 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
               <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
                 <legend>Background</legend>
-                <div className="flex justify-between items-center">
-                  <label htmlFor="backgroundName" className="mr-2">
-                    Name:
-                  </label>
-                  <input
-                    type="text"
-                    id="backgroundName"
-                    name="backgroundName"
-                    placeholder="Background name"
-                    required={true}
-                    className="w-full max-w-xs input input-bordered"
-                    onChange={(e) => {
-                      setName(e.target.value);
-                    }}
-                  />
-                </div>
+                {withName && (
+                  <div className="flex justify-between items-center">
+                    <label htmlFor="backgroundName" className="mr-2">
+                      Name:
+                    </label>
+                    <input
+                      type="text"
+                      id="backgroundName"
+                      name="backgroundName"
+                      placeholder="Background name"
+                      required={true}
+                      className="w-full max-w-xs input input-bordered"
+                      onChange={(e) => {
+                        setName(e.target.value);
+                      }}
+                    />
+                  </div>
+                )}
                 <ModifyColor
                   label="Color:"
                   name="background"

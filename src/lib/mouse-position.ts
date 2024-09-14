@@ -89,7 +89,7 @@ export const getRectPosition = (
   return { left: coord.x + offset.x, top: coord.y + offset.y };
 };
 
-export const mouseIsInsideRect = (
+export const coordinateIsInsideRect = (
   coord: Coordinate | Area,
   rect: DOMRect | Rectangle,
   extend = false
@@ -110,7 +110,7 @@ export const mouseIsInsideComponent = (
   if (component) {
     const rect = component.getBoundingClientRect();
     const coordinates = { x: event.clientX, y: event.clientY };
-    return mouseIsInsideRect(coordinates, rect);
+    return coordinateIsInsideRect(coordinates, rect);
   }
   return false;
 };

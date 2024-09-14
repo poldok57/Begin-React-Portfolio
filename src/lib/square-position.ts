@@ -3,7 +3,7 @@ import {
   BORDER,
   badgePosition,
   middleButtonPosition,
-  mouseIsInsideRect,
+  coordinateIsInsideRect,
   mouseIsOnBorderRect,
   getRectOffset,
   resizeRect,
@@ -24,7 +24,7 @@ export const isInsideSquare = (
     bottom: square.y + square.height,
   } as Rectangle;
 
-  return mouseIsInsideRect(coord, rect);
+  return coordinateIsInsideRect(coord, rect);
 };
 
 export const getSquareOffset = (coord: Coordinate, square: Coordinate) => {
@@ -57,20 +57,20 @@ export const isOnSquareBorder = ({
   if (withCornerButton) {
     const badgePos = badgePosition(rect, maxWidth);
 
-    if (mouseIsInsideRect(coordinate, badgePos)) {
+    if (coordinateIsInsideRect(coordinate, badgePos)) {
       return BORDER.ON_BUTTON;
     }
   }
   if (withTurningButtons) {
     const middleButton = middleButtonPosition(rect);
-    if (mouseIsInsideRect(coordinate, middleButton)) {
+    if (coordinateIsInsideRect(coordinate, middleButton)) {
       if (coordinate.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
       if (coordinate.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
       return BORDER.INSIDE;
     }
   }
 
-  if (!mouseIsInsideRect(coordinate, rect, true)) return null;
+  if (!coordinateIsInsideRect(coordinate, rect, true)) return null;
 
   if (!withResize) {
     // for text mode, no need to resize

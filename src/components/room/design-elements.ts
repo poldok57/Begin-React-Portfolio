@@ -153,8 +153,10 @@ export const drawAllDesignElements = ({
   temporaryCtx,
   scale = 1,
 }: DrawAllDesignElementsProps) => {
+  // clear the canvas
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   if (temporaryCtx) {
+    // clear the temporary canvas
     temporaryCtx.clearRect(
       0,
       0,

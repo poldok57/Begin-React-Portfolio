@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
+// import { useScale } from "./RoomProvider";
 
 const DEFAULT_SETTINGS = {
   widthLine: 0.025,
@@ -29,6 +30,7 @@ interface ShowTableProps {
   saveSettings: (settings: TableSettings) => void;
   resetTable?: () => void;
   isTouch: boolean;
+  editing: boolean;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
   colors,

@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
-import { mouseIsInsideComponent } from "@/lib/mouse-position";
+import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { useTableDataStore } from "./stores/tables";
 import { drawAllDesignElements } from "./design-elements";
+import { useScale } from "./RoomProvider";
 
 interface GroundSelectionProps {
-  onSelectionStart: (clientX: number, clientY: number) => void;
+  onSelectionStart: () => void;
   onSelectionMove: (clientX: number, clientY: number) => void;
   onSelectionEnd: (rect: Rectangle | null) => void;
   onHorizontalMove: (left: number, listId: string[]) => void;
@@ -13,7 +14,7 @@ interface GroundSelectionProps {
   id: string;
   preSelection: Rectangle | null;
   children: React.ReactNode;
-  scale?: number;
+  idContainer?: string;
 }
 
 const LINE_OVERLAP = 30;
@@ -27,8 +28,9 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   id,
   preSelection,
   children,
-  scale = 1,
+  idContainer = "container",
 }) => {
+  const { scale } = useScale();
   const isSelectingRef = useRef(false);
   const startPos = useRef<Position | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);
@@ -43,7 +45,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   const { designElements, selectedDesignElement } = useTableDataStore(
     (state) => state
   );
-  const tableSelectedRef = useRef(false);
+  const itemSelectedRef = useRef(false);
   const verticalAxis = useRef<number[]>([]);
   const horizontalAxis = useRef<number[]>([]);
   const selectedAlignmentLine = useRef<{
@@ -56,8 +58,10 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   }>({ vertical: [], horizontal: [] });
   const [showAlignmentLines, setShowAlignmentLines] = useState(false);
 
+  // container with overlap of LINE_OVERLAP
   const isInOverlapContainer = (x: number, y: number) => {
     if (!containerRef.current) return false;
+
     const containerRect = containerRef.current.getBoundingClientRect();
     return (
       x >= containerRect.left - LINE_OVERLAP &&
@@ -69,27 +73,30 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
 
   const handleStart = (clientX: number, clientY: number) => {
     if (!groundRef.current || !containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
 
-    if (
-      mouseIsInsideComponent(
-        { clientX, clientY } as MouseEvent,
-        containerRef.current
-      )
-    ) {
+    if (coordinateIsInsideRect({ x: clientX, y: clientY }, containerRect)) {
+      console.log("clic inside the container");
+
       // Clic inside the container start moving the container
       areaOffsetRef.current = {
         left: containerRef.current.offsetLeft - clientX,
         top: containerRef.current.offsetTop - clientY,
       };
-      onSelectionStart(clientX, clientY);
+      onSelectionStart();
       return;
     }
+    const scrollX = groundRef.current?.scrollLeft || 0;
+    const scrollY = groundRef.current?.scrollTop || 0;
 
     // clic outside the container start selecting new position of the container
     const { left, top } = groundRef.current.getBoundingClientRect();
     isSelectingRef.current = true;
-    tableSelectedRef.current = false;
-    startPos.current = { left: clientX - left, top: clientY - top };
+    itemSelectedRef.current = false;
+    startPos.current = {
+      left: clientX + scrollX - left,
+      top: clientY + scrollY - top,
+    };
 
     containerRef.current.style.display = "block";
     containerRef.current.style.left = `${clientX}px`;
@@ -187,12 +194,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     vertical: number[];
     horizontal: number[];
   }) => {
-    if (!temporaryCanvasRef.current) return;
+    if (!temporaryCanvasRef.current || !groundRef.current) return;
 
-    const { left, top } = groundRef.current?.getBoundingClientRect() || {
-      left: 0,
-      top: 0,
-    };
+    const { left, top } = groundRef.current?.getBoundingClientRect();
+    const { scrollLeft, scrollTop } = groundRef.current;
+    const offsetLeft = scrollLeft - left;
+    const offsetTop = scrollTop - top;
 
     // get container rect
 
@@ -210,16 +217,16 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     // Lignes verticales
     alignments.vertical.forEach((x) => {
       ctx.beginPath();
-      ctx.moveTo(x - left, container.top - LINE_OVERLAP - top);
-      ctx.lineTo(x - left, container.bottom + LINE_OVERLAP - top);
+      ctx.moveTo(x + offsetLeft, container.top - LINE_OVERLAP + offsetTop);
+      ctx.lineTo(x + offsetLeft, container.bottom + LINE_OVERLAP + offsetTop);
       ctx.stroke();
     });
 
     // Lignes horizontales
     alignments.horizontal.forEach((y) => {
       ctx.beginPath();
-      ctx.moveTo(container.left - LINE_OVERLAP - left, y - top);
-      ctx.lineTo(container.right + LINE_OVERLAP - left, y - top);
+      ctx.moveTo(container.left - LINE_OVERLAP + offsetLeft, y + offsetTop);
+      ctx.lineTo(container.right + LINE_OVERLAP + offsetLeft, y + offsetTop);
       ctx.stroke();
     });
 
@@ -256,6 +263,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     // select first corner of the container
     if (isSelectingRef.current && startPos.current) {
       const { left, top } = groundRef.current.getBoundingClientRect();
+      const scrollX = groundRef.current.scrollLeft;
+      const scrollY = groundRef.current.scrollTop;
+
+      clientX += scrollX;
+      clientY += scrollY;
+
       const width = clientX - left - startPos.current.left;
       const height = clientY - top - startPos.current.top;
       containerRef.current.style.width = `${Math.abs(width)}px`;
@@ -288,7 +301,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       return;
     }
 
-    if (tableSelectedRef.current) {
+    if (itemSelectedRef.current) {
       return;
     }
     onSelectionEnd(rect);
@@ -300,7 +313,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       alignments.vertical.length > 0 || alignments.horizontal.length > 0
     );
 
-    tableSelectedRef.current = true;
+    itemSelectedRef.current = true;
   };
 
   const resizeCanvas = (scale: number) => {
@@ -309,25 +322,28 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       temporaryCanvasRef.current &&
       groundRef.current
     ) {
-      const { width, height } = groundRef.current.getBoundingClientRect();
+      // const { width, height } = groundRef.current.getBoundingClientRect();
+
+      const offsetWidth = groundRef.current.offsetWidth;
+      const offsetHeight = groundRef.current.offsetHeight;
       canvasSize.current = {
-        width: scale > 1 ? Math.round(scale * width) : width,
-        height: scale > 1 ? Math.round(scale * height) : height,
+        width: scale > 1 ? Math.round(scale * offsetWidth) : offsetWidth,
+        height: scale > 1 ? Math.round(scale * offsetHeight) : offsetHeight,
       };
 
-      console.log("canvasSize", canvasSize.current);
+      // console.log("canvasSize", canvasSize.current);
 
       [backgroundCanvasRef.current, temporaryCanvasRef.current].forEach(
         (canvas) => {
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = canvasSize.current.width;
+          canvas.height = canvasSize.current.height;
         }
       );
-      drawElementsOnCanvas();
+      drawElementsOnCanvas(scale);
     }
   };
 
-  const drawElementsOnCanvas = () => {
+  const drawElementsOnCanvas = (scale: number) => {
     if (!backgroundCanvasRef.current) {
       return;
     }
@@ -340,7 +356,12 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     const temporaryCtx = temporaryCanvasRef.current?.getContext("2d") || null;
 
     const { left, top } = backgroundCanvasRef.current.getBoundingClientRect();
-    const offset = { left, top };
+    const { scrollLeft, scrollTop } = groundRef.current || {
+      scrollLeft: 0,
+      scrollTop: 0,
+    };
+    const offset = { left: left + scrollLeft, top: top + scrollTop };
+    console.log("offset from ground", offset);
 
     drawAllDesignElements({
       ctx,
@@ -361,48 +382,26 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
     const clickedVerticalLine = verticalAxis.current.find(
       (x) => Math.abs(x - mouseX) <= 5
     );
-
-    // clic on a horizontal line
-    const clickedHorizontalLine = horizontalAxis.current.find(
-      (y) => Math.abs(y - mouseY) <= 5
-    );
-
     // clic on a vertical line
     if (clickedVerticalLine !== undefined) {
       selectedAlignmentLine.current = {
         type: "vertical",
         position: clickedVerticalLine,
       };
-      const selectedGroup = alignmentGroups.current.vertical.find(
-        (group) => group.position === clickedVerticalLine
-      );
-      if (selectedGroup) {
-        const { left } = groundRef.current?.getBoundingClientRect() || {
-          left: 0,
-        };
-        const elementIds = selectedGroup.elements.map((el) => el.id);
-
-        // console.log("horizontal move elementIds", elementIds);
-        onHorizontalMove(mouseX - left, elementIds);
-      }
       return true;
     }
+
+    // clic on a horizontal line
+    const clickedHorizontalLine = horizontalAxis.current.find(
+      (y) => Math.abs(y - mouseY) <= 5
+    );
+
     if (clickedHorizontalLine !== undefined) {
       // clic on a horizontal line
       selectedAlignmentLine.current = {
         type: "horizontal",
         position: clickedHorizontalLine,
       };
-      const selectedGroup = alignmentGroups.current.horizontal.find(
-        (group) => group.position === clickedHorizontalLine
-      );
-      if (selectedGroup) {
-        const { top } = groundRef.current?.getBoundingClientRect() || {
-          top: 0,
-        };
-        const elementIds = selectedGroup.elements.map((el) => el.id);
-        onVerticalMove(mouseY - top, elementIds);
-      }
       return true;
     }
     return false;
@@ -411,12 +410,17 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   const handleMouseDown = (e: MouseEvent) => {
     e.preventDefault();
 
-    if (clicOnLine(e.clientX, e.clientY)) {
+    // Tenir compte du scroll de la fenêtre pour calculer la position de la souris
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    // Verify if the click is on a line
+    if (clicOnLine(clientX, clientY)) {
       return;
     }
 
     // clic outside the container start selecting new position of the container
-    handleStart(e.clientX, e.clientY);
+    handleStart(clientX, clientY);
   };
 
   const moveLine = (mouseX: number, mouseY: number) => {
@@ -428,6 +432,8 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       left: 0,
       top: 0,
     };
+    const scrollX = groundRef.current?.scrollLeft || 0;
+    const scrollY = groundRef.current?.scrollTop || 0;
 
     if (selectedAlignmentLine.current.type === "vertical") {
       const newPosition = mouseX;
@@ -438,9 +444,9 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         verticalAxis.current[index] = newPosition;
         const group = alignmentGroups.current.vertical[index];
         if (group) {
-          group.position = newPosition; // Mettre à jour la position dans le groupe
+          group.position = newPosition; // Update position in group
           const elementIds = group.elements.map((el) => el.id);
-          onHorizontalMove(newPosition - left, elementIds);
+          onHorizontalMove(newPosition + scrollX - left, elementIds);
         }
         // update selectedAlignmentLine position
         selectedAlignmentLine.current.position = newPosition;
@@ -456,7 +462,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         if (group) {
           group.position = newPosition; // Mettre à jour la position dans le groupe
           const elementIds = group.elements.map((el) => el.id);
-          onVerticalMove(newPosition - top, elementIds);
+          onVerticalMove(newPosition + scrollY - top, elementIds);
         }
         // update selectedAlignmentLine position
         selectedAlignmentLine.current.position = newPosition;
@@ -508,12 +514,15 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   const handleMouseMove = (e: MouseEvent) => {
     if (!temporaryCanvasRef.current || !groundRef.current) return;
 
-    if (moveLine(e.clientX, e.clientY)) {
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    if (moveLine(clientX, clientY)) {
       return;
     }
 
-    cursorStyle(e.clientX, e.clientY);
-    handleMove(e.clientX, e.clientY);
+    cursorStyle(clientX, clientY);
+    handleMove(clientX, clientY);
   };
 
   const handleMouseUp = () => {
@@ -540,7 +549,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
         ? alignmentGroups.current.vertical
         : alignmentGroups.current.horizontal;
 
-    // Récupérer les coordonnées left et top de l'élément ground
+    // Get the coordinates left and top of the ground element
     const groundRect = groundRef.current?.getBoundingClientRect();
     const groundLeft = groundRect?.left || 0;
     const groundTop = groundRect?.top || 0;
@@ -583,6 +592,15 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
   useEffect(() => {
     resizeCanvas(scale);
     window.addEventListener("resize", () => resizeCanvas(scale));
+    // hide the selection zone when the scale changes
+    if (containerRef.current) {
+      containerRef.current.style.display = "none";
+    }
+    // on resize clear the temporary canvas
+    clearTemporaryCanvas();
+    setShowAlignmentLines(false);
+    itemSelectedRef.current = false;
+
     return () =>
       window.removeEventListener("resize", () => resizeCanvas(scale));
   }, [scale]);
@@ -592,7 +610,7 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       return;
     }
 
-    drawElementsOnCanvas();
+    drawElementsOnCanvas(scale);
   }, [designElements, selectedDesignElement, scale]);
 
   useEffect(() => {
@@ -689,17 +707,16 @@ export const GroundSelection: React.FC<GroundSelectionProps> = ({
       <canvas
         ref={backgroundCanvasRef}
         id="background-canvas"
-        width={canvasSize.current.width}
-        height={canvasSize.current.height}
-        className="absolute top-0 left-0 w-full h-full border-gray-500 border-1"
+        className="overflow-visible absolute top-0 left-0"
       />
       <canvas
         ref={temporaryCanvasRef}
         id="temporary-canvas"
-        className="absolute top-0 left-0 w-full h-full"
+        className="overflow-visible absolute top-0 left-0"
       />
       <div
         ref={containerRef}
+        id={idContainer}
         className="absolute bg-gray-200 bg-opacity-20 border border-gray-500 border-dashed cursor-move"
         style={{ display: "none" }}
       />
