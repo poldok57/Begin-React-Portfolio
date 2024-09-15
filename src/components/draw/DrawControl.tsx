@@ -193,7 +193,13 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     return (
       <div
         onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
+        onTouchStartCapture={() =>
+          addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)
+        }
         onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
+        onTouchEndCapture={() =>
+          addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)
+        }
         className="flex flex-col gap-1 p-1 min-w-[590px] max-w-[650px] rounded-md border-2 shadow-xl border-secondary bg-background"
       >
         <div className="flex flex-row gap-4">

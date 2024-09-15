@@ -107,7 +107,7 @@ export const RangeInput: React.FC<{
           max={max}
           step={step}
           onChange={(e) => handleChange(parseFloat(e.target.value))}
-          className={clsx(className, "-mx-3")}
+          className={clsx("-mx-3", className)}
           style={style}
         />
         {isTouch && (

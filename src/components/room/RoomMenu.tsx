@@ -52,7 +52,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
         min="0.4"
         max="2"
         step="0.1"
-        className="w-full h-4"
+        className="mx-1 w-full h-4"
         isTouch={isTouch}
         onChange={(value: number) => setScale(value)}
       />
