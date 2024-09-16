@@ -1,10 +1,8 @@
-import { RectPosition as Position } from "@/lib/canvas/types";
 import { DesignElement, DesignType } from "./types";
 
 const drawDesignElement = (
   ctx: CanvasRenderingContext2D,
   element: DesignElement,
-  offset: Position,
   scale: number
 ) => {
   ctx.globalAlpha = element.opacity || 1;
@@ -20,8 +18,8 @@ const drawDesignElement = (
       }
       ctx.fillStyle = element.color;
       ctx.fillRect(
-        (element.rect.left - offset.left) * scale,
-        (element.rect.top - offset.top) * scale,
+        element.rect.left * scale,
+        element.rect.top * scale,
         element.rect.width * scale,
         element.rect.height * scale
       );
@@ -29,8 +27,8 @@ const drawDesignElement = (
       ctx.strokeStyle = "#888888";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        (element.rect.left - offset.left) * scale,
-        (element.rect.top - offset.top) * scale,
+        element.rect.left * scale,
+        element.rect.top * scale,
         element.rect.width * scale,
         element.rect.height * scale
       );
@@ -68,7 +66,6 @@ const drawDesignElement = (
 const hightLightSelectedElement = (
   ctx: CanvasRenderingContext2D,
   element: DesignElement,
-  offset: Position,
   scale: number
 ) => {
   const margin = 5;
@@ -90,8 +87,8 @@ const hightLightSelectedElement = (
       ctx.strokeStyle = "red";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        (element.rect.left - offset.left) * scale - margin,
-        (element.rect.top - offset.top) * scale - margin,
+        element.rect.left * scale - margin,
+        element.rect.top * scale - margin,
         (element.rect.width + 2 * margin) * scale,
         (element.rect.height + 2 * margin) * scale
       );
@@ -138,9 +135,7 @@ const hightLightSelectedElement = (
 interface DrawAllDesignElementsProps {
   ctx: CanvasRenderingContext2D;
   temporaryCtx: CanvasRenderingContext2D | null;
-
   elements: DesignElement[];
-  offset: Position;
   selectedElementId: string | null;
   scale?: number;
 }
@@ -148,7 +143,6 @@ interface DrawAllDesignElementsProps {
 export const drawAllDesignElements = ({
   ctx,
   elements,
-  offset,
   selectedElementId,
   temporaryCtx,
   scale = 1,
@@ -166,9 +160,9 @@ export const drawAllDesignElements = ({
   }
 
   elements.forEach((element) => {
-    drawDesignElement(ctx, element, offset, scale);
+    drawDesignElement(ctx, element, scale);
     if (element.id === selectedElementId) {
-      hightLightSelectedElement(temporaryCtx ?? ctx, element, offset, scale);
+      hightLightSelectedElement(temporaryCtx ?? ctx, element, scale);
     }
   });
 };

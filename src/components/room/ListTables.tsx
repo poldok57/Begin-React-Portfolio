@@ -37,7 +37,12 @@ export const ListTables = React.memo(({ tables, btnSize }: ListTablesProps) => {
     [updateTable]
   );
 
-  const handleClick = (id: string) => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
+    if (tableActive === id) {
+      setTableActive(null);
+      updateTable(id, { selected: false });
+      return;
+    }
     setTableActive(id);
     updateTable(id, { selected: true });
   };
@@ -83,7 +88,7 @@ export const ListTables = React.memo(({ tables, btnSize }: ListTablesProps) => {
           top: `${top}px`,
         }}
         scale={scale}
-        onClick={() => handleClick(table.id)}
+        onClick={(e) => handleClick(e, table.id)}
         isActive={isActive}
         setActiveTable={setTableActive}
       />

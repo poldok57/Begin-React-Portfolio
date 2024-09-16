@@ -42,6 +42,7 @@ interface WithMousePositionProps {
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onMove?: (id: string, position: RectPosition) => void;
 }
 
@@ -64,6 +65,7 @@ interface WithMousePositionProps {
  * @param {boolean} props.withMinimize - default false - if true, the minimize button is displayed
  * @param {boolean} props.withMaximize - default false - if true, the maximize button is displayed
  * @param {function} props.onMove - the function to call when the component is moved
+ * @param {function} props.onClick - the function to call when the component is clicked
  * @returns {JSX.Element} - the wrapped component
  */
 export function withMousePosition<P extends object>(
@@ -91,6 +93,7 @@ export function withMousePosition<P extends object>(
     maxWidth = 0,
     maxHeight = 0,
     onMove,
+    onClick,
     ...props
   }: WithMousePositionProps) {
     const titleRef = useRef(null);
@@ -482,6 +485,7 @@ export function withMousePosition<P extends object>(
         ref={componentRef}
         id={id}
         style={{ ...styleRef.current }}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => onClick?.(e)}
         className={clsx("hover:z-30", className, {
           "h-fit": resizable,
           "group/draggable": !withTitleBar || titleHidden,

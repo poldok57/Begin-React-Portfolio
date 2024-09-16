@@ -20,8 +20,8 @@ export type RectPosition = {
 
 export type Rectangle = RectPosition &
   Size & {
-    right: number;
-    bottom: number;
+    right?: number;
+    bottom?: number;
   };
 
 export type ArgsMouseOnShape = {

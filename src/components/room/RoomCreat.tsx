@@ -25,26 +25,10 @@ export const RoomCreatTools = () => {
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
-  const { scale, getScale } = useScale();
+  const { scale, getScale, getSelectedRect } = useScale();
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
-  const selectedRect = useRef<Rectangle | null>(null);
-  const groundRect = useRef<Rectangle | null>(null);
-
-  const setGroundRect = () => {
-    const ground = document.getElementById(GROUND_ID);
-    if (ground) {
-      const groundRectangle = ground.getBoundingClientRect();
-      groundRect.current = {
-        left: groundRectangle.left,
-        top: groundRectangle.top,
-        width: groundRectangle.width,
-        height: groundRectangle.height,
-        right: groundRectangle.right,
-        bottom: groundRectangle.bottom,
-      };
-    }
-  };
+  const groundRef = useRef<HTMLDivElement>(null);
 
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
@@ -84,14 +68,14 @@ export const RoomCreatTools = () => {
     selectedArea.current = true;
   };
 
-  const onZoneSelectedMove = (clientX: number, clientY: number) => {
+  const onZoneSelectedMove = (rectLeft: number, rectTop: number) => {
     if (!selectedArea.current) return;
 
     selectedTablesRef.current.forEach((table) => {
       if (table.offset) {
         const position: Position = {
-          left: Math.round(clientX + table.offset.left),
-          top: Math.round(clientY + table.offset.top),
+          left: Math.round(rectLeft + table.offset.left),
+          top: Math.round(rectTop + table.offset.top),
         };
         moveTable(table, position);
       }
@@ -118,15 +102,10 @@ export const RoomCreatTools = () => {
       tables.forEach((table) => {
         updateTable(table.id, { offset: null, selected: false });
       });
-      selectedRect.current = null;
       selectedArea.current = false;
 
       return;
     }
-
-    setGroundRect();
-
-    selectedRect.current = rect;
 
     const freshTables = useTableDataStore.getState().tables;
 
@@ -136,9 +115,9 @@ export const RoomCreatTools = () => {
         const tableRect = tableElement.getBoundingClientRect();
         const isInside =
           tableRect.left >= rect.left - MARGIN &&
-          tableRect.right <= rect.right + MARGIN &&
+          tableRect.right <= (rect?.right || rect.left + rect.width) + MARGIN &&
           tableRect.top >= rect.top - MARGIN &&
-          tableRect.bottom <= rect.bottom + MARGIN;
+          tableRect.bottom <= (rect?.bottom || rect.top + rect.height) + MARGIN;
 
         const offset = {
           left: Math.round(tableRect.left - rect.left),
@@ -157,19 +136,13 @@ export const RoomCreatTools = () => {
   };
 
   const addSelectedRect = (rect: Rectangle) => {
-    selectedRect.current = rect;
     setPreSelection(rect);
 
     upDateSelectedTables();
   };
 
   const handleHorizontalMove = (newLeft: number, listId: string[]) => {
-    const container = document.getElementById(CONTAINER_ID);
-    let containerLeft: number = 0;
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      containerLeft = containerRect.left;
-    }
+    const containerLeft = getSelectedRect()?.left || 0;
 
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
@@ -185,12 +158,9 @@ export const RoomCreatTools = () => {
           left: Math.round(newLeftPosition),
         };
         let newOffset: Position | null = null;
-        if (table.offset && container) {
+        if (table.offset) {
           newOffset = {
-            left: Math.round(
-              newLeftPosition -
-                (containerLeft - (groundRect.current?.left || 0))
-            ),
+            left: Math.round(newLeftPosition - containerLeft),
             top: table.offset.top,
           };
         }
@@ -202,12 +172,7 @@ export const RoomCreatTools = () => {
   };
 
   const handleVerticalMove = (newTop: number, listId: string[]) => {
-    const container = document.getElementById(CONTAINER_ID);
-    let containerTop: number = 0;
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      containerTop = containerRect.top;
-    }
+    const containerTop = getSelectedRect()?.top || 0;
 
     listId.forEach((id) => {
       const tableElement = document.getElementById(id);
@@ -225,9 +190,7 @@ export const RoomCreatTools = () => {
         if (table.offset) {
           newOffset = {
             left: table.offset.left,
-            top: Math.round(
-              newTopPosition - (containerTop - (groundRect.current?.top || 0))
-            ),
+            top: Math.round(newTopPosition - containerTop),
           };
         }
         moveTable(table, position, newOffset);
@@ -241,33 +204,21 @@ export const RoomCreatTools = () => {
     name: string,
     opacity: number = 100
   ) => {
-    if (!selectedRect.current) {
+    const rect = getSelectedRect();
+    if (!rect) {
       return;
     }
-
-    const { left, top, width, height } = selectedRect.current;
 
     const background: DesignElement = {
       id: "",
       type: DesignType.background,
       name: name,
-      rect: {
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-      },
+      rect,
       color,
       opacity: opacity <= 1 ? opacity : opacity / 100,
     };
     addDesignElement(background);
   };
-
-  // const handleTableActivation = (id: string) => {
-  //   setActiveTable(id === activeTable ? null : id);
-  // };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -318,6 +269,7 @@ export const RoomCreatTools = () => {
           resetSelectedTables={resetSelectedTables}
         />
         <GroundSelection
+          ref={groundRef}
           id={GROUND_ID}
           idContainer={CONTAINER_ID}
           onSelectionStart={onZoneSelectedStart}
@@ -327,12 +279,7 @@ export const RoomCreatTools = () => {
           onVerticalMove={handleVerticalMove}
           preSelection={preSelection}
         >
-          <ListTables
-            tables={tables}
-            btnSize={btnSize}
-            // activeTable={activeTable}
-            // onTableActivation={handleTableActivation}
-          />
+          <ListTables tables={tables} btnSize={btnSize} />
         </GroundSelection>
       </div>
     </div>

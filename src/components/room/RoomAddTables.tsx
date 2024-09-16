@@ -5,6 +5,7 @@ import { useTableDataStore } from "./stores/tables";
 import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
+import { useScale } from "./RoomProvider";
 import clsx from "clsx";
 
 export const RoomAddTables = ({
@@ -28,11 +29,13 @@ export const RoomAddTables = ({
     setSelectedItems(items);
   };
 
+  const { getSelectedRect } = useScale();
+
   const DEFAULT_TABLE_SIZE = 100;
-  const positionTable = (x: number, y: number) => {
+  const positionTable = (offset: Position, x: number, y: number) => {
     return {
-      left: DEFAULT_TABLE_SIZE * (1 + 1.5 * x),
-      top: DEFAULT_TABLE_SIZE * (1 + y),
+      left: offset.left + DEFAULT_TABLE_SIZE * (0.5 + 1.5 * x),
+      top: offset.top + DEFAULT_TABLE_SIZE * (0.5 + y),
     };
   };
 
@@ -42,7 +45,11 @@ export const RoomAddTables = ({
     tableNumber: number,
     selectedRect: Rectangle
   ) => {
-    const position: Position = positionTable(x, y);
+    const offsetStart = {
+      left: selectedRect.left,
+      top: selectedRect.top,
+    };
+    const position: Position = positionTable(offsetStart, x, y);
     const offset: Position = {
       left: position.left - selectedRect.left,
       top: position.top - selectedRect.top,
@@ -66,21 +73,39 @@ export const RoomAddTables = ({
     if (!selectedItems) {
       return;
     }
-    const start = positionTable(0, 0);
-    const end = positionTable(selectedItems.width, selectedItems.height);
+    const offsetStart = {
+      left: 10,
+      top: 10,
+    };
+    let selectedRect = getSelectedRect();
+
+    const start = positionTable(offsetStart, 0, 0);
+    const end = positionTable(
+      offsetStart,
+      selectedItems.width,
+      selectedItems.height
+    );
     const left = start.left - 20;
     const top = start.top - 20;
-    const width = end.left - start.left;
-    const height = end.top - start.top;
-    const selectedRect: Rectangle = {
-      left,
-      top,
-      width,
-      height,
-      right: left + width,
-      bottom: top + height,
-    };
-
+    const width = end.left - start.left + DEFAULT_TABLE_SIZE / 2;
+    const height = end.top - start.top + DEFAULT_TABLE_SIZE / 2;
+    if (selectedRect === null) {
+      selectedRect = {
+        ...{
+          left,
+          top,
+          width,
+          height,
+          right: left + width,
+          bottom: top + height,
+        },
+      };
+    } else {
+      selectedRect.width = width;
+      selectedRect.height = height;
+      selectedRect.right = left + width;
+      selectedRect.bottom = top + height;
+    }
     resetSelectedTables();
 
     let tableNumber = tables.length + 1;

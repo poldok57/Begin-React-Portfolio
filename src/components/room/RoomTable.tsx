@@ -22,7 +22,7 @@ interface RoomTableProps {
   scale?: number;
   onDelete: (id: string) => void;
   changeSelected: (id: string, selected: boolean) => void;
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   style?: React.CSSProperties;
   isActive: boolean;
   setActiveTable: (id: string | null) => void;
@@ -86,7 +86,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       style={style}
       onClick={(event) => {
         changeSelected(table.id, !table.selected);
-        onClick?.();
+        onClick?.(event);
         event.stopPropagation();
       }}
     >

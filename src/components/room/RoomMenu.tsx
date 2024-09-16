@@ -25,6 +25,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
 
   return (
     <div
+      id="room-menu"
       className="flex flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
       onMouseOver={(e) => e.stopPropagation()}
       onMouseEnter={(e) => e.stopPropagation()}

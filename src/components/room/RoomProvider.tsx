@@ -37,6 +37,31 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedRect, setStateSelectedRect] = useState<Rectangle | null>(null);
   const selectedRectRef = useRef<Rectangle | null>(null);
   const setSelectedRect = useCallback((rect: Rectangle | null) => {
+    if (rect) {
+      // Vérifier si bottom et right sont définis, sinon les calculer
+      if (rect.bottom === undefined || rect.right === undefined) {
+        const calculatedRect = { ...rect };
+
+        if (
+          calculatedRect.bottom === undefined &&
+          calculatedRect.top !== undefined &&
+          calculatedRect.height !== undefined
+        ) {
+          calculatedRect.bottom = calculatedRect.top + calculatedRect.height;
+        }
+
+        if (
+          calculatedRect.right === undefined &&
+          calculatedRect.left !== undefined &&
+          calculatedRect.width !== undefined
+        ) {
+          calculatedRect.right = calculatedRect.left + calculatedRect.width;
+        }
+
+        rect = calculatedRect;
+      }
+    }
+
     selectedRectRef.current = rect;
     setStateSelectedRect(rect);
   }, []);
