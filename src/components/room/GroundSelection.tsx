@@ -3,19 +3,26 @@ import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
 import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { useTableDataStore } from "./stores/tables";
 import { drawAllDesignElements } from "./design-elements";
+import { getCanvasSize } from "./canvas-size";
 import { useScale } from "./RoomProvider";
 import { useDebounce } from "@/hooks/useDebounce";
 
 interface GroundSelectionProps {
   onSelectionStart: () => void;
-  onSelectionMove: (clientX: number, clientY: number) => void;
   onSelectionEnd: (rect: Rectangle | null) => void;
-  onHorizontalMove: (left: number, listId: string[]) => void;
-  onVerticalMove: (top: number, listId: string[]) => void;
   id: string;
   preSelection: Rectangle | null;
   children: React.ReactNode;
   idContainer?: string;
+  changeCoordinates: ({
+    position,
+    offset,
+    tableIds,
+  }: {
+    position?: { left?: number; top?: number };
+    offset?: { left?: number; top?: number };
+    tableIds?: string[] | null;
+  }) => void;
 }
 type AxisLineType = "vertical" | "horizontal";
 
@@ -37,10 +44,8 @@ export const GroundSelection = React.forwardRef<
   (
     {
       onSelectionStart,
-      onSelectionMove,
       onSelectionEnd,
-      onHorizontalMove,
-      onVerticalMove,
+      changeCoordinates,
       id,
       preSelection,
       children,
@@ -63,6 +68,7 @@ export const GroundSelection = React.forwardRef<
     const { designElements, selectedDesignElement } = useTableDataStore(
       (state) => state
     );
+
     const itemSelectedRef = useRef(false);
     const verticalAxis = useRef<number[]>([]);
     const horizontalAxis = useRef<number[]>([]);
@@ -88,6 +94,9 @@ export const GroundSelection = React.forwardRef<
       );
     };
 
+    const scaleRef = useRef(scale);
+    const previousPosition = useRef<Position | null>(null);
+
     const getOffsetX = () => {
       if (!groundRef.current || !containerRef.current) return 0;
       return (
@@ -106,6 +115,10 @@ export const GroundSelection = React.forwardRef<
     const handleStart = (clientX: number, clientY: number) => {
       if (!groundRef.current || !containerRef.current) return;
       const containerRect = containerRef.current.getBoundingClientRect();
+      previousPosition.current = {
+        left: clientX,
+        top: clientY,
+      };
 
       if (coordinateIsInsideRect({ x: clientX, y: clientY }, containerRect)) {
         //  console.log("clic inside the container");
@@ -115,6 +128,7 @@ export const GroundSelection = React.forwardRef<
           left: containerRef.current.offsetLeft - clientX,
           top: containerRef.current.offsetTop - clientY,
         };
+
         onSelectionStart();
         return true;
       }
@@ -138,12 +152,13 @@ export const GroundSelection = React.forwardRef<
       return false;
     };
 
-    const findAlignments = () => {
+    const elementsInContainer = useRef<HTMLDivElement[]>([]);
+
+    const findElementsInContainer = () => {
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (!containerRect || !groundRef.current) return null;
 
       const children = Array.from(groundRef.current.children);
-      alignmentGroups.current = { vertical: [], horizontal: [] };
 
       const isInContainer = (rect: DOMRect) => {
         return (
@@ -154,17 +169,21 @@ export const GroundSelection = React.forwardRef<
         );
       };
 
-      const elements = children.filter((child): child is HTMLDivElement => {
-        return (
-          child instanceof HTMLDivElement &&
-          child !== containerRef.current &&
-          isInContainer(child.getBoundingClientRect())
-        );
-      });
+      elementsInContainer.current = children.filter(
+        (child): child is HTMLDivElement => {
+          return (
+            child instanceof HTMLDivElement &&
+            child !== containerRef.current &&
+            isInContainer(child.getBoundingClientRect())
+          );
+        }
+      );
+    };
 
+    const findAlignments = () => {
       const tolerance = 6; // tolerance for alignment
-
-      elements.forEach((el) => {
+      alignmentGroups.current = { vertical: [], horizontal: [] };
+      elementsInContainer.current.forEach((el) => {
         const rect = el.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -277,6 +296,30 @@ export const GroundSelection = React.forwardRef<
     };
     const debounceDrawAxe = useDebounce(drawAxe, 500);
 
+    const moveItems = (clientX: number, clientY: number) => {
+      const offset = previousPosition.current
+        ? {
+            left: (clientX - previousPosition.current.left) / scaleRef.current,
+            top: (clientY - previousPosition.current.top) / scaleRef.current,
+          }
+        : {
+            left: 0,
+            top: 0,
+          };
+      previousPosition.current = {
+        left: clientX,
+        top: clientY,
+      };
+
+      changeCoordinates({ offset });
+    };
+
+    const debouncedSetSelectedRect = useDebounce(
+      (rect: { left: number; top: number; width: number; height: number }) => {
+        setSelectedRect(rect);
+      },
+      300
+    );
     const handleMove = (clientX: number, clientY: number) => {
       if (!groundRef.current || !containerRef.current) return;
 
@@ -285,11 +328,12 @@ export const GroundSelection = React.forwardRef<
         const newLeft = Math.round(clientX + areaOffsetRef.current.left);
         const newTop = Math.round(clientY + areaOffsetRef.current.top);
 
+        moveItems(clientX, clientY);
+
         containerRef.current.style.left = `${newLeft}px`;
         containerRef.current.style.top = `${newTop}px`;
-        onSelectionMove(newLeft, newTop);
 
-        setSelectedRect({
+        debouncedSetSelectedRect({
           left: newLeft,
           top: newTop,
           width: containerRef.current.offsetWidth,
@@ -321,7 +365,7 @@ export const GroundSelection = React.forwardRef<
           Math.min(startPos.current.top, endTop)
         )}px`;
 
-        setSelectedRect({
+        debouncedSetSelectedRect({
           left: Math.round(Math.min(startPos.current.left, endLeft)),
           top: Math.round(Math.min(startPos.current.top, endTop)),
           width: width,
@@ -353,6 +397,8 @@ export const GroundSelection = React.forwardRef<
         return;
       }
       onSelectionEnd(rect);
+
+      findElementsInContainer();
       const alignments = findAlignments();
       if (!alignments) {
         setShowAlignmentLines(false);
@@ -380,9 +426,20 @@ export const GroundSelection = React.forwardRef<
 
         const offsetWidth = groundRef.current.offsetWidth;
         const offsetHeight = groundRef.current.offsetHeight;
+
+        const { width, height } = getCanvasSize(groundRef.current);
+
+        // Ajustement des dimensions du canvas
+        const canvasWidth = Math.max(width, offsetWidth, scale * offsetWidth);
+        const canvasHeight = Math.max(
+          height,
+          offsetHeight,
+          scale * offsetHeight
+        );
+
         canvasSize.current = {
-          width: scale > 1 ? Math.round(scale * offsetWidth) : offsetWidth,
-          height: scale > 1 ? Math.round(scale * offsetHeight) : offsetHeight,
+          width: Math.round(canvasWidth),
+          height: Math.round(canvasHeight),
         };
 
         [backgroundCanvasRef.current, temporaryCanvasRef.current].forEach(
@@ -412,6 +469,7 @@ export const GroundSelection = React.forwardRef<
         temporaryCtx,
         elements: designElements,
         selectedElementId: selectedDesignElement,
+        ground: groundRef.current,
         scale,
       });
     };
@@ -423,7 +481,10 @@ export const GroundSelection = React.forwardRef<
       if (group) {
         group.position = mouseX;
         const elementIds = group.elements.map((el) => el.id);
-        onHorizontalMove(mouseX + getOffsetX(), elementIds);
+        changeCoordinates({
+          position: { left: (mouseX + getOffsetX()) / scaleRef.current },
+          tableIds: elementIds,
+        });
         if (selectedAlignmentLine.current) {
           selectedAlignmentLine.current.position = mouseX;
         }
@@ -438,7 +499,11 @@ export const GroundSelection = React.forwardRef<
         group.position = mouseY;
 
         const elementIds = group.elements.map((el) => el.id);
-        onVerticalMove(mouseY + getOffsetY(), elementIds);
+        changeCoordinates({
+          position: { top: (mouseY + getOffsetY()) / scaleRef.current },
+          tableIds: elementIds,
+        });
+
         if (selectedAlignmentLine.current) {
           selectedAlignmentLine.current.position = mouseY;
         }
@@ -580,6 +645,7 @@ export const GroundSelection = React.forwardRef<
       if (selectedAlignmentLine.current !== null) {
         selectedAlignmentLine.current = null;
       }
+      previousPosition.current = null;
       handleEnd();
     };
 
@@ -630,7 +696,7 @@ export const GroundSelection = React.forwardRef<
       clearTemporaryCanvas();
       setShowAlignmentLines(false);
       itemSelectedRef.current = false;
-
+      scaleRef.current = scale;
       return () =>
         window.removeEventListener("resize", () => resizeCanvas(scale));
     }, [scale]);
@@ -649,10 +715,10 @@ export const GroundSelection = React.forwardRef<
       }
       const { left, top, width, height } = preSelection;
 
-      containerRef.current.style.left = `${left}px`;
-      containerRef.current.style.top = `${top}px`;
-      containerRef.current.style.width = `${width}px`;
-      containerRef.current.style.height = `${height}px`;
+      containerRef.current.style.left = `${left * scale}px`;
+      containerRef.current.style.top = `${top * scale}px`;
+      containerRef.current.style.width = `${width * scale}px`;
+      containerRef.current.style.height = `${height * scale}px`;
       containerRef.current.style.display = "block";
     }, [preSelection]);
 
@@ -726,16 +792,47 @@ export const GroundSelection = React.forwardRef<
         height: 0,
       };
 
+    useEffect(() => {
+      // Check if the background canvas is not defined or has no width
+      if (
+        groundRef.current &&
+        (!backgroundCanvasRef.current ||
+          backgroundCanvasRef.current.offsetWidth <
+            groundRef.current?.offsetWidth)
+      ) {
+        // Force re-render after 1 second
+        const timer = setTimeout(() => {
+          // Use a state update to trigger a re-render
+          console.log("force update canvas size");
+          resizeCanvas(scale);
+        }, 500);
+
+        // Clean up the timer
+        return () => clearTimeout(timer);
+      }
+    }, [backgroundCanvasRef.current, groundRef.current]);
+
+    // State to force update
+
     return (
       <div
         ref={groundRef}
         id={id}
-        className="overflow-auto relative w-full h-full"
+        className="overflow-auto relative inset-0 w-full h-full"
       >
+        <div className="flex absolute top-2 right-2 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300">
+          <span className="text-sm font-semibold">
+            Scale : {scale.toFixed(2)}
+          </span>
+          <span className="text-sm font-semibold text-gray-500">
+            Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
+            {backgroundCanvasRef.current?.offsetHeight}
+          </span>
+        </div>
         <canvas
           ref={backgroundCanvasRef}
           id="background-canvas"
-          className="overflow-visible absolute top-0 left-0"
+          className="overflow-visible absolute top-0 left-0 border-r border-b border-gray-500 border-dashed"
         />
         <canvas
           ref={temporaryCanvasRef}

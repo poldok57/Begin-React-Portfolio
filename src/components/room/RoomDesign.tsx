@@ -4,19 +4,35 @@ import { RangeInput } from "@/components/atom/RangeInput";
 import { X } from "lucide-react";
 import { useTableDataStore } from "./stores/tables";
 import { ModifyColor } from "./ModifyColor";
+import { DesignType } from "./types";
 import clsx from "clsx";
 
+const themeColors: string[] = [
+  "#ffffff",
+  "#d9d9d9",
+  "#b3b3b3",
+  "#8c8c8c",
+  "#666666",
+  "#404040",
+  "#1a1a1a",
+  "#000000",
+];
 interface RoomDesignProps {
   className: string;
   isTouch: boolean;
   withName?: boolean;
-  reccordBackround: (color: string, name: string, opacity: number) => void;
+  recordDesign: (
+    type: DesignType,
+    color: string,
+    name: string,
+    opacity: number
+  ) => void;
 }
 
 export const RoomDesign: React.FC<RoomDesignProps> = ({
   className,
   isTouch,
-  reccordBackround,
+  recordDesign,
   withName = false,
 }) => {
   const {
@@ -27,7 +43,8 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   } = useTableDataStore((state) => state);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [background, setBackground] = useState("#000000");
+  const [color, setColor] = useState("#e0aaaa");
+  const [bgColor, setBgColor] = useState("#d9d9d9");
   const [name, setName] = useState("");
   const [opacity, setOpacity] = useState(50);
   const ref = useRef<HTMLDivElement>(null);
@@ -58,12 +75,22 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   const handleBackgroundColorChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setBackground(e.target.value);
+    setBgColor(e.target.value);
+  };
+  const handleSquareColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setColor(e.target.value);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    reccordBackround(background, name, opacity);
+    const formData = new FormData(e.target as HTMLFormElement);
+    const type = formData.get("type") as DesignType;
+    recordDesign(type, color, name, opacity);
+  };
+
+  const handleSubmitBackground = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    recordDesign(DesignType.background, bgColor, "color", 1);
   };
 
   return (
@@ -85,13 +112,18 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
             <h2 className="justify-center w-full text-lg font-bold">
               Room design
             </h2>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+            <form
+              onSubmit={handleSubmitBackground}
+              className="flex flex-col gap-2"
+            >
               <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
                 <legend>Background</legend>
                 <ModifyColor
                   label="Color:"
                   name="background"
-                  defaultValue={"#fad0c3"}
+                  value={bgColor}
+                  defaultValue={bgColor}
+                  themeColors={themeColors}
                   onChange={handleBackgroundColorChange}
                   className="z-10 w-24 h-6"
                 />
@@ -99,6 +131,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
               </fieldset>
             </form>
             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+              <input type="hidden" name="type" value={DesignType.square} />
               <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
                 <legend>Square</legend>
                 {withName && (
@@ -121,9 +154,10 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                 )}
                 <ModifyColor
                   label="Color:"
-                  name="background"
-                  defaultValue={"#fad0c3"}
-                  onChange={handleBackgroundColorChange}
+                  name="square"
+                  value={color}
+                  defaultValue={color}
+                  onChange={handleSquareColorChange}
                   className="z-10 w-24 h-6"
                 />
                 <RangeInput
@@ -161,7 +195,13 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                     }}
                   >
                     <span
-                      className="text-sm cursor-pointer text-base-content"
+                      className={clsx(
+                        "text-sm cursor-pointer text-base-content w-full",
+                        {
+                          "text-black border-1 border-dashed border-red-500":
+                            selectedDesignElement === element.id,
+                        }
+                      )}
                       onClick={() => setSelectedDesignElement(element.id)}
                     >
                       {element.type}: {element.name}

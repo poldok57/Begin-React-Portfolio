@@ -110,7 +110,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
                 <Plus size={btnSize} />
               </button>
             </div>
-            <div className="flex justify-center">
+            <div className="flex flex-row justify-between px-4">
               <Dialog blur={true}>
                 <DialogOpen>
                   <button className="btn btn-circle btn-sm">
@@ -137,8 +137,6 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
                   />
                 </DialogContent>
               </Dialog>
-            </div>
-            <div className="flex justify-center">
               <DeleteWithConfirm
                 className="p-2 btn btn-sm"
                 position="right"

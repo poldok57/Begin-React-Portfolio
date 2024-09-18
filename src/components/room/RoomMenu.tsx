@@ -6,17 +6,22 @@ import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useScale } from "./RoomProvider";
-
+import { DesignType } from "./types";
 interface RoomMenuProps {
   btnSize: number;
-  reccordBackround: (color: string, name: string, opacity: number) => void;
+  recordDesign: (
+    type: DesignType,
+    color: string,
+    name: string,
+    opacity: number
+  ) => void;
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
 }
 
 export const RoomMenu: React.FC<RoomMenuProps> = ({
   btnSize,
-  reccordBackround,
+  recordDesign,
   addSelectedRect,
   resetSelectedTables,
 }) => {
@@ -26,7 +31,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   return (
     <div
       id="room-menu"
-      className="flex flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
+      className="flex inset-1 z-10 flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
       onMouseOver={(e) => e.stopPropagation()}
       onMouseEnter={(e) => e.stopPropagation()}
       onMouseLeave={(e) => e.stopPropagation()}
@@ -43,7 +48,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       />
       <RoomDesign
         className="flex flex-col p-1 w-full rounded-lg"
-        reccordBackround={reccordBackround}
+        recordDesign={recordDesign}
         isTouch={isTouch}
       />
       <RangeInput

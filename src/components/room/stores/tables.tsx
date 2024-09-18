@@ -11,6 +11,7 @@ interface TableDataState {
   selectedDesignElement: string | null;
   addTable: (table: TableData) => void;
   getTable: (id: string) => TableData | undefined;
+  getSelectedTables: () => TableData[];
   updateTable: (id: string, updatedTable: Partial<TableData>) => void;
   updateSelectedTable: (updatedTable: Partial<TableData>) => void;
   countSelectedTables: () => number;
@@ -43,6 +44,9 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
   },
   getTable: (id: string) => {
     return get().tables.find((table) => table.id === id);
+  },
+  getSelectedTables: () => {
+    return get().tables.filter((table) => table.selected);
   },
   updateTable: (id, updatedTable) =>
     set(

@@ -7,7 +7,10 @@ const drawDesignElement = (
 ) => {
   ctx.globalAlpha = element.opacity || 1;
   switch (element.type) {
-    case DesignType.background:
+    case DesignType.square:
+      if (!element.rect) {
+        return;
+      }
       if (
         !element.rect.left ||
         !element.rect.top ||
@@ -38,7 +41,7 @@ const drawDesignElement = (
         return;
       }
       ctx.strokeStyle = element.color;
-      ctx.lineWidth = element.rect.width;
+      ctx.lineWidth = element.lineWidth ?? 1;
       ctx.beginPath();
       ctx.moveTo(element.point1.x * scale, element.point1.y * scale);
       ctx.lineTo(element.point2.x * scale, element.point2.y * scale);
@@ -49,7 +52,7 @@ const drawDesignElement = (
         return;
       }
       ctx.strokeStyle = element.color;
-      ctx.lineWidth = element.rect.width;
+      ctx.lineWidth = element.lineWidth ?? 1;
       ctx.beginPath();
       ctx.moveTo(element.point1.x * scale, element.point1.y * scale);
       ctx.quadraticCurveTo(
@@ -71,9 +74,11 @@ const hightLightSelectedElement = (
   const margin = 5;
   // Dessiner un trait pointillé avec une marge extérieure
   switch (element.type) {
-    case DesignType.background:
+    case DesignType.square:
       ctx.globalAlpha = 1;
-
+      if (!element.rect) {
+        return;
+      }
       if (
         !element.rect.left ||
         !element.rect.top ||
@@ -135,6 +140,7 @@ const hightLightSelectedElement = (
 interface DrawAllDesignElementsProps {
   ctx: CanvasRenderingContext2D;
   temporaryCtx: CanvasRenderingContext2D | null;
+  ground: HTMLDivElement | null;
   elements: DesignElement[];
   selectedElementId: string | null;
   scale?: number;
@@ -142,6 +148,7 @@ interface DrawAllDesignElementsProps {
 
 export const drawAllDesignElements = ({
   ctx,
+  ground,
   elements,
   selectedElementId,
   temporaryCtx,
@@ -160,9 +167,15 @@ export const drawAllDesignElements = ({
   }
 
   elements.forEach((element) => {
-    drawDesignElement(ctx, element, scale);
-    if (element.id === selectedElementId) {
-      hightLightSelectedElement(temporaryCtx ?? ctx, element, scale);
+    if (element.type === DesignType.background) {
+      if (ground) {
+        ground.style.background = element.color;
+      }
+    } else {
+      drawDesignElement(ctx, element, scale);
+      if (element.id === selectedElementId) {
+        hightLightSelectedElement(temporaryCtx ?? ctx, element, scale);
+      }
     }
   });
 };

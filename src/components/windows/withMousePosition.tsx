@@ -333,6 +333,7 @@ export function withMousePosition<P extends object>(
           setCanMove(false);
           return;
         }
+        event.stopPropagation();
         event.preventDefault();
         setMouseCoordinates(coord.x, coord.y);
         calculNewPosition();
@@ -361,9 +362,7 @@ export function withMousePosition<P extends object>(
           if (trace) {
             console.log(
               `[${WrappedComponent.name}] startDrag: mouse is NOT inside the border of the component event:`,
-              event,
-              "rect: ",
-              component.getBoundingClientRect()
+              event
             );
           }
           return;
@@ -379,6 +378,7 @@ export function withMousePosition<P extends object>(
             top: component.offsetTop,
           });
           event.stopPropagation();
+          event.preventDefault();
         }
       };
 

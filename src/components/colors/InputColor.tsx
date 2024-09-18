@@ -46,7 +46,6 @@ export const InputColor: React.FC<InputColorProps> = ({
       {showPicker && (
         <DisplayColorPicker
           color={color}
-          memoColor={color}
           fieldName={fieldName}
           label={label}
           themeColors={themeColors}

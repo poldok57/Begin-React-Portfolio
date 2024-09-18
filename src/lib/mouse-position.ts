@@ -97,9 +97,9 @@ export const coordinateIsInsideRect = (
   const overhang = !extend ? 0 : isTouchDevice() ? margin : margin / 2;
   return (
     coord.x >= rect.left - overhang &&
-    coord.x <= rect.right + overhang &&
+    coord.x <= (rect?.right ?? rect.left + rect.width) + overhang &&
     coord.y >= rect.top - overhang &&
-    coord.y <= rect.bottom + overhang
+    coord.y <= (rect?.bottom ?? rect.top + rect.height) + overhang
   );
 };
 
@@ -121,9 +121,9 @@ export const mouseIsInsideBorder = (
 ): boolean => {
   return (
     coord.x > rect.left + margin &&
-    coord.x < rect.right - margin &&
+    coord.x < (rect?.right ?? rect.left + rect.width) - margin &&
     coord.y > rect.top + margin &&
-    coord.y < rect.bottom - margin
+    coord.y < (rect?.bottom ?? rect.top + rect.height) - margin
   );
 };
 
@@ -248,8 +248,8 @@ export const mouseIsOnBorderRect = (
   rect: DOMRect | Rectangle
 ): string | null => {
   if (
-    coord.x >= rect.right - margin &&
-    coord.x <= rect.right + margin &&
+    coord.x >= (rect?.right ?? rect.left + rect.width) - margin &&
+    coord.x <= (rect?.right ?? rect.left + rect.width) + margin &&
     coord.y >= rect.top - margin &&
     coord.y <= rect.top + margin
   ) {
@@ -266,36 +266,42 @@ export const mouseIsOnBorderRect = (
   if (
     coord.x >= rect.left - margin &&
     coord.x <= rect.left + margin &&
-    coord.y >= rect.bottom - margin &&
-    coord.y <= rect.bottom + margin
+    coord.y >= (rect?.bottom ?? rect.top + rect.height) - margin &&
+    coord.y <= (rect?.bottom ?? rect.top + rect.height) + margin
   ) {
     return BORDER.CORNER.BOTTOM_LEFT;
   }
   if (
-    coord.x >= rect.right - margin &&
-    coord.x <= rect.right + margin &&
-    coord.y >= rect.bottom - margin &&
-    coord.y <= rect.bottom + margin
+    coord.x >= (rect?.right ?? rect.left + rect.width) - margin &&
+    coord.x <= (rect?.right ?? rect.left + rect.width) + margin &&
+    coord.y >= (rect?.bottom ?? rect.top + rect.height) - margin &&
+    coord.y <= (rect?.bottom ?? rect.top + rect.height) + margin
   ) {
     return BORDER.CORNER.BOTTOM_RIGHT;
   }
   if (coord.x >= rect.left - margin && coord.x <= rect.left + margin) {
     return BORDER.LEFT;
   }
-  if (coord.x >= rect.right - margin && coord.x <= rect.right + margin) {
+  if (
+    coord.x >= (rect?.right ?? rect.left + rect.width) - margin &&
+    coord.x <= (rect?.right ?? rect.left + rect.width) + margin
+  ) {
     return BORDER.RIGHT;
   }
   if (coord.y >= rect.top - margin && coord.y <= rect.top + margin) {
     return BORDER.TOP;
   }
-  if (coord.y >= rect.bottom - margin && coord.y <= rect.bottom + margin) {
+  if (
+    coord.y >= (rect?.bottom ?? rect.top + rect.height) - margin &&
+    coord.y <= (rect?.bottom ?? rect.top + rect.height) + margin
+  ) {
     return BORDER.BOTTOM;
   }
   if (
     coord.x >= rect.left &&
-    coord.x <= rect.right &&
+    coord.x <= (rect?.right ?? rect.left + rect.width) &&
     coord.y >= rect.top &&
-    coord.y <= rect.bottom
+    coord.y <= (rect?.bottom ?? rect.top + rect.height)
   ) {
     return BORDER.INSIDE;
   }

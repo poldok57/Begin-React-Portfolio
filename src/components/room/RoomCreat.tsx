@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { GroupCreat } from "./GroupCreat";
-import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
+import { Rectangle } from "@/lib/canvas/types";
 import { DesignElement, DesignType, TableData } from "./types";
+import { RectPosition as Position } from "@/lib/canvas/types";
 import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { withMousePosition } from "@/components/windows/withMousePosition";
@@ -18,14 +19,26 @@ const MARGIN = 10;
 const RoomMenuWP = withMousePosition(RoomMenu);
 const GroupCreatWP = withMousePosition(GroupCreat);
 
+export const getGroundOffset = () => {
+  const ground = document.getElementById(GROUND_ID);
+  if (ground) {
+    const { left, top } = ground.getBoundingClientRect();
+    const { scrollLeft, scrollTop } = ground;
+    return {
+      left: scrollLeft - left,
+      top: scrollTop - top,
+    };
+  }
+  return { left: 0, top: 0 };
+};
+
 export const RoomCreatTools = () => {
-  const { updateTable, addDesignElement, getTable } = useTableDataStore(
-    (state) => state
-  );
+  const { updateTable, addDesignElement, getTable, getSelectedTables } =
+    useTableDataStore((state) => state);
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
-  const { scale, getScale, getSelectedRect } = useScale();
+  const { getSelectedRect, getElementRect } = useScale();
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);
@@ -33,53 +46,71 @@ export const RoomCreatTools = () => {
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
 
-  const moveTable = useCallback(
-    (
-      table: TableData,
-      position: { left?: number; top?: number },
-      offset: Position | null = null
-    ) => {
-      const currentScale = getScale();
-      const scalePosition = {
-        left:
-          position.left === undefined
-            ? table.position.left
-            : position.left / currentScale,
-        top:
-          position.top === undefined
-            ? table.position.top
-            : position.top / currentScale,
+  const updateTablePosition = (
+    table: TableData,
+    position?: { left?: number; top?: number },
+    offset?: { left?: number; top?: number }
+  ) => {
+    if (!position) {
+      const newPosition = {
+        left: table.position.left + (offset?.left ?? 0),
+        top: table.position.top + (offset?.top ?? 0),
       };
-      if (offset) {
-        updateTable(table.id, { position: scalePosition, offset: offset });
-      } else {
-        updateTable(table.id, { position: scalePosition });
+      updateTable(table.id, { position: newPosition as Position });
+      return;
+    }
+    const newPosition = {
+      left: table.position.left,
+      top: table.position.top,
+    };
+    // get element rect with real size without scale
+    const rect = getElementRect(table.id);
+    // convert axis position to border position
+    if (position.left !== undefined) {
+      // Log pour comparer offsetWidth et Rect.width
+      newPosition.left = Math.round(position.left - (rect?.width ?? 0) / 2);
+    }
+    if (position.top !== undefined) {
+      newPosition.top = Math.round(position.top - (rect?.height ?? 0) / 2);
+    }
+
+    updateTable(table.id, { position: newPosition as Position });
+  };
+
+  const changeCoordinates = ({
+    position,
+    offset,
+    tableIds,
+  }: {
+    position?: { left?: number; top?: number };
+    offset?: { left?: number; top?: number };
+    tableIds?: string[] | null;
+  }) => {
+    if (!tableIds) {
+      // Find all selected tables
+      const selectedTables = getSelectedTables();
+
+      // Move all selected tables
+      selectedTables.forEach((table) => {
+        updateTablePosition(table, position, offset);
+      });
+
+      // Update selectedTablesRef
+      selectedTablesRef.current = selectedTables;
+
+      return;
+    }
+
+    tableIds.forEach((id) => {
+      const table = getTable(id);
+      if (table) {
+        updateTablePosition(table, position, offset);
       }
-      const tableElement = document.getElementById(table.id);
-      if (tableElement) {
-        tableElement.style.left = `${scalePosition.left * currentScale}px`;
-        tableElement.style.top = `${scalePosition.top * currentScale}px`;
-      }
-    },
-    [updateTable, getScale]
-  );
+    });
+  };
 
   const onZoneSelectedStart = () => {
     selectedArea.current = true;
-  };
-
-  const onZoneSelectedMove = (rectLeft: number, rectTop: number) => {
-    if (!selectedArea.current) return;
-
-    selectedTablesRef.current.forEach((table) => {
-      if (table.offset) {
-        const position: Position = {
-          left: Math.round(rectLeft + table.offset.left),
-          top: Math.round(rectTop + table.offset.top),
-        };
-        moveTable(table, position);
-      }
-    });
   };
 
   const upDateSelectedTables = (tables: TableData[] | null = null) => {
@@ -92,7 +123,7 @@ export const RoomCreatTools = () => {
 
   const resetSelectedTables = () => {
     tables.forEach((table) => {
-      updateTable(table.id, { offset: null, selected: false });
+      updateTable(table.id, { selected: false });
     });
     selectedTablesRef.current = [];
   };
@@ -100,7 +131,7 @@ export const RoomCreatTools = () => {
   const onZoneSelectedEnd = (rect: Rectangle | null) => {
     if (!rect) {
       tables.forEach((table) => {
-        updateTable(table.id, { offset: null, selected: false });
+        updateTable(table.id, { selected: false });
       });
       selectedArea.current = false;
 
@@ -129,7 +160,7 @@ export const RoomCreatTools = () => {
     });
 
     updatedTables.forEach((table) => {
-      updateTable(table.id, { selected: table.selected, offset: table.offset });
+      updateTable(table.id, { selected: table.selected });
     });
 
     upDateSelectedTables(updatedTables);
@@ -141,83 +172,26 @@ export const RoomCreatTools = () => {
     upDateSelectedTables();
   };
 
-  const handleHorizontalMove = (newLeft: number, listId: string[]) => {
-    const containerLeft = getSelectedRect()?.left || 0;
-
-    listId.forEach((id) => {
-      const tableElement = document.getElementById(id);
-      if (tableElement) {
-        const table = getTable(id);
-        if (!table) {
-          return;
-        }
-        const { width } = tableElement.getBoundingClientRect();
-
-        const newLeftPosition = Math.round(newLeft - width / 2);
-        const position = {
-          left: Math.round(newLeftPosition),
-        };
-        let newOffset: Position | null = null;
-        if (table.offset) {
-          newOffset = {
-            left: Math.round(newLeftPosition - containerLeft),
-            top: table.offset.top,
-          };
-        }
-
-        moveTable(table, position, newOffset);
-      }
-    });
-    upDateSelectedTables();
-  };
-
-  const handleVerticalMove = (newTop: number, listId: string[]) => {
-    const containerTop = getSelectedRect()?.top || 0;
-
-    listId.forEach((id) => {
-      const tableElement = document.getElementById(id);
-      if (tableElement) {
-        const table = getTable(id);
-        if (!table) {
-          return;
-        }
-        const { height } = tableElement.getBoundingClientRect();
-        const newTopPosition = Math.round(newTop - height / 2);
-        const position = {
-          top: Math.round(newTopPosition),
-        };
-        let newOffset: Position | null = null;
-        if (table.offset) {
-          newOffset = {
-            left: table.offset.left,
-            top: Math.round(newTopPosition - containerTop),
-          };
-        }
-        moveTable(table, position, newOffset);
-      }
-    });
-    upDateSelectedTables();
-  };
-
-  const handleRecordBackground = (
+  const handleRecordDesing = (
+    type: DesignType = DesignType.square,
     color: string,
     name: string,
     opacity: number = 100
   ) => {
     const rect = getSelectedRect();
-    if (!rect) {
+    if (!rect && type === DesignType.square) {
       return;
     }
 
-    const background: DesignElement = {
+    const designElement: DesignElement = {
       id: "",
-      type: DesignType.background,
+      type,
       name: name,
       rect,
       color,
       opacity: opacity <= 1 ? opacity : opacity / 100,
     };
-    addDesignElement(background);
+    addDesignElement(designElement);
   };
 
   useEffect(() => {
@@ -240,11 +214,6 @@ export const RoomCreatTools = () => {
       className="flex w-full bg-background"
       style={{ height: "calc(100vh - 70px)" }}
     >
-      <div className="absolute top-2 right-2 px-2 py-1 bg-gray-200 rounded border border-gray-300">
-        <span className="text-sm font-semibold">
-          Scale : {scale.toFixed(2)}
-        </span>
-      </div>
       <div className="flex flex-row w-full">
         <GroupCreatWP
           className="absolute top-0 left-0 z-10"
@@ -264,7 +233,7 @@ export const RoomCreatTools = () => {
           withMinimize={true}
           draggable={true}
           btnSize={btnSize}
-          reccordBackround={handleRecordBackground}
+          recordDesign={handleRecordDesing}
           addSelectedRect={addSelectedRect}
           resetSelectedTables={resetSelectedTables}
         />
@@ -272,14 +241,12 @@ export const RoomCreatTools = () => {
           ref={groundRef}
           id={GROUND_ID}
           idContainer={CONTAINER_ID}
+          changeCoordinates={changeCoordinates}
           onSelectionStart={onZoneSelectedStart}
-          onSelectionMove={onZoneSelectedMove}
           onSelectionEnd={onZoneSelectedEnd}
-          onHorizontalMove={handleHorizontalMove}
-          onVerticalMove={handleVerticalMove}
           preSelection={preSelection}
         >
-          <ListTables tables={tables} btnSize={btnSize} />
+          <ListTables tables={tables} btnSize={btnSize} editable={true} />
         </GroundSelection>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "./SelectionItems";
 import { useTableDataStore } from "./stores/tables";
@@ -7,6 +7,7 @@ import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import { useScale } from "./RoomProvider";
 import clsx from "clsx";
+import { getGroundOffset } from "./RoomCreat";
 
 export const RoomAddTables = ({
   className,
@@ -17,6 +18,7 @@ export const RoomAddTables = ({
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const [openSelection, setOpenSelection] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{
     width: number;
@@ -29,7 +31,7 @@ export const RoomAddTables = ({
     setSelectedItems(items);
   };
 
-  const { getSelectedRect } = useScale();
+  const { getSelectedRect, scale } = useScale();
 
   const DEFAULT_TABLE_SIZE = 100;
   const positionTable = (offset: Position, x: number, y: number) => {
@@ -51,8 +53,8 @@ export const RoomAddTables = ({
     };
     const position: Position = positionTable(offsetStart, x, y);
     const offset: Position = {
-      left: position.left - selectedRect.left,
-      top: position.top - selectedRect.top,
+      left: (position.left - selectedRect.left) * scale,
+      top: (position.top - selectedRect.top) * scale,
     };
 
     const newTable = {
@@ -73,10 +75,24 @@ export const RoomAddTables = ({
     if (!selectedItems) {
       return;
     }
-    const offsetStart = {
-      left: 10,
-      top: 10,
+
+    let offsetStart = {
+      left: 50,
+      top: 50,
     };
+
+    // get the parent element
+    const parentElement = ref.current?.parentElement;
+    if (parentElement) {
+      const parentRect = parentElement.getBoundingClientRect();
+      const offset = getGroundOffset();
+      offsetStart = {
+        left: (parentRect.right + offset.left) / scale + 50,
+        top: (parentRect.top + offset.top) / scale + 20,
+      };
+    }
+
+    // use container position to adjust offsetStart
     let selectedRect = getSelectedRect();
 
     const start = positionTable(offsetStart, 0, 0);
@@ -85,8 +101,8 @@ export const RoomAddTables = ({
       selectedItems.width,
       selectedItems.height
     );
-    const left = start.left - 20;
-    const top = start.top - 20;
+    const left = start.left - DEFAULT_TABLE_SIZE / 4;
+    const top = start.top - DEFAULT_TABLE_SIZE / 4;
     const width = end.left - start.left + DEFAULT_TABLE_SIZE / 2;
     const height = end.top - start.top + DEFAULT_TABLE_SIZE / 2;
     if (selectedRect === null) {
@@ -121,7 +137,13 @@ export const RoomAddTables = ({
   };
 
   return (
-    <div className={clsx("relative", className)}>
+    <div
+      ref={ref}
+      className={clsx("relative", className)}
+      onMouseOver={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => e.stopPropagation()}
+      onMouseLeave={(e) => e.stopPropagation()}
+    >
       <Button onClick={() => setOpenSelection(true)}>Add tables</Button>
       {openSelection && (
         <SelectionItems

@@ -12,7 +12,6 @@ interface DisplayColorPickerProps {
   color: string;
   themeColors?: string[];
   themeName?: string;
-  memoColor: string;
   fieldName: string;
   label: string;
   withCloseBtn?: boolean;
@@ -24,7 +23,6 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   color,
   themeColors,
   themeName = "Theme colors",
-  memoColor,
   fieldName,
   label,
   withCloseBtn = false,
@@ -33,8 +31,9 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
 }) => {
   const pickerRef = useRef<HTMLDialogElement>(null);
   const [showSwatches, setShowSwatches] = useState(false);
+  const memoColorRef = useRef(color);
   const handleCopyColor = () => {
-    navigator.clipboard.writeText(memoColor);
+    navigator.clipboard.writeText(color);
   };
   const handleClose = () => {
     pickerRef.current?.close();
@@ -182,11 +181,11 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
           <div className="flex relative gap-2 justify-center items-center">
             <button
               className="btn btn-sm"
-              onClick={() => setColor(fieldName, memoColor)}
+              onClick={() => setColor(fieldName, memoColorRef.current)}
               title="Back to initial color"
-              style={{ backgroundColor: memoColor }}
+              style={{ backgroundColor: memoColorRef.current }}
             >
-              <Undo2 size={16} color={getContrastColor(memoColor)} />
+              <Undo2 size={16} color={getContrastColor(memoColorRef.current)} />
             </button>
             <input
               type="text"

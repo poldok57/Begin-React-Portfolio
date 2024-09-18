@@ -55,7 +55,7 @@ export interface TableData extends Table {
   type: TableType;
   selected: boolean;
   position: Position;
-  offset?: Position | null;
+  // offset?: Position | null;
   settings?: TableSettings | null;
 }
 
@@ -71,7 +71,7 @@ export interface DesignElement {
   id: string;
   type: DesignType;
   name: string;
-  rect: Rectangle;
+  rect: Rectangle | null;
   color: string;
   opacity?: number;
   lineWidth?: number;

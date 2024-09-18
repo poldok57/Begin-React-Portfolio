@@ -12,6 +12,7 @@ interface ScaleContextProps {
   scale: number;
   setScale: (scale: number) => void;
   getScale: () => number;
+  getElementRect: (id: string) => Rectangle | null;
   selectedRect: Rectangle | null;
   setSelectedRect: (rect: Rectangle | null) => void;
   getSelectedRect: () => Rectangle | null;
@@ -32,6 +33,19 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const getScale = useCallback(() => {
     return scaleRef.current;
+  }, []);
+
+  const getElementRect = useCallback((id: string) => {
+    const rect = document.getElementById(id)?.getBoundingClientRect();
+    if (!rect) {
+      return null;
+    }
+    return {
+      left: rect.left / scaleRef.current,
+      top: rect.top / scaleRef.current,
+      width: rect.width / scaleRef.current,
+      height: rect.height / scaleRef.current,
+    };
   }, []);
 
   const [selectedRect, setStateSelectedRect] = useState<Rectangle | null>(null);
@@ -66,7 +80,22 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     setStateSelectedRect(rect);
   }, []);
   const getSelectedRect = useCallback(() => {
-    return selectedRectRef.current;
+    const rect = selectedRectRef.current;
+    const scale = getScale();
+    if (rect) {
+      if (scale === 1) {
+        return rect;
+      }
+      return {
+        left: Math.round(rect.left / scale),
+        top: Math.round(rect.top / scale),
+        width: Math.round(rect.width / scale),
+        height: Math.round(rect.height / scale),
+        right: Math.round((rect.right ?? rect.left + rect.width) / scale),
+        bottom: Math.round((rect.bottom ?? rect.top + rect.height) / scale),
+      };
+    }
+    return null;
   }, []);
 
   return (
@@ -75,6 +104,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
         scale: scale,
         setScale,
         getScale,
+        getElementRect,
         selectedRect,
         setSelectedRect,
         getSelectedRect,
