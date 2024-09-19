@@ -56,7 +56,7 @@ export const GroundSelection = React.forwardRef<
     },
     ref
   ) => {
-    const { scale, setSelectedRect } = useScale();
+    const { scale, setSelectedRect, setScale } = useScale();
     const isSelectingRef = useRef(false);
     const startPos = useRef<Position | null>(null);
     const groundRef = useRef<HTMLDivElement>(null);
@@ -725,6 +725,27 @@ export const GroundSelection = React.forwardRef<
       containerRef.current.style.display = "block";
     }, [preSelection]);
 
+    const intervalPoints = useRef(0);
+
+    const calculateScale = (e: TouchEvent) => {
+      // Calculate the distance between the two touch points
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      if (intervalPoints.current === 0) {
+        intervalPoints.current = distance;
+        return;
+      }
+      const ratio = distance / intervalPoints.current;
+      intervalPoints.current = distance;
+      setScale(scale * ratio);
+    };
+
+    const debouncedCalculateScale = useDebounce(calculateScale, 250);
+
     useEffect(() => {
       const ground = groundRef.current;
       if (!ground) {
@@ -743,6 +764,8 @@ export const GroundSelection = React.forwardRef<
         }
         if (e.touches.length > 1) {
           groundRef.current.style.touchAction = "auto";
+          // Calculate the distance between the two touch points
+          calculateScale(e);
           return;
         }
         groundRef.current.style.touchAction = "none";
@@ -760,6 +783,8 @@ export const GroundSelection = React.forwardRef<
       const handleTouchMove = (e: TouchEvent) => {
         const touch = e.touches[0];
         if (e.touches.length > 1) {
+          // Calculate the distance between the two touch points
+          debouncedCalculateScale(e);
           return;
         }
         // console.log("touch move", touch.clientX, touch.clientY);
@@ -783,6 +808,11 @@ export const GroundSelection = React.forwardRef<
         }
       };
 
+      const handleTouchEnd = () => {
+        intervalPoints.current = 0;
+        handleMouseUp();
+      };
+
       document.addEventListener("keydown", handleKeyDown);
 
       ground.addEventListener("touchstart", handleTouchStart);
@@ -797,7 +827,7 @@ export const GroundSelection = React.forwardRef<
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("touchmove", handleTouchMove);
         document.removeEventListener("mouseup", handleMouseUp);
-        document.removeEventListener("touchend", handleMouseUp);
+        document.removeEventListener("touchend", handleTouchEnd);
         document.removeEventListener("keydown", handleKeyDown);
       };
     }, []);
