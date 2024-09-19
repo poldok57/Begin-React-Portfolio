@@ -12,6 +12,9 @@ interface ScaleContextProps {
   scale: number;
   setScale: (scale: number) => void;
   getScale: () => number;
+  rotation: number;
+  setRotation: (rotation: number) => void;
+  getRotation: () => number;
   getElementRect: (id: string) => Rectangle | null;
   selectedRect: Rectangle | null;
   setSelectedRect: (rect: Rectangle | null) => void;
@@ -24,7 +27,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [scale, setStateScale] = useState<number>(1);
-
   const scaleRef = useRef<number>(1);
   const setScale = useCallback((newScale: number) => {
     scaleRef.current = newScale;
@@ -34,6 +36,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   const getScale = useCallback(() => {
     return scaleRef.current;
   }, []);
+
+  const [rotation, setStateRotation] = useState<number>(0);
+  const rotationRef = useRef<number>(0);
+
+  const setRotation = useCallback((newRotation: number) => {
+    rotationRef.current = newRotation;
+    setStateRotation(newRotation);
+  }, []);
+
+  const getRotation = () => {
+    return rotationRef.current;
+  };
 
   const getElementRect = useCallback((id: string) => {
     const rect = document.getElementById(id)?.getBoundingClientRect();
@@ -108,6 +122,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
         selectedRect,
         setSelectedRect,
         getSelectedRect,
+        rotation,
+        setRotation,
+        getRotation,
       }}
     >
       {children}

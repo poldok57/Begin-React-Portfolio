@@ -33,12 +33,17 @@ export const getGroundOffset = () => {
 };
 
 export const RoomCreatTools = () => {
-  const { updateTable, addDesignElement, getTable, getSelectedTables } =
-    useTableDataStore((state) => state);
+  const {
+    updateTable,
+    addDesignElement,
+    getTable,
+    getSelectedTables,
+    deleteDesignElementByType,
+  } = useTableDataStore((state) => state);
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
-  const { getSelectedRect, getElementRect } = useScale();
+  const { getSelectedRect, getElementRect, getRotation } = useScale();
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);
@@ -46,17 +51,27 @@ export const RoomCreatTools = () => {
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
 
+  const roundToTwoDigits = (value: number) => parseFloat(value.toFixed(2));
+
   const updateTablePosition = (
     table: TableData,
     position?: { left?: number; top?: number },
-    offset?: { left?: number; top?: number }
+    offset?: { left?: number; top?: number },
+    rotation?: number
   ) => {
     if (!position) {
       const newPosition = {
-        left: table.position.left + (offset?.left ?? 0),
-        top: table.position.top + (offset?.top ?? 0),
+        left: roundToTwoDigits(table.position.left + (offset?.left ?? 0)),
+        top: roundToTwoDigits(table.position.top + (offset?.top ?? 0)),
       };
-      updateTable(table.id, { position: newPosition as Position });
+      const updateData: Partial<TableData> = {
+        position: newPosition as Position,
+      };
+      if (rotation !== undefined) {
+        updateData.rotation = rotation;
+      }
+      updateTable(table.id, updateData);
+
       return;
     }
     const newPosition = {
@@ -80,10 +95,12 @@ export const RoomCreatTools = () => {
   const changeCoordinates = ({
     position,
     offset,
+    rotation,
     tableIds,
   }: {
     position?: { left?: number; top?: number };
     offset?: { left?: number; top?: number };
+    rotation?: number;
     tableIds?: string[] | null;
   }) => {
     if (!tableIds) {
@@ -92,7 +109,7 @@ export const RoomCreatTools = () => {
 
       // Move all selected tables
       selectedTables.forEach((table) => {
-        updateTablePosition(table, position, offset);
+        updateTablePosition(table, position, offset, rotation);
       });
 
       // Update selectedTablesRef
@@ -191,6 +208,13 @@ export const RoomCreatTools = () => {
       color,
       opacity: opacity <= 1 ? opacity : opacity / 100,
     };
+    const rotation = getRotation();
+    if (rotation) {
+      designElement.rotation = rotation;
+    }
+    if (type === DesignType.background) {
+      deleteDesignElementByType(type);
+    }
     addDesignElement(designElement);
   };
 

@@ -20,21 +20,41 @@ const drawDesignElement = (
         break;
       }
       ctx.fillStyle = element.color;
+
+      // Save the current context state
+      ctx.save();
+
+      // Translate to the center of the rectangle
+      ctx.translate(
+        (element.rect.left + element.rect.width / 2) * scale,
+        (element.rect.top + element.rect.height / 2) * scale
+      );
+
+      // Rotate if rotation is defined
+      if (element.rotation) {
+        ctx.rotate((element.rotation * Math.PI) / 180);
+      }
+
+      // Draw the rectangle
       ctx.fillRect(
-        element.rect.left * scale,
-        element.rect.top * scale,
+        (-element.rect.width * scale) / 2,
+        (-element.rect.height * scale) / 2,
         element.rect.width * scale,
         element.rect.height * scale
       );
-      // Ajouter un bord noir
+
+      // Add a black border
       ctx.strokeStyle = "#888888";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        element.rect.left * scale,
-        element.rect.top * scale,
+        (-element.rect.width * scale) / 2,
+        (-element.rect.height * scale) / 2,
         element.rect.width * scale,
         element.rect.height * scale
       );
+
+      // Restore the context state
+      ctx.restore();
       break;
     case DesignType.line:
       if (!element.point1 || !element.point2) {
@@ -72,7 +92,6 @@ const hightLightSelectedElement = (
   scale: number
 ) => {
   const margin = 5;
-  // Dessiner un trait pointillé avec une marge extérieure
   switch (element.type) {
     case DesignType.square:
       ctx.globalAlpha = 1;
@@ -87,17 +106,35 @@ const hightLightSelectedElement = (
       ) {
         break;
       }
-      // Dessiner un trait pointillé avec une marge extérieure
-      ctx.setLineDash([10, 5]); // Définir le motif du trait pointillé
+
+      // Save the current context state
+      ctx.save();
+
+      // Translate to the center of the rectangle
+      ctx.translate(
+        (element.rect.left + element.rect.width / 2) * scale,
+        (element.rect.top + element.rect.height / 2) * scale
+      );
+
+      // Rotate if rotation is defined
+      if (element.rotation) {
+        ctx.rotate((element.rotation * Math.PI) / 180);
+      }
+
+      // Draw a dashed line with an outer margin
+      ctx.setLineDash([10, 5]); // Set the dashed line pattern
       ctx.strokeStyle = "red";
       ctx.lineWidth = 2;
       ctx.strokeRect(
-        element.rect.left * scale - margin,
-        element.rect.top * scale - margin,
+        (-element.rect.width / 2 - margin) * scale,
+        (-element.rect.height / 2 - margin) * scale,
         (element.rect.width + 2 * margin) * scale,
         (element.rect.height + 2 * margin) * scale
       );
-      ctx.setLineDash([]); // Réinitialiser le style de ligne
+      ctx.setLineDash([]); // Reset the line style
+
+      // Restore the context state
+      ctx.restore();
       break;
     case DesignType.line:
       if (!element.point1 || !element.point2) {

@@ -55,7 +55,6 @@ export interface TableData extends Table {
   type: TableType;
   selected: boolean;
   position: Position;
-  // offset?: Position | null;
   settings?: TableSettings | null;
 }
 
@@ -75,6 +74,7 @@ export interface DesignElement {
   color: string;
   opacity?: number;
   lineWidth?: number;
+  rotation?: number; // Angle de rotation en degrés
   point1?: Coordinate;
   point2?: Coordinate;
   point3?: Coordinate;

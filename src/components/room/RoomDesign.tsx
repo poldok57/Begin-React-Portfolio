@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 import { useTableDataStore } from "./stores/tables";
 import { ModifyColor } from "./ModifyColor";
 import { DesignType } from "./types";
+import { getContrastColor } from "../colors/colors";
+
 import clsx from "clsx";
 
 const themeColors: string[] = [
@@ -195,13 +197,13 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
                     }}
                   >
                     <span
-                      className={clsx(
-                        "text-sm cursor-pointer text-base-content w-full",
-                        {
-                          "text-black border-1 border-dashed border-red-500":
-                            selectedDesignElement === element.id,
-                        }
-                      )}
+                      className={clsx("text-sm cursor-pointer w-full", {
+                        "border-1 border-dashed border-red-500 font-semibold text-opacity-100":
+                          selectedDesignElement === element.id,
+                      })}
+                      style={{
+                        color: getContrastColor(element.color),
+                      }}
                       onClick={() => setSelectedDesignElement(element.id)}
                     >
                       {element.type}: {element.name}

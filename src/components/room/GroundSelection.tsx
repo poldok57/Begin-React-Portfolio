@@ -20,10 +20,12 @@ interface GroundSelectionProps {
   changeCoordinates: ({
     position,
     offset,
+    rotation,
     tableIds,
   }: {
     position?: { left?: number; top?: number };
     offset?: { left?: number; top?: number };
+    rotation?: number;
     tableIds?: string[] | null;
   }) => void;
 }
@@ -56,7 +58,8 @@ export const GroundSelection = React.forwardRef<
     },
     ref
   ) => {
-    const { scale, setSelectedRect, setScale, getScale } = useScale();
+    const { scale, rotation, setSelectedRect, setRotation, getRotation } =
+      useScale();
     const isSelectingRef = useRef(false);
     const startPos = useRef<Position | null>(null);
     const groundRef = useRef<HTMLDivElement>(null);
@@ -251,7 +254,10 @@ export const GroundSelection = React.forwardRef<
       horizontal: number[];
     }) => {
       if (!temporaryCanvasRef.current || !groundRef.current) return;
-
+      if (rotation !== 0) {
+        clearTemporaryCanvas();
+        return;
+      }
       const offsetLeft = getOffsetX();
       const offsetTop = getOffsetY();
 
@@ -347,7 +353,9 @@ export const GroundSelection = React.forwardRef<
           alignmentLinesRef.current = false;
           clearTemporaryCanvas();
         }
-        debounceDrawAxe();
+        if (getRotation() === 0) {
+          debounceDrawAxe();
+        }
 
         return;
       }
@@ -383,6 +391,8 @@ export const GroundSelection = React.forwardRef<
 
       if (!containerRef.current) {
         onSelectionEnd(null);
+        setRotation(0);
+
         return;
       }
 
@@ -393,6 +403,7 @@ export const GroundSelection = React.forwardRef<
         containerRef.current.style.display = "none";
         clearTemporaryCanvas();
         setShowAlignmentLines(false);
+        setRotation(0);
         return;
       }
 
@@ -518,6 +529,10 @@ export const GroundSelection = React.forwardRef<
         return false;
       }
 
+      if (rotation !== 0) {
+        return false;
+      }
+
       const indexV = verticalAxis.current.findIndex(
         (x) => Math.abs(x - mouseX) <= 5
       );
@@ -568,7 +583,7 @@ export const GroundSelection = React.forwardRef<
     };
 
     const moveLine = (mouseX: number, mouseY: number) => {
-      if (selectedAlignmentLine.current === null) {
+      if (selectedAlignmentLine.current === null || getRotation() !== 0) {
         return false;
       }
 
@@ -604,20 +619,22 @@ export const GroundSelection = React.forwardRef<
         !containerRef.current
       )
         return;
-
-      const isNearVerticalLine = verticalAxis.current.some(
-        (x) => Math.abs(x - mouseX) <= 5
-      );
-      const isNearHorizontalLine = horizontalAxis.current.some(
-        (y) => Math.abs(y - mouseY) <= 5
-      );
-
       let cursorStyle = "default";
-      if (isInOverlapContainer(mouseX, mouseY)) {
-        if (isNearVerticalLine) {
-          cursorStyle = "ew-resize";
-        } else if (isNearHorizontalLine) {
-          cursorStyle = "ns-resize";
+
+      if (rotation === 0) {
+        const isNearVerticalLine = verticalAxis.current.some(
+          (x) => Math.abs(x - mouseX) <= 5
+        );
+        const isNearHorizontalLine = horizontalAxis.current.some(
+          (y) => Math.abs(y - mouseY) <= 5
+        );
+
+        if (isInOverlapContainer(mouseX, mouseY)) {
+          if (isNearVerticalLine) {
+            cursorStyle = "ew-resize";
+          } else if (isNearHorizontalLine) {
+            cursorStyle = "ns-resize";
+          }
         }
       }
 
@@ -677,7 +694,9 @@ export const GroundSelection = React.forwardRef<
       });
 
       // ensure showAlignmentLines is true
-      setShowAlignmentLines(true);
+      if (rotation === 0) {
+        setShowAlignmentLines(true);
+      }
     };
 
     const clearTemporaryCanvas = () => {
@@ -713,6 +732,13 @@ export const GroundSelection = React.forwardRef<
     }, [designElements, selectedDesignElement, scale]);
 
     useEffect(() => {
+      if (rotation !== 0) {
+        setShowAlignmentLines(false);
+        clearTemporaryCanvas();
+      }
+    }, [rotation]);
+
+    useEffect(() => {
       if (!preSelection || !containerRef.current) {
         return; // no preSelection
       }
@@ -724,28 +750,6 @@ export const GroundSelection = React.forwardRef<
       containerRef.current.style.height = `${height * scale}px`;
       containerRef.current.style.display = "block";
     }, [preSelection]);
-
-    const intervalPoints = useRef(0);
-
-    const calculateScale = (e: TouchEvent) => {
-      // Calculate the distance between the two touch points
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const distance = Math.sqrt(
-        Math.pow(touch2.clientX - touch1.clientX, 2) +
-          Math.pow(touch2.clientY - touch1.clientY, 2)
-      );
-      if (intervalPoints.current === 0) {
-        intervalPoints.current = distance;
-        return;
-      }
-      const scale = getScale();
-      const ratio = distance / intervalPoints.current;
-      intervalPoints.current = distance;
-      setScale(scale * ratio);
-    };
-
-    const debouncedCalculateScale = useDebounce(calculateScale, 250);
 
     useEffect(() => {
       const ground = groundRef.current;
@@ -765,8 +769,6 @@ export const GroundSelection = React.forwardRef<
         }
         if (e.touches.length > 1) {
           groundRef.current.style.touchAction = "auto";
-          // Calculate the distance between the two touch points
-          calculateScale(e);
           return;
         }
         groundRef.current.style.touchAction = "none";
@@ -784,11 +786,8 @@ export const GroundSelection = React.forwardRef<
       const handleTouchMove = (e: TouchEvent) => {
         const touch = e.touches[0];
         if (e.touches.length > 1) {
-          // Calculate the distance between the two touch points
-          debouncedCalculateScale(e);
           return;
         }
-        // console.log("touch move", touch.clientX, touch.clientY);
         e.preventDefault();
         if (moveLine(touch.clientX, touch.clientY)) {
           return;
@@ -806,11 +805,11 @@ export const GroundSelection = React.forwardRef<
           setShowAlignmentLines(false);
           clearTemporaryCanvas();
           setSelectedRect(null);
+          setRotation(0);
         }
       };
 
       const handleTouchEnd = () => {
-        intervalPoints.current = 0;
         handleMouseUp();
       };
 
@@ -883,14 +882,16 @@ export const GroundSelection = React.forwardRef<
         style={{ touchAction: "none" }}
         className="overflow-auto relative inset-0 w-full h-full"
       >
-        <div className="flex absolute top-2 right-2 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-70">
-          <span className="text-sm font-semibold">
-            Scale : {scale.toFixed(2)}
-          </span>
-          <span className="text-sm font-semibold text-gray-500">
-            Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
-            {backgroundCanvasRef.current?.offsetHeight}
-          </span>
+        <div className="flex sticky top-0 right-0 justify-end w-full">
+          <div className="flex top-1 right-1 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-70">
+            <span className="text-sm font-semibold">
+              Scale : {scale.toFixed(2)}
+            </span>
+            <span className="text-sm font-semibold text-gray-500">
+              Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
+              {backgroundCanvasRef.current?.offsetHeight}
+            </span>
+          </div>
         </div>
         <div
           id={TOUCH_MESSAGE_ID}
@@ -916,9 +917,12 @@ export const GroundSelection = React.forwardRef<
           ref={containerRef}
           id={idContainer}
           className="absolute bg-gray-200 bg-opacity-20 border border-gray-500 border-dashed cursor-move"
-          style={{ display: "none" }}
+          style={{
+            display: "none",
+            transform: `rotate(${rotation}deg)`,
+          }}
         />
-        {showAlignmentLines && (
+        {showAlignmentLines && rotation === 0 && (
           <>
             {verticalAxis.current.length > 2 && (
               <button
@@ -934,7 +938,7 @@ export const GroundSelection = React.forwardRef<
             )}
             {horizontalAxis.current.length > 2 && (
               <button
-                className="sticky px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
+                className="absolute px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
                 onClick={() => equalizeSpaces("horizontal")}
                 style={{
                   left: left + getOffsetX(),

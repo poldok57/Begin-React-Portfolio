@@ -4,7 +4,7 @@ import { TableData, DesignElement } from "../types";
 import { produce } from "immer";
 import { StateCreator } from "zustand";
 import { generateUniqueId } from "./unique-id";
-
+import { DesignType } from "../types";
 interface TableDataState {
   tables: TableData[];
   designElements: DesignElement[];
@@ -21,6 +21,7 @@ interface TableDataState {
   deleteSelectedTable: () => void;
   addDesignElement: (designElement: DesignElement) => void;
   deleteDesignElement: (id: string) => void;
+  deleteDesignElementByType: (type: DesignType) => void;
   setSelectedDesignElement: (id: string | null) => void;
 }
 
@@ -113,6 +114,12 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
     set((state: TableDataState) => ({
       designElements: state.designElements.filter(
         (designElement) => designElement.id !== id
+      ),
+    })),
+  deleteDesignElementByType: (type: DesignType) =>
+    set((state: TableDataState) => ({
+      designElements: state.designElements.filter(
+        (designElement) => designElement.type !== type
       ),
     })),
   setSelectedDesignElement: (id: string | null) =>
