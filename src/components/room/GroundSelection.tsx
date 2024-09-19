@@ -56,7 +56,7 @@ export const GroundSelection = React.forwardRef<
     },
     ref
   ) => {
-    const { scale, setSelectedRect, setScale } = useScale();
+    const { scale, setSelectedRect, setScale, getScale } = useScale();
     const isSelectingRef = useRef(false);
     const startPos = useRef<Position | null>(null);
     const groundRef = useRef<HTMLDivElement>(null);
@@ -739,6 +739,7 @@ export const GroundSelection = React.forwardRef<
         intervalPoints.current = distance;
         return;
       }
+      const scale = getScale();
       const ratio = distance / intervalPoints.current;
       intervalPoints.current = distance;
       setScale(scale * ratio);
@@ -882,7 +883,7 @@ export const GroundSelection = React.forwardRef<
         style={{ touchAction: "none" }}
         className="overflow-auto relative inset-0 w-full h-full"
       >
-        <div className="flex absolute top-2 right-2 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300">
+        <div className="flex absolute top-2 right-2 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-70">
           <span className="text-sm font-semibold">
             Scale : {scale.toFixed(2)}
           </span>
@@ -933,7 +934,7 @@ export const GroundSelection = React.forwardRef<
             )}
             {horizontalAxis.current.length > 2 && (
               <button
-                className="absolute px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
+                className="sticky px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
                 onClick={() => equalizeSpaces("horizontal")}
                 style={{
                   left: left + getOffsetX(),
