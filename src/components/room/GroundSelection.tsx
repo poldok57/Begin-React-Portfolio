@@ -738,9 +738,15 @@ export const GroundSelection = React.forwardRef<
 
       const handleTouchStart = (e: TouchEvent) => {
         const touch = e.touches[0];
-        if (e.touches.length > 1) {
+        if (!groundRef.current) {
           return;
         }
+        if (e.touches.length > 1) {
+          groundRef.current.style.touchAction = "auto";
+          return;
+        }
+        groundRef.current.style.touchAction = "none";
+
         if (clicOnLine(touch.clientX, touch.clientY)) {
           e.preventDefault();
           return;
