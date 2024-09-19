@@ -735,18 +735,23 @@ export const GroundSelection = React.forwardRef<
 
       const handleTouchStart = (e: TouchEvent) => {
         const touch = e.touches[0];
-        // e.preventDefault();
+        if (e.touches.length > 1) {
+          return;
+        }
         if (clicOnLine(touch.clientX, touch.clientY)) {
           e.preventDefault();
           return;
         }
-        if (handleStart(touch.clientX, touch.clientY)) {
-          e.preventDefault();
-        }
+        handleStart(touch.clientX, touch.clientY);
+        // e.preventDefault(); should not be used because it prevent click on buttons
       };
 
       const handleTouchMove = (e: TouchEvent) => {
         const touch = e.touches[0];
+        if (e.touches.length > 1) {
+          return;
+        }
+        // console.log("touch move", touch.clientX, touch.clientY);
         e.preventDefault();
         if (moveLine(touch.clientX, touch.clientY)) {
           return;
@@ -770,7 +775,9 @@ export const GroundSelection = React.forwardRef<
       document.addEventListener("keydown", handleKeyDown);
 
       ground.addEventListener("touchstart", handleTouchStart);
-      document.addEventListener("touchmove", handleTouchMove);
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
       document.addEventListener("touchend", handleMouseUp);
 
       return () => {
@@ -818,6 +825,7 @@ export const GroundSelection = React.forwardRef<
       <div
         ref={groundRef}
         id={id}
+        style={{ touchAction: "none" }}
         className="overflow-auto relative inset-0 w-full h-full"
       >
         <div className="flex absolute top-2 right-2 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300">
