@@ -3,9 +3,12 @@ import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
 import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { useTableDataStore } from "./stores/tables";
 import { drawAllDesignElements } from "./design-elements";
-import { getCanvasSize } from "./canvas-size";
+import { getCanvasSize, changeToucheMessage } from "./canvas-size";
 import { useScale } from "./RoomProvider";
 import { useDebounce } from "@/hooks/useDebounce";
+import { isTouchDevice } from "@/lib/utils/device";
+
+const TOUCH_MESSAGE_ID = "touch-message";
 
 interface GroundSelectionProps {
   onSelectionStart: () => void;
@@ -742,7 +745,9 @@ export const GroundSelection = React.forwardRef<
           e.preventDefault();
           return;
         }
-        handleStart(touch.clientX, touch.clientY);
+        if (!handleStart(touch.clientX, touch.clientY)) {
+          changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
+        }
         // e.preventDefault(); should not be used because it prevent click on buttons
       };
 
@@ -819,7 +824,20 @@ export const GroundSelection = React.forwardRef<
       }
     }, [backgroundCanvasRef.current, groundRef.current]);
 
-    // State to force update
+    useEffect(() => {
+      if (isTouchDevice()) {
+        const handleResize = () => {
+          changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
+        };
+
+        handleResize(); // Initial check
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+          window.removeEventListener("resize", handleResize);
+        };
+      }
+    }, []);
 
     return (
       <div
@@ -836,6 +854,16 @@ export const GroundSelection = React.forwardRef<
             Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
             {backgroundCanvasRef.current?.offsetHeight}
           </span>
+        </div>
+        <div
+          id={TOUCH_MESSAGE_ID}
+          className="fixed right-2 bottom-2 p-2 text-white bg-gray-800 rounded md:block"
+          style={{
+            display: "none",
+            transition: "display 0.3s ease-in-out",
+          }}
+        >
+          Use 2 fingers to move the screen
         </div>
         <canvas
           ref={backgroundCanvasRef}

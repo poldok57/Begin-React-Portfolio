@@ -20,3 +20,31 @@ export const getCanvasSize = (groundRef: HTMLDivElement) => {
 
   return { width: maxWidth + MARGE, height: maxHeight + MARGE };
 };
+
+export const changeToucheMessage = (
+  groundDiv: HTMLDivElement | null,
+  idDiv: string
+) => {
+  if (groundDiv === null) {
+    return;
+  }
+
+  const touchMessage = document.getElementById(idDiv);
+  const isDocumentLargerThanWindow =
+    groundDiv !== null &&
+    (groundDiv.scrollHeight > groundDiv.offsetHeight ||
+      groundDiv.scrollWidth > groundDiv.offsetWidth);
+
+  if (touchMessage) {
+    touchMessage.style.display = isDocumentLargerThanWindow ? "block" : "none";
+  }
+
+  // Effacer le message après 5 secondes
+  if (isDocumentLargerThanWindow && isDocumentLargerThanWindow) {
+    setTimeout(() => {
+      if (touchMessage) {
+        touchMessage.style.display = "none";
+      }
+    }, 4000);
+  }
+};
