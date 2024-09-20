@@ -29,7 +29,6 @@ export abstract class DrawingHandler {
   protected mCanvas: HTMLCanvasElement | null = null;
 
   protected context: CanvasRenderingContext2D | null = null;
-  protected ctxMouse: CanvasRenderingContext2D | null = null;
   protected ctxTempory: CanvasRenderingContext2D | null = null;
   protected lastMouseOnShape: string | null = null;
 
@@ -60,11 +59,6 @@ export abstract class DrawingHandler {
   setCanvas(canvas: HTMLCanvasElement) {
     this.mCanvas = canvas;
     this.context = canvas.getContext("2d") as CanvasRenderingContext2D | null;
-  }
-
-  setMouseCanvas(canvas: HTMLCanvasElement | null) {
-    if (!canvas) return;
-    this.ctxMouse = canvas.getContext("2d") as CanvasRenderingContext2D | null;
   }
 
   setTemporyCanvas(canvas: HTMLCanvasElement | null) {

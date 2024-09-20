@@ -26,7 +26,6 @@ export class DrawLine extends DrawingHandler {
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
     this.line = new CanvasLine(canvas);
-    this.ctxMouse = null;
     this.ctxTempory = null;
 
     this.setType(DRAWING_MODES.LINE);
@@ -46,10 +45,7 @@ export class DrawLine extends DrawingHandler {
   setDataGeneral(data: ParamsGeneral) {
     this.line.setLineWidth(data.lineWidth);
     this.line.setStrokeStyle(data.color);
-    if (this.ctxMouse !== null) {
-      this.ctxMouse.lineWidth = data.lineWidth;
-      this.ctxMouse.strokeStyle = data.color;
-    }
+
     if (this.ctxTempory !== null) {
       this.ctxTempory.lineWidth = data.lineWidth;
       this.ctxTempory.strokeStyle = data.color;
@@ -69,14 +65,6 @@ export class DrawLine extends DrawingHandler {
     this.mCanvas = canvas;
     this.context = canvas.getContext("2d");
     if (this.line) this.line.setCanvas(canvas);
-  }
-
-  setMouseCanvas(canvas: HTMLCanvasElement) {
-    if (canvas === null) {
-      console.error("setMouseCanvas canvas is null");
-      return;
-    }
-    this.ctxMouse = canvas.getContext("2d");
   }
 
   setTemporyCanvas(canvas: HTMLCanvasElement) {
@@ -129,13 +117,13 @@ export class DrawLine extends DrawingHandler {
    * @param {DRAWING_MODES} mode
    */
   followCursor() {
-    const ctxMouse = this.ctxMouse;
+    const ctxMouse = this.ctxTempory;
     if (ctxMouse === null) {
-      console.error("ctxMouse is null");
+      console.error("ctxTempory is null");
       return;
     }
 
-    clearCanvasByCtx(ctxMouse);
+    this.clearTemporyCanvas();
     ctxMouse.globalAlpha = 0.4;
 
     let cursorType = "default";
@@ -144,7 +132,6 @@ export class DrawLine extends DrawingHandler {
     switch (this.getType()) {
       case DRAWING_MODES.ARC:
         hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        this.clearTemporyCanvas();
         this.line.showArc(this.ctxTempory, true);
         cursorType = "crosshair";
         break;
@@ -222,7 +209,7 @@ export class DrawLine extends DrawingHandler {
   }
 
   actionMouseLeave() {
-    clearCanvasByCtx(this.ctxMouse);
+    clearCanvasByCtx(this.ctxTempory);
   }
 
   actionAbort(): void {
@@ -235,6 +222,6 @@ export class DrawLine extends DrawingHandler {
       this.clearTemporyCanvas();
       this.line.eraseLastCoordinates();
     }
-    clearCanvasByCtx(this.ctxMouse);
+    clearCanvasByCtx(this.ctxTempory);
   }
 }

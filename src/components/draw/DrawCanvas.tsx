@@ -39,8 +39,6 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   setMode,
   getParams,
 }) => {
-  const canvasMouseRef: React.RefObject<HTMLCanvasElement | undefined> =
-    useRef(undefined);
   const canvasTemporyRef: React.RefObject<HTMLCanvasElement | undefined> =
     useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
@@ -137,7 +135,6 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     if (newHandler) {
       drawingHdl.initData(currentParams);
       drawingHdl.setCanvas(canvasRef.current);
-      drawingHdl.setMouseCanvas(canvasMouseRef.current as HTMLCanvasElement);
       drawingHdl.setTemporyCanvas(
         canvasTemporyRef.current as HTMLCanvasElement
       );
@@ -165,8 +162,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const handleMouseUpExtend = (event: MouseEvent) => {
     // the event is inside the canvas, let event on the canvas to be handled
     if (
-      !canvasMouseRef.current ||
-      canvasMouseRef.current.contains(event.target as Node)
+      !canvasTemporyRef.current ||
+      canvasTemporyRef.current.contains(event.target as Node)
     ) {
       return;
     }
@@ -174,9 +171,9 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   };
 
   const handleMouseDownExtend = (event: MouseEvent) => {
-    if (!drawingRef.current || !canvasMouseRef.current) return;
+    if (!drawingRef.current || !canvasTemporyRef.current) return;
     // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasMouseRef.current.contains(event.target as Node)) {
+    if (canvasTemporyRef.current.contains(event.target as Node)) {
       return;
     }
     // draw line can be extended outside the canvas
@@ -194,8 +191,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   const handleMouseMoveExtend = (event: MouseEvent) => {
     // the event is inside the canvas, let event on the canvas to be handled
     if (
-      !canvasMouseRef.current ||
-      canvasMouseRef.current.contains(event.target as Node)
+      !canvasTemporyRef.current ||
+      canvasTemporyRef.current.contains(event.target as Node)
     ) {
       return;
     }
@@ -419,8 +416,8 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       drawingRef.current = selectDrawingHandler(chgtMode);
       drawingRef.current.initData(currentParams);
     }
-    if (pointer !== null && canvasMouseRef.current) {
-      canvasMouseRef.current.style.cursor = pointer;
+    if (pointer !== null && canvasTemporyRef.current) {
+      canvasTemporyRef.current.style.cursor = pointer;
     }
 
     alertMessage(`Start (${currentParams.mode})`);
@@ -434,10 +431,10 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
   };
 
   useEffect(() => {
-    if (!canvasMouseRef.current) {
+    const canvasMouse = canvasTemporyRef.current;
+    if (!canvasMouse) {
       return;
     }
-    const canvasMouse = canvasMouseRef.current;
     setContext(canvasMouse);
 
     const handleMouseUp = () => {
@@ -564,7 +561,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
       canvasMouse.removeEventListener("touchcancel", handleTouchEnd);
       canvasMouse.removeEventListener("touchstart", handleDoubleTap);
     };
-  }, [canvasMouseRef.current]);
+  }, [canvasTemporyRef.current]);
 
   useEffect(() => {
     actionChangeMode(mode);
@@ -600,18 +597,6 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
           left: 0,
           top: 0,
           zIndex: 2,
-        }}
-        className="m-auto transparent"
-      />
-      <canvas
-        width={WIDTH}
-        height={HEIGHT}
-        ref={canvasMouseRef as React.RefObject<HTMLCanvasElement>}
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          zIndex: 3,
         }}
         className="m-auto transparent"
       />

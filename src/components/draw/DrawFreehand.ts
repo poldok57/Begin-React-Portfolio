@@ -23,7 +23,6 @@ export class DrawFreehand extends DrawingHandler {
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
-    this.ctxMouse = null;
     this.ctxTempory = null;
     this.extendedMouseArea = false;
     this.setType(DRAWING_MODES.DRAW);
@@ -35,9 +34,9 @@ export class DrawFreehand extends DrawingHandler {
   }
   changeData(data: AllParams): void {
     this.setDataGeneral(data.general);
-    if (this.ctxMouse === null) return;
-    this.ctxMouse.lineWidth = data.general.lineWidth;
-    this.ctxMouse.strokeStyle = data.general.color;
+    if (this.ctxTempory === null) return;
+    this.ctxTempory.lineWidth = data.general.lineWidth;
+    this.ctxTempory.strokeStyle = data.general.color;
   }
 
   setDrawing(drawing: boolean) {
@@ -58,7 +57,7 @@ export class DrawFreehand extends DrawingHandler {
       console.error("setMouseCanvas canvas is null");
       return;
     }
-    this.ctxMouse = canvas.getContext("2d");
+    this.ctxTempory = canvas.getContext("2d");
   }
 
   setTemporyCanvas(canvas: HTMLCanvasElement | null) {
@@ -85,39 +84,39 @@ export class DrawFreehand extends DrawingHandler {
    * @param {DRAWING_MODES} mode
    */
   followCursor() {
-    const ctxMouse = this.ctxMouse;
-    if (ctxMouse === null) {
-      console.error("ctxMouse is null");
+    const ctxTempory = this.ctxTempory;
+    if (ctxTempory === null) {
+      console.error("ctxTempory is null");
       return;
     }
 
-    clearCanvasByCtx(ctxMouse);
-    ctxMouse.globalAlpha = 0.4;
+    clearCanvasByCtx(ctxTempory);
+    ctxTempory.globalAlpha = 0.4;
 
     const coord = this.getCoordinates() as Coordinate;
 
     switch (this.getType()) {
       case DRAWING_MODES.DRAW:
-        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        // ctxMouse.lineWidth = this.data.general.lineWidth;
-        // ctxMouse.strokeStyle = this.data.general.color;
+        hightLightMouseCursor(ctxTempory, coord, mouseCircle);
+        // ctxTempory.lineWidth = this.data.general.lineWidth;
+        // ctxTempory.strokeStyle = this.data.general.color;
         drawPoint({
-          context: ctxMouse,
+          context: ctxTempory,
           coordinate: coord,
         } as drawingCircle);
         break;
       case DRAWING_MODES.ERASE:
-        ctxMouse.globalAlpha = 0.7;
-        // ctxMouse.lineWidth = this.data.general.lineWidth;
-        // ctxMouse.strokeStyle = this.data.general.color;
-        hightLightMouseCursor(ctxMouse, coord, {
+        ctxTempory.globalAlpha = 0.7;
+        // ctxTempory.lineWidth = this.data.general.lineWidth;
+        // ctxTempory.strokeStyle = this.data.general.color;
+        hightLightMouseCursor(ctxTempory, coord, {
           ...mouseCircle,
           color: "pink",
           width: 50,
         });
-        ctxMouse.globalAlpha = 0.5;
+        ctxTempory.globalAlpha = 0.5;
         hatchedCircle({
-          context: ctxMouse,
+          context: ctxTempory,
           coordinate: coord,
           color: "#eee",
           borderColor: "#303030",
@@ -172,13 +171,12 @@ export class DrawFreehand extends DrawingHandler {
 
   actionMouseLeave() {
     clearCanvasByCtx(this.ctxTempory);
-    clearCanvasByCtx(this.ctxMouse);
 
     this.setDrawing(false);
   }
   endAction() {
     this.setDrawing(false);
 
-    clearCanvasByCtx(this.ctxMouse);
+    clearCanvasByCtx(this.ctxTempory);
   }
 }

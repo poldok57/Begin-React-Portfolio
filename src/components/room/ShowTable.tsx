@@ -30,10 +30,15 @@ interface ShowTableProps {
   title: string | undefined;
   saveSettings: (settings: TableSettings) => void;
   resetTable?: () => void;
+  handleRotation?: (rotation: number) => void;
+  handleSize?: (size: number) => void;
   onClose?: () => void;
   isTouch: boolean;
   editing?: boolean;
   className?: string;
+  rotation?: number;
+  rotationStep?: number;
+  sizeStep?: number;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
   colors,
@@ -45,10 +50,15 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   onClose,
   editing = false,
   className,
+  rotation = 0,
+  rotationStep = 15,
+  sizeStep = 10,
+  handleRotation,
+  handleSize,
 }) => {
   // states for size and rotation
   const [size, setSize] = useState(200);
-  const [rotation, setRotation] = useState(0);
+  const [_rotation, setRotation] = useState(rotation);
   const [openSettings, setOpenSettings] = useState(editing);
   const [tableSettings, setTableSettings] =
     useState<TableSettings>(DEFAULT_SETTINGS);
@@ -62,11 +72,14 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   };
   // Fonctions pour modifier la rotation et la taille
   const changeRotation = (increment: number) => {
-    setRotation((prevRotation) => (prevRotation + increment + 360) % 360);
+    const newRotation = (_rotation + increment + 360) % 360;
+    setRotation(newRotation);
+    handleRotation && handleRotation(newRotation);
   };
 
   const changeSize = (increment: number) => {
     setSize((prevSize) => Math.max(50, Math.min(500, prevSize + increment)));
+    handleSize && handleSize(increment);
   };
 
   useEffect(() => {
@@ -83,7 +96,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
       <div className="flex z-[1] mx-3 justify-between border-b-2 border-gray-200 pb-1 w-full">
         <div className="flex flex-row gap-3">
           <button
-            onClick={() => changeRotation(-15)}
+            onClick={() => changeRotation(-rotationStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
             })}
@@ -91,7 +104,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             <RotateCcw size={btnSize} />
           </button>
           <button
-            onClick={() => changeRotation(15)}
+            onClick={() => changeRotation(rotationStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
             })}
@@ -101,7 +114,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
         </div>
         <div className="flex flex-row gap-3">
           <button
-            onClick={() => changeSize(-10)}
+            onClick={() => changeSize(-sizeStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
             })}
@@ -109,7 +122,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             <Minus size={btnSize} />
           </button>
           <button
-            onClick={() => changeSize(10)}
+            onClick={() => changeSize(sizeStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
             })}
@@ -248,7 +261,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
       </div>
       <PokerTable
         size={size}
-        rotation={rotation}
+        rotation={_rotation}
         {...colors}
         {...tableSettings}
         tableNumber="88"

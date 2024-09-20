@@ -71,6 +71,15 @@ export const RoomTable: React.FC<RoomTableProps> = ({
 
   const [localSize, setLocalSize] = React.useState(table.size ?? 100);
 
+  const handleRotation = (rotation: number) => {
+    updateTable(table.id, { rotation: rotation });
+  };
+
+  const handleSize = (step: number) => {
+    const size = Math.max(50, Math.min(500, localSize + step));
+    updateTable(table.id, { size: size });
+  };
+
   React.useEffect(() => {
     setLocalSize((table.size ?? 100) * scale);
   }, [scale, table.size]);
@@ -147,6 +156,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                 settings={editSettings}
                 title={table.tableText}
                 saveSettings={saveSettings}
+                rotation={table.rotation ?? 0}
+                rotationStep={5}
+                handleRotation={handleRotation}
+                handleSize={handleSize}
                 resetTable={() => {
                   saveSettings(null);
                   // updateTable(table.id, { settings: null });
