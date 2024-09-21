@@ -28,7 +28,6 @@ const Home = () => {
       </div>
       <ShowAlertMessagesWP
         display={true}
-        trace={false}
         draggable={true}
         withTitleBar={true}
         titleHidden={true}

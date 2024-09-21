@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { PokerTable } from "./svg/PokerTable";
 import { TableData, TableSettings, TableColors } from "./types";
 import { useGroupStore } from "./stores/groups";
@@ -61,7 +61,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
   );
 
   const saveSettings = (newSettings: TableSettings | null) => {
-    // console.log("newSettings:", newSettings);
+    console.log("newSettings:", newSettings);
 
     setEditSettings(newSettings);
     setSettings(newSettings);
@@ -75,14 +75,20 @@ export const RoomTable: React.FC<RoomTableProps> = ({
     updateTable(table.id, { rotation: rotation });
   };
 
-  const handleSize = (step: number) => {
-    const size = Math.max(50, Math.min(500, localSize + step));
-    updateTable(table.id, { size: size });
+  const handleSize = (newSize: number) => {
+    updateTable(table.id, { size: newSize });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalSize((table.size ?? 100) * scale);
   }, [scale, table.size]);
+
+  useEffect(() => {
+    setSettings({
+      ...(group ? group.settings : {}),
+      ...table.settings,
+    });
+  }, [table?.settings, group?.settings]);
 
   return (
     <div
@@ -151,7 +157,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                 </button>
               </DialogClose>
               <ShowTable
-                className="p-4 rounded-lg bg-background"
+                className="p-4 rounded-lg bg-background min-h-96"
                 colors={colors}
                 settings={editSettings}
                 title={table.tableText}
@@ -159,7 +165,9 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                 rotation={table.rotation ?? 0}
                 rotationStep={5}
                 handleRotation={handleRotation}
+                size={table.size}
                 handleSize={handleSize}
+                tableNumber={table.tableNumber}
                 resetTable={() => {
                   saveSettings(null);
                   // updateTable(table.id, { settings: null });

@@ -29,7 +29,7 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
           tabIndex={0}
           className="dropdown-content menu bg-base-100 rounded-box z-[1] w-fit min-w-40 p-2 text-nowrap shadow"
         >
-          <li className="p-1 text-nowrap">
+          <li className="z-40 p-1 text-nowrap">
             <button className={className} onClick={onConfirm}>
               {confirmMessage}
             </button>

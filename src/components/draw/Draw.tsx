@@ -45,7 +45,6 @@ export const Draw = () => {
       <DrawControlWP
         mode={mode}
         setMode={setMode}
-        trace={false}
         withMinimize={true}
         style={{
           top: "40px",

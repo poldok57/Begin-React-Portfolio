@@ -377,8 +377,9 @@ export function withMousePosition<P extends object>(
             left: component.offsetLeft,
             top: component.offsetTop,
           });
+          // console.log("start drag");
           event.stopPropagation();
-          event.preventDefault();
+          // event.preventDefault();
         }
       };
 
@@ -507,7 +508,10 @@ export function withMousePosition<P extends object>(
           maxHeight={maxHeight}
           {...props}
         >
-          <WrappedComponent trace={trace} {...(props as P)} />
+          <WrappedComponent
+            trace={trace ? "true" : undefined}
+            {...(props as P)}
+          />
           <TitleBar
             id={idKey}
             ref={titleRef}

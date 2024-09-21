@@ -32,6 +32,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
     sizeSelectedTable,
     deleteSelectedTable,
     updateSelectedTable,
+    // countSelectedTables,
     tables,
   } = useTableDataStore();
 
@@ -75,7 +76,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
 
   return (
     <div className={clsx("relative", className)} ref={ref}>
-      <Button onClick={() => setIsOpen(!isOpen)}>Modifier les tables</Button>
+      <Button onClick={() => setIsOpen(!isOpen)}>Table modifications</Button>
       {isOpen && (
         <div className="absolute left-4 top-full z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg">
           <div className="flex flex-col gap-2 justify-center">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TableColors, TableSettings } from "./types";
 import { PokerTable } from "./svg/PokerTable";
+import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { RangeInput } from "@/components/atom/RangeInput";
 import {
   RotateCcw,
@@ -38,7 +39,9 @@ interface ShowTableProps {
   className?: string;
   rotation?: number;
   rotationStep?: number;
+  size?: number;
   sizeStep?: number;
+  tableNumber?: string;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
   colors,
@@ -52,12 +55,14 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   className,
   rotation = 0,
   rotationStep = 15,
+  size = 200,
   sizeStep = 10,
   handleRotation,
   handleSize,
+  tableNumber = "88",
 }) => {
   // states for size and rotation
-  const [size, setSize] = useState(200);
+  const [_size, setSize] = useState(size);
   const [_rotation, setRotation] = useState(rotation);
   const [openSettings, setOpenSettings] = useState(editing);
   const [tableSettings, setTableSettings] =
@@ -78,8 +83,9 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   };
 
   const changeSize = (increment: number) => {
-    setSize((prevSize) => Math.max(50, Math.min(500, prevSize + increment)));
-    handleSize && handleSize(increment);
+    const newSize = Math.max(50, Math.min(500, _size + increment));
+    setSize(newSize);
+    handleSize && handleSize(newSize);
   };
 
   useEffect(() => {
@@ -88,7 +94,10 @@ export const ShowTable: React.FC<ShowTableProps> = ({
 
   return (
     <div
-      className={clsx("flex flex-col gap-1 items-center", className)}
+      className={clsx(
+        "flex flex-col gap-1 items-center border border-red",
+        className
+      )}
       onMouseOver={(e) => e.stopPropagation()}
       onMouseEnter={(e) => e.stopPropagation()}
       onMouseLeave={(e) => e.stopPropagation()}
@@ -168,27 +177,41 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               <PencilOff size={btnSize} />
             </button>
           )}
-          {resetTable && (
-            <button
-              className={clsx("absolute bottom-1 left-5 btn btn-circle", {
-                "btn-sm": !isTouch,
-                hidden: openSettings,
-              })}
-              title="Reset table"
-              onClick={resetTable}
-            >
-              <ListRestart size={btnSize} />
-            </button>
-          )}
-          <button
-            className={clsx("btn btn-circle", {
-              "btn-sm": !isTouch,
+          <div
+            className={clsx("flex relative flex-row gap-4", {
               hidden: !openSettings,
             })}
-            onClick={() => saveSettings(tableSettings)}
           >
-            <Save size={btnSize} />
-          </button>
+            {resetTable && (
+              <DeleteWithConfirm
+                className="p-2 m-1 btn btn-sm"
+                position="top"
+                // confirmMessage="Confirm reset table?"
+                onConfirm={() => {
+                  resetTable();
+                }}
+              >
+                <button
+                  className={clsx("btn btn-circle", {
+                    "btn-sm": !isTouch,
+                  })}
+                  title="Reset table"
+                >
+                  <ListRestart size={btnSize} />
+                </button>
+              </DeleteWithConfirm>
+            )}
+            <button
+              className={clsx("btn btn-circle", {
+                "btn-sm": !isTouch,
+                hidden: !openSettings,
+              })}
+              title="Save settings"
+              onClick={() => saveSettings(tableSettings)}
+            >
+              <Save size={btnSize} />
+            </button>
+          </div>
         </div>
         <div
           className={clsx("flex flex-row gap-2 justify-between pt-2 w-full", {
@@ -259,12 +282,13 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           />
         </div>
       </div>
+
       <PokerTable
-        size={size}
+        size={_size}
         rotation={_rotation}
         {...colors}
         {...tableSettings}
-        tableNumber="88"
+        tableNumber={tableNumber}
         tableText={title}
       />
     </div>

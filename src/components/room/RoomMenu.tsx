@@ -7,6 +7,8 @@ import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useScale } from "./RoomProvider";
 import { DesignType } from "./types";
+import { TableNumbers } from "./TableNumbers";
+
 interface RoomMenuProps {
   btnSize: number;
   recordDesign: (
@@ -17,6 +19,8 @@ interface RoomMenuProps {
   ) => void;
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
+  setTableCurrentNumber: (number: string) => void;
+  tableCurrentNumber: string | null;
 }
 
 export const RoomMenu: React.FC<RoomMenuProps> = ({
@@ -24,8 +28,11 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   recordDesign,
   addSelectedRect,
   resetSelectedTables,
+  setTableCurrentNumber,
+  tableCurrentNumber,
 }) => {
   const isTouch = isTouchDevice();
+
   const { scale, setScale } = useScale();
 
   return (
@@ -45,6 +52,11 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
         className="flex flex-col p-1 w-full rounded-lg"
         btnSize={btnSize}
         isTouch={isTouch}
+      />
+      <TableNumbers
+        className="flex flex-col p-1 w-full rounded-lg"
+        setTableCurrentNumber={setTableCurrentNumber}
+        tableCurrentNumber={tableCurrentNumber}
       />
       <RoomDesign
         className="flex flex-col p-1 w-full rounded-lg"

@@ -22,7 +22,6 @@ interface ShowDivAlertMessagesProps {
   style?: React.CSSProperties;
   className?: string;
   display: boolean;
-  trace?: boolean;
   messages: string[];
   clearMessages: () => void;
 }
@@ -140,16 +139,13 @@ export const ShowDivAlertMessages: React.FC<ShowDivAlertMessagesProps> = ({
  * ShowAlertMessages component to display messages in a div
  * @param {object} props
  * @param {boolean} props.display - display messages in the div or not
- * @param {boolean} props.trace - trace the render
  */
 interface ShowAlertMessagesProps {
   display?: boolean;
-  trace?: boolean;
 }
 
 export const ShowAlertMessages: React.FC<ShowAlertMessagesProps> = ({
   display = true,
-  trace = false,
   ...props
 }) => {
   const { messages, clearMessages } = useMessageStore((state) => ({
@@ -164,7 +160,6 @@ export const ShowAlertMessages: React.FC<ShowAlertMessagesProps> = ({
         display={display}
         messages={messages}
         clearMessages={clearMessages}
-        trace={trace}
         {...props}
       />
     );

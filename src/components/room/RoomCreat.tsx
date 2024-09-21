@@ -50,11 +50,15 @@ export const RoomCreatTools = () => {
 
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
+  const [tableCurrentNumber, setTableCurrentNumber] = useState<string | null>(
+    null
+  );
 
   const roundToTwoDigits = (value: number) => parseFloat(value.toFixed(2));
 
   const updateTablePosition = (
     table: TableData,
+
     position?: { left?: number; top?: number },
     offset?: { left?: number; top?: number },
     rotation?: number
@@ -239,6 +243,17 @@ export const RoomCreatTools = () => {
       style={{ height: "calc(100vh - 70px)" }}
     >
       <div className="flex flex-row w-full">
+        <GroundSelection
+          ref={groundRef}
+          id={GROUND_ID}
+          idContainer={CONTAINER_ID}
+          changeCoordinates={changeCoordinates}
+          onSelectionStart={onZoneSelectedStart}
+          onSelectionEnd={onZoneSelectedEnd}
+          preSelection={preSelection}
+        >
+          <ListTables tables={tables} btnSize={btnSize} editable={true} />
+        </GroundSelection>
         <GroupCreatWP
           className="absolute top-0 left-0 z-10"
           withTitleBar={true}
@@ -260,18 +275,9 @@ export const RoomCreatTools = () => {
           recordDesign={handleRecordDesing}
           addSelectedRect={addSelectedRect}
           resetSelectedTables={resetSelectedTables}
+          setTableCurrentNumber={setTableCurrentNumber}
+          tableCurrentNumber={tableCurrentNumber}
         />
-        <GroundSelection
-          ref={groundRef}
-          id={GROUND_ID}
-          idContainer={CONTAINER_ID}
-          changeCoordinates={changeCoordinates}
-          onSelectionStart={onZoneSelectedStart}
-          onSelectionEnd={onZoneSelectedEnd}
-          preSelection={preSelection}
-        >
-          <ListTables tables={tables} btnSize={btnSize} editable={true} />
-        </GroundSelection>
       </div>
     </div>
   );

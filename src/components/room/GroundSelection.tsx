@@ -571,6 +571,7 @@ export const GroundSelection = React.forwardRef<
       const clientY = e.clientY;
 
       // Verify if the click is on a line
+
       if (clicOnLine(clientX, clientY)) {
         e.preventDefault();
         return;
@@ -780,7 +781,7 @@ export const GroundSelection = React.forwardRef<
         if (!handleStart(touch.clientX, touch.clientY)) {
           changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
         }
-        // e.preventDefault(); should not be used because it prevent click on buttons
+        // event.preventDefault(); should not be used because it prevent click on buttons
       };
 
       const handleTouchMove = (e: TouchEvent) => {
