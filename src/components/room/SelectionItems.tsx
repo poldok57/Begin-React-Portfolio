@@ -96,6 +96,7 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    // e.stopPropagation();
     handleStart(e.clientX, e.clientY);
   };
 
@@ -108,7 +109,7 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
   return (
     <div
       ref={ref}
-      className="overflow-hidden absolute left-4 top-full z-40 p-4 mt-2 bg-white rounded-lg shadow-lg min-w-40 min-h-40"
+      className="overflow-hidden absolute left-4 top-full z-40 p-4 mt-2 bg-white rounded-lg shadow-lg translate-x-16 min-w-40 min-h-40"
       style={{
         width: `${width + 10 + 2 * cellSize}px`,
         height: `${height + 50 + 2 * cellSize}px`,

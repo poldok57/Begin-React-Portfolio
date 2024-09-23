@@ -16,6 +16,13 @@ export enum DesignType {
   image = "image",
 }
 
+export enum Mode {
+  draw = "draw",
+  create = "create",
+  numbering = "numbering",
+  settings = "settings",
+}
+
 import {
   RectPosition as Position,
   Rectangle,

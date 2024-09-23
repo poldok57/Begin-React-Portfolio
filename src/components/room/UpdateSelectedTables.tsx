@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Settings, X } from "lucide-react";
 import { TableSettings } from "./types";
 import { useTableDataStore } from "./stores/tables";
@@ -15,17 +15,24 @@ import { RotationButtons } from "./control/RotationButtons";
 import { ResizeButtons } from "./control/ResizeButtons";
 import { DeleteSelectedTables } from "./control/DeleteSelectedTables";
 import { RotationSquad } from "./control/RotationSquad";
+import { useRoomContext } from "./RoomProvider";
+import { Mode } from "./types";
+import { Menu } from "./RoomMenu";
 
 interface UpdateSelectedTablesProps {
   btnSize: number;
   className: string;
   isTouch: boolean;
+  activeMenu: Menu | null;
+  setActiveMenu: (menu: Menu | null) => void;
 }
 
 export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   className,
   btnSize,
   isTouch,
+  activeMenu,
+  setActiveMenu,
 }) => {
   const {
     rotationSelectedTable,
@@ -35,9 +42,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
     // countSelectedTables,
     tables,
   } = useTableDataStore();
-
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const { setMode } = useRoomContext();
   const [selectedTablesCount, setSelectedTablesCount] = useState(0);
   const [editSettings, setEditSettings] = useState<TableSettings | null>(null);
 
@@ -46,27 +51,12 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
     updateSelectedTable({ settings: newSettings });
   };
 
-  // const { setRotation, getRotation, getSelectedRect, getElementRect } =
-  //   useScale();
-
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
+    if (activeMenu === Menu.updateTable) {
       const selectedTables = tables.filter((table) => table.selected);
       setSelectedTablesCount(selectedTables.length);
     }
-  }, [isOpen, tables]);
+  }, [activeMenu, tables]);
 
   const handleDeleteSelectedTable = () => {
     if (selectedTablesCount > 0) {
@@ -75,10 +65,17 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   };
 
   return (
-    <div className={clsx("relative", className)} ref={ref}>
-      <Button onClick={() => setIsOpen(!isOpen)}>Table modifications</Button>
-      {isOpen && (
-        <div className="absolute left-4 top-full z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg">
+    <div className={clsx("relative", className)}>
+      <Button
+        onClick={() => {
+          setActiveMenu(Menu.updateTable);
+          setMode(Mode.create);
+        }}
+      >
+        Table modifications
+      </Button>
+      {activeMenu === Menu.updateTable && (
+        <div className="absolute left-4 top-full z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg translate-x-16">
           <div className="flex flex-col gap-2 justify-center">
             <i>
               Mofication apply to <b>{selectedTablesCount} selected table</b>

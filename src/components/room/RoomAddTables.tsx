@@ -5,21 +5,27 @@ import { useTableDataStore } from "./stores/tables";
 import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
-import { useScale } from "./RoomProvider";
-import clsx from "clsx";
+import { useRoomContext } from "./RoomProvider";
 import { getGroundOffset } from "./RoomCreat";
+import { Menu } from "./RoomMenu";
+import { Mode } from "./types";
+
+import clsx from "clsx";
 
 export const RoomAddTables = ({
   className,
   addSelectedRect,
   resetSelectedTables,
+  activeMenu,
+  setActiveMenu,
 }: {
   className: string;
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
+  activeMenu: Menu | null;
+  setActiveMenu: (menu: Menu | null) => void;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [openSelection, setOpenSelection] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{
     width: number;
     height: number;
@@ -31,7 +37,7 @@ export const RoomAddTables = ({
     setSelectedItems(items);
   };
 
-  const { getSelectedRect, scale } = useScale();
+  const { getSelectedRect, scale, setMode } = useRoomContext();
 
   const DEFAULT_TABLE_SIZE = 100;
   const positionTable = (offset: Position, x: number, y: number) => {
@@ -132,8 +138,7 @@ export const RoomAddTables = ({
       }
     }
     addSelectedRect(selectedRect);
-
-    setOpenSelection(false);
+    setActiveMenu(null);
   };
 
   return (
@@ -144,10 +149,17 @@ export const RoomAddTables = ({
       onMouseEnter={(e) => e.stopPropagation()}
       onMouseLeave={(e) => e.stopPropagation()}
     >
-      <Button onClick={() => setOpenSelection(true)}>Add tables</Button>
-      {openSelection && (
+      <Button
+        onClick={() => {
+          setActiveMenu(Menu.addTable);
+          setMode(Mode.create);
+        }}
+      >
+        Add tables
+      </Button>
+      {activeMenu === Menu.addTable && (
         <SelectionItems
-          handleClose={() => setOpenSelection(false)}
+          handleClose={() => setActiveMenu(null)}
           setSelectedItems={handleSelectedItems}
           selectedItems={selectedItems}
           addTables={handleAddTables}

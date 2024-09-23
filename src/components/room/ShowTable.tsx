@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
-// import { useScale } from "./RoomProvider";
+// import { useRoomContext } from "./RoomProvider";
 
 const DEFAULT_SETTINGS = {
   widthLine: 0.025,

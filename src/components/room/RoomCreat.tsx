@@ -8,8 +8,9 @@ import { isTouchDevice } from "@/lib/utils/device";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomMenu } from "./RoomMenu";
 import { GroundSelection } from "./GroundSelection";
-import { RoomProvider, useScale } from "./RoomProvider";
+import { RoomProvider, useRoomContext } from "./RoomProvider";
 import { ListTables } from "./ListTables";
+import { Mode } from "./types";
 
 export const GROUND_ID = "back-ground";
 export const CONTAINER_ID = "ground-container";
@@ -35,6 +36,7 @@ export const getGroundOffset = () => {
 export const RoomCreatTools = () => {
   const {
     updateTable,
+    updateSelectedTable,
     addDesignElement,
     getTable,
     getSelectedTables,
@@ -43,16 +45,26 @@ export const RoomCreatTools = () => {
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
-  const { getSelectedRect, getElementRect, getRotation } = useScale();
+  const {
+    getSelectedRect,
+    getElementRect,
+    getRotation,
+    mode,
+    setMode,
+    addSelectedTableId,
+    removeSelectedTableId,
+  } = useRoomContext();
+
+  if (mode === null) {
+    console.log("RoomCreatTools setMode Create");
+    setMode(Mode.create);
+  }
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);
 
   const selectedArea = useRef<boolean>(false);
   const selectedTablesRef = useRef<TableData[]>([]);
-  const [tableCurrentNumber, setTableCurrentNumber] = useState<string | null>(
-    null
-  );
 
   const roundToTwoDigits = (value: number) => parseFloat(value.toFixed(2));
 
@@ -151,11 +163,10 @@ export const RoomCreatTools = () => {
 
   const onZoneSelectedEnd = (rect: Rectangle | null) => {
     if (!rect) {
-      tables.forEach((table) => {
-        updateTable(table.id, { selected: false });
-      });
+      if (mode === Mode.create) {
+        updateSelectedTable({ selected: false });
+      }
       selectedArea.current = false;
-
       return;
     }
 
@@ -222,6 +233,20 @@ export const RoomCreatTools = () => {
     addDesignElement(designElement);
   };
 
+  const handleNumberingTableClick = (id: string) => {
+    const table = getTable(id);
+    if (!table) return;
+
+    if (table.selected) {
+      addSelectedTableId(id);
+    } else {
+      removeSelectedTableId(id);
+    }
+  };
+
+  const onTableClick =
+    mode === Mode.numbering ? handleNumberingTableClick : null;
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -252,7 +277,12 @@ export const RoomCreatTools = () => {
           onSelectionEnd={onZoneSelectedEnd}
           preSelection={preSelection}
         >
-          <ListTables tables={tables} btnSize={btnSize} editable={true} />
+          <ListTables
+            tables={tables}
+            btnSize={btnSize}
+            editable={mode !== Mode.numbering}
+            onClick={onTableClick}
+          />
         </GroundSelection>
         <GroupCreatWP
           className="absolute top-0 left-0 z-10"
@@ -275,8 +305,6 @@ export const RoomCreatTools = () => {
           recordDesign={handleRecordDesing}
           addSelectedRect={addSelectedRect}
           resetSelectedTables={resetSelectedTables}
-          setTableCurrentNumber={setTableCurrentNumber}
-          tableCurrentNumber={tableCurrentNumber}
         />
       </div>
     </div>

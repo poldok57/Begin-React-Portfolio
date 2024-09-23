@@ -1,7 +1,7 @@
 import React from "react";
 import { RotateCcw, RotateCw } from "lucide-react";
 import { useTableDataStore } from "../stores/tables";
-import { useScale } from "../RoomProvider";
+import { useRoomContext } from "../RoomProvider";
 
 interface RotationSquadProps {
   btnSize: number;
@@ -10,7 +10,7 @@ interface RotationSquadProps {
 export const RotationSquad: React.FC<RotationSquadProps> = ({ btnSize }) => {
   const { updateTable, getSelectedTables } = useTableDataStore();
   const { setRotation, getRotation, getSelectedRect, getElementRect } =
-    useScale();
+    useRoomContext();
 
   const setRotationSquad = (angle: number) => {
     const rotation = getRotation();

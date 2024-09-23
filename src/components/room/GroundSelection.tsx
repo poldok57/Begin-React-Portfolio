@@ -4,9 +4,11 @@ import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { useTableDataStore } from "./stores/tables";
 import { drawAllDesignElements } from "./design-elements";
 import { getCanvasSize, changeToucheMessage } from "./canvas-size";
-import { useScale } from "./RoomProvider";
+import { useRoomContext } from "./RoomProvider";
 import { useDebounce } from "@/hooks/useDebounce";
 import { isTouchDevice } from "@/lib/utils/device";
+import { Mode } from "./types";
+import clsx from "clsx";
 
 const TOUCH_MESSAGE_ID = "touch-message";
 
@@ -58,8 +60,15 @@ export const GroundSelection = React.forwardRef<
     },
     ref
   ) => {
-    const { scale, rotation, setSelectedRect, setRotation, getRotation } =
-      useScale();
+    const {
+      mode,
+      scale,
+      rotation,
+      setSelectedRect,
+      setRotation,
+      getRotation,
+      setCtxTemporary,
+    } = useRoomContext();
     const isSelectingRef = useRef(false);
     const startPos = useRef<Position | null>(null);
     const groundRef = useRef<HTMLDivElement>(null);
@@ -463,6 +472,7 @@ export const GroundSelection = React.forwardRef<
           }
         );
         drawElementsOnCanvas(scale);
+        setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     };
 
@@ -912,7 +922,12 @@ export const GroundSelection = React.forwardRef<
         <canvas
           ref={temporaryCanvasRef}
           id="temporary-canvas"
-          className="overflow-visible absolute top-0 left-0"
+          className={clsx(
+            "overflow-visible absolute top-0 left-0",
+            mode === Mode.numbering ? "z-20" : "z-0"
+          )}
+          // onClick={handleCanvasClick} // A
+          style={{ pointerEvents: "none" }} //
         />
         <div
           ref={containerRef}

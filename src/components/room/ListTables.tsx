@@ -4,8 +4,8 @@ import { TableData } from "./types";
 import { useTableDataStore } from "./stores/tables";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
-import { useScale } from "./RoomProvider";
-
+import { useRoomContext } from "./RoomProvider";
+import { Mode } from "./types";
 const RoomTableWP = withMousePosition(RoomTable);
 
 interface ListTablesProps {
@@ -18,7 +18,7 @@ interface ListTablesProps {
 export const ListTables = React.memo(
   ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
     const [tableActive, setTableActive] = useState<string | null>(null);
-    const { scale, getScale } = useScale();
+    const { scale, getScale, mode } = useRoomContext();
     const { updateTable, deleteTable } = useTableDataStore((state) => state);
 
     const handleMove = useCallback(
@@ -74,8 +74,10 @@ export const ListTables = React.memo(
       const left = table.position.left * scale;
       const top = table.position.top * scale;
       const isActive = table.id === tableActive;
+      const showButton = mode === Mode.create && isActive;
 
-      const TableComponent = isActive ? RoomTableWP : RoomTable;
+      const TableComponent =
+        isActive && mode === Mode.create ? RoomTableWP : RoomTable;
 
       return (
         <TableComponent
@@ -99,6 +101,8 @@ export const ListTables = React.memo(
           scale={scale}
           onClick={(e) => handleClick(e, table.id)}
           isActive={isActive}
+          mode={mode}
+          showButton={showButton}
           setActiveTable={setTableActive}
         />
       );

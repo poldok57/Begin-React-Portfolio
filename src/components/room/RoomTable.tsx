@@ -12,7 +12,7 @@ import {
   DialogClose,
 } from "@/components/atom/Dialog";
 import { isTouchDevice } from "@/lib/utils/device";
-
+import { Mode } from "./types";
 import clsx from "clsx";
 
 interface RoomTableProps {
@@ -25,6 +25,8 @@ interface RoomTableProps {
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   style?: React.CSSProperties;
   isActive: boolean;
+  showButton: boolean;
+  mode?: Mode | null;
   setActiveTable: (id: string | null) => void;
 }
 
@@ -37,7 +39,8 @@ export const RoomTable: React.FC<RoomTableProps> = ({
   changeSelected,
   onClick,
   style,
-  isActive,
+  showButton,
+  mode = Mode.create,
   setActiveTable,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -96,6 +99,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       ref={ref}
       className={clsx("p-0 m-0 border-2 cursor-pointer z-10", {
         "border-dotted border-red-500": table.selected,
+        "bg-orange-400": table.selected && mode === Mode.numbering,
         "border-transparent": !table.selected,
       })}
       style={style}
@@ -113,7 +117,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
         {...settings}
         {...colors}
       />
-      {isActive && (
+      {showButton && (
         <>
           {table.groupId && (
             <button

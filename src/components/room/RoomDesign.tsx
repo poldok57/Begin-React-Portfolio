@@ -6,6 +6,9 @@ import { useTableDataStore } from "./stores/tables";
 import { ModifyColor } from "./ModifyColor";
 import { DesignType } from "./types";
 import { getContrastColor } from "../colors/colors";
+import { useRoomContext } from "./RoomProvider";
+import { Mode } from "./types";
+import { Menu } from "./RoomMenu";
 
 import clsx from "clsx";
 
@@ -23,6 +26,8 @@ interface RoomDesignProps {
   className: string;
   isTouch: boolean;
   withName?: boolean;
+  activeMenu: Menu | null;
+  setActiveMenu: (menu: Menu | null) => void;
   recordDesign: (
     type: DesignType,
     color: string,
@@ -36,6 +41,8 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   isTouch,
   recordDesign,
   withName = false,
+  activeMenu,
+  setActiveMenu,
 }) => {
   const {
     designElements,
@@ -44,7 +51,6 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
     setSelectedDesignElement,
   } = useTableDataStore((state) => state);
 
-  const [isOpen, setIsOpen] = useState(false);
   const [color, setColor] = useState("#e0aaaa");
   const [bgColor, setBgColor] = useState("#d9d9d9");
   const [name, setName] = useState("");
@@ -53,9 +59,10 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   const [menuPosition, setMenuPosition] = useState<React.CSSProperties>({
     top: "100%",
   });
+  const { setMode } = useRoomContext();
 
   useEffect(() => {
-    if (isOpen) {
+    if (activeMenu === Menu.roomDesign) {
       if (!ref.current) return;
       const rectDiv = ref.current.getBoundingClientRect();
       const menu = document.getElementById("menu-design");
@@ -72,7 +79,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
         }
       }
     }
-  }, [isOpen]);
+  }, [activeMenu]);
 
   const handleBackgroundColorChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -95,10 +102,15 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
     recordDesign(DesignType.background, bgColor, "color", 1);
   };
 
+  const handleOpen = () => {
+    setActiveMenu(Menu.roomDesign);
+    setMode(Mode.create);
+  };
+
   return (
     <div className={clsx("relative", className)} ref={ref}>
-      <Button onClick={() => setIsOpen(!isOpen)}>Room design</Button>
-      {isOpen && (
+      <Button onClick={() => handleOpen()}>Room design</Button>
+      {activeMenu === Menu.roomDesign && (
         <div
           id="menu-design"
           className="absolute left-4 z-40 p-2 mt-2 w-56 bg-white rounded-lg shadow-lg"
@@ -106,7 +118,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
         >
           <button
             className="absolute top-0 right-0 btn btn-circle btn-sm"
-            onClick={() => setIsOpen(false)}
+            onClick={() => setActiveMenu(null)}
           >
             <X size={12} />
           </button>

@@ -7,8 +7,11 @@ import React, {
 } from "react";
 
 import { Rectangle } from "@/lib/canvas/types";
+import { Mode } from "@/components/room/types";
 
 interface ScaleContextProps {
+  ctxTemporary: CanvasRenderingContext2D | null;
+  setCtxTemporary: (ctx: CanvasRenderingContext2D | null) => void;
   scale: number;
   setScale: (scale: number) => void;
   getScale: () => number;
@@ -19,6 +22,13 @@ interface ScaleContextProps {
   selectedRect: Rectangle | null;
   setSelectedRect: (rect: Rectangle | null) => void;
   getSelectedRect: () => Rectangle | null;
+  mode: Mode | null;
+  setMode: (mode: Mode) => void;
+  getMode: () => Mode | null;
+  selectedTableIds: string[];
+  addSelectedTableId: (id: string) => void;
+  removeSelectedTableId: (id: string) => void;
+  clearSelectedTableIds: () => void;
 }
 
 const RoomContext = createContext<ScaleContextProps | undefined>(undefined);
@@ -26,6 +36,8 @@ const RoomContext = createContext<ScaleContextProps | undefined>(undefined);
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const [ctxTemporary, setCtxTemporary] =
+    useState<CanvasRenderingContext2D | null>(null);
   const [scale, setStateScale] = useState<number>(1);
   const scaleRef = useRef<number>(1);
   const setScale = useCallback((newScale: number) => {
@@ -112,9 +124,39 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     return null;
   }, []);
 
+  const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
+
+  const addSelectedTableId = useCallback((id: string) => {
+    setSelectedTableIds((prevIds) => Array.from(new Set([...prevIds, id])));
+  }, []);
+
+  const removeSelectedTableId = useCallback((id: string) => {
+    setSelectedTableIds((prevIds) =>
+      prevIds.filter((tableId) => tableId !== id)
+    );
+  }, []);
+
+  const clearSelectedTableIds = useCallback(() => {
+    setSelectedTableIds([]);
+  }, []);
+
+  const [mode, setStateMode] = useState<Mode | null>(null);
+  const modeRef = useRef<Mode | null>(null);
+
+  const setMode = useCallback((newMode: Mode) => {
+    modeRef.current = newMode;
+    setStateMode(newMode);
+  }, []);
+
+  const getMode = useCallback(() => {
+    return modeRef.current;
+  }, []);
+
   return (
     <RoomContext.Provider
       value={{
+        ctxTemporary,
+        setCtxTemporary,
         scale: scale,
         setScale,
         getScale,
@@ -125,6 +167,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
         rotation,
         setRotation,
         getRotation,
+        mode,
+        setMode,
+        getMode,
+        selectedTableIds,
+        addSelectedTableId,
+        removeSelectedTableId,
+        clearSelectedTableIds,
       }}
     >
       {children}
@@ -132,10 +181,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useScale = () => {
+export const useRoomContext = () => {
   const context = useContext(RoomContext);
   if (!context) {
-    throw new Error("useScale must be used within a RoomProvider");
+    throw new Error("useRoomContext must be used within a RoomProvider");
   }
   return context;
 };
