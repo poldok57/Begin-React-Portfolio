@@ -207,6 +207,11 @@ export const drawAllDesignElements = ({
     if (element.type === DesignType.background) {
       if (ground) {
         ground.style.background = element.color;
+        if (element.id === selectedElementId) {
+          ground.style.border = "3px dashed red";
+        } else {
+          ground.style.border = "none";
+        }
       }
     } else {
       drawDesignElement(ctx, element, scale);

@@ -10,6 +10,7 @@ import { RoomMenu } from "./RoomMenu";
 import { GroundSelection } from "./GroundSelection";
 import { RoomProvider, useRoomContext } from "./RoomProvider";
 import { ListTables } from "./ListTables";
+import { ValidationFrame } from "./ValidationFrame";
 import { Mode } from "./types";
 
 export const GROUND_ID = "back-ground";
@@ -283,6 +284,7 @@ export const RoomCreatTools = () => {
             editable={mode !== Mode.numbering}
             onClick={onTableClick}
           />
+          <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
         </GroundSelection>
         <GroupCreatWP
           className="absolute top-0 left-0 z-10"

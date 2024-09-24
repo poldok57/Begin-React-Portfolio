@@ -71,7 +71,7 @@ export const RoomAddTables = ({
       position,
       offset,
       rotation: 0,
-      tableNumber: `${tableNumber}`,
+      tableNumber: `tmp${tableNumber}`,
       tableText: `Table ${tableNumber}`,
     };
     addTable(newTable);

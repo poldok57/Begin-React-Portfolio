@@ -23,6 +23,7 @@ interface TableDataState {
   deleteDesignElement: (id: string) => void;
   deleteDesignElementByType: (type: DesignType) => void;
   setSelectedDesignElement: (id: string | null) => void;
+  getTables: () => TableData[];
 }
 
 interface TableDataWithIndex extends TableData {
@@ -45,6 +46,9 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
   },
   getTable: (id: string) => {
     return get().tables.find((table) => table.id === id);
+  },
+  getTables: () => {
+    return get().tables;
   },
   getSelectedTables: () => {
     return get().tables.filter((table) => table.selected);
