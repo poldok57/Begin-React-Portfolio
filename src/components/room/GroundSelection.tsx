@@ -2,15 +2,19 @@ import React, { useRef, useEffect, useState } from "react";
 import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
 import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { useTableDataStore } from "./stores/tables";
-import { drawAllDesignElements } from "./design-elements";
+import {
+  drawAllDesignElements,
+  hightLightSelectedElement,
+} from "./design-elements";
 import { getCanvasSize, changeToucheMessage } from "./canvas-size";
 import { useRoomContext } from "./RoomProvider";
 import { useDebounce } from "@/hooks/useDebounce";
 import { isTouchDevice } from "@/lib/utils/device";
-import { Mode } from "./types";
+import { Mode, DesignType } from "./types";
 import clsx from "clsx";
 
 const TOUCH_MESSAGE_ID = "touch-message";
+const MARGIN = 10;
 
 interface GroundSelectionProps {
   onSelectionStart: () => void;
@@ -177,10 +181,10 @@ export const GroundSelection = React.forwardRef<
 
       const isInContainer = (rect: DOMRect) => {
         return (
-          rect.left >= containerRect.left &&
-          rect.right <= containerRect.right &&
-          rect.top >= containerRect.top &&
-          rect.bottom <= containerRect.bottom
+          rect.left >= containerRect.left - MARGIN &&
+          rect.right <= containerRect.right + MARGIN &&
+          rect.top >= containerRect.top - MARGIN &&
+          rect.bottom <= containerRect.bottom + MARGIN
         );
       };
 
@@ -482,20 +486,30 @@ export const GroundSelection = React.forwardRef<
       }
 
       const ctx = backgroundCanvasRef.current.getContext("2d");
-      if (!ctx) {
-        return;
+      if (ctx) {
+        drawAllDesignElements({
+          ctx,
+          elements: designElements,
+          ground: groundRef.current,
+          scale,
+        });
       }
 
       const temporaryCtx = temporaryCanvasRef.current?.getContext("2d") || null;
 
-      drawAllDesignElements({
-        ctx,
-        temporaryCtx,
-        elements: designElements,
-        selectedElementId: selectedDesignElement,
-        ground: groundRef.current,
-        scale,
-      });
+      if (selectedDesignElement && temporaryCtx) {
+        const element = designElements.find(
+          (el) => el.id === selectedDesignElement
+        );
+        if (element && groundRef.current) {
+          if (element.type === DesignType.background) {
+            groundRef.current.style.border = "3px dashed red";
+          } else {
+            groundRef.current.style.border = "none";
+            hightLightSelectedElement(temporaryCtx, element, scale);
+          }
+        }
+      }
     };
 
     const moveVerticalLine = (index: number, mouseX: number) => {

@@ -17,7 +17,7 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
   return (
     <>
       <div
-        className={clsx("dropdown", {
+        className={clsx("dropdown z-10", {
           "dropdown-top": position === "top",
           "dropdown-bottom": position === "bottom",
           "dropdown-left": position === "left",

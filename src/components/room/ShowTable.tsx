@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { TableColors, TableSettings } from "./types";
+import { TableColors, TableSettings, TableType } from "./types";
 import { PokerTable } from "./svg/PokerTable";
+import { RouletteTable } from "./svg/RouletteTable";
+import { SymetricTable } from "./svg/SymetricTable";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { RangeInput } from "@/components/atom/RangeInput";
 import {
@@ -15,7 +17,7 @@ import {
 } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
-// import { useRoomContext } from "./RoomProvider";
+import styled from "styled-components";
 
 const DEFAULT_SETTINGS = {
   widthLine: 0.025,
@@ -25,10 +27,20 @@ const DEFAULT_SETTINGS = {
   opacity: 0.4,
 };
 
+export const getTableComponent = (tableType: TableType) => {
+  return tableType === TableType.poker
+    ? PokerTable
+    : tableType === TableType.roulette || tableType === TableType.rouletteL
+    ? RouletteTable
+    : SymetricTable;
+};
+
 interface ShowTableProps {
   colors?: TableColors | null;
   settings?: TableSettings | null;
   title: string | undefined;
+  tableType: TableType;
+  setTableType: (tableType: TableType) => void;
   saveSettings: (settings: TableSettings) => void;
   resetTable?: () => void;
   handleRotation?: (rotation: number) => void;
@@ -42,11 +54,15 @@ interface ShowTableProps {
   size?: number;
   sizeStep?: number;
   tableNumber?: string;
+  flashDuration?: number;
+  bgTable?: string;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
   colors,
   settings,
   title,
+  tableType,
+  setTableType,
   saveSettings,
   resetTable,
   isTouch,
@@ -60,10 +76,13 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   handleRotation,
   handleSize,
   tableNumber = "88",
+  flashDuration = 0,
+  bgTable,
 }) => {
   // states for size and rotation
   const [_size, setSize] = useState(size);
   const [_rotation, setRotation] = useState(rotation);
+  const [_flashDuration, setFlashDuration] = useState(flashDuration);
   const [openSettings, setOpenSettings] = useState(editing);
   const [tableSettings, setTableSettings] =
     useState<TableSettings>(DEFAULT_SETTINGS);
@@ -90,7 +109,9 @@ export const ShowTable: React.FC<ShowTableProps> = ({
 
   useEffect(() => {
     setTableSettings(settings || DEFAULT_SETTINGS);
-  }, [settings]);
+  }, [settings, tableType]);
+
+  const TableComponent = getTableComponent(tableType);
 
   return (
     <div
@@ -121,6 +142,17 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             <RotateCw size={btnSize} />
           </button>
         </div>
+        <RangeInput
+          className="w-24 h-4"
+          id="flashDuration"
+          label="Flash duration"
+          value={_flashDuration || 0}
+          min="0"
+          max="10"
+          step="0.5"
+          onChange={(v) => setFlashDuration(v)}
+          isTouch={isTouch}
+        />
         <div className="flex flex-row gap-3">
           <button
             onClick={() => changeSize(-sizeStep)}
@@ -154,7 +186,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           }
         )}
       >
-        <div className="flex flex-row gap-2 justify-between w-full z-[1]">
+        <div className="flex flex-row gap-2 justify-between mb-3 w-full">
           <button
             onClick={() => setOpenSettings(!openSettings)}
             className={clsx("btn btn-circle", {
@@ -167,6 +199,20 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               <Settings size={btnSize} />
             )}
           </button>
+          <StyledSelect
+            className="select select-bordered select-sm"
+            value={tableType}
+            onChange={(e) => setTableType(e.target.value as TableType)}
+          >
+            <option value={TableType.poker}>Poker</option>
+            <option value={TableType.blackjack}>Blackjack</option>
+            <option value={TableType.craps}>Craps</option>
+            <option value={TableType.roulette}>Roulette Right</option>
+            <option value={TableType.rouletteL}>Roulette Left</option>
+            {/* <option value={TableType.slot}>Slot</option>
+            <option value={TableType.other}>Other</option> */}
+          </StyledSelect>
+
           {onClose && !openSettings && (
             <button
               className={clsx("btn btn-circle", {
@@ -272,7 +318,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           <RangeInput
             className="w-20 h-4"
             id="opacity"
-            label="Cashier opacity"
+            label="Details opacity"
             value={tableSettings.opacity || 0}
             min="0"
             max="1"
@@ -283,14 +329,29 @@ export const ShowTable: React.FC<ShowTableProps> = ({
         </div>
       </div>
 
-      <PokerTable
+      <TableComponent
         size={_size}
         rotation={_rotation}
         {...colors}
         {...tableSettings}
+        flashDuration={_flashDuration}
         tableNumber={tableNumber}
         tableText={title}
+        type={tableType}
+        style={{
+          zIndex: 2,
+          backgroundColor: bgTable,
+        }}
       />
     </div>
   );
 };
+
+const StyledSelect = styled.select`
+  position: relative;
+  z-index: 1;
+
+  &:focus {
+    z-index: 10;
+  }
+`;

@@ -1,7 +1,14 @@
+import {
+  RectPosition as Position,
+  Rectangle,
+  Coordinate,
+} from "@/lib/canvas/types";
+
 export enum TableType {
   poker = "poker",
   blackjack = "blackjack",
   roulette = "roulette",
+  rouletteL = "rouletteL",
   craps = "craps",
   slot = "slot",
   other = "other",
@@ -23,15 +30,10 @@ export enum Mode {
   settings = "settings",
 }
 
-import {
-  RectPosition as Position,
-  Rectangle,
-  Coordinate,
-} from "@/lib/canvas/types";
-
 export interface Table {
   size?: number;
   rotation?: number;
+  type: TableType;
   tableNumber?: string;
   tableText?: string;
 }
@@ -54,12 +56,13 @@ export interface TableSettings {
 
 export interface TableProps extends Table, TableColors, TableSettings {
   flashDuration?: number;
+  flashDelay?: number;
+  style?: React.CSSProperties;
 }
 
 export interface TableData extends Table {
   id: string;
   groupId?: string | null;
-  type: TableType;
   selected: boolean;
   position: Position;
   settings?: TableSettings | null;
@@ -68,6 +71,7 @@ export interface TableData extends Table {
 export interface GroupTable {
   id: string;
   title?: string;
+  type: TableType;
   tables?: Table[];
   colors: TableColors;
   settings?: TableSettings;

@@ -8,6 +8,7 @@ import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomContext } from "./RoomProvider";
 import { DesignType } from "./types";
 import { TableNumbers } from "./TableNumbers";
+import { useTableDataStore } from "./stores/tables";
 
 export enum Menu {
   addTable = "addTable",
@@ -40,7 +41,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   const { scale, setScale, clearSelectedTableIds } = useRoomContext();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
-
+  const { tables, updateTable } = useTableDataStore();
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
@@ -65,6 +66,15 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       if (event.key === "Escape") {
         setActiveMenu(null);
         clearSelectedTableIds();
+        return;
+      }
+      // Sélectionner toutes les tables avec Ctrl+A
+      if (event.ctrlKey && event.key === "a") {
+        event.preventDefault();
+        tables.forEach((table) => {
+          updateTable(table.id, { selected: true });
+        });
+        return;
       }
     };
 

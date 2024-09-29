@@ -139,6 +139,19 @@ export const mouseIsInsideBorderComponent = (
   return false;
 };
 
+export const mouseDistanceFromBorder = (
+  coord: Coordinate,
+  rect: DOMRect | Rectangle
+): number => {
+  // Calculate the minimum distance from the coordinate to any edge of the rectangle
+  const distanceLeft = rect.left - coord.x;
+  const distanceRight = coord.x - (rect.right ?? rect.left + rect.width);
+  const distanceTop = rect.top - coord.y;
+  const distanceBottom = coord.y - (rect.bottom ?? rect.top + rect.height);
+
+  // Return the minimum of these distances
+  return Math.max(distanceLeft, distanceRight, distanceTop, distanceBottom);
+};
 export const mousePointer = (mouseOnBorder: string): string => {
   switch (mouseOnBorder) {
     case BORDER.RIGHT:

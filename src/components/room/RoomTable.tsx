@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
-import { PokerTable } from "./svg/PokerTable";
-import { TableData, TableSettings, TableColors } from "./types";
+import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
+
+import { TableData, TableSettings, TableColors, TableType } from "./types";
 import { useGroupStore } from "./stores/groups";
 import { useTableDataStore } from "./stores/tables";
 import { Trash2, PowerOff, Settings, X, PencilOff } from "lucide-react";
-import { ShowTable } from "./ShowTable";
+import { ShowTable, getTableComponent } from "./ShowTable";
 import {
   Dialog,
   DialogContent,
@@ -82,6 +83,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
     updateTable(table.id, { size: newSize });
   };
 
+  const setTableType = (type: TableType) => {
+    updateTable(table.id, { type: type });
+  };
+
   useEffect(() => {
     setLocalSize((table.size ?? 100) * scale);
   }, [scale, table.size]);
@@ -92,6 +97,8 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       ...table.settings,
     });
   }, [table?.settings, group?.settings]);
+
+  const TableComponent = getTableComponent(table.type);
 
   return (
     <div
@@ -109,16 +116,17 @@ export const RoomTable: React.FC<RoomTableProps> = ({
         event.stopPropagation();
       }}
     >
-      <PokerTable
+      <TableComponent
         size={localSize}
         rotation={table.rotation ?? 0}
         tableNumber={table.tableNumber ?? ""}
         tableText={table.tableText ?? ""}
         {...settings}
         {...colors}
+        type={table.type}
       />
       {showButton && (
-        <>
+        <div>
           {table.groupId && (
             <button
               className="absolute -top-4 -right-4 btn btn-circle btn-sm"
@@ -140,48 +148,54 @@ export const RoomTable: React.FC<RoomTableProps> = ({
           >
             <PencilOff size={btnSize} />
           </button>
-          <button
-            className="absolute -bottom-2 -right-4 btn btn-circle btn-sm"
-            onClick={() => {
-              onDelete(table.id);
-            }}
-          >
-            <Trash2 size={btnSize} />
-          </button>
-          <Dialog blur={true}>
-            <DialogOpen>
-              <button className="absolute -bottom-2 -left-4 btn btn-circle btn-sm">
-                <Settings size={btnSize} />
-              </button>
-            </DialogOpen>
-            <DialogContent position="modal">
-              <DialogClose>
-                <button className="absolute top-5 right-5 btn btn-circle btn-sm">
-                  <X size={btnSize} />
+          <div className="flex absolute left-0 -bottom-1 flex-row justify-between w-full">
+            <Dialog blur={true}>
+              <DialogOpen>
+                <button className="absolute -left-4 btn btn-circle btn-sm">
+                  <Settings size={btnSize} />
                 </button>
-              </DialogClose>
-              <ShowTable
-                className="p-4 rounded-lg bg-background min-h-96"
-                colors={colors}
-                settings={editSettings}
-                title={table.tableText}
-                saveSettings={saveSettings}
-                rotation={table.rotation ?? 0}
-                rotationStep={5}
-                handleRotation={handleRotation}
-                size={table.size}
-                handleSize={handleSize}
-                tableNumber={table.tableNumber}
-                resetTable={() => {
-                  saveSettings(null);
-                  // updateTable(table.id, { settings: null });
-                }}
-                editing={true}
-                isTouch={isTouch}
-              />
-            </DialogContent>
-          </Dialog>
-        </>
+              </DialogOpen>
+              <DialogContent position="modal">
+                <DialogClose>
+                  <button className="absolute top-5 right-5 btn btn-circle btn-sm">
+                    <X size={btnSize} />
+                  </button>
+                </DialogClose>
+                <ShowTable
+                  className="p-4 rounded-lg bg-background min-h-96"
+                  colors={colors}
+                  settings={editSettings}
+                  title={table.tableText}
+                  saveSettings={saveSettings}
+                  rotation={table.rotation ?? 0}
+                  rotationStep={5}
+                  handleRotation={handleRotation}
+                  size={table.size}
+                  handleSize={handleSize}
+                  tableNumber={table.tableNumber}
+                  resetTable={() => {
+                    saveSettings(null);
+                    // updateTable(table.id, { settings: null });
+                  }}
+                  tableType={table.type}
+                  setTableType={setTableType}
+                  editing={true}
+                  isTouch={isTouch}
+                />
+              </DialogContent>
+            </Dialog>
+            <DeleteWithConfirm
+              position="right"
+              onConfirm={() => onDelete(table.id)}
+              confirmMessage="Delete this table?"
+              className="p-0 w-36 btn btn-warning"
+            >
+              <button className="absolute -right-4 btn btn-circle btn-sm">
+                <Trash2 size={btnSize} />
+              </button>
+            </DeleteWithConfirm>
+          </div>
+        </div>
       )}
     </div>
   );

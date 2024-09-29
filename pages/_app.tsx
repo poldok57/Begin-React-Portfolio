@@ -21,9 +21,8 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           close={true}
           resizable={true}
           draggable={false}
-          alt="Aline n' Karl
-          "
-          // trace={true}
+          alt="Aline n' Karl"
+          trace={false}
           style={{
             position: "absolute",
             left: "50px",

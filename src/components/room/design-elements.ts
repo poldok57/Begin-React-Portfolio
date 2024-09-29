@@ -86,12 +86,14 @@ const drawDesignElement = (
   }
 };
 
-const hightLightSelectedElement = (
+export const hightLightSelectedElement = (
   ctx: CanvasRenderingContext2D,
   element: DesignElement,
   scale: number
 ) => {
   const margin = 5;
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
   switch (element.type) {
     case DesignType.square:
       ctx.globalAlpha = 1;
@@ -174,12 +176,11 @@ const hightLightSelectedElement = (
       break;
   }
 };
+
 interface DrawAllDesignElementsProps {
   ctx: CanvasRenderingContext2D;
-  temporaryCtx: CanvasRenderingContext2D | null;
   ground: HTMLDivElement | null;
   elements: DesignElement[];
-  selectedElementId: string | null;
   scale?: number;
 }
 
@@ -187,37 +188,17 @@ export const drawAllDesignElements = ({
   ctx,
   ground,
   elements,
-  selectedElementId,
-  temporaryCtx,
   scale = 1,
 }: DrawAllDesignElementsProps) => {
   // clear the canvas
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  if (temporaryCtx) {
-    // clear the temporary canvas
-    temporaryCtx.clearRect(
-      0,
-      0,
-      temporaryCtx.canvas.width,
-      temporaryCtx.canvas.height
-    );
-  }
-
   elements.forEach((element) => {
     if (element.type === DesignType.background) {
       if (ground) {
         ground.style.background = element.color;
-        if (element.id === selectedElementId) {
-          ground.style.border = "3px dashed red";
-        } else {
-          ground.style.border = "none";
-        }
       }
     } else {
       drawDesignElement(ctx, element, scale);
-      if (element.id === selectedElementId) {
-        hightLightSelectedElement(temporaryCtx ?? ctx, element, scale);
-      }
     }
   });
 };

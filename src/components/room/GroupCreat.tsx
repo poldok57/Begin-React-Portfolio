@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { GroupTable, TableColors, TableSettings } from "./types";
-import { ShowTable } from "./ShowTable";
+import { GroupTable, TableColors, TableSettings, TableType } from "./types";
+import { ShowTable, getTableComponent } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "./stores/groups";
 import { useTableDataStore } from "./stores/tables";
 import { Palette, ArrowBigUpDash, Trash2, Pencil } from "lucide-react";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { ModifyColor } from "./ModifyColor";
-import { PokerTable } from "./svg/PokerTable";
+
 import clsx from "clsx";
 
 const DEFAULT_COLORS = {
@@ -31,6 +31,7 @@ export const GroupCreat = () => {
   };
   const isTouch = isTouchDevice();
   const btnSize = isTouch ? 20 : 16;
+  const [tableType, setTableType] = useState<TableType>(TableType.poker);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,6 +41,7 @@ export const GroupCreat = () => {
     const group: GroupTable = {
       id: input.currentId.value,
       title: input.titleGroup.value,
+      type: tableType,
       colors: { ...colors },
       settings: undefined,
     };
@@ -60,6 +62,7 @@ export const GroupCreat = () => {
     if (currentId) {
       updateGroup(currentId, {
         settings: newSettings,
+        type: tableType,
       });
     }
   };
@@ -80,6 +83,7 @@ export const GroupCreat = () => {
       setTitle(selectedGroup?.title ?? "");
       setColors(selectedGroup?.colors ?? DEFAULT_COLORS);
       setSettings(selectedGroup?.settings ?? null);
+      setTableType(selectedGroup?.type ?? TableType.poker);
     } else {
       console.error("Groupe non trouvé");
     }
@@ -114,6 +118,8 @@ export const GroupCreat = () => {
     themeColors.push(colors.fillColor);
   }
 
+  const TableComponent = getTableComponent(tableType);
+
   return (
     <div
       className={clsx("shadow-xl bg-base-100", {
@@ -128,7 +134,7 @@ export const GroupCreat = () => {
             className="w-full max-w-xs select select-primary"
             onChange={(e) => selectGroup(e)}
           >
-            <option disabled selected>
+            <option value="" disabled selected>
               Choose or creat a group?
             </option>
             <option value="new">New group</option>
@@ -149,13 +155,14 @@ export const GroupCreat = () => {
         </p>
         {!editing ? (
           <div className="flex relative flex-col justify-center items-center p-2 mx-auto mt-1 w-full rounded-lg border border-opacity-50 h-fit border-secondary">
-            <PokerTable
+            <TableComponent
               size={120}
               rotation={0}
               {...colors}
               {...settings}
               tableNumber="88"
               tableText={title}
+              type={tableType}
             />
 
             <button
@@ -179,9 +186,12 @@ export const GroupCreat = () => {
                 title={title}
                 settings={settings}
                 saveSettings={saveSettings}
+                tableType={tableType}
+                setTableType={setTableType}
                 resetTable={currentId ? undefined : resetTable}
                 isTouch={isTouch}
                 onClose={() => setEditing(false)}
+                bgTable="rgb(210,210,210, 0.5)"
               />
             </div>
             <div className="p-2 rounded-lg border shadow-lg border-primary bg-paper">

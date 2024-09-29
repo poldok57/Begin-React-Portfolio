@@ -211,6 +211,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         if (maximizeId.length === 0) {
           document.body.style.overflow = "auto";
           document.body.style.transition = "overflow 0.5s";
+          document.body.style.pointerEvents = "auto";
         }
       };
 
@@ -218,6 +219,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         addMaximizedWindow(id);
         document.body.style.overflow = "hidden";
         document.body.style.transition = "overflow 0.5s";
+        document.body.style.pointerEvents = "none";
       } else {
         windowClosed();
       }

@@ -113,7 +113,11 @@ export const FullScreenWindow = forwardRef<
           invisible: !isOpen,
         }
       )}
-      style={mStyle.current as React.CSSProperties}
+      style={{
+        ...(mStyle.current as React.CSSProperties),
+        pointerEvents: "auto",
+      }}
+      onMouseOver={(e) => e.stopPropagation()}
     >
       <WithResizing
         componentRef={ref as MutableRefObject<HTMLElement>}

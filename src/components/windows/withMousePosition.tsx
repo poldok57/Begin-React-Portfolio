@@ -326,20 +326,22 @@ export function withMousePosition<P extends object>(
         coord: Coordinate
       ) => {
         if (!canMove()) {
-          return;
+          return false;
         }
         const rect = waitEvent.getBoundingClientRect();
         if (!coordinateIsInsideRect(coord, rect)) {
           setCanMove(false);
-          return;
+          return false;
         }
         event.stopPropagation();
         event.preventDefault();
         setMouseCoordinates(coord.x, coord.y);
         calculNewPosition();
+        return true;
       };
 
       const handleMouseMove = (event: MouseEvent) => {
+        event.preventDefault();
         handleMove(event, { x: event.clientX, y: event.clientY });
       };
 
@@ -348,7 +350,7 @@ export function withMousePosition<P extends object>(
        */
       const startDrag = (event: MouseEvent | TouchEvent, coord: Coordinate) => {
         const { component } = selectComponent();
-        if (!component) return;
+        if (!component) return false;
 
         const rectComponent = component.getBoundingClientRect();
         const rectWaitEvent = waitEvent.getBoundingClientRect();
@@ -365,7 +367,7 @@ export function withMousePosition<P extends object>(
               event
             );
           }
-          return;
+          return false;
         }
         if (waitEvent && waitEvent.contains(event.target as Node)) {
           setCanMove(true);
@@ -379,8 +381,9 @@ export function withMousePosition<P extends object>(
           });
           // console.log("start drag");
           event.stopPropagation();
-          // event.preventDefault();
+          return true;
         }
+        return false;
       };
 
       /**
@@ -399,7 +402,9 @@ export function withMousePosition<P extends object>(
          */
         if (isLocked) return;
 
-        startDrag(event, { x: event.clientX, y: event.clientY });
+        if (startDrag(event, { x: event.clientX, y: event.clientY })) {
+          // event.preventDefault();
+        }
       };
 
       /**
@@ -418,6 +423,7 @@ export function withMousePosition<P extends object>(
           mouseUp(event);
         }
       };
+
       /**
        * Touch events
        */
@@ -429,8 +435,6 @@ export function withMousePosition<P extends object>(
           );
         }
         if (isLocked) return;
-
-        // event.preventDefault();
 
         startDrag(event, {
           x: touch.clientX,

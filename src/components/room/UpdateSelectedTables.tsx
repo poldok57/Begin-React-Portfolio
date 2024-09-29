@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Settings, X } from "lucide-react";
+import { Settings, X, PowerOff } from "lucide-react";
 import { TableSettings } from "./types";
 import { useTableDataStore } from "./stores/tables";
 import { Button } from "@/components/atom/Button";
-import { ShowTable } from "./ShowTable";
+import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +11,13 @@ import {
   DialogClose,
 } from "@/components/atom/Dialog";
 import clsx from "clsx";
+import { ShowTable } from "./ShowTable";
 import { RotationButtons } from "./control/RotationButtons";
 import { ResizeButtons } from "./control/ResizeButtons";
 import { DeleteSelectedTables } from "./control/DeleteSelectedTables";
 import { RotationSquad } from "./control/RotationSquad";
 import { useRoomContext } from "./RoomProvider";
-import { Mode } from "./types";
+import { Mode, TableType } from "./types";
 import { Menu } from "./RoomMenu";
 
 interface UpdateSelectedTablesProps {
@@ -49,6 +50,10 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   const saveSettings = (newSettings: TableSettings | null) => {
     setEditSettings(newSettings);
     updateSelectedTable({ settings: newSettings });
+  };
+
+  const handlePowerOff = () => {
+    updateSelectedTable({ groupId: null });
   };
 
   useEffect(() => {
@@ -114,9 +119,22 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
                     }}
                     editing={true}
                     isTouch={isTouch}
+                    tableType={TableType.poker}
+                    setTableType={() => {}}
                   />
                 </DialogContent>
               </Dialog>
+              <DeleteWithConfirm
+                position="top"
+                onConfirm={handlePowerOff}
+                confirmMessage={`Close ${selectedTablesCount} tables ?`}
+                className="p-0 w-36 btn btn-warning"
+              >
+                <button className="btn btn-circle btn-sm">
+                  <PowerOff size={btnSize} />
+                </button>
+              </DeleteWithConfirm>
+
               <DeleteSelectedTables
                 btnSize={btnSize}
                 selectedTablesCount={selectedTablesCount}

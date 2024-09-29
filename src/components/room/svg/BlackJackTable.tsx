@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TableProps } from "../types";
+
 import { SvgWrapper, useAnimation } from "./SvgWrapper";
 
-const MemorizedPokerTable = React.memo(
+const MemorizedBlackJackTable = React.memo(
   ({
     size = 300,
     rotation = 0,
@@ -15,7 +16,7 @@ const MemorizedPokerTable = React.memo(
     flashDuration = 0,
     flashDelay = 0,
     widthLine = 0.025,
-    heightRatio = 0.28,
+    heightRatio = 0.34,
     concaveRatio = 0.07,
     textRatio = 0.3,
     opacity = 0.4,
@@ -26,19 +27,26 @@ const MemorizedPokerTable = React.memo(
     const subTextSize = textSize * 0.25;
 
     // Dimensions de la table
-    const radius = size * heightRatio - strokeWidth / 2;
-    const longSide = size - strokeWidth - 2 * radius;
+    const radius = (size - strokeWidth) / 2;
+    const radiusY = radius * (0.3 + 2 * heightRatio);
+    const cornerRadius = size * 0.2 * heightRatio;
+
+    const longSide = size - strokeWidth - 2 * +cornerRadius;
     const concaveRadius = size * concaveRatio; // rayon des quarts de cercle concaves pour le croupier
 
     const concaveRadiusY = (concaveRadius * 2) / 3;
-    const concaveLarge = Math.max(longSide - concaveRadius * 3.5, size * 0.1);
+    const concaveLarge = Math.max(
+      longSide * 0.6 - concaveRadius * 3.5,
+      size * 0.1
+    );
     const concaveSide = (longSide - concaveLarge) / 2 - concaveRadius;
+    const bottomTable = radiusY + cornerRadius;
 
     const cashierWidth = Math.min(
-      Math.max(longSide - concaveRadius * 3, size * 0.2),
-      radius
+      Math.max(concaveLarge, size * 0.2),
+      radius / 2
     );
-    const cashierHeight = cashierWidth * 0.5;
+    const cashierHeight = cashierWidth * 0.4;
     const textRef = useRef<SVGTextElement>(null);
     const [adjustedFontSize, setAdjustedFontSize] = useState(subTextSize);
     const [animationkey, setAnimationKey] = useState(flashDuration > 0 ? 1 : 0);
@@ -67,8 +75,8 @@ const MemorizedPokerTable = React.memo(
     return (
       <SvgWrapper
         width={size}
-        height={radius * 2 + strokeWidth}
-        viewBox={`0 0 ${size} ${radius * 2 + strokeWidth}`}
+        height={bottomTable + strokeWidth}
+        viewBox={`0 0 ${size} ${bottomTable}`}
         rotation={rotation}
         animationkey={animationkey}
         style={style}
@@ -76,10 +84,10 @@ const MemorizedPokerTable = React.memo(
         <path
           d={
             `
-          M ${strokeWidth / 2 + radius},${radius * 2 + strokeWidth / 2} 
-        a ${radius},${radius} 0 0,1 0,${-radius * 2}` +
-            `h ${longSide}` +
-            `a ${radius},${radius} 0 0,1 0,${radius * 2}` +
+          M ${cornerRadius + strokeWidth / 2},${bottomTable} 
+          a ${cornerRadius},${cornerRadius} 0 0,1 ${-cornerRadius},${-cornerRadius}` +
+            `a ${radius},${radiusY} 0 0,1 ${2 * radius},0` +
+            `a ${cornerRadius},${cornerRadius} 0 0,1 ${-cornerRadius},${cornerRadius}` +
             `h ${-concaveSide}` +
             `a ${concaveRadius},${concaveRadiusY} 0 0,0 ${-concaveRadius},${-concaveRadiusY}` +
             `h ${-concaveLarge}` +
@@ -91,10 +99,28 @@ const MemorizedPokerTable = React.memo(
           strokeWidth={strokeWidth}
           strokeLinejoin="round"
         />
+        {/* vertical symmetry line */}
+        <line
+          x1={size / 2}
+          y1={0}
+          x2={size / 2}
+          y2={bottomTable}
+          stroke={textColor}
+          strokeWidth="1"
+          strokeDasharray="20,5,4,3"
+          opacity={0.5}
+        />
+
         {/* Rectangle for cashier */}
         <rect
           x={(size - cashierWidth) / 2}
-          y={radius * 1.95 - concaveRadiusY - cashierHeight}
+          y={
+            radiusY * 0.95 +
+            cornerRadius -
+            concaveRadiusY -
+            cashierHeight -
+            strokeWidth / 2
+          }
           width={cashierWidth}
           height={cashierHeight}
           fill={borderColor}
@@ -103,12 +129,12 @@ const MemorizedPokerTable = React.memo(
         {/* Table number */}
         <g
           transform={`rotate(${-rotation}, ${size / 2}, ${
-            radius + strokeWidth
+            (bottomTable + strokeWidth) / 2
           })`}
         >
           <text
             x="50%"
-            y={"59%"}
+            y={rotation > 130 && rotation < 230 ? "70%" : "60%"}
             fontSize={textSize}
             fill={numberColor}
             dominantBaseline="middle"
@@ -126,7 +152,7 @@ const MemorizedPokerTable = React.memo(
                 (rotation > 130 && rotation < 230
                   ? concaveRadiusY + strokeWidth * 0.5
                   : rotation >= 325 || rotation <= 30
-                  ? strokeWidth
+                  ? strokeWidth * 0.4
                   : 0)
               }
               fontSize={adjustedFontSize}
@@ -162,8 +188,8 @@ const MemorizedPokerTable = React.memo(
   }
 );
 
-MemorizedPokerTable.displayName = "PokerTable";
+MemorizedBlackJackTable.displayName = "BlackJackTable";
 
-export const PokerTable = MemorizedPokerTable;
+export const BlackJackTable = MemorizedBlackJackTable;
 
-export default PokerTable;
+export default BlackJackTable;
