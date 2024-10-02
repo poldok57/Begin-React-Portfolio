@@ -15,19 +15,19 @@ type DialogContextType = {
 };
 
 const DialogContext = createContext<DialogContextType | null>(null);
-const useDialogContext: () => DialogContextType = () => {
+const useDialogContext = (): DialogContextType => {
   const context = useContext(DialogContext);
   if (!context) throw new Error("DialogContext.Provider not found");
-  // ✅ Sinon on va renvoyer le contexte
   return context;
 };
 
 interface EventListenerProps {
-  handler: (event: Event | KeyboardEvent | MouseEvent) => void;
+  handler: (event: Event) => void;
   isEnabled?: boolean;
   type: string;
   element?: Window | Document | HTMLElement;
 }
+
 const useEventListener = ({
   handler,
   isEnabled = true,
@@ -57,7 +57,7 @@ const useEventListener = ({
   }, [isEnabled, type, element]);
 };
 
-const getFocusableElements = (ref: RefObject<HTMLElement>) => {
+const getFocusableElements = (ref: RefObject<HTMLElement>): HTMLElement[] => {
   if (!ref.current) return [];
   return Array.from(
     ref.current.querySelectorAll("a[href], button, textarea, input, select")
@@ -90,7 +90,6 @@ const useFocusTrap = (ref: RefObject<HTMLElement>, isEnabled: boolean) => {
 
       focusableElements[nextIndex].focus();
       event.preventDefault();
-      return;
     },
   });
 };
@@ -99,6 +98,7 @@ interface DialogProps {
   children: React.ReactNode;
   blur?: boolean | null;
 }
+
 export const Dialog: React.FC<DialogProps> = ({ children, blur = null }) => {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
@@ -108,6 +108,7 @@ export const Dialog: React.FC<DialogProps> = ({ children, blur = null }) => {
     </DialogContext.Provider>
   );
 };
+
 type ClickableProps = {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 };
@@ -115,6 +116,7 @@ type ClickableProps = {
 interface DialogActionProps {
   children: React.ReactElement | string;
   className?: string | null;
+  onClick?: (e: MouseEvent) => void;
 }
 
 interface DialogTriggerProps extends DialogActionProps {
@@ -124,24 +126,32 @@ interface DialogTriggerProps extends DialogActionProps {
 function isClickableElement(
   element: React.ReactNode
 ): element is React.ReactElement<ClickableProps> {
-  return React.isValidElement(element); //&& typeof element.props.onClick === "function"
+  return React.isValidElement(element);
 }
 
 export const DialogTrigger: React.FC<DialogTriggerProps> = ({
   children,
   className = null,
   type = "toggle",
+  onClick,
 }: DialogTriggerProps) => {
   const { blur, dialogRef } = useDialogContext();
 
-  const handleClick = () => {
+  const handleClick = (e: MouseEvent) => {
     switch (type) {
       case "close":
+        if (onClick) {
+          onClick(e);
+        }
         if (dialogRef.current) {
           dialogRef.current.close();
         }
         break;
       case "open":
+        if (onClick) {
+          onClick(e);
+        }
+
         if (dialogRef.current) {
           if (blur) {
             dialogRef.current.showModal();
@@ -169,50 +179,53 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
   return isClickableElement(children) && children.props.onClick ? (
     cloneElement(children, {
       onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-        handleClick();
+        handleClick(e as unknown as MouseEvent);
         if (typeof children.props.onClick === "function") {
           children.props.onClick(e);
         }
       },
     })
   ) : (
-    <button className={className || ""} onClick={() => handleClick()}>
+    <button
+      className={className || ""}
+      onClick={(e) => handleClick(e as unknown as MouseEvent)}
+    >
       {children}
     </button>
   );
 };
 
-// DialogOpen: Fonction pour ouvrir la boîte de dialogue
 export const DialogOpen: React.FC<DialogActionProps> = ({
   children,
   className,
+  onClick,
 }) => {
   return (
-    <DialogTrigger className={className} type="open">
+    <DialogTrigger className={className} type="open" onClick={onClick}>
       {children}
     </DialogTrigger>
   );
 };
 
-// DialogClose: Fonction pour fermer la boîte de dialogue
 export const DialogClose: React.FC<DialogActionProps> = ({
   children,
   className,
+  onClick,
 }) => {
   return (
-    <DialogTrigger className={className} type="close">
+    <DialogTrigger className={className} type="close" onClick={onClick}>
       {children}
     </DialogTrigger>
   );
 };
 
-// DialogToggle: Fonction pour basculer l'état de la boîte de dialogue
 export const DialogToggle: React.FC<DialogActionProps> = ({
   children,
   className,
+  onClick,
 }) => {
   return (
-    <DialogTrigger className={className} type="toggle">
+    <DialogTrigger className={className} type="toggle" onClick={onClick}>
       {children}
     </DialogTrigger>
   );
@@ -230,12 +243,12 @@ export const DialogContent: React.FC<DialogContentProps> = ({
   position = "modal",
 }) => {
   const { blur, dialogRef } = useDialogContext();
-  const ref = useRef(null);
-  const open = true; //dialogRef.current?.open;
+  const ref = useRef<HTMLDivElement>(null);
+  const open = true;
 
   useEffect(() => {
     if (!dialogRef.current) return;
-    // not necessary on modal
+
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (dialogRef.current) {
@@ -244,10 +257,10 @@ export const DialogContent: React.FC<DialogContentProps> = ({
         }
       }
     };
-    const handleClickOutside = (e: Event) => {
+
+    const handleClickOutside = (e: MouseEvent) => {
       console.log("handleClickOutside");
-      if (!(e instanceof MouseEvent)) return;
-      const element: HTMLElement | null = ref.current as HTMLElement | null;
+      const element: HTMLElement | null = ref.current;
       if (element && !element.contains(e.target as Node)) {
         if (dialogRef.current) {
           dialogRef.current.close();
@@ -256,7 +269,7 @@ export const DialogContent: React.FC<DialogContentProps> = ({
       }
     };
 
-    const handleClick = (event: Event) => {
+    const handleClick = (event: MouseEvent) => {
       if (dialogRef.current && dialogRef.current === event.target) {
         dialogRef.current.close();
       }
@@ -265,22 +278,31 @@ export const DialogContent: React.FC<DialogContentProps> = ({
     if (open && !blur) {
       document.addEventListener("keydown", handleEscape);
       document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("touchstart", handleClickOutside);
+      document.addEventListener(
+        "touchstart",
+        handleClickOutside as EventListener
+      );
     }
     if (open && blur) {
       dialogRef.current.addEventListener("mousedown", handleClick);
-      dialogRef.current.addEventListener("touchstart", handleClick);
+      dialogRef.current.addEventListener(
+        "touchstart",
+        handleClick as EventListener
+      );
     }
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener(
+        "touchstart",
+        handleClickOutside as EventListener
+      );
       dialogRef.current?.removeEventListener("mousedown", handleClick);
     };
-  }, [open, dialogRef]);
+  }, [open, dialogRef, blur]);
 
-  useFocusTrap(ref, open || false);
+  useFocusTrap(ref, open);
 
   return (
     <>

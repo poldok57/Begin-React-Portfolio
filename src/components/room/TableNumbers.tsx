@@ -41,7 +41,14 @@ const TableNumbers = ({
   };
 
   return (
-    <div className={clsx("relative z-30", className)} ref={ref}>
+    <div
+      className={clsx(
+        "relative",
+        { "z-30": activeMenu === Menu.tableNumbers },
+        className
+      )}
+      ref={ref}
+    >
       <Button onClick={() => startNumbering()}>table numbering</Button>
       {activeMenu === Menu.tableNumbers && <TableNumbersProcess />}
     </div>

@@ -341,7 +341,7 @@ export function withMousePosition<P extends object>(
       };
 
       const handleMouseMove = (event: MouseEvent) => {
-        event.preventDefault();
+        // event.preventDefault();
         handleMove(event, { x: event.clientX, y: event.clientY });
       };
 

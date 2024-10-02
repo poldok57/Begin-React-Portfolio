@@ -7,7 +7,7 @@ import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomMenu } from "./RoomMenu";
-import { GroundSelection } from "./GroundSelection";
+import { GroundSelection } from "./GroundSelection/GroundSelection";
 import { RoomProvider, useRoomContext } from "./RoomProvider";
 import { ListTables } from "./ListTables";
 import { ValidationFrame } from "./ValidationFrame";
@@ -33,6 +33,13 @@ export const getGroundOffset = () => {
   }
   return { left: 0, top: 0 };
 };
+
+export interface ChangeCoordinatesParams {
+  position?: { left?: number; top?: number };
+  offset?: { left?: number; top?: number };
+  rotation?: number;
+  tableIds?: string[] | null;
+}
 
 export const RoomCreatTools = () => {
   const {
@@ -114,12 +121,7 @@ export const RoomCreatTools = () => {
     offset,
     rotation,
     tableIds,
-  }: {
-    position?: { left?: number; top?: number };
-    offset?: { left?: number; top?: number };
-    rotation?: number;
-    tableIds?: string[] | null;
-  }) => {
+  }: ChangeCoordinatesParams) => {
     if (!tableIds) {
       // Find all selected tables
       const selectedTables = getSelectedTables();
@@ -272,7 +274,7 @@ export const RoomCreatTools = () => {
         <GroundSelection
           ref={groundRef}
           id={GROUND_ID}
-          idContainer={CONTAINER_ID}
+          containerId={CONTAINER_ID}
           changeCoordinates={changeCoordinates}
           onSelectionStart={onZoneSelectedStart}
           onSelectionEnd={onZoneSelectedEnd}

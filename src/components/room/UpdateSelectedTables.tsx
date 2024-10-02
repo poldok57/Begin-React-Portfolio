@@ -46,10 +46,15 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   const { setMode } = useRoomContext();
   const [selectedTablesCount, setSelectedTablesCount] = useState(0);
   const [editSettings, setEditSettings] = useState<TableSettings | null>(null);
-
+  const [tableType, setTableType] = useState<TableType | null>(TableType.poker);
   const saveSettings = (newSettings: TableSettings | null) => {
     setEditSettings(newSettings);
     updateSelectedTable({ settings: newSettings });
+  };
+
+  const saveTableType = (tableType: TableType) => {
+    setTableType(tableType);
+    updateSelectedTable({ type: tableType });
   };
 
   const handlePowerOff = () => {
@@ -119,8 +124,8 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
                     }}
                     editing={true}
                     isTouch={isTouch}
-                    tableType={TableType.poker}
-                    setTableType={() => {}}
+                    tableType={tableType || TableType.poker}
+                    setTableType={saveTableType}
                   />
                 </DialogContent>
               </Dialog>

@@ -87,6 +87,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
     updateTable(table.id, { type: type });
   };
 
+  const setSelected = (selected: boolean) => {
+    changeSelected(table.id, selected);
+  };
+
   useEffect(() => {
     setLocalSize((table.size ?? 100) * scale);
   }, [scale, table.size]);
@@ -150,7 +154,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
           </button>
           <div className="flex absolute left-0 -bottom-1 flex-row justify-between w-full">
             <Dialog blur={true}>
-              <DialogOpen>
+              <DialogOpen onClick={() => setSelected(false)}>
                 <button className="absolute -left-4 btn btn-circle btn-sm">
                   <Settings size={btnSize} />
                 </button>

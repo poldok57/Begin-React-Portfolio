@@ -22,7 +22,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
           resizable={true}
           draggable={false}
           alt="Aline n' Karl"
-          trace={false}
+          // trace={false}
           style={{
             position: "absolute",
             left: "50px",

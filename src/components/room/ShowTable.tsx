@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
 import clsx from "clsx";
-import styled from "styled-components";
+import { SelectTableType } from "./SelectTableType";
 
 const DEFAULT_SETTINGS = {
   widthLine: 0.025,
@@ -39,7 +39,7 @@ interface ShowTableProps {
   colors?: TableColors | null;
   settings?: TableSettings | null;
   title: string | undefined;
-  tableType: TableType;
+  tableType?: TableType;
   setTableType: (tableType: TableType) => void;
   saveSettings: (settings: TableSettings) => void;
   resetTable?: () => void;
@@ -61,7 +61,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   colors,
   settings,
   title,
-  tableType,
+  tableType = TableType.poker,
   setTableType,
   saveSettings,
   resetTable,
@@ -199,20 +199,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               <Settings size={btnSize} />
             )}
           </button>
-          <StyledSelect
-            className="select select-bordered select-sm"
-            value={tableType}
-            onChange={(e) => setTableType(e.target.value as TableType)}
-          >
-            <option value={TableType.poker}>Poker</option>
-            <option value={TableType.blackjack}>Blackjack</option>
-            <option value={TableType.craps}>Craps</option>
-            <option value={TableType.roulette}>Roulette Right</option>
-            <option value={TableType.rouletteL}>Roulette Left</option>
-            {/* <option value={TableType.slot}>Slot</option>
-            <option value={TableType.other}>Other</option> */}
-          </StyledSelect>
-
+          <SelectTableType tableType={tableType} setTableType={setTableType} />
           {onClose && !openSettings && (
             <button
               className={clsx("btn btn-circle", {
@@ -346,12 +333,3 @@ export const ShowTable: React.FC<ShowTableProps> = ({
     </div>
   );
 };
-
-const StyledSelect = styled.select`
-  position: relative;
-  z-index: 1;
-
-  &:focus {
-    z-index: 10;
-  }
-`;

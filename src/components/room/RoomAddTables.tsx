@@ -9,37 +9,38 @@ import { useRoomContext } from "./RoomProvider";
 import { getGroundOffset } from "./RoomCreat";
 import { Menu } from "./RoomMenu";
 import { Mode } from "./types";
-
+import { SelectTableType } from "./SelectTableType";
 import clsx from "clsx";
 
-export const RoomAddTables = ({
-  className,
-  addSelectedRect,
-  resetSelectedTables,
-  activeMenu,
-  setActiveMenu,
-}: {
+interface RoomAddTablesProps {
   className: string;
   addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
+}
+
+export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
+  className,
+  addSelectedRect,
+  resetSelectedTables,
+  activeMenu,
+  setActiveMenu,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [selectedItems, setSelectedItems] = useState<{
     width: number;
     height: number;
-  } | null>({ width: 2, height: 2 });
+  }>({ width: 2, height: 2 });
+  const [selectedTableType, setSelectedTableType] = useState<TableType>(
+    TableType.poker
+  );
 
   const { addTable, tables } = useTableDataStore((state) => state);
-
-  const handleSelectedItems = (items: { width: number; height: number }) => {
-    setSelectedItems(items);
-  };
-
   const { getSelectedRect, scale, setMode } = useRoomContext();
 
   const DEFAULT_TABLE_SIZE = 100;
+
   const positionTable = (offset: Position, x: number, y: number) => {
     return {
       left: offset.left + DEFAULT_TABLE_SIZE * (0.5 + 1.5 * x),
@@ -47,41 +48,10 @@ export const RoomAddTables = ({
     };
   };
 
-  const handleAddTable = (
-    x: number,
-    y: number,
-    tableNumber: number,
-    selectedRect: Rectangle
-  ) => {
-    const offsetStart = {
-      left: selectedRect.left,
-      top: selectedRect.top,
-    };
-    const position: Position = positionTable(offsetStart, x, y);
-    const offset: Position = {
-      left: (position.left - selectedRect.left) * scale,
-      top: (position.top - selectedRect.top) * scale,
-    };
-
-    const newTable = {
-      id: "",
-      type: "poker" as TableType,
-      selected: true,
-      size: DEFAULT_TABLE_SIZE,
-      position,
-      offset,
-      rotation: 0,
-      tableNumber: `tmp${tableNumber}`,
-      tableText: `Table ${tableNumber}`,
-    };
-    addTable(newTable);
-  };
-
-  const handleAddTables = () => {
-    if (!selectedItems) {
-      return;
-    }
-
+  const calculateSelectedRect = (selectedItems: {
+    width: number;
+    height: number;
+  }) => {
     let offsetStart = {
       left: 50,
       top: 50,
@@ -113,14 +83,12 @@ export const RoomAddTables = ({
     const height = end.top - start.top + DEFAULT_TABLE_SIZE / 2;
     if (selectedRect === null) {
       selectedRect = {
-        ...{
-          left,
-          top,
-          width,
-          height,
-          right: left + width,
-          bottom: top + height,
-        },
+        left,
+        top,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
       };
     } else {
       selectedRect.width = width;
@@ -128,6 +96,45 @@ export const RoomAddTables = ({
       selectedRect.right = left + width;
       selectedRect.bottom = top + height;
     }
+    return selectedRect;
+  };
+
+  const handleAddTable = (
+    x: number,
+    y: number,
+    tableNumber: number,
+    selectedRect: Rectangle
+  ) => {
+    const offsetStart = {
+      left: selectedRect.left,
+      top: selectedRect.top,
+    };
+    const position: Position = positionTable(offsetStart, x, y);
+    const offset: Position = {
+      left: (position.left - selectedRect.left) * scale,
+      top: (position.top - selectedRect.top) * scale,
+    };
+
+    const newTable = {
+      id: "",
+      type: selectedTableType,
+      selected: true,
+      size: DEFAULT_TABLE_SIZE,
+      position,
+      offset,
+      rotation: 0,
+      tableNumber: `tmp${tableNumber}`,
+      tableText: `Table ${tableNumber}`,
+    };
+    addTable(newTable);
+  };
+
+  const handleAddTables = () => {
+    if (!selectedItems) {
+      return;
+    }
+
+    const selectedRect = calculateSelectedRect(selectedItems);
     resetSelectedTables();
 
     let tableNumber = tables.length + 1;
@@ -158,15 +165,43 @@ export const RoomAddTables = ({
         Add tables
       </Button>
       {activeMenu === Menu.addTable && (
-        <SelectionItems
-          handleClose={() => setActiveMenu(null)}
-          setSelectedItems={handleSelectedItems}
-          selectedItems={selectedItems}
-          addTables={handleAddTables}
-          Component={
-            RectangleHorizontal as React.FC<{ size: number; className: string }>
-          }
-        />
+        <div className="absolute left-0 top-full z-10 p-4 mt-2 w-64 bg-white rounded-lg shadow-lg">
+          <h3 className="mb-4 text-lg font-semibold">Add New Tables</h3>
+          <div className="mb-4">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
+              Table Type
+            </label>
+            <SelectTableType
+              tableType={selectedTableType}
+              setTableType={setSelectedTableType}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block mb-2 text-sm font-medium text-gray-700">
+              Table Layout
+            </label>
+            <SelectionItems
+              handleClose={() => setActiveMenu(null)}
+              setSelectedItems={setSelectedItems}
+              selectedItems={selectedItems}
+              addTables={handleAddTables}
+              Component={
+                RectangleHorizontal as React.FC<{
+                  size: number;
+                  className: string;
+                }>
+              }
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button onClick={() => setActiveMenu(null)} className="bg-warning">
+              Cancel
+            </Button>
+            <Button onClick={handleAddTables} className="bg-primary">
+              Add Tables
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

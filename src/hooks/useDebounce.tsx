@@ -1,10 +1,13 @@
 import React from "react";
 
-export const useDebounce = (callback, time) => {
-  const timeoutRef = React.useRef(null);
+export const useDebounce = <T extends unknown[]>(
+  callback: (...args: T) => void,
+  time: number
+) => {
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  const onDebounce = (...args) => {
-    if (timeoutRef) clearTimeout(timeoutRef.current);
+  const onDebounce = (...args: T) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
       callback(...args);
     }, time);

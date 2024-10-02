@@ -45,7 +45,7 @@ export const useFetch = (url, config = null) => {
   const isMounted = useIsMounted();
 
   const run = useCallback(() => {
-    fetch(url, config)
+    fetch(url, config || undefined)
       .then(async (response) => {
         const json = await response.json();
 
