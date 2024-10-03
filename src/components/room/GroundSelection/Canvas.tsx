@@ -3,8 +3,8 @@ import { Mode } from "../types";
 import {
   drawAllDesignElements,
   hightLightSelectedElement,
-} from "../design-elements";
-import { getCanvasSize } from "../canvas-size";
+} from "../scripts/design-elements";
+import { getCanvasSize } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { useTableDataStore } from "../stores/tables";
 import clsx from "clsx";
@@ -104,14 +104,14 @@ export const Canvas: React.FC<CanvasProps> = ({
   );
 
   useEffect(() => {
-    const handleResize = () => resizeCanvas(1); // Utilisez 1 comme échelle par défaut
+    const handleResize = () => resizeCanvas(scale); // Utilisez 1 comme échelle par défaut
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [resizeCanvas]);
+  }, [resizeCanvas, scale]);
 
   useEffect(() => {
-    drawElementsOnCanvas(1); // Utilisez 1 comme échelle par défaut
-  }, [drawElementsOnCanvas]);
+    drawElementsOnCanvas(scale);
+  }, [drawElementsOnCanvas, scale]);
 
   useEffect(() => {
     // Check if the background canvas is not defined or has no width

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
-import { changeToucheMessage } from "../canvas-size";
+import { changeToucheMessage } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { isTouchDevice } from "@/lib/utils/device";
 import { Canvas } from "./Canvas";

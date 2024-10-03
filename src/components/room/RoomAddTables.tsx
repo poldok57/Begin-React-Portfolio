@@ -6,10 +6,14 @@ import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import { useRoomContext } from "./RoomProvider";
-import { getGroundOffset } from "./RoomCreat";
 import { Menu } from "./RoomMenu";
 import { Mode } from "./types";
 import { SelectTableType } from "./SelectTableType";
+import {
+  positionTable,
+  calculateSelectedRect,
+  DEFAULT_TABLE_SIZE,
+} from "./scripts/room-add-tables";
 import clsx from "clsx";
 
 interface RoomAddTablesProps {
@@ -38,66 +42,6 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
 
   const { addTable, tables } = useTableDataStore((state) => state);
   const { getSelectedRect, scale, setMode } = useRoomContext();
-
-  const DEFAULT_TABLE_SIZE = 100;
-
-  const positionTable = (offset: Position, x: number, y: number) => {
-    return {
-      left: offset.left + DEFAULT_TABLE_SIZE * (0.5 + 1.5 * x),
-      top: offset.top + DEFAULT_TABLE_SIZE * (0.5 + y),
-    };
-  };
-
-  const calculateSelectedRect = (selectedItems: {
-    width: number;
-    height: number;
-  }) => {
-    let offsetStart = {
-      left: 50,
-      top: 50,
-    };
-
-    // get the parent element
-    const parentElement = ref.current?.parentElement;
-    if (parentElement) {
-      const parentRect = parentElement.getBoundingClientRect();
-      const offset = getGroundOffset();
-      offsetStart = {
-        left: (parentRect.right + offset.left) / scale + 50,
-        top: (parentRect.top + offset.top) / scale + 20,
-      };
-    }
-
-    // use container position to adjust offsetStart
-    let selectedRect = getSelectedRect();
-
-    const start = positionTable(offsetStart, 0, 0);
-    const end = positionTable(
-      offsetStart,
-      selectedItems.width,
-      selectedItems.height
-    );
-    const left = start.left - DEFAULT_TABLE_SIZE / 4;
-    const top = start.top - DEFAULT_TABLE_SIZE / 4;
-    const width = end.left - start.left + DEFAULT_TABLE_SIZE / 2;
-    const height = end.top - start.top + DEFAULT_TABLE_SIZE / 2;
-    if (selectedRect === null) {
-      selectedRect = {
-        left,
-        top,
-        width,
-        height,
-        right: left + width,
-        bottom: top + height,
-      };
-    } else {
-      selectedRect.width = width;
-      selectedRect.height = height;
-      selectedRect.right = left + width;
-      selectedRect.bottom = top + height;
-    }
-    return selectedRect;
-  };
 
   const handleAddTable = (
     x: number,
@@ -134,7 +78,12 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
       return;
     }
 
-    const selectedRect = calculateSelectedRect(selectedItems);
+    const selectedRect = calculateSelectedRect({
+      parentElement: ref.current?.parentElement ?? null,
+      containerRect: getSelectedRect(),
+      selectedItems,
+      scale,
+    });
     resetSelectedTables();
 
     let tableNumber = tables.length + 1;
@@ -153,7 +102,6 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
       ref={ref}
       className={clsx("relative", className)}
       onMouseOver={(e) => e.stopPropagation()}
-      onMouseEnter={(e) => e.stopPropagation()}
       onMouseLeave={(e) => e.stopPropagation()}
     >
       <Button
@@ -177,9 +125,9 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
             />
           </div>
           <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium text-gray-700">
+            {/* <label className="block mb-2 text-sm font-medium text-gray-700">
               Table Layout
-            </label>
+            </label> */}
             <SelectionItems
               handleClose={() => setActiveMenu(null)}
               setSelectedItems={setSelectedItems}

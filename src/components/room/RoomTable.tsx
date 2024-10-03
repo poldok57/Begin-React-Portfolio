@@ -31,6 +31,8 @@ interface RoomTableProps {
   setActiveTable: (id: string | null) => void;
 }
 
+const withButtonStop = false;
+
 export const RoomTable: React.FC<RoomTableProps> = ({
   id,
   table,
@@ -87,10 +89,6 @@ export const RoomTable: React.FC<RoomTableProps> = ({
     updateTable(table.id, { type: type });
   };
 
-  const setSelected = (selected: boolean) => {
-    changeSelected(table.id, selected);
-  };
-
   useEffect(() => {
     setLocalSize((table.size ?? 100) * scale);
   }, [scale, table.size]);
@@ -143,18 +141,20 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               <PowerOff size={btnSize} />
             </button>
           )}
-          <button
-            className="absolute -top-4 -left-4 btn btn-circle btn-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveTable("");
-            }}
-          >
-            <PencilOff size={btnSize} />
-          </button>
+          {withButtonStop && (
+            <button
+              className="absolute -top-4 -left-4 btn btn-circle btn-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTable("");
+              }}
+            >
+              <PencilOff size={btnSize} />
+            </button>
+          )}
           <div className="flex absolute left-0 -bottom-1 flex-row justify-between w-full">
             <Dialog blur={true}>
-              <DialogOpen onClick={() => setSelected(false)}>
+              <DialogOpen>
                 <button className="absolute -left-4 btn btn-circle btn-sm">
                   <Settings size={btnSize} />
                 </button>

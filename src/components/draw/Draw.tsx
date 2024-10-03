@@ -1,18 +1,17 @@
 import React, { useRef, useState } from "react";
-import { DrawCanvas } from "./DrawCanvas";
 import { DrawControlWP } from "./DrawControl";
 import { ShowAlertMessagesWP } from "@/components/alert-messages/ShowAlertMessages";
-import {
-  DEFAULT_PARAMS,
-  // isDrawingMode,
-  GroupParams,
-} from "../../lib/canvas/canvas-defines";
+import { Canvas } from "./Canvas";
+import { DEFAULT_PARAMS, GroupParams } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
+import { useCanvas } from "./hooks/useCanvas";
 
 const MAX_HISTORY = 40;
+const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
 
 export const Draw = () => {
   const canvasRef = useRef(null);
+  const canvasTemporyRef = useRef(null);
 
   const drawingParamsRef = useRef(DEFAULT_PARAMS);
   const [mode, setMode] = useState(drawingParamsRef.current.mode);
@@ -26,21 +25,21 @@ export const Draw = () => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
   };
 
-  // const changeMode = (mode: string) => {
-  //   if (isDrawingMode(mode)) {
-  //     drawingParamsRef.current.mode = mode;
-  //   } else {
-  //     console.error(`${Component.name} Invalid mode: `, mode);
-  //   }
-  // };
+  useCanvas({
+    canvasRef,
+    canvasTemporyRef,
+    mode,
+    setMode,
+    getParams: getDrawingParams,
+  });
 
   return (
     <div className="flex relative flex-col gap-8 justify-center items-center py-5 w-full h-full">
-      <DrawCanvas
-        mode={mode}
-        setMode={setMode}
+      <Canvas
+        width={WIDTH}
+        height={HEIGHT}
         canvasRef={canvasRef}
-        getParams={getDrawingParams}
+        canvasTemporyRef={canvasTemporyRef}
       />
       <DrawControlWP
         mode={mode}

@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { RectangleVertical } from "lucide-react";
+import { Button } from "@/components/atom/Button";
 import clsx from "clsx";
 
 interface SelectionItemsProps {
-  handleClose: () => void;
+  handleClose?: () => void;
   selectedItems: { width: number; height: number } | null;
   setSelectedItems: (_: { width: number; height: number }) => void;
   addTables: () => void;
@@ -11,7 +12,6 @@ interface SelectionItemsProps {
 }
 
 export const SelectionItems: React.FC<SelectionItemsProps> = ({
-  handleClose,
   selectedItems,
   setSelectedItems,
   addTables,
@@ -24,21 +24,6 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
   const eleHeight = selectedItems?.height || 0;
   const width = cellSize * eleWidth;
   const height = cellSize * eleHeight;
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        handleClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, [handleClose]);
 
   const handleStart = (clientX: number, clientY: number) => {
     const startX = clientX;
@@ -147,8 +132,8 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
           onTouchStart={handleTouchStart}
         />
         {showAddBtn && (
-          <button
-            className="absolute btn btn-sm btn-primary"
+          <Button
+            className="absolute btn btn-sm bg-primary"
             style={{
               left: `${width / 3}px`,
               top: `${height + 8}px`,
@@ -156,7 +141,7 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
             onClick={addTables}
           >
             Add
-          </button>
+          </Button>
         )}
       </div>
     </div>

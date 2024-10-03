@@ -10,7 +10,28 @@ export const VALIDATION_ID = {
 
 import { RectPosition, Rectangle } from "@/lib/canvas/types";
 
-export const showValidationFrame = (newPosition?: RectPosition | Rectangle) => {
+let validationCancelAction: null | (() => void) = null;
+let validationValidAction: null | (() => void) = null;
+
+export const addValidationText = (text: string) => {
+  const validText = document.getElementById(VALIDATION_ID.TEXT);
+  if (validText) {
+    validText.textContent = text;
+  }
+};
+
+export const addValidationCancelAction = (action: () => void) => {
+  validationCancelAction = action;
+};
+
+export const addValidationValidAction = (action: () => void) => {
+  validationValidAction = action;
+};
+
+export const showValidationFrame = (
+  newPosition?: RectPosition | Rectangle,
+  validationText?: string
+) => {
   const frame = document.getElementById(VALIDATION_ID.FRAME);
   if (frame) {
     frame.classList.remove("hidden");
@@ -18,6 +39,22 @@ export const showValidationFrame = (newPosition?: RectPosition | Rectangle) => {
       frame.style.left = newPosition.left + "px";
       frame.style.top = Math.max(newPosition.top, 0) + "px";
     }
+    if (validationText) {
+      addValidationText(validationText);
+    }
+  }
+};
+
+export const hideValidationFrame = () => {
+  const frame = document.getElementById(VALIDATION_ID.FRAME);
+  if (frame) {
+    frame.classList.add("hidden");
+  }
+  if (validationCancelAction) {
+    validationCancelAction = null;
+  }
+  if (validationValidAction) {
+    validationValidAction = null;
   }
 };
 
@@ -51,6 +88,11 @@ export const ValidationFrame = ({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         hiddenFrame();
+      }
+      if (event.key === "Enter") {
+        if (validationValidAction) {
+          validationValidAction();
+        }
       }
     };
 

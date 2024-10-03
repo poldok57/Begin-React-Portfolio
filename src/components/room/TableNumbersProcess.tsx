@@ -5,7 +5,12 @@ import { drawArrow } from "@/lib/utils/canvasUtils";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { Rectangle } from "@/lib/canvas/types";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
-import { showValidationFrame, VALIDATION_ID } from "./ValidationFrame";
+import {
+  showValidationFrame,
+  addValidationCancelAction,
+  addValidationValidAction,
+  hideValidationFrame,
+} from "./ValidationFrame";
 import { TableNumbersHelper } from "./TableNumbersHelper";
 import {
   MARGIN,
@@ -234,27 +239,12 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     show: boolean,
     position?: { left: number; top: number }
   ) => {
-    const validBtn = document.getElementById(VALIDATION_ID.BUTTON);
-    const validCancel = document.getElementById(VALIDATION_ID.CANCEL);
     if (show) {
-      const validationText = document.getElementById(VALIDATION_ID.TEXT);
-      if (validationText) {
-        validationText.textContent = "Validate table numbering";
-      }
-      showValidationFrame(position);
-      if (validBtn) {
-        validBtn.addEventListener("click", handleValidation);
-      }
-      if (validCancel) {
-        validCancel.addEventListener("click", handleCancel);
-      }
+      showValidationFrame(position, "Validate table numbering");
+      addValidationValidAction(handleValidation);
+      addValidationCancelAction(handleCancel);
     } else {
-      if (validBtn) {
-        validBtn.removeEventListener("click", handleValidation);
-      }
-      if (validCancel) {
-        validCancel.removeEventListener("click", handleCancel);
-      }
+      hideValidationFrame();
     }
   };
 

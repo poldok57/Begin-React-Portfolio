@@ -1,4 +1,4 @@
-import { DesignElement, DesignType } from "./types";
+import { DesignElement, DesignType } from "../types";
 
 const drawDesignElement = (
   ctx: CanvasRenderingContext2D,

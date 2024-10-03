@@ -1,14 +1,14 @@
-import { Coordinate, Area, ArgsMouseOnShape } from "../../lib/canvas/types";
+import { Coordinate, Area, ArgsMouseOnShape } from "../../../lib/canvas/types";
 import {
   getMouseCoordinates,
   clearCanvasByCtx,
-} from "../../lib/canvas/canvas-tools";
-import { showElement } from "../../lib/canvas/canvas-elements";
-import { mousePointer, isInside } from "../../lib/mouse-position";
+} from "../../../lib/canvas/canvas-tools";
+import { showElement } from "../../../lib/canvas/canvas-elements";
+import { mousePointer, isInside } from "../../../lib/mouse-position";
 import {
   addPictureToHistory,
   CanvasPicture,
-} from "../../lib/canvas/canvas-history";
+} from "../../../lib/canvas/canvas-history";
 
 import {
   DRAWING_MODES,
@@ -16,8 +16,8 @@ import {
   ShapeDefinition,
   AllParams,
   ParamsGeneral,
-} from "../../lib/canvas/canvas-defines";
-import { isOnSquareBorder } from "../../lib/square-position";
+} from "../../../lib/canvas/canvas-defines";
+import { isOnSquareBorder } from "../../../lib/square-position";
 
 export type returnMouseDown = {
   toContinue: boolean;
@@ -25,7 +25,7 @@ export type returnMouseDown = {
   pointer: string | null;
 };
 
-export abstract class DrawingHandler {
+export abstract class drawingHandler {
   protected mCanvas: HTMLCanvasElement | null = null;
 
   protected context: CanvasRenderingContext2D | null = null;

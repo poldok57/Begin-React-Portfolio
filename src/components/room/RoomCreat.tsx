@@ -5,6 +5,7 @@ import { DesignElement, DesignType, TableData } from "./types";
 import { RectPosition as Position } from "@/lib/canvas/types";
 import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
+import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomMenu } from "./RoomMenu";
 import { GroundSelection } from "./GroundSelection/GroundSelection";
@@ -251,17 +252,18 @@ export const RoomCreatTools = () => {
     mode === Mode.numbering ? handleNumberingTableClick : null;
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        resetSelectedTables();
-        setPreSelection(null);
-      }
+    // manage escape event
+    const handleEscapeEvent = () => {
+      resetSelectedTables();
+      setPreSelection(null);
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    // add escape event listener
+    const removeListener = addEscapeKeyListener(handleEscapeEvent);
 
+    // Cleanup the event listener when the component unmounts
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      removeListener();
     };
   }, []);
 

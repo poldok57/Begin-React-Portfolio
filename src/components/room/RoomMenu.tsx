@@ -9,6 +9,10 @@ import { useRoomContext } from "./RoomProvider";
 import { DesignType } from "./types";
 import { TableNumbers } from "./TableNumbers";
 import { useTableDataStore } from "./stores/tables";
+import {
+  showValidationFrame,
+  addValidationValidAction,
+} from "./ValidationFrame";
 
 export enum Menu {
   addTable = "addTable",
@@ -38,10 +42,12 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
 }) => {
   const isTouch = isTouchDevice();
   const ref = useRef<HTMLDivElement>(null);
-  const { scale, setScale, clearSelectedTableIds } = useRoomContext();
+  const { scale, setScale, clearSelectedTableIds, getSelectedRect } =
+    useRoomContext();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
-  const { tables, updateTable } = useTableDataStore();
+  const { tables, updateTable, deleteSelectedTable, countSelectedTables } =
+    useTableDataStore();
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
@@ -50,7 +56,10 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
-        if (activeMenuRef.current === Menu.updateTable) {
+        if (
+          activeMenuRef.current === Menu.updateTable ||
+          activeMenuRef.current === Menu.addTable
+        ) {
           setActiveMenu(null);
         }
       }
@@ -74,6 +83,32 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
         tables.forEach((table) => {
           updateTable(table.id, { selected: true });
         });
+        return;
+      }
+      // Delete table with Delete key
+      if (event.key === "Delete") {
+        const containerSelect = getSelectedRect();
+        if (!containerSelect) {
+          return;
+        }
+        const count = countSelectedTables();
+        if (count === 0) {
+          return;
+        }
+        const text = `Delete ${count} tables`;
+        showValidationFrame(
+          {
+            left: containerSelect.left + containerSelect.width - 20,
+            top: containerSelect.top + 10,
+          },
+          text
+        );
+        addValidationValidAction(deleteSelectedTable);
+        event.preventDefault();
+        const selectedTables = tables.filter((table) => table.selected);
+        if (selectedTables.length > 0) {
+          resetSelectedTables();
+        }
         return;
       }
     };

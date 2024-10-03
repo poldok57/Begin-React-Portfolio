@@ -1,4 +1,4 @@
-import { getMouseCoordinates } from "../../lib/canvas/canvas-tools";
+import { getMouseCoordinates } from "../../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   AllParams,
@@ -6,20 +6,20 @@ import {
   ParamsShape,
   ParamsText,
   ShapeDefinition,
-} from "../../lib/canvas/canvas-defines";
-import { BORDER, isOnTurnButton } from "../../lib/mouse-position";
-import { showElement } from "../../lib/canvas/canvas-elements";
-import { resizingElement } from "../../lib/canvas/canvas-resize";
+} from "../../../lib/canvas/canvas-defines";
+import { BORDER, isOnTurnButton } from "../../../lib/mouse-position";
+import { showElement } from "../../../lib/canvas/canvas-elements";
+import { resizingElement } from "../../../lib/canvas/canvas-resize";
 
-import { Coordinate, Area } from "../../lib/canvas/types";
+import { Coordinate, Area } from "../../../lib/canvas/types";
 
-import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
-import { alertMessage } from "../alert-messages/alertMessage";
-import { isInsideSquare } from "../../lib/square-position";
+import { drawingHandler, returnMouseDown } from "./drawingHandler";
+import { alertMessage } from "../../alert-messages/alertMessage";
+import { isInsideSquare } from "../../../lib/square-position";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
-export class DrawElement extends DrawingHandler {
+export class drawElement extends drawingHandler {
   private fixed: boolean = false;
   private resizing: string | null = null;
   private offset: Coordinate | null = null;

@@ -1,24 +1,24 @@
-import { Coordinate } from "../../lib/canvas/types";
+import { Coordinate } from "../../../lib/canvas/types";
 import {
   basicLine,
   drawingCircle,
   drawPoint,
   hatchedCircle,
   hightLightMouseCursor,
-} from "../../lib/canvas/canvas-basic";
-import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
+} from "../../../lib/canvas/canvas-basic";
+import { drawingHandler, returnMouseDown } from "./drawingHandler";
 
 import {
   DRAWING_MODES,
   mouseCircle,
   AllParams,
-} from "../../lib/canvas/canvas-defines";
-import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
+} from "../../../lib/canvas/canvas-defines";
+import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
-export class DrawFreehand extends DrawingHandler {
+export class drawFreehand extends drawingHandler {
   private drawing: boolean = false;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -130,6 +130,9 @@ export class DrawFreehand extends DrawingHandler {
    * Function who recieve the mouse move event
    */
   actionMouseMove(event: MouseEvent): string | null {
+    if (this.getType() === DRAWING_MODES.PAUSE) {
+      return null;
+    }
     const start: Coordinate | null = this.coordinates;
     this.setCoordinates(event);
     if (this.isDrawing()) {
@@ -150,17 +153,22 @@ export class DrawFreehand extends DrawingHandler {
    * @returns {boolean} to continue or not
    */
   actionMouseDown(event: MouseEvent): returnMouseDown {
+    if (this.getType() === DRAWING_MODES.PAUSE) {
+      return { toContinue: false } as returnMouseDown;
+    }
     // color and width painting
     this.setCoordinates(event);
 
     this.setDrawing(true);
-
     return { toContinue: false, pointer: "none" } as returnMouseDown;
   }
   /**
    * Function to stop drawing on the canvas
    */
   actionMouseUp() {
+    if (this.getType() === DRAWING_MODES.PAUSE) {
+      return;
+    }
     this.coordinates = null;
 
     if (this.isDrawing()) {
@@ -170,11 +178,17 @@ export class DrawFreehand extends DrawingHandler {
   }
 
   actionMouseLeave() {
+    if (this.getType() === DRAWING_MODES.PAUSE) {
+      return;
+    }
     clearCanvasByCtx(this.ctxTempory);
 
     this.setDrawing(false);
   }
   endAction() {
+    if (this.getType() === DRAWING_MODES.PAUSE) {
+      return;
+    }
     this.setDrawing(false);
 
     clearCanvasByCtx(this.ctxTempory);

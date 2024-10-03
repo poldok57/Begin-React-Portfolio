@@ -30,6 +30,7 @@ const IMAGE_ACTIONS = {
 };
 
 export const DRAWING_MODES = {
+  PAUSE: "pause",
   DRAW: "draw",
   LINE: "line",
   ARC: "arc",
@@ -48,7 +49,11 @@ export const DRAWING_MODES = {
 };
 
 const LINE_MODES = [DRAWING_MODES.LINE, DRAWING_MODES.ARC];
-const FREEHAND_MODES = [DRAWING_MODES.DRAW, DRAWING_MODES.ERASE];
+const FREEHAND_MODES = [
+  DRAWING_MODES.DRAW,
+  DRAWING_MODES.ERASE,
+  DRAWING_MODES.PAUSE,
+];
 const SHAPE_MODES = [
   DRAWING_MODES.SQUARE,
   DRAWING_MODES.CIRCLE,
@@ -64,6 +69,7 @@ const ALL_DRAWING_MODES = [
   ...SHAPE_MODES,
   ...SELECT_MODES,
   DRAWING_MODES.TEXT,
+  DRAWING_MODES.PAUSE,
 ];
 export const isDrawingMode = (mode: string) => ALL_DRAWING_MODES.includes(mode);
 export const isDrawingShape = (mode: string) => SHAPE_MODES.includes(mode);

@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from "react";
 import {
   undoHistory,
   getCurrentHistory,
-} from "../../lib/canvas/canvas-history";
-import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
+} from "../../../lib/canvas/canvas-history";
+import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
 
 import {
   DRAWING_MODES,
@@ -14,43 +14,42 @@ import {
   isDrawingSelect,
   AllParams,
   EventDetail,
-} from "../../lib/canvas/canvas-defines";
+} from "../../../lib/canvas/canvas-defines";
 
-import { alertMessage } from "../alert-messages/alertMessage";
+import { alertMessage } from "../../alert-messages/alertMessage";
 
-import { DrawLine } from "./DrawLine";
-import { DrawElement } from "./DrawElement";
-import { DrawSelection } from "./DrawSelection";
-import { DrawFreehand } from "./DrawFreehand";
-import { DrawingHandler } from "./DrawingHandler";
+import { drawLine } from "./drawLine";
+import { drawElement } from "./drawElement";
+import { drawSelection } from "./drawSelection";
+import { drawFreehand } from "./drawFreehand";
+import { drawingHandler } from "./drawingHandler";
 
 const TEMPORTY_OPACITY = 0.6;
 
 interface DrawCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
   mode: string;
   setMode: (mode: string) => void;
   getParams: () => AllParams;
 }
 // Draw on Canvas
-export const DrawCanvas: React.FC<DrawCanvasProps> = ({
+export const useCanvas = ({
   canvasRef,
+  canvasTemporyRef,
   mode,
   setMode,
   getParams,
-}) => {
-  const canvasTemporyRef: React.RefObject<HTMLCanvasElement | undefined> =
-    useRef(undefined);
+}: DrawCanvasProps) => {
+  useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
-
-  const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
 
   let currentParams = getParams();
   // drawing handler
-  const drawingRef = useRef<DrawingHandler | null>(null);
-  const lineRef = useRef<DrawLine | null>(null);
-  const selectionRef = useRef<DrawSelection | null>(null);
-  const elementRef = useRef<DrawElement | null>(null);
+  const drawingRef = useRef<drawingHandler | null>(null);
+  const lineRef = useRef<drawLine | null>(null);
+  const selectionRef = useRef<drawSelection | null>(null);
+  const elementRef = useRef<drawElement | null>(null);
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -101,7 +100,7 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
    * @param {string} mode
    * @returns {DrawingHandler} the drawing handler
    */
-  const selectDrawingHandler: (mode: string) => DrawingHandler = (mode) => {
+  const selectDrawingHandler: (mode: string) => drawingHandler = (mode) => {
     if (canvasRef.current === null) {
       throw new Error("Canvas is null");
     }
@@ -110,22 +109,22 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     let newHandler = false;
     if (isDrawingLine(mode)) {
       if (lineRef.current === null) {
-        lineRef.current = new DrawLine(canvasRef.current);
+        lineRef.current = new drawLine(canvasRef.current);
       }
       newHandler = true; // new initialization for color and width
       drawingHdl = lineRef.current;
     } else if (isDrawingFreehand(mode)) {
-      drawingHdl = new DrawFreehand(canvasRef.current);
+      drawingHdl = new drawFreehand(canvasRef.current);
       newHandler = true;
     } else if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {
       if (elementRef.current === null) {
-        elementRef.current = new DrawElement(canvasRef.current);
+        elementRef.current = new drawElement(canvasRef.current);
         newHandler = true;
       }
       drawingHdl = elementRef.current;
     } else if (isDrawingSelect(mode)) {
       if (selectionRef.current === null) {
-        selectionRef.current = new DrawSelection(canvasRef.current);
+        selectionRef.current = new drawSelection(canvasRef.current);
         newHandler = true;
       }
       drawingHdl = selectionRef.current;
@@ -409,18 +408,16 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     if (toReset && drawingRef.current) {
       drawingRef.current.endAction();
       // restart with basic drawing mode
-      const chgtMode = DRAWING_MODES.DRAW;
+      const chgtMode = DRAWING_MODES.PAUSE;
       currentParams.mode = chgtMode;
       setMode(chgtMode);
 
       drawingRef.current = selectDrawingHandler(chgtMode);
       drawingRef.current.initData(currentParams);
     }
-    if (pointer !== null && canvasTemporyRef.current) {
+    if (pointer && canvasTemporyRef.current) {
       canvasTemporyRef.current.style.cursor = pointer;
     }
-
-    alertMessage(`Start (${currentParams.mode})`);
   };
 
   /**
@@ -567,39 +564,4 @@ export const DrawCanvas: React.FC<DrawCanvasProps> = ({
     actionChangeMode(mode);
     // clearTemporyCanvas();
   }, [mode]);
-
-  return (
-    <div
-      style={{
-        position: "relative",
-        height: HEIGHT + 5,
-        width: WIDTH + 5,
-      }}
-      className="border-2 border-blue-300 border-spacing-2"
-    >
-      <canvas
-        width={WIDTH}
-        height={HEIGHT}
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-        }}
-        className="m-auto bg-white rounded-md shadow-md border-spacing-3"
-      />
-      <canvas
-        width={WIDTH}
-        height={HEIGHT}
-        ref={canvasTemporyRef as React.RefObject<HTMLCanvasElement>}
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          zIndex: 2,
-        }}
-        className="m-auto transparent"
-      />
-    </div>
-  );
 };

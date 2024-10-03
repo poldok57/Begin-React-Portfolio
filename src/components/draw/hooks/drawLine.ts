@@ -1,12 +1,12 @@
-import { mouseIsInsideComponent } from "../../lib/mouse-position";
-import { Coordinate } from "../../lib/canvas/types";
+import { mouseIsInsideComponent } from "../../../lib/mouse-position";
+import { Coordinate } from "../../../lib/canvas/types";
 import {
   drawingCircle,
   drawPoint,
   hightLightMouseCursor,
-} from "../../lib/canvas/canvas-basic";
-import { CanvasLine } from "../../lib/canvas/CanvasLine";
-import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
+} from "../../../lib/canvas/canvas-basic";
+import { CanvasLine } from "../../../lib/canvas/CanvasLine";
+import { drawingHandler, returnMouseDown } from "./drawingHandler";
 
 import {
   DRAWING_MODES,
@@ -14,13 +14,13 @@ import {
   ParamsGeneral,
   AllParams,
   isDrawingLine,
-} from "../../lib/canvas/canvas-defines";
-import { clearCanvasByCtx } from "../../lib/canvas/canvas-tools";
+} from "../../../lib/canvas/canvas-defines";
+import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
-export class DrawLine extends DrawingHandler {
+export class drawLine extends drawingHandler {
   private line: CanvasLine;
 
   constructor(canvas: HTMLCanvasElement) {

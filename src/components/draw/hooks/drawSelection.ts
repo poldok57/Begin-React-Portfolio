@@ -1,36 +1,36 @@
-import { Area, Size, Coordinate } from "../../lib/canvas/types";
-import { getMouseCoordinates } from "../../lib/canvas/canvas-tools";
+import { Area, Size, Coordinate } from "../../../lib/canvas/types";
+import { getMouseCoordinates } from "../../../lib/canvas/canvas-tools";
 import {
   makeWhiteTransparent,
   makeWhiteTransparent2,
-} from "../../lib/canvas/image-transparency";
+} from "../../../lib/canvas/image-transparency";
 import {
   DRAWING_MODES,
   AllParams,
   ShapeDefinition,
-} from "../../lib/canvas/canvas-defines";
-import { BORDER, isOnTurnButton } from "../../lib/mouse-position";
-import { showElement } from "../../lib/canvas/canvas-elements";
-import { resizingElement } from "../../lib/canvas/canvas-resize";
-import { isInsideSquare } from "../../lib/square-position";
+} from "../../../lib/canvas/canvas-defines";
+import { BORDER, isOnTurnButton } from "../../../lib/mouse-position";
+import { showElement } from "../../../lib/canvas/canvas-elements";
+import { resizingElement } from "../../../lib/canvas/canvas-resize";
+import { isInsideSquare } from "../../../lib/square-position";
 
 import {
   copyInVirtualCanvas,
   calculateSize,
-} from "../../lib/canvas/canvas-images";
+} from "../../../lib/canvas/canvas-images";
 
-import { DrawingHandler, returnMouseDown } from "./DrawingHandler";
-import { alertMessage } from "../alert-messages/alertMessage";
-import { imageSize, cutOutArea } from "../../lib/canvas/canvas-size";
+import { drawingHandler, returnMouseDown } from "./drawingHandler";
+import { alertMessage } from "../../alert-messages/alertMessage";
+import { imageSize, cutOutArea } from "../../../lib/canvas/canvas-size";
 import {
   downloadCanvasToPNG,
   downloadCanvasToSVG,
   downloadCanvasToGIF,
-} from "../../lib/canvas/canvas-save";
+} from "../../../lib/canvas/canvas-save";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
-export class DrawSelection extends DrawingHandler {
+export class drawSelection extends drawingHandler {
   private fixed: boolean = false;
   private resizing: string | null = null;
   private offset: Coordinate | null = null;
