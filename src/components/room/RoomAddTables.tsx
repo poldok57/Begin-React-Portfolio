@@ -3,7 +3,7 @@ import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "./SelectionItems";
 import { useTableDataStore } from "./stores/tables";
 import { TableType } from "./types";
-import { RectangleHorizontal } from "lucide-react";
+import { RectangleHorizontal, X } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import { useRoomContext } from "./RoomProvider";
 import { Menu } from "./RoomMenu";
@@ -14,7 +14,6 @@ import {
   calculateSelectedRect,
   DEFAULT_TABLE_SIZE,
 } from "./scripts/room-add-tables";
-import clsx from "clsx";
 
 interface RoomAddTablesProps {
   className: string;
@@ -22,6 +21,7 @@ interface RoomAddTablesProps {
   resetSelectedTables: () => void;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
+  btnSize?: number;
 }
 
 export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
@@ -30,6 +30,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
   resetSelectedTables,
   activeMenu,
   setActiveMenu,
+  btnSize = 14,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [selectedItems, setSelectedItems] = useState<{
@@ -100,11 +101,11 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
   return (
     <div
       ref={ref}
-      className={clsx("relative", className)}
+      className="flex relative flex-col p-1 w-full"
       onMouseOver={(e) => e.stopPropagation()}
-      onMouseLeave={(e) => e.stopPropagation()}
     >
       <Button
+        className={className}
         onClick={() => {
           setActiveMenu(Menu.addTable);
           setMode(Mode.create);
@@ -113,7 +114,13 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
         Add tables
       </Button>
       {activeMenu === Menu.addTable && (
-        <div className="absolute left-0 top-full z-10 p-4 mt-2 w-64 bg-white rounded-lg shadow-lg">
+        <div className="absolute left-0 top-full z-40 p-4 mt-2 w-64 bg-white rounded-lg shadow-lg">
+          <button
+            className="absolute top-0 right-0 btn btn-circle btn-sm"
+            onClick={() => setActiveMenu(null)}
+          >
+            <X size={btnSize - 2} />
+          </button>
           <h3 className="mb-4 text-lg font-semibold">Add New Tables</h3>
           <div className="mb-4">
             <label className="block mb-2 text-sm font-medium text-gray-700">

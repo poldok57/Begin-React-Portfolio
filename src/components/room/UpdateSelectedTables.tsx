@@ -10,7 +10,6 @@ import {
   DialogOpen,
   DialogClose,
 } from "@/components/atom/Dialog";
-import clsx from "clsx";
 import { ShowTable } from "./ShowTable";
 import { RotationButtons } from "./control/RotationButtons";
 import { ResizeButtons } from "./control/ResizeButtons";
@@ -75,17 +74,24 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   };
 
   return (
-    <div className={clsx("relative", className)}>
+    <div className="flex relative flex-col p-1 w-full">
       <Button
         onClick={() => {
           setActiveMenu(Menu.updateTable);
           setMode(Mode.create);
         }}
+        className={className}
       >
         Table modifications
       </Button>
       {activeMenu === Menu.updateTable && (
         <div className="absolute left-4 top-full z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg translate-x-16">
+          <button
+            className="absolute top-0 right-0 btn btn-circle btn-sm"
+            onClick={() => setActiveMenu(null)}
+          >
+            <X size={btnSize - 2} />
+          </button>
           <div className="flex flex-col gap-2 justify-center">
             <i>
               Mofication apply to <b>{selectedTablesCount} selected table</b>

@@ -219,7 +219,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               <DeleteWithConfirm
                 className="p-2 m-1 btn btn-sm"
                 position="top"
-                // confirmMessage="Confirm reset table?"
+                confirmMessage="Confirm reset table?"
                 onConfirm={() => {
                   resetTable();
                 }}

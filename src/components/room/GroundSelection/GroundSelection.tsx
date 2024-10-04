@@ -18,6 +18,7 @@ interface GroundSelectionProps {
   preSelection: Rectangle | null;
   children: React.ReactNode;
   containerId?: string;
+  typeListMode?: "plan" | "list";
   changeCoordinates: ({
     position,
     offset,
@@ -46,6 +47,7 @@ export const GroundSelection = React.forwardRef<
       preSelection,
       children,
       containerId = "container",
+      typeListMode,
     },
     ref
   ) => {
@@ -331,47 +333,51 @@ export const GroundSelection = React.forwardRef<
         style={{ touchAction: "none" }}
         className="overflow-auto relative inset-0 w-full h-full"
       >
-        <div className="flex sticky top-0 right-0 justify-end w-full">
-          <div className="flex top-1 right-1 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-70">
-            <span className="text-sm font-semibold">
-              Scale : {scale.toFixed(2)}
-            </span>
-            <span className="text-sm font-semibold text-gray-500">
-              Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
-              {backgroundCanvasRef.current?.offsetHeight}
-            </span>
-          </div>
-        </div>
-        <div
-          id={TOUCH_MESSAGE_ID}
-          className="fixed right-2 bottom-2 p-2 text-white bg-gray-800 rounded md:block"
-          style={{
-            display: "none",
-            transition: "display 0.3s ease-in-out",
-          }}
-        >
-          Use 2 fingers to move the screen
-        </div>
-        <Canvas
-          backgroundCanvasRef={backgroundCanvasRef}
-          temporaryCanvasRef={temporaryCanvasRef}
-          mode={mode}
-        />
+        {typeListMode === "plan" && (
+          <>
+            <div className="flex sticky top-1 right-1 justify-end w-full">
+              <div className="flex top-1 right-1 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-65">
+                <span className="text-sm font-semibold">
+                  Scale : {scale.toFixed(2)}
+                </span>
+                <span className="text-sm font-semibold text-gray-500">
+                  Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
+                  {backgroundCanvasRef.current?.offsetHeight}
+                </span>
+              </div>
+            </div>
+            <div
+              id={TOUCH_MESSAGE_ID}
+              className="fixed right-2 bottom-2 p-2 text-white bg-gray-800 rounded md:block"
+              style={{
+                display: "none",
+                transition: "display 0.3s ease-in-out",
+              }}
+            >
+              Use 2 fingers to move the screen
+            </div>
+            <Canvas
+              backgroundCanvasRef={backgroundCanvasRef}
+              temporaryCanvasRef={temporaryCanvasRef}
+              mode={mode}
+            />
 
-        <SelectionContainer
-          containerRef={containerRef}
-          containerId={containerId}
-          rotation={rotation}
-        />
-        {showAlignmentLines && rotation === 0 && (
-          <AlignmentButtons
-            offsetX={getOffsetX()}
-            offsetY={getOffsetY()}
-            showVerticalBtn={numberOfAlignmentsRef.current.vertical > 2}
-            showHorizontalBtn={numberOfAlignmentsRef.current.horizontal > 2}
-            equalizeSpaces={equalizeSpaces}
-            container={containerRef.current}
-          />
+            <SelectionContainer
+              containerRef={containerRef}
+              containerId={containerId}
+              rotation={rotation}
+            />
+            {showAlignmentLines && rotation === 0 && (
+              <AlignmentButtons
+                offsetX={getOffsetX()}
+                offsetY={getOffsetY()}
+                showVerticalBtn={numberOfAlignmentsRef.current.vertical > 2}
+                showHorizontalBtn={numberOfAlignmentsRef.current.horizontal > 2}
+                equalizeSpaces={equalizeSpaces}
+                container={containerRef.current}
+              />
+            )}
+          </>
         )}
         {children}
       </div>

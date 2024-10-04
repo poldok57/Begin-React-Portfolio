@@ -1,5 +1,5 @@
 import { Rectangle, RectPosition } from "@/lib/canvas/types";
-import { TableData } from "./types";
+import { TableData } from "../types";
 export interface TableWithRect extends TableData {
   domRectangle: Rectangle;
 }

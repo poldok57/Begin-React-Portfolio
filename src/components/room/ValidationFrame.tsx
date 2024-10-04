@@ -67,19 +67,26 @@ export const ValidationFrame = ({
   isTouch: boolean;
   children?: React.ReactNode;
 }) => {
-  const hiddenFrame = () => {
-    const frame = document.getElementById(VALIDATION_ID.FRAME);
-    if (frame) {
-      frame.classList.add("hidden");
-    }
-  };
-
   // Function to hide the frame when clicking outside of it
   const onClickOutside = (event: MouseEvent) => {
     const frame = document.getElementById(VALIDATION_ID.FRAME);
     if (frame && !frame.contains(event.target as Node)) {
-      hiddenFrame();
+      hideValidationFrame();
     }
+  };
+
+  const handleCancel = () => {
+    if (validationCancelAction) {
+      validationCancelAction();
+    }
+    hideValidationFrame();
+  };
+
+  const handleValid = () => {
+    if (validationValidAction) {
+      validationValidAction();
+    }
+    hideValidationFrame();
   };
 
   // Add event listener to handle clicks outside the frame
@@ -87,12 +94,12 @@ export const ValidationFrame = ({
     // Function to hide the frame when pressing the Escape key
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        hiddenFrame();
+        handleCancel();
+        event.preventDefault();
+        event.stopPropagation();
       }
       if (event.key === "Enter") {
-        if (validationValidAction) {
-          validationValidAction();
-        }
+        handleValid();
       }
     };
 
@@ -124,7 +131,7 @@ export const ValidationFrame = ({
             "hover:bg-green-600",
             { "btn-lg": isTouch }
           )}
-          onClick={hiddenFrame}
+          onClick={handleValid}
         >
           <CircleCheckBig size={btnSize} />
         </button>
@@ -135,7 +142,7 @@ export const ValidationFrame = ({
             "hover:bg-red-600",
             { "btn-lg": isTouch }
           )}
-          onClick={hiddenFrame}
+          onClick={handleCancel}
         >
           <CircleX size={btnSize} />
         </button>

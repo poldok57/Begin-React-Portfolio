@@ -7,10 +7,12 @@ import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { withMousePosition } from "@/components/windows/withMousePosition";
-import { RoomMenu } from "./RoomMenu";
+// import { RoomMenu } from "./RoomMenu";
+import { RoomMenu2 } from "./RoomMenu2";
 import { GroundSelection } from "./GroundSelection/GroundSelection";
 import { RoomProvider, useRoomContext } from "./RoomProvider";
-import { ListTables } from "./ListTables";
+import { ListTablesPlan } from "./ListTablesPlan";
+import { ListTablesText } from "./ListTablesText";
 import { ValidationFrame } from "./ValidationFrame";
 import { Mode } from "./types";
 
@@ -19,7 +21,9 @@ export const CONTAINER_ID = "ground-container";
 
 const MARGIN = 10;
 
-const RoomMenuWP = withMousePosition(RoomMenu);
+export type TypeList = "plan" | "list";
+
+// const RoomMenuWP = withMousePosition(RoomMenu);
 const GroupCreatWP = withMousePosition(GroupCreat);
 
 export const getGroundOffset = () => {
@@ -76,6 +80,8 @@ export const RoomCreatTools = () => {
   const selectedTablesRef = useRef<TableData[]>([]);
 
   const roundToTwoDigits = (value: number) => parseFloat(value.toFixed(2));
+
+  const [typeListMode, setTypeListMode] = useState<TypeList>("plan");
 
   const updateTablePosition = (
     table: TableData,
@@ -268,52 +274,69 @@ export const RoomCreatTools = () => {
   }, []);
 
   return (
-    <div
-      className="flex w-full bg-background"
-      style={{ height: "calc(100vh - 70px)" }}
-    >
-      <div className="flex flex-row w-full">
-        <GroundSelection
-          ref={groundRef}
-          id={GROUND_ID}
-          containerId={CONTAINER_ID}
-          changeCoordinates={changeCoordinates}
-          onSelectionStart={onZoneSelectedStart}
-          onSelectionEnd={onZoneSelectedEnd}
-          preSelection={preSelection}
-        >
-          <ListTables
-            tables={tables}
-            btnSize={btnSize}
-            editable={mode !== Mode.numbering}
-            onClick={onTableClick}
+    <>
+      <RoomMenu2
+        btnSize={btnSize}
+        recordDesign={handleRecordDesing}
+        addSelectedRect={addSelectedRect}
+        resetSelectedTables={resetSelectedTables}
+        typeListMode={typeListMode}
+        setTypeListMode={setTypeListMode}
+      />
+      <div
+        className="flex w-full bg-background"
+        style={{ height: "calc(100vh - 140px)" }}
+      >
+        <div className="flex flex-row w-full">
+          <GroundSelection
+            ref={groundRef}
+            id={GROUND_ID}
+            containerId={CONTAINER_ID}
+            changeCoordinates={changeCoordinates}
+            onSelectionStart={onZoneSelectedStart}
+            onSelectionEnd={onZoneSelectedEnd}
+            preSelection={preSelection}
+            typeListMode={typeListMode}
+          >
+            {typeListMode === "plan" ? (
+              <>
+                <ListTablesPlan
+                  tables={tables}
+                  btnSize={btnSize}
+                  editable={mode !== Mode.numbering}
+                  onClick={onTableClick}
+                />
+                <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
+              </>
+            ) : (
+              <ListTablesText maxRowsPerColumn={40} />
+            )}
+          </GroundSelection>
+          <GroupCreatWP
+            className="absolute top-0 left-0 z-10"
+            withTitleBar={true}
+            titleText="Group creat"
+            titleHidden={false}
+            titleBackground={"#99ee66"}
+            withMinimize={true}
+            draggable={true}
           />
-          <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
-        </GroundSelection>
-        <GroupCreatWP
-          className="absolute top-0 left-0 z-10"
-          withTitleBar={true}
-          titleText="Group creat"
-          titleHidden={false}
-          titleBackground={"#99ee66"}
-          withMinimize={true}
-          draggable={true}
-        />
-        <RoomMenuWP
-          className="absolute top-2 left-40 z-10"
-          withTitleBar={true}
-          titleText="Room config"
-          titleHidden={false}
-          titleBackground={"#cc66ff"}
-          withMinimize={true}
-          draggable={true}
-          btnSize={btnSize}
-          recordDesign={handleRecordDesing}
-          addSelectedRect={addSelectedRect}
-          resetSelectedTables={resetSelectedTables}
-        />
+          {/* <RoomMenuWP
+            className="absolute top-2 left-40 z-10"
+            withTitleBar={true}
+            titleText="Room config"
+            titleHidden={false}
+            titleBackground={"#cc66ff"}
+            withMinimize={true}
+            draggable={true}
+            btnSize={btnSize}
+            recordDesign={handleRecordDesing}
+            addSelectedRect={addSelectedRect}
+            resetSelectedTables={resetSelectedTables}
+          /> */}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -6,6 +6,7 @@ import { GroupTable } from "../types";
 
 interface GroupState {
   groups: GroupTable[];
+  getGroup: (id: string) => GroupTable | undefined;
   addGroup: (group: GroupTable) => string;
   updateGroup: (id: string, updatedGroup: Partial<GroupTable>) => void;
   deleteGroup: (id: string) => void;
@@ -13,7 +14,7 @@ interface GroupState {
 
 export const useGroupStore = create<GroupState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       groups: [] as GroupTable[],
       addGroup: (group) => {
         const newGroup = {
@@ -28,6 +29,9 @@ export const useGroupStore = create<GroupState>()(
           groups: [...state.groups, newGroup],
         }));
         return newGroup.id; // Retourne l'ID du groupe créé
+      },
+      getGroup: (id: string) => {
+        return get().groups.find((group) => group.id === id);
       },
       updateGroup: (id, updatedGroup) =>
         set((state) => ({

@@ -1,6 +1,6 @@
 import { useRef, useCallback } from "react";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
-import { MARGIN } from "../../table-numbers";
+import { MARGIN } from "../../scripts/table-numbers";
 import { useRoomContext } from "../../RoomProvider";
 
 interface AxisLine {

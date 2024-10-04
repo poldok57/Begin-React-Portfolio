@@ -123,7 +123,6 @@ export const Canvas: React.FC<CanvasProps> = ({
       // Force re-render after 1 second
       const timer = setTimeout(() => {
         // Use a state update to trigger a re-render
-        console.log("force update canvas size");
         resizeCanvas(scale);
       }, 500);
 

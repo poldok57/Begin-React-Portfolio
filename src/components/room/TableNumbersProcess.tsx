@@ -21,7 +21,9 @@ import {
   virtualTurningTables,
   calculateFourthAngle,
   clearCanvas,
-} from "./table-numbers";
+} from "./scripts/table-numbers";
+import { Menu } from "./RoomMenu";
+import { X } from "lucide-react";
 
 const ALIGNMENT_TOLERANCE = 25;
 
@@ -37,10 +39,21 @@ export enum NumberingMode {
   OneByOne = "One by one",
 }
 
-interface TableNumbersProcessProps {}
-export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
-  const { tables, getTable, updateTable, updateSelectedTable } =
-    useTableDataStore();
+interface TableNumbersProcessProps {
+  btnSize?: number;
+  setActiveMenu: (menu: Menu | null) => void;
+}
+export const TableNumbersProcess = ({
+  btnSize = 14,
+  setActiveMenu,
+}: TableNumbersProcessProps) => {
+  const {
+    tables,
+    getTable,
+    updateTable,
+    updateSelectedTable,
+    countSelectedTables,
+  } = useTableDataStore();
   const { selectedTableIds, clearSelectedTableIds, ctxTemporary } =
     useRoomContext();
 
@@ -249,6 +262,12 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
   };
 
   const resetTablesNumber = () => {
+    const nbTables = countSelectedTables();
+    if (nbTables > 0) {
+      updateSelectedTable({ tableNumber: "" });
+      return;
+    }
+    // if no table is selected, reset all tables number
     tables.forEach((table) => {
       updateTable(table.id, { tableNumber: "" });
     });
@@ -377,6 +396,12 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
 
   return (
     <div className="absolute left-4 top-full z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg translate-x-16 min-w-44">
+      <button
+        className="absolute top-0 right-0 btn btn-circle btn-sm"
+        onClick={() => setActiveMenu(null)}
+      >
+        <X size={btnSize - 2} />
+      </button>
       <div className="mb-2">
         <label
           htmlFor="tableNumber"
@@ -419,7 +444,9 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
       </div>
       <DeleteWithConfirm
         onConfirm={resetTablesNumber}
-        confirmMessage="Confirm reset all tables number?"
+        confirmMessage={`Confirm reset ${
+          countSelectedTables() ?? "all"
+        } tables number`}
         className="btn btn-warning"
       >
         <button className="btn btn-outline btn-warning">

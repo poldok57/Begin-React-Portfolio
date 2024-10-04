@@ -5,7 +5,7 @@ import { useRoomContext } from "./RoomProvider";
 import { Mode } from "./types";
 import { Menu } from "./RoomMenu";
 import { TableNumbersProcess } from "./TableNumbersProcess";
-import { clearCanvas } from "./table-numbers";
+import { clearCanvas } from "./scripts/table-numbers";
 import clsx from "clsx";
 
 export enum NumberingMode {
@@ -24,6 +24,7 @@ const TableNumbers = ({
   className,
   activeMenu,
   setActiveMenu,
+  btnSize,
 }: TableNumbersProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { updateSelectedTable } = useTableDataStore();
@@ -42,15 +43,17 @@ const TableNumbers = ({
 
   return (
     <div
-      className={clsx(
-        "relative",
-        { "z-30": activeMenu === Menu.tableNumbers },
-        className
-      )}
+      className={clsx("flex relative flex-col p-1 w-full", {
+        "z-30": activeMenu === Menu.tableNumbers,
+      })}
       ref={ref}
     >
-      <Button onClick={() => startNumbering()}>table numbering</Button>
-      {activeMenu === Menu.tableNumbers && <TableNumbersProcess />}
+      <Button onClick={() => startNumbering()} className={className}>
+        table numbering
+      </Button>
+      {activeMenu === Menu.tableNumbers && (
+        <TableNumbersProcess btnSize={btnSize} setActiveMenu={setActiveMenu} />
+      )}
     </div>
   );
 };

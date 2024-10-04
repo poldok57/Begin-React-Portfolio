@@ -73,7 +73,9 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setActiveMenu(null);
+        if (activeMenuRef.current !== Menu.tableNumbers) {
+          setActiveMenu(null);
+        }
         clearSelectedTableIds();
         return;
       }
@@ -126,35 +128,35 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       id="room-menu"
       className="flex inset-1 z-10 flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
       onMouseOver={(e) => e.stopPropagation()}
-      onMouseEnter={(e) => e.stopPropagation()}
-      onMouseLeave={(e) => e.stopPropagation()}
     >
       <RoomAddTables
-        className="flex flex-col p-1 w-full rounded-lg"
+        className="w-full"
         addSelectedRect={addSelectedRect}
         resetSelectedTables={resetSelectedTables}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
+        btnSize={btnSize}
       />
       <UpdateSelectedTables
-        className="flex flex-col p-1 w-full rounded-lg"
+        className="w-full"
         btnSize={btnSize}
         isTouch={isTouch}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
       />
       <TableNumbers
-        className="flex flex-col p-1 w-full rounded-lg"
+        className="w-full"
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
         btnSize={btnSize}
       />
       <RoomDesign
-        className="flex flex-col p-1 w-full rounded-lg"
+        className="w-full"
         recordDesign={recordDesign}
         isTouch={isTouch}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
+        btnSize={btnSize}
       />
       <RangeInput
         id="scale"

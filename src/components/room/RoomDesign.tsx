@@ -24,6 +24,7 @@ const themeColors: string[] = [
 ];
 interface RoomDesignProps {
   className: string;
+  btnSize?: number;
   isTouch: boolean;
   withName?: boolean;
   activeMenu: Menu | null;
@@ -43,6 +44,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   withName = false,
   activeMenu,
   setActiveMenu,
+  btnSize = 14,
 }) => {
   const {
     designElements,
@@ -108,8 +110,10 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   };
 
   return (
-    <div className={clsx("relative", className)} ref={ref}>
-      <Button onClick={() => handleOpen()}>Room design</Button>
+    <div className="flex relative flex-col p-1 w-full" ref={ref}>
+      <Button onClick={() => handleOpen()} className={className}>
+        Room design
+      </Button>
       {activeMenu === Menu.roomDesign && (
         <div
           id="menu-design"
@@ -120,7 +124,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
             className="absolute top-0 right-0 btn btn-circle btn-sm"
             onClick={() => setActiveMenu(null)}
           >
-            <X size={12} />
+            <X size={btnSize - 2} />
           </button>
           <div className="flex flex-col gap-3 mb-5 border-b-2 border-base-300">
             <h2 className="justify-center w-full text-lg font-bold">

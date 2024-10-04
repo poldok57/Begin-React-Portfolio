@@ -15,7 +15,7 @@ interface ListTablesProps {
   onClick?: ((id: string) => void) | null;
 }
 
-export const ListTables = React.memo(
+export const ListTablesPlan = React.memo(
   ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
     const [tableActive, setTableActive] = useState<string | null>(null);
     const { scale, getScale, mode } = useRoomContext();
@@ -110,4 +110,4 @@ export const ListTables = React.memo(
   }
 );
 
-ListTables.displayName = "ListTables";
+ListTablesPlan.displayName = "ListTablesPlan";
