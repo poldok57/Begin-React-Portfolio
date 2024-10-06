@@ -15,7 +15,7 @@ import {
   DEFAULT_TABLE_SIZE,
 } from "./scripts/room-add-tables";
 import { withMousePosition } from "../windows/withMousePosition";
-
+import { menuRoomVariants } from "@/styles/menu-variants";
 interface RoomAddTablesMenuProps {
   addSelectedRect: (rect: Rectangle) => void;
   setActiveMenu: (menu: Menu | null) => void;
@@ -97,7 +97,7 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     setActiveMenu(null);
   };
   return (
-    <div ref={ref} className="z-40 p-4 w-64 bg-white rounded-md shadow-sm">
+    <div ref={ref} className={menuRoomVariants({ width: 64 })}>
       <div className="mb-4">
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Table Type
@@ -151,10 +151,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
 
   return (
     <>
-      <div
-        className="flex relative flex-col p-1 w-full"
-        onMouseOver={(e) => e.stopPropagation()}
-      >
+      <div className="flex relative flex-col p-1 w-full">
         <Button
           className={className}
           onClick={() => {

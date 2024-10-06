@@ -20,6 +20,7 @@ import { Mode, TableType } from "./types";
 import { Menu } from "./RoomMenu";
 
 import { withMousePosition } from "../windows/withMousePosition";
+import { menuRoomVariants } from "@/styles/menu-variants";
 
 interface UpdateSelectedTablesMenuProps {
   btnSize: number;
@@ -68,7 +69,7 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
   }, [tables]);
 
   return (
-    <div className="z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg">
+    <div className={menuRoomVariants({ width: 44 })}>
       <div className="flex flex-col gap-2 justify-center">
         <i>
           Mofication apply to <b>{selectedTablesCount} selected table</b>
@@ -154,16 +155,18 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   const { setMode } = useRoomContext();
 
   return (
-    <div className="flex relative flex-col p-1 w-full">
-      <Button
-        onClick={() => {
-          setActiveMenu(Menu.updateTable);
-          setMode(Mode.create);
-        }}
-        className={className}
-      >
-        Table modifications
-      </Button>
+    <>
+      <div className="flex relative flex-col p-1 w-full">
+        <Button
+          onClick={() => {
+            setActiveMenu(Menu.updateTable);
+            setMode(Mode.create);
+          }}
+          className={className}
+        >
+          Table modifications
+        </Button>
+      </div>
       {activeMenu === Menu.updateTable && (
         <UpdateSelectedTablesMenuWP
           btnSize={btnSize}
@@ -179,6 +182,6 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
           draggable={true}
         />
       )}
-    </div>
+    </>
   );
 };

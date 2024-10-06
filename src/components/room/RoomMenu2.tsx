@@ -162,7 +162,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                 className="flex flex-col p-1 w-full rounded-lg"
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
-                btnSize={btnSize}
               />
             </li>
             <li>
@@ -222,7 +221,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               className="px-2"
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
-              btnSize={btnSize}
             />
           </li>
           <li className="flex items-center">

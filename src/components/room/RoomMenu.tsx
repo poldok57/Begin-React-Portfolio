@@ -132,10 +132,8 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       <RoomAddTables
         className="w-full"
         addSelectedRect={addSelectedRect}
-        resetSelectedTables={resetSelectedTables}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
-        btnSize={btnSize}
       />
       <UpdateSelectedTables
         className="w-full"
@@ -148,7 +146,6 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
         className="w-full"
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
-        btnSize={btnSize}
       />
       <RoomDesign
         className="w-full"

@@ -22,8 +22,7 @@ import {
   calculateFourthAngle,
   clearCanvas,
 } from "./scripts/table-numbers";
-import { Menu } from "./RoomMenu";
-import { X } from "lucide-react";
+import { menuRoomVariants } from "@/styles/menu-variants";
 
 const ALIGNMENT_TOLERANCE = 25;
 
@@ -39,14 +38,8 @@ export enum NumberingMode {
   OneByOne = "One by one",
 }
 
-interface TableNumbersProcessProps {
-  btnSize?: number;
-  setActiveMenu: (menu: Menu | null) => void;
-}
-export const TableNumbersProcess = ({
-  btnSize = 14,
-  setActiveMenu,
-}: TableNumbersProcessProps) => {
+interface TableNumbersProcessProps {}
+export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
   const {
     tables,
     getTable,
@@ -63,6 +56,16 @@ export const TableNumbersProcess = ({
   const [numberingMode, setNumberingMode] = useState<NumberingMode>(
     NumberingMode.ByArea
   );
+  const numModeRef = useRef<NumberingMode>(NumberingMode.ByArea);
+
+  const updateNumberingMode = (mode: NumberingMode) => {
+    setNumberingMode(mode);
+    numModeRef.current = mode;
+    // clear the selected tables
+    clearSelectedTableIds();
+    updateSelectedTable({ selected: false });
+  };
+
   const withAngle = useRef<boolean>(false);
 
   const tableNumber = useRef<TableNumber>({
@@ -277,111 +280,125 @@ export const TableNumbersProcess = ({
   // console.log("nbSelected :", nbSelected);
 
   useEffect(() => {
-    if (numberingMode === NumberingMode.OneByOne) {
-      // One by one duplicate the last table to use "by area" processing
-      if (selectedTableIds.length === 1) {
-        const [firstTableId] = selectedTableIds;
-        const table = getTable(firstTableId);
-        if (table) {
-          const currentNumber = tableNumber.current.number;
-          updateTableNumber(table.id, currentNumber);
-          if (currentNumber !== null) {
-            updateTableNumber(null, currentNumber + 1);
-          }
-        }
-        clearSelection();
-      }
+    if (selectedTableIds.length === 0) {
+      clearCanvas(ctxTemporary);
+      toggleValidationButtons(false);
       return;
     }
-    if (numberingMode === NumberingMode.ByLine) {
-      // By line duplicate the last table to use "by area" processing
-      if (selectedTableIds.length === 2) {
-        const [firstTableId, secondTableId] = selectedTableIds;
-        const firstTable = getElementById(firstTableId);
-        const secondTable = getElementById(secondTableId);
 
-        if (firstTable && secondTable) {
-          selectedTableIds.push(secondTableId);
+    const timeoutId = setTimeout(() => {
+      if (numberingMode === NumberingMode.OneByOne) {
+        // One by one duplicate the last table to use "by area" processing
+        if (selectedTableIds.length === 1) {
+          const [firstTableId] = selectedTableIds;
+          const table = getTable(firstTableId);
+          if (table) {
+            const currentNumber = tableNumber.current.number;
+            updateTableNumber(table.id, currentNumber);
+            if (currentNumber !== null) {
+              updateTableNumber(null, currentNumber + 1);
+            }
+          }
+          clearSelection();
+        }
+        return;
+      }
+      if (numberingMode === NumberingMode.ByLine) {
+        // By line duplicate the last table to use "by area" processing
+        // console.log("By line", selectedTableIds);
+        if (selectedTableIds.length === 2) {
+          const [firstTableId, secondTableId] = selectedTableIds;
+          const firstTable = getElementById(firstTableId);
+          const secondTable = getElementById(secondTableId);
+
+          if (firstTable && secondTable) {
+            selectedTableIds.push(secondTableId);
+          }
         }
       }
-    }
 
-    if (selectedTableIds.length >= 2 && ctxTemporary) {
-      const [firstTableId, secondTableId, thirdTableId, fourthTableId] =
-        selectedTableIds;
-      const firstTable = getElementById(firstTableId);
-      const secondTable = getElementById(secondTableId);
-      const thirdTable = getElementById(thirdTableId);
-      let fourthTable = getElementById(fourthTableId);
+      if (selectedTableIds.length >= 2 && ctxTemporary) {
+        const [firstTableId, secondTableId, thirdTableId, fourthTableId] =
+          selectedTableIds;
+        const firstTable = getElementById(firstTableId);
+        const secondTable = getElementById(secondTableId);
+        const thirdTable = getElementById(thirdTableId);
+        let fourthTable = getElementById(fourthTableId);
 
-      if (numberingMode === NumberingMode.ByArea && firstTable && secondTable) {
-        const startX = firstTable.left + firstTable.width / 2;
-        const startY = firstTable.top + firstTable.height / 2;
-        const endX = secondTable.left + secondTable.width / 2;
-        const endY = secondTable.top + secondTable.height / 2;
+        if (firstTable && secondTable) {
+          const startX = firstTable.left + firstTable.width / 2;
+          const startY = firstTable.top + firstTable.height / 2;
+          const endX = secondTable.left + secondTable.width / 2;
+          const endY = secondTable.top + secondTable.height / 2;
 
-        drawArrow({
-          ctx: ctxTemporary,
-          from: { x: startX, y: startY },
-          to: { x: endX, y: endY },
-          color: "rgba(120, 20, 20, 0.6)",
-          curvature: 0.15,
-          lineWidth: 10,
-          padding: 10,
-        });
-      }
-      if (firstTable && secondTable && thirdTable) {
-        const startX = firstTable.left + firstTable.width / 2;
-        const startY = firstTable.top + firstTable.height / 2;
-        const endX = thirdTable.left + thirdTable.width / 2;
-        const endY = thirdTable.top + thirdTable.height / 2;
+          drawArrow({
+            ctx: ctxTemporary,
+            from: { x: startX, y: startY },
+            to: { x: endX, y: endY },
+            color: "rgba(120, 20, 20, 0.6)",
+            curvature: 0.15,
+            lineWidth: 10,
+            padding: 10,
+          });
+        }
+        if (firstTable && secondTable && thirdTable) {
+          const startX = firstTable.left + firstTable.width / 2;
+          const startY = firstTable.top + firstTable.height / 2;
+          const endX = thirdTable.left + thirdTable.width / 2;
+          const endY = thirdTable.top + thirdTable.height / 2;
 
-        drawArrow({
-          ctx: ctxTemporary,
-          from: { x: startX, y: startY },
-          to: { x: endX, y: endY },
-          color: "rgba(20, 80, 20, 0.6)",
-          curvature: 0.2,
-          lineWidth: 20,
-          padding: 25,
-        });
+          if (secondTableId !== thirdTableId) {
+            drawArrow({
+              ctx: ctxTemporary,
+              from: { x: startX, y: startY },
+              to: { x: endX, y: endY },
+              color: "rgba(20, 80, 20, 0.6)",
+              curvature: 0.2,
+              lineWidth: 20,
+              padding: 25,
+            });
+          }
 
-        const angle = getAngle(firstTable, secondTable);
-        withAngle.current =
-          Math.abs(angle % 90) > 5 && Math.abs(angle % 90) < 85;
+          const angle = getAngle(firstTable, secondTable);
+          withAngle.current =
+            Math.abs(angle % 90) > 5 && Math.abs(angle % 90) < 85;
 
-        if (
-          withAngle.current &&
-          numberingMode === NumberingMode.ByArea &&
-          fourthTable === null
-        ) {
-          fourthTable = calculateFourthAngle(
+          if (
+            withAngle.current &&
+            numberingMode === NumberingMode.ByArea &&
+            fourthTable === null
+          ) {
+            fourthTable = calculateFourthAngle(
+              firstTable,
+              secondTable,
+              thirdTable,
+              ctxTemporary
+            );
+
+            if (!fourthTable) {
+              return;
+            }
+          }
+
+          const { left, top, width } = getPerimeter(
             firstTable,
             secondTable,
             thirdTable,
+            fourthTable,
             ctxTemporary
           );
 
-          if (!fourthTable) {
-            return;
-          }
+          toggleValidationButtons(true, {
+            left: left + width - 80,
+            top: top - 40,
+          });
         }
-
-        const { left, top, width } = getPerimeter(
-          firstTable,
-          secondTable,
-          thirdTable,
-          fourthTable,
-          ctxTemporary
-        );
-
-        toggleValidationButtons(true, {
-          left: left + width - 80,
-          top: top - 40,
-        });
       }
-    }
-  }, [selectedTableIds]);
+    }, 0);
+
+    // Nettoyage du timeout
+    return () => clearTimeout(timeoutId);
+  }, [selectedTableIds, numberingMode]);
 
   // add escape key listener
   useEffect(() => {
@@ -395,13 +412,7 @@ export const TableNumbersProcess = ({
   }, []);
 
   return (
-    <div className="absolute left-4 top-full z-40 p-2 mt-2 w-40 bg-white rounded-lg shadow-lg translate-x-16 min-w-44">
-      <button
-        className="absolute top-0 right-0 btn btn-circle btn-sm"
-        onClick={() => setActiveMenu(null)}
-      >
-        <X size={btnSize - 2} />
-      </button>
+    <div className={menuRoomVariants({ width: 44 })}>
       <div className="mb-2">
         <label
           htmlFor="tableNumber"
@@ -425,7 +436,7 @@ export const TableNumbersProcess = ({
         <select
           id="numberingMode"
           value={numberingMode}
-          onChange={(e) => setNumberingMode(e.target.value as NumberingMode)}
+          onChange={(e) => updateNumberingMode(e.target.value as NumberingMode)}
           className="px-2 py-1 w-full rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value={NumberingMode.ByArea}>By area</option>

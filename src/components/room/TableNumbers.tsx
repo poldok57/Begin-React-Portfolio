@@ -6,7 +6,9 @@ import { Mode } from "./types";
 import { Menu } from "./RoomMenu";
 import { TableNumbersProcess } from "./TableNumbersProcess";
 import { clearCanvas } from "./scripts/table-numbers";
-import clsx from "clsx";
+import { withMousePosition } from "../windows/withMousePosition";
+
+const TableNumbersProcessWP = withMousePosition(TableNumbersProcess);
 
 export enum NumberingMode {
   ByArea = "By area",
@@ -18,13 +20,11 @@ interface TableNumbersProps {
   className?: string;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
-  btnSize: number;
 }
 const TableNumbers = ({
   className,
   activeMenu,
   setActiveMenu,
-  btnSize,
 }: TableNumbersProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { updateSelectedTable } = useTableDataStore();
@@ -42,19 +42,25 @@ const TableNumbers = ({
   };
 
   return (
-    <div
-      className={clsx("flex relative flex-col p-1 w-full", {
-        "z-30": activeMenu === Menu.tableNumbers,
-      })}
-      ref={ref}
-    >
-      <Button onClick={() => startNumbering()} className={className}>
-        table numbering
-      </Button>
+    <>
+      <div className="flex relative flex-col p-1 w-full" ref={ref}>
+        <Button onClick={() => startNumbering()} className={className}>
+          table numbering
+        </Button>
+      </div>
       {activeMenu === Menu.tableNumbers && (
-        <TableNumbersProcess btnSize={btnSize} setActiveMenu={setActiveMenu} />
+        <TableNumbersProcessWP
+          className="absolute z-10 translate-y-24"
+          onClose={() => setActiveMenu(null)}
+          withToggleLock={false}
+          withTitleBar={true}
+          titleText="Table Numbering"
+          titleHidden={false}
+          titleBackground={"#99ee66"}
+          draggable={true}
+        />
       )}
-    </div>
+    </>
   );
 };
 
