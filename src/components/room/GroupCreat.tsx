@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GroupTable, TableColors, TableSettings, TableType } from "./types";
 import { ShowTable, getTableComponent } from "./ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
@@ -17,10 +17,10 @@ const DEFAULT_COLORS = {
   textColor: "#111199",
 };
 
-export const GroupCreat = () => {
+export const GroupCreat = ({ groupId }: { groupId?: string }) => {
   const { addGroup, updateGroup, deleteGroup, groups } = useGroupStore();
   const { updateSelectedTable, countSelectedTables } = useTableDataStore();
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [currentId, setCurrentId] = useState<string | null>(groupId ?? null);
   const [title, setTitle] = useState("");
   const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
   const [settings, setSettings] = useState<TableSettings | null>(null);
@@ -67,9 +67,7 @@ export const GroupCreat = () => {
     }
   };
 
-  const selectGroup = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectId = event.target.value;
-    // console.log("selected event:", selectId);
+  const selectGroup = (selectId: string) => {
     if (selectId === "new") {
       setCurrentId(null);
       resetTable();
@@ -118,8 +116,18 @@ export const GroupCreat = () => {
     themeColors.push(colors.fillColor);
   }
 
+  useEffect(() => {
+    if (groupId) {
+      console.log("select groupId:", groupId);
+      selectGroup(groupId);
+      setEditing(true);
+      setShowColors(true);
+    }
+  }, [groupId]);
+
   const TableComponent = getTableComponent(tableType);
 
+  console.log("currentId:", currentId, " showColors:", showColors);
   return (
     <div
       className={clsx("shadow-xl bg-base-100", {
@@ -132,7 +140,7 @@ export const GroupCreat = () => {
         <p>
           <select
             className="w-full max-w-xs select select-primary"
-            onChange={(e) => selectGroup(e)}
+            onChange={(e) => selectGroup(e.target.value)}
           >
             <option value="" disabled selected>
               Choose or creat a group?
@@ -147,6 +155,7 @@ export const GroupCreat = () => {
                   backgroundColor: group.colors.fillColor,
                   color: group.colors.textColor,
                 }}
+                selected={group.id === currentId}
               >
                 {group.title}
               </option>

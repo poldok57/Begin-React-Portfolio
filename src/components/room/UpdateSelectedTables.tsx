@@ -173,7 +173,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
           isTouch={isTouch}
           setActiveMenu={setActiveMenu}
           onClose={() => setActiveMenu(null)}
-          className="absolute z-10 translate-y-24"
+          className="absolute z-30 translate-y-24"
           withToggleLock={false}
           withTitleBar={true}
           titleText="Update Tables"

@@ -50,7 +50,7 @@ const TableNumbers = ({
       </div>
       {activeMenu === Menu.tableNumbers && (
         <TableNumbersProcessWP
-          className="absolute z-10 translate-y-24"
+          className="absolute z-30 translate-y-24"
           onClose={() => setActiveMenu(null)}
           withToggleLock={false}
           withTitleBar={true}

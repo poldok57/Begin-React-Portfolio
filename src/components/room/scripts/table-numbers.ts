@@ -268,11 +268,8 @@ export const virtualTurningTables = ({
   ctx?: CanvasRenderingContext2D | null;
 }) => {
   if (Math.abs(angle) > 45 && Math.abs(angle) < 90) {
-    console.log("Turn angle original :", angle);
     angle = angle < 0 ? 90 + angle : -90 + angle;
   }
-
-  console.log("Turn angle :", angle);
 
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;

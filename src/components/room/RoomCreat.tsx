@@ -289,7 +289,7 @@ export const RoomCreatTools = () => {
                 <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
               </>
             ) : (
-              <ListTablesText maxRowsPerColumn={40} />
+              <ListTablesText maxRowsPerColumn={20} />
             )}
           </GroundSelection>
           <GroupCreatWP
