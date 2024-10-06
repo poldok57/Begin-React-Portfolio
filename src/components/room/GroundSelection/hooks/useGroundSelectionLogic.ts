@@ -121,7 +121,7 @@ export const useGroundSelectionLogic = (
 
   const handleMove = useCallback(
     (clientX: number, clientY: number) => {
-      if (!groundRef.current || !containerRef.current) return;
+      if (!groundRef.current || !containerRef.current) return false;
 
       if (areaOffsetRef.current) {
         // move container
@@ -145,7 +145,7 @@ export const useGroundSelectionLogic = (
           debounceDrawAxe();
         }
 
-        return;
+        return true;
       }
 
       // select first corner of the container
@@ -170,7 +170,9 @@ export const useGroundSelectionLogic = (
           width: width,
           height: height,
         });
+        return true;
       }
+      return false;
     },
     [changeCoordinates, getOffsetX, getOffsetY]
   );

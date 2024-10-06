@@ -77,6 +77,7 @@ export const RoomCreatTools = () => {
   const groundRef = useRef<HTMLDivElement>(null);
 
   const selectedArea = useRef<boolean>(false);
+  // const selectedTablesRef = useRef<TableData[]>([]);
 
   const roundToTwoDigits = (value: number) => parseFloat(value.toFixed(2));
 
@@ -137,6 +138,9 @@ export const RoomCreatTools = () => {
         updateTablePosition(table, position, offset, rotation);
       });
 
+      // Update selectedTablesRef
+      // selectedTablesRef.current = selectedTables;
+
       return;
     }
 
@@ -152,8 +156,20 @@ export const RoomCreatTools = () => {
     selectedArea.current = true;
   };
 
+  // const upDateSelectedTables = (tables: TableData[] | null = null) => {
+  //   if (!tables) {
+  //     tables = useTableDataStore.getState().tables;
+  //   }
+
+  //   // selectedTablesRef.current = tables.filter((table) => table.selected);
+  // };
+
   const resetSelectedTables = () => {
+    // tables.forEach((table) => {
+    //   updateTable(table.id, { selected: false });
+    // });
     updateSelectedTable({ selected: false });
+    // selectedTablesRef.current = [];
   };
 
   const onZoneSelectedEnd = (rect: Rectangle | null) => {
@@ -189,10 +205,14 @@ export const RoomCreatTools = () => {
     updatedTables.forEach((table) => {
       updateTable(table.id, { selected: table.selected });
     });
+
+    // upDateSelectedTables(updatedTables);
   };
 
   const addSelectedRect = (rect: Rectangle) => {
     setPreSelection(rect);
+
+    // upDateSelectedTables();
   };
 
   const handleRecordDesing = (
@@ -301,6 +321,19 @@ export const RoomCreatTools = () => {
             withMinimize={true}
             draggable={true}
           />
+          {/* <RoomMenuWP
+            className="absolute top-2 left-40 z-10"
+            withTitleBar={true}
+            titleText="Room config"
+            titleHidden={false}
+            titleBackground={"#cc66ff"}
+            withMinimize={true}
+            draggable={true}
+            btnSize={btnSize}
+            recordDesign={handleRecordDesing}
+            addSelectedRect={addSelectedRect}
+            resetSelectedTables={resetSelectedTables}
+          /> */}
         </div>
       </div>
     </>

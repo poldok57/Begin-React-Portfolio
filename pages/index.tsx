@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { CommentSection } from "../src/components/comment";
+// import { CommentSection } from "../src/components/comment";
 import { DrawSection } from "../src/components/Chapters";
 import { Footer } from "../src/components/Footer";
 import { Header } from "../src/components/Header";
@@ -23,7 +23,7 @@ const Home = () => {
         <GameSelector />
         <DrawSection />
 
-        <CommentSection />
+        {/* <CommentSection /> */}
         <Footer />
       </div>
       <ShowAlertMessagesWP

@@ -235,10 +235,6 @@ export const GroundSelection = React.forwardRef<
         return;
       }
 
-      ground.addEventListener("mousedown", handleMouseDown);
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-
       const handleTouchStart = (e: TouchEvent) => {
         const touch = e.touches[0];
         if (!groundRef.current) {
@@ -268,11 +264,14 @@ export const GroundSelection = React.forwardRef<
         if (e.touches.length > 1) {
           return;
         }
-        e.preventDefault();
         if (moveLine(touch.clientX, touch.clientY)) {
+          e.preventDefault();
           return;
         }
-        handleMove(touch.clientX, touch.clientY);
+        if (handleMove(touch.clientX, touch.clientY)) {
+          e.preventDefault();
+          return;
+        }
       };
 
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -293,9 +292,13 @@ export const GroundSelection = React.forwardRef<
         handleMouseUp();
       };
 
+      ground.addEventListener("mousedown", handleMouseDown);
+      ground.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+
       document.addEventListener("keydown", handleKeyDown);
       ground.addEventListener("touchstart", handleTouchStart);
-      document.addEventListener("touchmove", handleTouchMove, {
+      ground.addEventListener("touchmove", handleTouchMove, {
         passive: false,
       });
       document.addEventListener("touchend", handleMouseUp);
@@ -303,8 +306,8 @@ export const GroundSelection = React.forwardRef<
       return () => {
         ground.removeEventListener("mousedown", handleMouseDown);
         ground.removeEventListener("touchstart", handleTouchStart);
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("touchmove", handleTouchMove);
+        ground.removeEventListener("mousemove", handleMouseMove);
+        ground.removeEventListener("touchmove", handleTouchMove);
         document.removeEventListener("mouseup", handleMouseUp);
         document.removeEventListener("touchend", handleTouchEnd);
         document.removeEventListener("keydown", handleKeyDown);

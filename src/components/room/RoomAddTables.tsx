@@ -3,7 +3,7 @@ import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "./SelectionItems";
 import { useTableDataStore } from "./stores/tables";
 import { TableType } from "./types";
-import { RectangleHorizontal, X } from "lucide-react";
+import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import { useRoomContext } from "./RoomProvider";
 import { Menu } from "./RoomMenu";
@@ -14,23 +14,16 @@ import {
   calculateSelectedRect,
   DEFAULT_TABLE_SIZE,
 } from "./scripts/room-add-tables";
+import { withMousePosition } from "../windows/withMousePosition";
 
-interface RoomAddTablesProps {
-  className: string;
+interface RoomAddTablesMenuProps {
   addSelectedRect: (rect: Rectangle) => void;
-  resetSelectedTables: () => void;
-  activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
-  btnSize?: number;
 }
 
-export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
-  className,
+const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
   addSelectedRect,
-  resetSelectedTables,
-  activeMenu,
   setActiveMenu,
-  btnSize = 14,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [selectedItems, setSelectedItems] = useState<{
@@ -41,8 +34,14 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
     TableType.poker
   );
 
-  const { addTable, tables } = useTableDataStore((state) => state);
-  const { getSelectedRect, scale, setMode } = useRoomContext();
+  const { tables, addTable, updateSelectedTable } = useTableDataStore(
+    (state) => state
+  );
+  const { getSelectedRect, scale } = useRoomContext();
+
+  const resetSelectedTables = () => {
+    updateSelectedTable({ selected: false });
+  };
 
   const handleAddTable = (
     x: number,
@@ -80,7 +79,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
     }
 
     const selectedRect = calculateSelectedRect({
-      parentElement: ref.current?.parentElement ?? null,
+      parentElement: ref.current,
       containerRect: getSelectedRect(),
       selectedItems,
       scale,
@@ -97,67 +96,90 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
     addSelectedRect(selectedRect);
     setActiveMenu(null);
   };
+  return (
+    <div ref={ref} className="z-40 p-4 w-64 bg-white rounded-md shadow-sm">
+      <div className="mb-4">
+        <label className="block mb-2 text-sm font-medium text-gray-700">
+          Table Type
+        </label>
+        <SelectTableType
+          tableType={selectedTableType}
+          setTableType={setSelectedTableType}
+        />
+      </div>
+      <div className="mb-4">
+        <SelectionItems
+          handleClose={() => setActiveMenu(null)}
+          setSelectedItems={setSelectedItems}
+          selectedItems={selectedItems}
+          addTables={handleAddTables}
+          Component={
+            RectangleHorizontal as React.FC<{
+              size: number;
+              className: string;
+            }>
+          }
+        />
+      </div>
+      <div className="flex justify-end space-x-2">
+        <Button onClick={() => setActiveMenu(null)} className="bg-warning">
+          Cancel
+        </Button>
+        <Button onClick={handleAddTables} className="bg-primary">
+          Add Tables
+        </Button>
+      </div>
+    </div>
+  );
+};
+const RoomAddTablesMenuWP = withMousePosition(RoomAddTablesMenu);
+
+interface RoomAddTablesProps {
+  className: string;
+  addSelectedRect: (rect: Rectangle) => void;
+  activeMenu: Menu | null;
+  setActiveMenu: (menu: Menu | null) => void;
+}
+
+export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
+  className,
+  addSelectedRect,
+  activeMenu,
+  setActiveMenu,
+}) => {
+  const { setMode } = useRoomContext();
 
   return (
-    <div
-      ref={ref}
-      className="flex relative flex-col p-1 w-full"
-      onMouseOver={(e) => e.stopPropagation()}
-    >
-      <Button
-        className={className}
-        onClick={() => {
-          setActiveMenu(Menu.addTable);
-          setMode(Mode.create);
-        }}
+    <>
+      <div
+        className="flex relative flex-col p-1 w-full"
+        onMouseOver={(e) => e.stopPropagation()}
       >
-        Add tables
-      </Button>
+        <Button
+          className={className}
+          onClick={() => {
+            setActiveMenu(Menu.addTable);
+            setMode(Mode.create);
+          }}
+        >
+          Add tables
+        </Button>
+      </div>
+
       {activeMenu === Menu.addTable && (
-        <div className="absolute left-0 top-full z-40 p-4 mt-2 w-64 bg-white rounded-lg shadow-lg">
-          <button
-            className="absolute top-0 right-0 btn btn-circle btn-sm"
-            onClick={() => setActiveMenu(null)}
-          >
-            <X size={btnSize - 2} />
-          </button>
-          <h3 className="mb-4 text-lg font-semibold">Add New Tables</h3>
-          <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium text-gray-700">
-              Table Type
-            </label>
-            <SelectTableType
-              tableType={selectedTableType}
-              setTableType={setSelectedTableType}
-            />
-          </div>
-          <div className="mb-4">
-            {/* <label className="block mb-2 text-sm font-medium text-gray-700">
-              Table Layout
-            </label> */}
-            <SelectionItems
-              handleClose={() => setActiveMenu(null)}
-              setSelectedItems={setSelectedItems}
-              selectedItems={selectedItems}
-              addTables={handleAddTables}
-              Component={
-                RectangleHorizontal as React.FC<{
-                  size: number;
-                  className: string;
-                }>
-              }
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button onClick={() => setActiveMenu(null)} className="bg-warning">
-              Cancel
-            </Button>
-            <Button onClick={handleAddTables} className="bg-primary">
-              Add Tables
-            </Button>
-          </div>
-        </div>
+        <RoomAddTablesMenuWP
+          addSelectedRect={addSelectedRect}
+          setActiveMenu={setActiveMenu}
+          onClose={() => setActiveMenu(null)}
+          className="absolute z-10 translate-y-24"
+          withToggleLock={false}
+          withTitleBar={true}
+          titleText="Add New Tables"
+          titleHidden={false}
+          titleBackground={"#99ee66"}
+          draggable={true}
+        />
       )}
-    </div>
+    </>
   );
 };

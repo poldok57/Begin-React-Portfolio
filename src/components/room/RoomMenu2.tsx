@@ -33,7 +33,6 @@ interface RoomMenu2Props {
     opacity: number
   ) => void;
   addSelectedRect: (rect: Rectangle) => void;
-  resetSelectedTables: () => void;
   typeListMode: TypeList;
   setTypeListMode: (type: TypeList) => void;
 }
@@ -42,7 +41,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   btnSize,
   recordDesign,
   addSelectedRect,
-  resetSelectedTables,
   typeListMode,
   setTypeListMode,
 }) => {
@@ -52,8 +50,13 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     useRoomContext();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
-  const { tables, updateTable, deleteSelectedTable, countSelectedTables } =
-    useTableDataStore();
+  const {
+    tables,
+    updateTable,
+    updateSelectedTable,
+    deleteSelectedTable,
+    countSelectedTables,
+  } = useTableDataStore();
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
@@ -113,7 +116,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
         event.preventDefault();
         const selectedTables = tables.filter((table) => table.selected);
         if (selectedTables.length > 0) {
-          resetSelectedTables();
+          updateSelectedTable({ selected: false });
         }
         return;
       }
@@ -141,7 +144,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               <RoomAddTables
                 className="flex flex-col p-1 w-full rounded-lg"
                 addSelectedRect={addSelectedRect}
-                resetSelectedTables={resetSelectedTables}
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
               />
@@ -201,7 +203,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             <RoomAddTables
               className="px-2"
               addSelectedRect={addSelectedRect}
-              resetSelectedTables={resetSelectedTables}
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
             />

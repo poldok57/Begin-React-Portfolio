@@ -50,7 +50,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       className,
       style,
       close,
-      onClose = undefined,
+      onClose,
       status = STATUS.OPEN,
       referrer,
       withMinimize = false,

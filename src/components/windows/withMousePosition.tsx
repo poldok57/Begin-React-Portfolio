@@ -28,6 +28,7 @@ interface WithMousePositionProps {
   draggable?: boolean;
   resizable?: boolean;
   close?: boolean;
+  onClose?: () => void;
   className?: string | null;
   withTitleBar?: boolean;
   titleHidden?: boolean;
@@ -57,6 +58,7 @@ interface WithMousePositionProps {
  * @param {boolean} props.titleHidden - default true - if true, the title bar is hidden
  * @param {boolean} props.trace - default false - if true, the trace is enabled
  * @param {boolean} props.close - default false - if true, the close button is displayed
+ * @param {function} props.onClose - the function to call when the component is closed
  * @param {string} props.titleText - the text of the title bar
  * @param {string} props.titleClassName - the class name of the title bar
  * @param {number} props.titleHeight - the height of the title bar
@@ -76,6 +78,7 @@ export function withMousePosition<P extends object>(
     id,
     trace = false,
     close = false,
+    onClose,
     draggable = true,
     resizable = false,
     className = null,
@@ -546,6 +549,7 @@ export function withMousePosition<P extends object>(
             withMinimize={withMinimize}
             withMaximize={withMaximize}
             close={close}
+            onClose={onClose}
           >
             {titleText}
           </TitleBar>
