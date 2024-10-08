@@ -50,10 +50,11 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     useRoomContext();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
+  const [isPlanMode, setIsPlanMode] = useState(true);
   const {
     tables,
     updateTable,
-    updateSelectedTable,
+    resetSelectedTables,
     deleteSelectedTable,
     countSelectedTables,
   } = useTableDataStore();
@@ -112,11 +113,12 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           },
           text
         );
+        console.log("deleteSelectedTable");
         addValidationValidAction(deleteSelectedTable);
         event.preventDefault();
         const selectedTables = tables.filter((table) => table.selected);
         if (selectedTables.length > 0) {
-          updateSelectedTable({ selected: false });
+          resetSelectedTables();
         }
         return;
       }
@@ -129,6 +131,11 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     };
   }, []);
 
+  useEffect(() => {
+    console.log("typeListMode", typeListMode);
+    setIsPlanMode(typeListMode === "plan");
+  }, [typeListMode]);
+
   return (
     <div className="flex items-center w-full align-middle min-h-12 bg-base-100">
       <div className="navbar-start">
@@ -140,39 +147,45 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             tabIndex={0}
             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
           >
-            <li>
-              <RoomAddTables
-                className="flex flex-col p-1 w-full rounded-lg"
-                addSelectedRect={addSelectedRect}
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-              />
-            </li>
-            <li>
-              <UpdateSelectedTables
-                className="flex flex-col p-1 w-full rounded-lg"
-                btnSize={btnSize}
-                isTouch={isTouch}
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-              />
-            </li>
-            <li>
-              <TableNumbers
-                className="flex flex-col p-1 w-full rounded-lg"
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-              />
-            </li>
-            <li>
-              <RoomDesign
-                className="flex flex-col p-1 w-full rounded-lg"
-                recordDesign={recordDesign}
-                isTouch={isTouch}
-                activeMenu={activeMenu}
-                setActiveMenu={setActiveMenu}
-              />
-            </li>
+            {isPlanMode && (
+              <>
+                <li>
+                  <RoomAddTables
+                    className="flex flex-col p-1 w-full rounded-lg"
+                    addSelectedRect={addSelectedRect}
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    disabled={!isPlanMode}
+                  />
+                </li>
+                <li>
+                  <UpdateSelectedTables
+                    className="flex flex-col p-1 w-full rounded-lg"
+                    btnSize={btnSize}
+                    isTouch={isTouch}
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    disabled={!isPlanMode}
+                  />
+                </li>
+                <li>
+                  <TableNumbers
+                    className="flex flex-col p-1 w-full rounded-lg"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                  />
+                </li>
+                <li>
+                  <RoomDesign
+                    className="flex flex-col p-1 w-full rounded-lg"
+                    recordDesign={recordDesign}
+                    isTouch={isTouch}
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                  />
+                </li>
+              </>
+            )}
             <li>
               <a>View type</a>
               <li>
@@ -204,6 +217,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               addSelectedRect={addSelectedRect}
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
+              disabled={!isPlanMode}
             />
           </li>
           <li className="flex items-center">
@@ -213,6 +227,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               setActiveMenu={setActiveMenu}
               btnSize={btnSize}
               isTouch={isTouch}
+              disabled={!isPlanMode}
             />
           </li>
 
@@ -221,6 +236,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               className="px-2"
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
+              disabled={!isPlanMode}
             />
           </li>
           <li className="flex items-center">
@@ -230,6 +246,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
               isTouch={isTouch}
+              disabled={!isPlanMode}
             />
           </li>
           <li className="flex z-40 items-center">

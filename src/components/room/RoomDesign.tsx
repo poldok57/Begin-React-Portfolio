@@ -233,6 +233,7 @@ interface RoomDesignProps {
     name: string,
     opacity: number
   ) => void;
+  disabled?: boolean;
 }
 
 export const RoomDesign: React.FC<RoomDesignProps> = ({
@@ -241,6 +242,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   recordDesign,
   activeMenu,
   setActiveMenu,
+  disabled = false,
 }) => {
   const { setMode } = useRoomContext();
 
@@ -252,7 +254,11 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   return (
     <>
       <div className="flex relative flex-col p-1 w-full">
-        <Button onClick={() => handleOpen()} className={className}>
+        <Button
+          onClick={() => handleOpen()}
+          className={className}
+          disabled={disabled}
+        >
           Room design
         </Button>
       </div>

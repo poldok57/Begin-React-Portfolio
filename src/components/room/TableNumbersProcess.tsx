@@ -44,7 +44,8 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     tables,
     getTable,
     updateTable,
-    updateSelectedTable,
+    updateSelectedTables,
+    resetSelectedTables,
     countSelectedTables,
   } = useTableDataStore();
   const { selectedTableIds, clearSelectedTableIds, ctxTemporary } =
@@ -63,7 +64,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     numModeRef.current = mode;
     // clear the selected tables
     clearSelectedTableIds();
-    updateSelectedTable({ selected: false });
+    resetSelectedTables();
   };
 
   const withAngle = useRef<boolean>(false);
@@ -104,7 +105,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
 
   const clearSelection = (clearTemporaryCanvas: boolean = true) => {
     clearSelectedTableIds();
-    updateSelectedTable({ selected: false });
+    resetSelectedTables();
     if (ctxTemporary && clearTemporaryCanvas) {
       clearCanvas(ctxTemporary);
     }
@@ -267,7 +268,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
   const resetTablesNumber = () => {
     const nbTables = countSelectedTables();
     if (nbTables > 0) {
-      updateSelectedTable({ tableNumber: "" });
+      updateSelectedTables({ tableNumber: "" });
       return;
     }
     // if no table is selected, reset all tables number
@@ -410,6 +411,8 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
       removeListener();
     };
   }, []);
+  // const selectedTables = tables.filter((table) => table.selected);
+  const nbSelectedTables = countSelectedTables();
 
   return (
     <div className={menuRoomVariants({ width: 44 })}>
@@ -456,7 +459,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
       <DeleteWithConfirm
         onConfirm={resetTablesNumber}
         confirmMessage={`Confirm reset ${
-          countSelectedTables() ?? "all"
+          nbSelectedTables > 0 ? nbSelectedTables : "all"
         } tables number`}
         className="btn btn-warning"
       >

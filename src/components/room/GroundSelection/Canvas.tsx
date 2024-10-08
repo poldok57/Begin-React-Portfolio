@@ -25,7 +25,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     height: 600,
   });
   const { designElements, selectedDesignElement } = useTableDataStore();
-  const { setCtxTemporary, scale } = useRoomContext();
+  const { setCtxTemporary, scale, getScale } = useRoomContext();
   const ground: HTMLDivElement | null | undefined = backgroundCanvasRef.current
     ?.parentElement as HTMLDivElement;
 
@@ -37,17 +37,19 @@ export const Canvas: React.FC<CanvasProps> = ({
         const offsetWidth = ground.offsetWidth;
         const offsetHeight = ground.offsetHeight;
 
-        const canvasWidth = Math.max(width, offsetWidth, scale * offsetWidth);
+        const canvasWidth = Math.max(width, offsetWidth, ground.scrollWidth);
         const canvasHeight = Math.max(
           height,
           offsetHeight,
-          scale * offsetHeight
+          ground.scrollHeight
         );
 
         canvasSize.current = {
           width: Math.round(canvasWidth),
           height: Math.round(canvasHeight),
         };
+
+        // console.log("canvasSize", canvasSize.current);
 
         [backgroundCanvasRef.current, temporaryCanvasRef.current].forEach(
           (canvas) => {
@@ -59,7 +61,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     },
-    [backgroundCanvasRef, temporaryCanvasRef, ground, setCtxTemporary]
+    [backgroundCanvasRef, temporaryCanvasRef, scale, ground]
   );
 
   const drawElementsOnCanvas = useCallback(
@@ -97,6 +99,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     [
       backgroundCanvasRef,
       temporaryCanvasRef,
+      scale,
       ground,
       designElements,
       selectedDesignElement,
@@ -104,21 +107,31 @@ export const Canvas: React.FC<CanvasProps> = ({
   );
 
   useEffect(() => {
-    const handleResize = () => resizeCanvas(scale); // Utilisez 1 comme échelle par défaut
+    const handleResize = () => {
+      const scale = getScale();
+      resizeCanvas(scale); // Utilisez 1 comme échelle par défaut
+      drawElementsOnCanvas(scale);
+    };
+
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [resizeCanvas, scale]);
+  }, []);
 
   useEffect(() => {
     drawElementsOnCanvas(scale);
-  }, [drawElementsOnCanvas, scale]);
+  }, [designElements, selectedDesignElement]);
+
+  useEffect(() => {
+    resizeCanvas(scale);
+  }, [scale]);
 
   useEffect(() => {
     // Check if the background canvas is not defined or has no width
     if (
       ground &&
       (!backgroundCanvasRef.current ||
-        backgroundCanvasRef.current.offsetWidth < ground.offsetWidth)
+        backgroundCanvasRef.current.offsetWidth < ground.offsetWidth ||
+        backgroundCanvasRef.current.offsetHeight < ground.offsetHeight)
     ) {
       // Force re-render after 1 second
       const timer = setTimeout(() => {
@@ -129,20 +142,20 @@ export const Canvas: React.FC<CanvasProps> = ({
       // Clean up the timer
       return () => clearTimeout(timer);
     }
-  }, [backgroundCanvasRef.current, backgroundCanvasRef.current]);
+  }, [backgroundCanvasRef.current, ground, scale]);
 
   return (
     <>
       <canvas
         ref={backgroundCanvasRef}
         id="background-canvas"
-        className="overflow-visible absolute top-0 left-0 border-r border-b border-gray-500 border-dashed"
+        className="overflow-visible absolute top-0 left-0 min-w-full min-h-full border-r border-b border-gray-500 border-dashed"
       />
       <canvas
         ref={temporaryCanvasRef}
         id="temporary-canvas"
         className={clsx(
-          "overflow-visible absolute top-0 left-0",
+          "overflow-visible min-w-full min-h-full absolute top-0 left-0",
           mode === Mode.numbering ? "z-20" : "z-0"
         )}
         style={{ pointerEvents: "none" }}

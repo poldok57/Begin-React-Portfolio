@@ -20,19 +20,21 @@ interface TableNumbersProps {
   className?: string;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
+  disabled?: boolean;
 }
 const TableNumbers = ({
   className,
   activeMenu,
   setActiveMenu,
+  disabled = false,
 }: TableNumbersProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const { updateSelectedTable } = useTableDataStore();
+  const { resetSelectedTables } = useTableDataStore();
   const { setMode, clearSelectedTableIds, ctxTemporary } = useRoomContext();
 
   const startNumbering = () => {
     clearSelectedTableIds();
-    updateSelectedTable({ selected: false });
+    resetSelectedTables();
     if (ctxTemporary) {
       clearCanvas(ctxTemporary);
     }
@@ -44,7 +46,11 @@ const TableNumbers = ({
   return (
     <>
       <div className="flex relative flex-col p-1 w-full" ref={ref}>
-        <Button onClick={() => startNumbering()} className={className}>
+        <Button
+          onClick={() => startNumbering()}
+          className={className}
+          disabled={disabled}
+        >
           table numbering
         </Button>
       </div>

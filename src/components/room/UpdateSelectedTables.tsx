@@ -37,7 +37,7 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
     rotationSelectedTable,
     sizeSelectedTable,
     deleteSelectedTable,
-    updateSelectedTable,
+    updateSelectedTables,
   } = useTableDataStore();
 
   const [selectedTablesCount, setSelectedTablesCount] = useState(0);
@@ -45,16 +45,16 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
   const [tableType, setTableType] = useState<TableType | null>(TableType.poker);
   const saveSettings = (newSettings: TableSettings | null) => {
     setEditSettings(newSettings);
-    updateSelectedTable({ settings: newSettings });
+    updateSelectedTables({ settings: newSettings });
   };
 
   const saveTableType = (tableType: TableType) => {
     setTableType(tableType);
-    updateSelectedTable({ type: tableType });
+    updateSelectedTables({ type: tableType });
   };
 
   const handlePowerOff = () => {
-    updateSelectedTable({ groupId: null });
+    updateSelectedTables({ groupId: null });
   };
 
   const handleDeleteSelectedTable = () => {
@@ -143,6 +143,7 @@ interface UpdateSelectedTablesProps {
   isTouch: boolean;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
+  disabled?: boolean;
 }
 
 export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
@@ -151,6 +152,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   isTouch,
   activeMenu,
   setActiveMenu,
+  disabled = false,
 }) => {
   const { setMode } = useRoomContext();
 
@@ -158,6 +160,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
     <>
       <div className="flex relative flex-col p-1 w-full">
         <Button
+          disabled={disabled}
           onClick={() => {
             setActiveMenu(Menu.updateTable);
             setMode(Mode.create);

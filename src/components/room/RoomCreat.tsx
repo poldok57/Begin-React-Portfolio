@@ -49,7 +49,7 @@ export interface ChangeCoordinatesParams {
 export const RoomCreatTools = () => {
   const {
     updateTable,
-    updateSelectedTable,
+    resetSelectedTables,
     addDesignElement,
     getTable,
     getSelectedTables,
@@ -152,14 +152,10 @@ export const RoomCreatTools = () => {
     selectedArea.current = true;
   };
 
-  const resetSelectedTables = () => {
-    updateSelectedTable({ selected: false });
-  };
-
   const onZoneSelectedEnd = (rect: Rectangle | null) => {
     if (!rect) {
       if (mode === Mode.create) {
-        updateSelectedTable({ selected: false });
+        resetSelectedTables();
       }
       selectedArea.current = false;
       return;

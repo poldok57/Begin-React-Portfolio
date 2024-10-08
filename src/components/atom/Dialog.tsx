@@ -244,7 +244,7 @@ export const DialogContent: React.FC<DialogContentProps> = ({
 }) => {
   const { blur, dialogRef } = useDialogContext();
   const ref = useRef<HTMLDivElement>(null);
-  const open = true;
+  const isOpen = true;
 
   useEffect(() => {
     if (!dialogRef.current) return;
@@ -275,7 +275,7 @@ export const DialogContent: React.FC<DialogContentProps> = ({
       }
     };
 
-    if (open && !blur) {
+    if (isOpen && !blur) {
       document.addEventListener("keydown", handleEscape);
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener(
@@ -283,7 +283,7 @@ export const DialogContent: React.FC<DialogContentProps> = ({
         handleClickOutside as EventListener
       );
     }
-    if (open && blur) {
+    if (isOpen && blur) {
       dialogRef.current.addEventListener("mousedown", handleClick);
       dialogRef.current.addEventListener(
         "touchstart",
@@ -300,9 +300,9 @@ export const DialogContent: React.FC<DialogContentProps> = ({
       );
       dialogRef.current?.removeEventListener("mousedown", handleClick);
     };
-  }, [open, dialogRef, blur]);
+  }, [isOpen, dialogRef, blur]);
 
-  useFocusTrap(ref, open);
+  useFocusTrap(ref, isOpen);
 
   return (
     <>

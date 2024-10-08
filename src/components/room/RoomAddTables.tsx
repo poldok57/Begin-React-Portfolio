@@ -34,13 +34,13 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     TableType.poker
   );
 
-  const { tables, addTable, updateSelectedTable } = useTableDataStore(
+  const { tables, addTable, updateSelectedTables } = useTableDataStore(
     (state) => state
   );
   const { getSelectedRect, scale } = useRoomContext();
 
   const resetSelectedTables = () => {
-    updateSelectedTable({ selected: false });
+    updateSelectedTables({ selected: false });
   };
 
   const handleAddTable = (
@@ -139,6 +139,7 @@ interface RoomAddTablesProps {
   addSelectedRect: (rect: Rectangle) => void;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
+  disabled?: boolean;
 }
 
 export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
@@ -146,6 +147,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
   addSelectedRect,
   activeMenu,
   setActiveMenu,
+  disabled = false,
 }) => {
   const { setMode } = useRoomContext();
 
@@ -158,6 +160,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
             setActiveMenu(Menu.addTable);
             setMode(Mode.create);
           }}
+          disabled={disabled}
         >
           Add tables
         </Button>

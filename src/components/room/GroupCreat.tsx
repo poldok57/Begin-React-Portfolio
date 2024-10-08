@@ -17,9 +17,15 @@ const DEFAULT_COLORS = {
   textColor: "#111199",
 };
 
-export const GroupCreat = ({ groupId }: { groupId?: string }) => {
+export const GroupCreat = ({
+  groupId,
+  onSelect,
+}: {
+  groupId?: string;
+  onSelect?: (groupId: string | null) => void;
+}) => {
   const { addGroup, updateGroup, deleteGroup, groups } = useGroupStore();
-  const { updateSelectedTable, countSelectedTables } = useTableDataStore();
+  const { updateSelectedTables, countSelectedTables } = useTableDataStore();
   const [currentId, setCurrentId] = useState<string | null>(groupId ?? null);
   const [title, setTitle] = useState("");
   const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
@@ -83,7 +89,7 @@ export const GroupCreat = ({ groupId }: { groupId?: string }) => {
       setSettings(selectedGroup?.settings ?? null);
       setTableType(selectedGroup?.type ?? TableType.poker);
     } else {
-      console.error("Groupe non trouvé");
+      console.error("Group not found");
     }
   };
   const changeColor = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,7 +124,7 @@ export const GroupCreat = ({ groupId }: { groupId?: string }) => {
 
   useEffect(() => {
     if (groupId) {
-      console.log("select groupId:", groupId);
+      // console.log("select groupId:", groupId);
       selectGroup(groupId);
       setEditing(true);
       setShowColors(true);
@@ -127,12 +133,11 @@ export const GroupCreat = ({ groupId }: { groupId?: string }) => {
 
   const TableComponent = getTableComponent(tableType);
 
-  console.log("currentId:", currentId, " showColors:", showColors);
   return (
     <div
       className={clsx("shadow-xl bg-base-100", {
         "w-96 card": editing,
-        "w-80": !editing,
+        "w-80 rounded-lg": !editing,
       })}
     >
       <div className="card-body">
@@ -176,7 +181,10 @@ export const GroupCreat = ({ groupId }: { groupId?: string }) => {
 
             <button
               className="mt-4 btn btn-sm"
-              onClick={() => updateSelectedTable({ groupId: currentId })}
+              onClick={() => {
+                updateSelectedTables({ groupId: currentId });
+                onSelect?.(currentId);
+              }}
             >
               Selected tables: {countSelectedTables()}
             </button>
