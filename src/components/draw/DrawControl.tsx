@@ -1,13 +1,9 @@
 import React, { useRef, useMemo, useState, useEffect } from "react";
 import { withMousePosition } from "../windows/withMousePosition";
 import { isTouchDevice } from "@/lib/utils/device";
-import { MdTimeline } from "react-icons/md";
-// import { MdRadioButtonUnchecked } from "react-icons/md";
 import { SlActionUndo } from "react-icons/sl";
-import { AiOutlineLoading } from "react-icons/ai";
 import { CiEraser } from "react-icons/ci";
 import { PiSelectionPlusLight } from "react-icons/pi";
-// import clsx from "clsx";
 
 import { Button } from "../atom/Button";
 import {
@@ -18,10 +14,12 @@ import {
   GroupParams,
   EventDetail,
   EventModeAction,
+  isDrawingLine,
 } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
+import { DrawControlBasic } from "./DrawControlBasic";
 import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../alert-messages/alertMessage";
@@ -216,15 +214,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             onClick={() => handleModeChange(DRAWING_MODES.LINE)}
             title="Draw lines"
           >
-            <MdTimeline size="28px" />
-          </Button>
-          <Button
-            className="px-5 py-1"
-            selected={mode == DRAWING_MODES.ARC}
-            onClick={() => handleModeChange(DRAWING_MODES.ARC)}
-            title="Draw arcs"
-          >
-            <AiOutlineLoading size="28px" />
+            Lines
           </Button>
           <Button
             className="px-5"
@@ -286,16 +276,24 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleTextParams={handleParamChange}
           isTouch={isTouch}
         />
-        <DrawControlLine
+        <DrawControlBasic
           mode={mode}
           handleParamChange={handleParamChange}
-          handleModeChange={handleModeChange}
-          addEventAction={addEventAction}
           drawingParams={drawingParams}
           opacity={opacity}
           setOpacity={handleOpacity}
           isTouch={isTouch}
         />
+        {isDrawingLine(mode) && (
+          <DrawControlLine
+            mode={mode}
+            handleParamChange={handleParamChange}
+            handleModeChange={handleModeChange}
+            addEventAction={addEventAction}
+            drawingParams={drawingParams}
+            isTouch={isTouch}
+          />
+        )}
         <DrawControlShape
           mode={mode}
           drawingParams={drawingParams}

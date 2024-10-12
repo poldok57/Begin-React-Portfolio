@@ -72,6 +72,9 @@ export class drawLine extends drawingHandler {
   }
   changeData(data: AllParams) {
     this.setDataGeneral(data.general);
+    if (data.path) {
+      this.path?.setParams(this.ctxTempory, data.path);
+    }
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
@@ -314,11 +317,29 @@ export class drawLine extends drawingHandler {
     clearCanvasByCtx(this.ctxTempory);
   }
 
+  // escape action
   actionAbort(): void {
+    if (this.path && this.withPath) {
+      if (this.pathIsClosed) {
+        this.path.closed = false;
+        this.pathIsClosed = false;
+        return;
+      } else {
+        if (this.path.cancelLastLine()) {
+          this.clearTemporyCanvas();
+          this.path.draw(this.ctxTempory);
+
+          const lastLine = this.path.getLastLine();
+          if (lastLine && lastLine.end) {
+            this.line.setStartCoordinates(lastLine.end);
+          }
+          return;
+        }
+      }
+    }
+
     this.clearTemporyCanvas();
     this.line.eraseLastCoordinates();
-    this.withPath = false;
-    this.path = null;
   }
 
   endAction(nextMode: string = DRAWING_MODES.DRAW) {

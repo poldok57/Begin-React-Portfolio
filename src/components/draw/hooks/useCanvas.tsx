@@ -147,6 +147,9 @@ export const useCanvas = ({
     currentParams = getParams();
     setMode(DRAWING_MODES.DRAW);
 
+    lineRef.current = null;
+    elementRef.current = null;
+
     // default drawing handler
     drawingRef.current = selectDrawingHandler(DRAWING_MODES.DRAW);
 

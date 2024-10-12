@@ -84,7 +84,14 @@ export const isDrawingAllLines = (mode: string) =>
   isDrawingLine(mode) || isDrawingFreehand(mode);
 export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
 
-const DEFAULT = { COLOR: "#ff0000", SIZE: 4, OPACITY: 1 };
+const DEFAULT = {
+  COLOR: "#ff0000",
+  SIZE: 4,
+  OPACITY: 1,
+  BORDER_COLOR: "#aaa",
+  PATH_COLOR: "#666",
+  TEXT_COLOR: "#404080",
+};
 
 export const mouseCircle: MouseCircle = {
   color: "rgba(255, 255, 0,0.8)",
@@ -131,6 +138,11 @@ export type ParamsText = {
   fontSize: number;
   rotation: number;
 };
+export type ParamsPath = {
+  filled: boolean;
+  color: string;
+  opacity: number;
+};
 export type AllParams = {
   mode: string;
   fixed: boolean;
@@ -139,7 +151,7 @@ export type AllParams = {
   shape: ParamsShape;
   text: ParamsText;
   border: ParamsGeneral;
-  path: ParamsGeneral;
+  path: ParamsPath;
 };
 export type GroupParams = {
   [key: string]:
@@ -148,6 +160,7 @@ export type GroupParams = {
     | ParamsGeneral
     | ParamsShape
     | ParamsText
+    | ParamsPath
     | null;
 };
 
@@ -187,7 +200,7 @@ export const DEFAULT_PARAMS: AllParams = {
   },
   text: {
     text: "",
-    color: "#404080",
+    color: DEFAULT.TEXT_COLOR,
     font: "Arial",
     bold: 100,
     italic: false,
@@ -195,14 +208,14 @@ export const DEFAULT_PARAMS: AllParams = {
     rotation: 0,
   },
   border: {
-    color: "#a0a0a0",
+    color: DEFAULT.BORDER_COLOR,
     lineWidth: 1,
     opacity: 1,
     interval: 0,
   },
   path: {
-    color: "#ff0000",
-    lineWidth: 1,
+    filled: false,
+    color: DEFAULT.PATH_COLOR,
     opacity: 1,
   },
 };

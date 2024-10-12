@@ -16,6 +16,7 @@ import { badgePosition, BORDER } from "../mouse-position";
 import { drawBadge } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
+import { ParamsPath } from "./canvas-defines";
 
 const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
@@ -93,12 +94,12 @@ export class CanvasPath {
         top = Math.min(top, line.end.y);
         right = Math.max(right, line.end.x);
         bottom = Math.max(bottom, line.end.y);
-      }
-      if (line.type === LineType.CURVE && line.coordinates) {
-        left = Math.min(left, line.coordinates.x);
-        top = Math.min(top, line.coordinates.y);
-        right = Math.max(right, line.coordinates.x);
-        bottom = Math.max(bottom, line.coordinates.y);
+        if (line.type === LineType.CURVE && line.coordinates) {
+          left = Math.min(left, (line.coordinates.x + line.end.x) / 2);
+          top = Math.min(top, (line.coordinates.y + line.end.y) / 2);
+          right = Math.max(right, (line.coordinates.x + line.end.x) / 2);
+          bottom = Math.max(bottom, (line.coordinates.y + line.end.y) / 2);
+        }
       }
     });
     return {
@@ -139,11 +140,10 @@ export class CanvasPath {
     ctx.globalAlpha = this.globalAlpha;
     ctx.moveTo(this.start.x, this.start.y);
 
-    this.lines.forEach((line, idx) => {
+    this.lines.forEach((line) => {
       ctx.lineWidth = line.lineWidth;
       if (line.strokeStyle) {
         ctx.strokeStyle = line.strokeStyle;
-        console.log(idx, " style", line.strokeStyle);
       }
       if (line.globalAlpha !== null && line.globalAlpha !== undefined) {
         ctx.globalAlpha = line.globalAlpha;
@@ -211,6 +211,22 @@ export class CanvasPath {
     );
   }
 
+  setParams(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
+    const { filled, color, opacity } = params;
+    const hasChanged =
+      this.filled !== filled ||
+      this.fillStyle !== color ||
+      this.globalAlpha !== opacity;
+    if (hasChanged) {
+      this.filled = filled;
+      this.fillStyle = color;
+      this.globalAlpha = opacity;
+
+      this.draw(ctx);
+    }
+    return hasChanged;
+  }
+
   addLine(line: LinePath) {
     const { strokeStyle, globalAlpha } = this.getLastParams();
 
@@ -235,6 +251,24 @@ export class CanvasPath {
     }
     this.lines.push(newLine);
     this.rectangle = this.getRectangle();
+  }
+
+  cancelLastLine() {
+    if (this.lines.length > 0) {
+      this.lines.pop();
+      // Recalculate the rectangle after removing the last line
+      this.rectangle = this.getRectangle();
+      this.angleFound = -1;
+      this.closed = false;
+      return true;
+    }
+    return false;
+  }
+  getLastLine() {
+    if (this.lines.length > 0) {
+      return this.lines[this.lines.length - 1];
+    }
+    return null;
   }
 
   setFillStyle(fillStyle: string | null = null) {
