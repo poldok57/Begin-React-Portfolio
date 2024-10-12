@@ -338,17 +338,6 @@ export const GroundSelection = React.forwardRef<
       >
         {typeListMode === "plan" && (
           <>
-            <div className="flex sticky top-1 right-1 justify-end w-full">
-              <div className="flex top-1 right-1 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-65">
-                <span className="text-sm font-semibold">
-                  Scale : {scale.toFixed(2)}
-                </span>
-                <span className="text-sm font-semibold text-gray-500">
-                  Size : {backgroundCanvasRef.current?.offsetWidth} x{" "}
-                  {backgroundCanvasRef.current?.offsetHeight}
-                </span>
-              </div>
-            </div>
             <div
               id={TOUCH_MESSAGE_ID}
               className="fixed right-2 bottom-2 p-2 text-white bg-gray-800 rounded md:block"

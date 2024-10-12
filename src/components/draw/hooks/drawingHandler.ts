@@ -20,9 +20,10 @@ import {
 import { isOnSquareBorder } from "../../../lib/square-position";
 
 export type returnMouseDown = {
-  toContinue: boolean;
-  toReset: boolean;
-  pointer: string | null;
+  toContinue?: boolean;
+  toReset?: boolean;
+  changeMode?: string;
+  pointer?: string | null;
 };
 
 export abstract class drawingHandler {

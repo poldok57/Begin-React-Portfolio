@@ -18,6 +18,7 @@ const DRAWING_ACTIONS = {
   INIT: "init",
   ABORT: "abort",
   VALID: "valid",
+  CLOSE_PATH: "closePath",
 };
 const IMAGE_ACTIONS = {
   IMAGE_RADIUS: "imageRadius",
@@ -34,6 +35,7 @@ export const DRAWING_MODES = {
   DRAW: "draw",
   LINE: "line",
   ARC: "arc",
+  PATH: "path",
   ERASE: "erase",
 
   CONTROL_PANEL: {
@@ -48,7 +50,7 @@ export const DRAWING_MODES = {
   ...SHAPE_TYPE,
 };
 
-const LINE_MODES = [DRAWING_MODES.LINE, DRAWING_MODES.ARC];
+const LINE_MODES = [DRAWING_MODES.LINE, DRAWING_MODES.ARC, DRAWING_MODES.PATH];
 const FREEHAND_MODES = [
   DRAWING_MODES.DRAW,
   DRAWING_MODES.ERASE,
@@ -137,6 +139,7 @@ export type AllParams = {
   shape: ParamsShape;
   text: ParamsText;
   border: ParamsGeneral;
+  path: ParamsGeneral;
 };
 export type GroupParams = {
   [key: string]:
@@ -145,7 +148,7 @@ export type GroupParams = {
     | ParamsGeneral
     | ParamsShape
     | ParamsText
-    | null; // Exemple avec une union de types
+    | null;
 };
 
 export interface ThingsToDraw {
@@ -196,5 +199,10 @@ export const DEFAULT_PARAMS: AllParams = {
     lineWidth: 1,
     opacity: 1,
     interval: 0,
+  },
+  path: {
+    color: "#ff0000",
+    lineWidth: 1,
+    opacity: 1,
   },
 };

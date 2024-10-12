@@ -87,6 +87,7 @@ export const hightLightMouseCursor = (
     basicCircle(ctx, coord, element.width);
     ctx.stroke();
   }
+  ctx.closePath();
 };
 /**
  * Function to draw a hatched circle on the canvas
@@ -128,7 +129,7 @@ export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
   context.fill();
   if (borderColor) context.strokeStyle = borderColor;
   context.stroke();
-
+  context.closePath();
   const hatchSpacing = radius > 12 ? Math.PI / 8 : Math.PI / 6;
 
   let startX: number, startY: number, endX: number, endY: number;
@@ -183,5 +184,6 @@ export const crossLine = (
   ctx.lineTo(center.x + width / 2, center.y);
 
   ctx.stroke();
+  ctx.closePath();
   ctx.setLineDash([]);
 };

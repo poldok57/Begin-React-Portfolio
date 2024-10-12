@@ -1,7 +1,7 @@
 /**
  * Part of the canvas module that contains the functions to draw a dashed rectangle on the canvas
  */
-import { Area } from "./types";
+import { Area, Rectangle } from "./types";
 
 /**
  * Function to draw a dashed rectangle on the canvas
@@ -10,17 +10,27 @@ import { Area } from "./types";
  */
 
 export const drawDashedRectangle = (
-  ctx: CanvasRenderingContext2D,
-  bounds: Area
+  ctx: CanvasRenderingContext2D | null,
+  bounds: Area | Rectangle | null,
+  globalAlpha: number = 0.8
 ) => {
-  if (!bounds) return;
+  if (!bounds || !ctx) return;
   const alpha = ctx.globalAlpha;
   const interval = 5;
-  ctx.globalAlpha = 0.8;
+  ctx.globalAlpha = globalAlpha;
   ctx.beginPath();
   ctx.strokeStyle = "#201010";
   ctx.lineWidth = 0.5;
-  let { x, y, width, height } = bounds;
+  let { width, height } = bounds;
+  let x = 0,
+    y = 0;
+  if ("left" in bounds && "top" in bounds) {
+    x = bounds.left;
+    y = bounds.top;
+  } else {
+    x = bounds.x;
+    y = bounds.y;
+  }
 
   const overage = interval * 1.6;
 
@@ -30,7 +40,7 @@ export const drawDashedRectangle = (
   ctx.beginPath();
   ctx.rect(x, y, width, height);
   ctx.fill();
-  ctx.beginPath();
+  ctx.closePath();
 
   x -= 1;
   y -= 1;
@@ -53,6 +63,7 @@ export const drawDashedRectangle = (
       ctx.beginPath();
       ctx.arc(x + w, y + h, 4, 0, 2 * Math.PI);
       ctx.stroke();
+      ctx.closePath();
     }
   }
   ctx.globalAlpha = alpha;

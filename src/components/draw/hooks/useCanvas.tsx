@@ -278,6 +278,7 @@ export const useCanvas = ({
 
     switch (eventAction) {
       case DRAWING_MODES.INIT:
+        drawingRef.current?.actionAbort();
         generalInitialisation();
         clearCanvasByCtx(canvasRef.current.getContext("2d"));
         clearTemporyCanvas();
@@ -366,6 +367,11 @@ export const useCanvas = ({
           selectionRef.current.blackWhiteSelection(value as boolean);
         }
         break;
+      case DRAWING_MODES.CLOSE_PATH:
+        if (lineRef.current !== null) {
+          lineRef.current?.actionClosePath();
+        }
+        break;
       default:
         console.error("Action not found : ", eventAction);
     }
@@ -398,7 +404,7 @@ export const useCanvas = ({
 
     if (!drawingRef.current) return;
     drawingRef.current.setType(currentParams.mode);
-    const { toContinue, toReset, pointer } =
+    const { toContinue, toReset, pointer, changeMode } =
       drawingRef.current.actionMouseDown(event);
     if (toContinue) {
       extendMouseEvent();
@@ -414,6 +420,9 @@ export const useCanvas = ({
 
       drawingRef.current = selectDrawingHandler(chgtMode);
       drawingRef.current.initData(currentParams);
+    }
+    if (changeMode) {
+      setMode(changeMode);
     }
     if (pointer && canvasTemporyRef.current) {
       canvasTemporyRef.current.style.cursor = pointer;

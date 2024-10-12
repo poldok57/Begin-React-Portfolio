@@ -1,31 +1,34 @@
 import { getMouseCoordinates } from "./canvas-tools";
 import { basicLine, crossLine } from "./canvas-basic";
-import { Coordinate } from "./types";
+import { Coordinate, LinePath, LineType } from "./types";
 
-export class CanvasLine {
+export class CanvasLine implements LinePath {
   mCanvas: HTMLCanvasElement | null = null;
   context: CanvasRenderingContext2D | null = null;
+  type: LineType = LineType.LINE;
   coordinates: Coordinate | null = null;
-  startCoordinates: Coordinate | null;
-  endCoordinates: Coordinate | null;
-  globalAlpha: string | null = null;
+  start: Coordinate | null = null;
+  end: Coordinate | null = null;
   strokeStyle: string | null = null;
   lineWidth: number = 0;
-  drawing: boolean;
+  globalAlpha: number | null = null;
 
   constructor(canvas: HTMLCanvasElement | null = null) {
     this.setCanvas(canvas);
 
     this.coordinates = { x: 0, y: 0 };
-    this.startCoordinates = null;
-    this.endCoordinates = null;
-    this.drawing = false;
+    this.start = null;
+    this.end = null;
   }
 
   setCanvas(canvas: HTMLCanvasElement | null = null) {
     if (!canvas) return;
     this.mCanvas = canvas;
     this.context = canvas.getContext("2d");
+  }
+
+  setType(type: LineType) {
+    this.type = type;
   }
 
   setCoordinates(event: MouseEvent, canvas: HTMLCanvasElement | null = null) {
@@ -44,45 +47,54 @@ export class CanvasLine {
   }
 
   setStartCoordinates(coord: Coordinate | null = null) {
-    this.startCoordinates = coord || this.coordinates;
+    this.start = coord || this.coordinates;
   }
 
   getStartCoordinates() {
-    return this.startCoordinates;
+    return this.start;
   }
   eraseStartCoordinates() {
-    this.startCoordinates = null;
-    this.endCoordinates = null;
+    this.start = null;
+    this.end = null;
   }
 
   eraseLastCoordinates() {
-    if (this.endCoordinates) {
-      this.endCoordinates = null;
+    if (this.end) {
+      this.end = null;
       return;
     }
-    this.startCoordinates = null;
+    this.start = null;
   }
 
   setEndCoordinates(coord = null) {
-    this.endCoordinates = coord || this.coordinates;
+    this.end = coord || this.coordinates;
   }
   getEndCoordinates() {
-    return this.endCoordinates;
+    return this.end;
   }
 
   setStartFromEnd() {
-    this.startCoordinates = this.endCoordinates;
-    this.endCoordinates = null;
+    this.start = this.end;
+    this.end = null;
   }
 
-  setGlobalAlpha(alpha: string | null = null) {
+  setGlobalAlpha(alpha: number | null = null) {
     this.globalAlpha = alpha;
+  }
+  getGlobalAlpha() {
+    return this.globalAlpha;
   }
   setLineWidth(width: number) {
     this.lineWidth = width;
   }
+  getLineWidth() {
+    return this.lineWidth;
+  }
   setStrokeStyle(color: string) {
     this.strokeStyle = color;
+  }
+  getStrokeStyle() {
+    return this.strokeStyle;
   }
 
   /**
@@ -90,27 +102,26 @@ export class CanvasLine {
    * @param {MouseEvent} event
    * @param {HTMLCanvasElement} canvas
    */
-  drawLine(context: CanvasRenderingContext2D | null = null) {
-    if (context === null) {
-      context = this.context;
+  setLine() {
+    if (this.getStartCoordinates() === null) {
+      // set first coordinates
+      this.setStartCoordinates();
+      return false;
     }
 
-    const start = this.startCoordinates;
-    const end = this.coordinates; // start for next segment
-    this.setStartCoordinates(end);
-    if (start !== null && end !== null && context !== null) {
-      basicLine(context, start, end);
-      return true;
+    if (this.coordinates === null) {
+      return false;
     }
-    return false;
+
+    this.setEndCoordinates(); // start for next segment
+    return true;
   }
 
   showLine(context: CanvasRenderingContext2D | null = null) {
     if (context === null) {
       context = this.context;
     }
-    if (context === null || !this.startCoordinates || !this.coordinates)
-      return false;
+    if (context === null || !this.start || !this.coordinates) return false;
 
     if (this.strokeStyle) {
       context.strokeStyle = this.strokeStyle;
@@ -118,17 +129,12 @@ export class CanvasLine {
     if (this.lineWidth) {
       context.lineWidth = this.lineWidth;
     }
-    basicLine(context, this.startCoordinates, this.coordinates);
+    basicLine(context, this.start, this.coordinates);
   }
 
-  drawArc(context: CanvasRenderingContext2D | null = null) {
-    if (context === null) {
-      context = this.context;
-    }
-
-    const start = this.getStartCoordinates();
-
-    if (!start) {
+  setArc() {
+    if (this.getStartCoordinates() === null) {
+      // set first coordinates
       this.setStartCoordinates();
       return false;
     }
@@ -168,7 +174,6 @@ export class CanvasLine {
       context.moveTo(start.x, start.y);
       context.quadraticCurveTo(current.x, current.y, end.x, end.y);
       context.stroke();
-      context.closePath();
     }
 
     if (withCross) {
@@ -183,5 +188,23 @@ export class CanvasLine {
     }
 
     return true;
+  }
+
+  setPositions() {
+    if (this.type === LineType.CURVE) {
+      return this.setArc();
+    }
+    return this.setLine();
+  }
+
+  show(
+    context: CanvasRenderingContext2D | null = null,
+    withCross: boolean = false
+  ) {
+    if (this.type === LineType.CURVE) {
+      this.showArc(context, withCross);
+    } else {
+      this.showLine(context);
+    }
   }
 }

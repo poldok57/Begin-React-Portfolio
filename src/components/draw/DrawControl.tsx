@@ -289,6 +289,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         <DrawControlLine
           mode={mode}
           handleParamChange={handleParamChange}
+          handleModeChange={handleModeChange}
+          addEventAction={addEventAction}
           drawingParams={drawingParams}
           opacity={opacity}
           setOpacity={handleOpacity}

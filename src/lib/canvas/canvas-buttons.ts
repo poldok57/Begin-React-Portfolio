@@ -29,6 +29,7 @@ export const drawCheckMark = (
   ctx.globalAlpha = opacity;
   ctx.lineWidth = 2; // width of the check mark
   ctx.stroke();
+  ctx.closePath();
 };
 /**
  * Function to draw a circle on the canvas
@@ -54,6 +55,7 @@ const drawDisk = (
   ctx.fillStyle = color;
   ctx.globalAlpha = opacity;
   ctx.fill();
+  ctx.closePath();
 };
 
 export const drawBadge = (
@@ -64,7 +66,13 @@ export const drawBadge = (
   opacity: number
 ) => {
   // cercle parameters
-  drawDisk(ctx, { x, y }, radius * 2, CIRCLE_COLOR, opacity);
+  drawDisk(
+    ctx,
+    { x, y },
+    radius * 2,
+    opacity === 1 ? "white" : CIRCLE_COLOR,
+    opacity
+  );
 
   // draw the check mark
   drawCheckMark(ctx, x - 1 - radius / 2, y, radius + 1, opacity);
@@ -155,6 +163,7 @@ export function drawCircularArrow(
 
   ctx.lineWidth = Math.min(5, radiusArrow / 10);
   ctx.stroke();
+  ctx.closePath();
 
   // Déterminer l'angle de la tangente à la fin de l'arc
   const arrowAngle = clockwise ? endAngle : endAngle - 2 * Math.PI;

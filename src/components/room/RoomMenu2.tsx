@@ -113,7 +113,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           },
           text
         );
-        console.log("deleteSelectedTable");
         addValidationValidAction(deleteSelectedTable);
         event.preventDefault();
         const selectedTables = tables.filter((table) => table.selected);
@@ -132,7 +131,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   }, []);
 
   useEffect(() => {
-    console.log("typeListMode", typeListMode);
     setIsPlanMode(typeListMode === "plan");
   }, [typeListMode]);
 
@@ -187,23 +185,25 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               </>
             )}
             <li>
-              <a>View type</a>
-              <li>
-                <a
-                  className={typeListMode === "plan" ? "active" : ""}
-                  onClick={() => setTypeListMode("plan")}
-                >
-                  Floor plan
-                </a>
-              </li>
-              <li>
-                <a
-                  className={typeListMode === "list" ? "active" : ""}
-                  onClick={() => setTypeListMode("list")}
-                >
-                  List tables
-                </a>
-              </li>
+              <ul>
+                <a>View type</a>
+                <li>
+                  <a
+                    className={typeListMode === "plan" ? "active" : ""}
+                    onClick={() => setTypeListMode("plan")}
+                  >
+                    Floor plan
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className={typeListMode === "list" ? "active" : ""}
+                    onClick={() => setTypeListMode("list")}
+                  >
+                    List tables
+                  </a>
+                </li>
+              </ul>
             </li>
           </ul>
         </div>

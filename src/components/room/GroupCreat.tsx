@@ -88,8 +88,8 @@ export const GroupCreat = ({
       setColors(selectedGroup?.colors ?? DEFAULT_COLORS);
       setSettings(selectedGroup?.settings ?? null);
       setTableType(selectedGroup?.type ?? TableType.poker);
-    } else {
-      console.error("Group not found");
+    } else if (selectId !== "new" && selectId !== "-") {
+      console.log("Group not found", selectId);
     }
   };
   const changeColor = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,8 +146,9 @@ export const GroupCreat = ({
           <select
             className="w-full max-w-xs select select-primary"
             onChange={(e) => selectGroup(e.target.value)}
+            value={currentId ?? ""}
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               Choose or creat a group?
             </option>
             <option value="new">New group</option>
@@ -160,7 +161,6 @@ export const GroupCreat = ({
                   backgroundColor: group.colors.fillColor,
                   color: group.colors.textColor,
                 }}
-                selected={group.id === currentId}
               >
                 {group.title}
               </option>

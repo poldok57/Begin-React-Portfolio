@@ -8,10 +8,11 @@ export const getMouseCoordinates: (
 
   const rect = canvas.getBoundingClientRect();
 
-  return {
+  const coord: Coordinate = {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top,
-  } as Coordinate;
+  };
+  return coord;
 };
 
 /**

@@ -1,11 +1,11 @@
-import { mouseIsInsideComponent } from "../../../lib/mouse-position";
-import { Coordinate } from "../../../lib/canvas/types";
+import { mouseIsInsideComponent } from "@/lib/mouse-position";
+import { Coordinate, LinePath, LineType } from "@/lib/canvas/types";
 import {
   drawingCircle,
   drawPoint,
   hightLightMouseCursor,
-} from "../../../lib/canvas/canvas-basic";
-import { CanvasLine } from "../../../lib/canvas/CanvasLine";
+} from "@/lib/canvas/canvas-basic";
+import { CanvasLine } from "@/lib/canvas/CanvasLine";
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 
 import {
@@ -15,13 +15,18 @@ import {
   AllParams,
   isDrawingLine,
 } from "../../../lib/canvas/canvas-defines";
-import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { CanvasPath } from "@/lib/canvas/CanvasPath";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
 export class drawLine extends drawingHandler {
   private line: CanvasLine;
+  private path: CanvasPath | null = null;
+  private withPath: boolean = false;
+  private pathIsClosed: boolean = false;
+  private lastCoordinates: Coordinate | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
@@ -29,6 +34,15 @@ export class drawLine extends drawingHandler {
     this.ctxTempory = null;
 
     this.setType(DRAWING_MODES.LINE);
+  }
+
+  setType(type: string) {
+    super.setType(type);
+    if (type === DRAWING_MODES.ARC) {
+      this.line.setType(LineType.CURVE);
+    } else {
+      this.line.setType(LineType.LINE);
+    }
   }
 
   setCoordinates(event: MouseEvent) {
@@ -83,6 +97,20 @@ export class drawLine extends drawingHandler {
     this.line.setStartCoordinates(coord);
   }
 
+  initPath = () => {
+    this.path = new CanvasPath(this.line as LinePath);
+    this.withPath = true;
+    this.pathIsClosed = false;
+  };
+
+  addLineToPath() {
+    if (!this.path) {
+      this.initPath();
+    }
+    if (this.path) {
+      this.path.addLine(this.line as LinePath);
+    }
+  }
   /**
    * Function to show the line on the tempory canvas
    * @param {DRAWING_MODES} mode - mode of the drawing
@@ -98,6 +126,9 @@ export class drawLine extends drawingHandler {
     }
 
     this.clearTemporyCanvas();
+    if (this.withPath && this.path) {
+      this.path.draw(this.ctxTempory);
+    }
     switch (mode) {
       case DRAWING_MODES.LINE:
         this.line.showLine(this.ctxTempory);
@@ -114,7 +145,6 @@ export class drawLine extends drawingHandler {
   }
   /**
    * Function follow the cursor on the canvas
-   * @param {DRAWING_MODES} mode
    */
   followCursor() {
     const ctxMouse = this.ctxTempory;
@@ -124,42 +154,62 @@ export class drawLine extends drawingHandler {
     }
 
     this.clearTemporyCanvas();
-    ctxMouse.globalAlpha = 0.4;
-
     let cursorType = "default";
-    const coord = this.line.getCoordinates() as Coordinate;
 
-    switch (this.getType()) {
-      case DRAWING_MODES.ARC:
-        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        this.line.showArc(this.ctxTempory, true);
-        cursorType = "crosshair";
-        break;
-      case DRAWING_MODES.LINE:
-        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
-        cursorType = "crosshair";
-        if (this.line.getStartCoordinates() == null) {
-          drawPoint({
-            context: ctxMouse,
-            coordinate: this.line.getCoordinates() as Coordinate,
-          } as drawingCircle);
-
-          break;
+    if (this.withPath && this.path) {
+      this.path.draw(ctxMouse);
+      // action after the path is closed
+      if (this.pathIsClosed) {
+        if (this.path.isInRectangle(this.line.getCoordinates() as Coordinate)) {
+          cursorType = "pointer";
+          if (this.path.findAngle(this.line.getCoordinates() as Coordinate)) {
+            cursorType = "move";
+          }
         }
-        this.clearTemporyCanvas();
-        this.line.showLine(this.ctxTempory);
-        break;
+        return cursorType;
+      }
     }
 
-    // ctxMouse.canvas.style.cursor = cursorType;
+    const coord = this.line.getCoordinates() as Coordinate;
+    ctxMouse.globalAlpha = 0.4;
+    hightLightMouseCursor(ctxMouse, coord, mouseCircle);
+    cursorType = "crosshair";
+    if (this.line.getStartCoordinates() == null) {
+      // first point of line show a point
+      drawPoint({
+        context: ctxMouse,
+        coordinate: this.line.getCoordinates() as Coordinate,
+      } as drawingCircle);
+    } else {
+      this.line.show(this.ctxTempory, true);
+    }
     return cursorType as string;
   }
+
+  /**
+   * Function follow the cursor on the canvas
+   */
+  followCursorOnPath(btnPressed: boolean) {
+    if (this.path) {
+      return this.path.mouseOverPath(
+        this.ctxTempory,
+        this.line.getCoordinates() as Coordinate,
+        btnPressed
+      );
+    }
+    return "default";
+  }
+
   /**
    * Function who recieve the mouse move event
    */
   actionMouseMove(event: MouseEvent) {
     this.line.setCoordinates(event);
 
+    if (this.withPath && this.pathIsClosed) {
+      const btnPressed = event.buttons === 1;
+      return this.followCursorOnPath(btnPressed) as string;
+    }
     return this.followCursor() as string;
   }
 
@@ -182,24 +232,73 @@ export class drawLine extends drawingHandler {
     this.setCoordinates(event);
     let toContinue = false;
     const pointer = "none";
+    let changeMode = null;
 
-    switch (this.getType()) {
-      case DRAWING_MODES.LINE:
-        if (this.line.drawLine()) {
-          this.saveCanvasPicture(this.line.getCoordinates() as Coordinate);
+    if (this.withPath) {
+      if (this.pathIsClosed && this.path) {
+        if (
+          this.path.mouseDown(
+            this.ctxTempory,
+            this.line.getCoordinates() as Coordinate
+          )
+        ) {
+          this.path.draw(this.context, false);
+          this.withPath = false;
+          this.pathIsClosed = false;
+          this.saveCanvasPicture(null);
+          this.line.eraseStartCoordinates();
+          return {
+            toContinue: true,
+            toReset: false,
+            pointer: "move",
+            changeMode: DRAWING_MODES.LINE,
+          };
         }
-        toContinue = true;
-        break;
-      case DRAWING_MODES.ARC:
-        if (this.line.drawArc()) {
-          this.line.showArc(null, false);
-          this.line.setStartFromEnd();
-          this.saveCanvasPicture(this.line.getStartCoordinates() as Coordinate);
+      } else {
+        switch (this.getType()) {
+          case DRAWING_MODES.LINE:
+          case DRAWING_MODES.ARC:
+            if (this.line.setPositions()) {
+              this.line.show(this.ctxTempory);
+              this.addLineToPath();
+              this.line.setStartFromEnd();
+            }
+
+            this.path?.draw(this.ctxTempory);
+
+            toContinue = true;
+            break;
         }
-        toContinue = true;
-        break;
+      }
+    } else {
+      switch (this.getType()) {
+        case DRAWING_MODES.PATH:
+          if (!this.withPath) {
+            // starting mode path
+            this.line.setStartCoordinates();
+            this.initPath();
+          }
+          changeMode = DRAWING_MODES.LINE;
+          break;
+        case DRAWING_MODES.LINE:
+        case DRAWING_MODES.ARC:
+          if (this.line.setPositions()) {
+            this.line.show();
+            this.line.setStartFromEnd();
+            this.saveCanvasPicture(
+              this.line.getStartCoordinates() as Coordinate
+            );
+          }
+          toContinue = true;
+          break;
+      }
     }
-    return { toContinue, toReset: false, pointer } as returnMouseDown;
+    return {
+      toContinue,
+      toReset: false,
+      pointer,
+      changeMode,
+    } as returnMouseDown;
   }
   /**
    * Function to stop drawing on the canvas
@@ -209,12 +308,17 @@ export class drawLine extends drawingHandler {
   }
 
   actionMouseLeave() {
+    if (this.withPath && this.pathIsClosed) {
+      return this.followCursorOnPath(false) as string;
+    }
     clearCanvasByCtx(this.ctxTempory);
   }
 
   actionAbort(): void {
     this.clearTemporyCanvas();
     this.line.eraseLastCoordinates();
+    this.withPath = false;
+    this.path = null;
   }
 
   endAction(nextMode: string = DRAWING_MODES.DRAW) {
@@ -223,5 +327,15 @@ export class drawLine extends drawingHandler {
       this.line.eraseLastCoordinates();
     }
     clearCanvasByCtx(this.ctxTempory);
+  }
+
+  actionClosePath() {
+    if (this.withPath && this.path) {
+      // console.log("close path", this.path);
+      this.path.close();
+      this.pathIsClosed = true;
+      this.clearTemporyCanvas();
+      this.path.draw(this.ctxTempory);
+    }
   }
 }
