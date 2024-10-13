@@ -105,18 +105,14 @@ export class drawFreehand extends drawingHandler {
     switch (this.getType()) {
       case DRAWING_MODES.DRAW:
         hightLightMouseCursor(ctxTempory, coord, mouseCircle);
-        // ctxTempory.lineWidth = this.data.general.lineWidth;
-        // ctxTempory.strokeStyle = this.data.general.color;
         drawPoint({
           context: ctxTempory,
           coordinate: coord,
         } as drawingCircle);
-        this.freeCurve.drawCurve(ctxTempory);
+        this.freeCurve.draw(ctxTempory);
         break;
       case DRAWING_MODES.ERASE:
         ctxTempory.globalAlpha = 0.7;
-        // ctxTempory.lineWidth = this.data.general.lineWidth;
-        // ctxTempory.strokeStyle = this.data.general.color;
         hightLightMouseCursor(ctxTempory, coord, {
           ...mouseCircle,
           color: "pink",
@@ -192,7 +188,7 @@ export class drawFreehand extends drawingHandler {
 
   endCurve() {
     if (this.getType() === DRAWING_MODES.DRAW) {
-      this.freeCurve.drawCurve(this.context as CanvasRenderingContext2D);
+      this.freeCurve.draw(this.context as CanvasRenderingContext2D);
       this.freeCurve.clearPoints();
     }
   }

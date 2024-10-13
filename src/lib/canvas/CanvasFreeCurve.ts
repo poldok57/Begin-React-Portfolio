@@ -1,13 +1,21 @@
 import { Coordinate } from "./types";
 import { basicLine } from "./canvas-basic";
 import { throttle } from "@/lib/utils/throttle";
-export class CanvasFreeCurve {
+import { CanvasPoints } from "./CanvasPoints";
+
+const MARGIN = 5;
+const DELAY = 50;
+
+export class CanvasFreeCurve extends CanvasPoints {
   private points: Coordinate[] = [];
   private globalAlpha: number = 1;
   private strokeStyle: string = "#000";
   private lineWidth: number = 1;
 
-  constructor() {}
+  constructor() {
+    super();
+    this.start = { x: 0, y: 0 };
+  }
 
   clearPoints() {
     this.points = [];
@@ -25,7 +33,7 @@ export class CanvasFreeCurve {
     lineWidth?: number;
   }) {
     this.points = [];
-    this.points.push(firstPoint);
+    this.start = firstPoint;
     this.globalAlpha = globalAlpha || 1;
     this.strokeStyle = strokeStyle || "#000";
     this.lineWidth = lineWidth || 1;
@@ -39,23 +47,23 @@ export class CanvasFreeCurve {
     // Utilisation de throttle pour limiter la fréquence d'ajout de points
     const throttledAddPoint = throttle((point: Coordinate) => {
       this.points.push(point);
-    }, 50); // 50ms de délai
+    }, DELAY); // 50ms de délai
 
     throttledAddPoint(point);
   }
 
-  drawCurve(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D) {
     if (this.points.length < 2) return;
     if (this.points.length === 2) {
       basicLine(ctx, this.points[0], this.points[1]);
       return;
     }
-    const MARGIN = 5;
+
     // Calcul d'une suite de courbes passant près de tous les points avec une marge maximale
     ctx.beginPath();
-    ctx.moveTo(this.points[0].x, this.points[0].y);
+    ctx.moveTo(this.start.x, this.start.y);
 
-    for (let i = 1; i < this.points.length - 2; i += 2) {
+    for (let i = 0; i < this.points.length - 2; i += 2) {
       const xc = (this.points[i].x + this.points[i + 1].x) / 2;
       const yc = (this.points[i].y + this.points[i + 1].y) / 2;
 
@@ -94,8 +102,11 @@ export class CanvasFreeCurve {
       };
 
       if (
-        distanceToLine(this.points[i], this.points[i - 1], { x: xc, y: yc }) <=
-        MARGIN
+        distanceToLine(
+          this.points[i],
+          i === 0 ? this.start : this.points[i - 1],
+          { x: xc, y: yc }
+        ) <= MARGIN
       ) {
         ctx.quadraticCurveTo(this.points[i].x, this.points[i].y, xc, yc);
       } else {

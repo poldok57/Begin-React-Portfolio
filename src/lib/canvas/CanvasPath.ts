@@ -4,22 +4,9 @@
  * This module provides functions to draw and manipulate paths on a canvas.
  */
 
-import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
-import {
-  Coordinate,
-  Area,
-  LinePath,
-  LineType,
-  ArgsMouseOnShape,
-} from "./types";
-import { badgePosition, BORDER } from "../mouse-position";
-import { drawCornerButton } from "./canvas-buttons";
-import { isOnSquareBorder } from "@/lib/square-position";
-import { throttle } from "@/lib/utils/throttle";
+import { Coordinate, LinePath, LineType } from "./types";
 import { ParamsPath } from "./canvas-defines";
-
-const MARGIN = 10;
-const DEFAULT_OPACITY = 0.5;
+import { CanvasPoints } from "./CanvasPoints";
 
 const roundCoordinates = (
   coord: Coordinate | null | undefined
@@ -33,19 +20,14 @@ const roundCoordinates = (
   };
 };
 
-export class CanvasPath {
-  start: Coordinate;
-  rectangle?: Area;
+export class CanvasPath extends CanvasPoints {
   closed: boolean;
   filled: boolean;
   fillStyle: string;
   globalAlpha: number;
-  lines: LinePath[];
-  angleFound: number;
-  lastMousePosition: Coordinate | null;
-  lastButtonOpacity: number = DEFAULT_OPACITY;
 
   constructor(line: LinePath) {
+    super();
     if (!line.coordinates) {
       throw new Error("Line coordinates are required");
     }
@@ -56,9 +38,6 @@ export class CanvasPath {
     this.filled = false;
     this.fillStyle = "gray";
     this.globalAlpha = 1;
-    this.lines = [];
-    this.angleFound = -1;
-    this.lastMousePosition = null;
   }
 
   private drawLine(ctx: CanvasRenderingContext2D, line: LinePath) {
@@ -82,39 +61,11 @@ export class CanvasPath {
     ctx.stroke();
   }
 
-  private getRectangle(): Area {
-    let left = this.start.x;
-    let top = this.start.y;
-    let right = this.start.x;
-    let bottom = this.start.y;
-
-    this.lines.forEach((line) => {
-      if (line.end) {
-        left = Math.min(left, line.end.x);
-        top = Math.min(top, line.end.y);
-        right = Math.max(right, line.end.x);
-        bottom = Math.max(bottom, line.end.y);
-        if (line.type === LineType.CURVE && line.coordinates) {
-          left = Math.min(left, (line.coordinates.x + line.end.x) / 2);
-          top = Math.min(top, (line.coordinates.y + line.end.y) / 2);
-          right = Math.max(right, (line.coordinates.x + line.end.x) / 2);
-          bottom = Math.max(bottom, (line.coordinates.y + line.end.y) / 2);
-        }
-      }
-    });
-    return {
-      x: left,
-      y: top,
-      width: right - left,
-      height: bottom - top,
-    };
-  }
-
   private getLastParams() {
     let strokeStyle: string = "black";
     let globalAlpha: number = this.globalAlpha;
 
-    this.lines.forEach((line) => {
+    (this.items as LinePath[]).forEach((line) => {
       if (line.strokeStyle) {
         strokeStyle = line.strokeStyle;
       }
@@ -140,7 +91,7 @@ export class CanvasPath {
     ctx.globalAlpha = this.globalAlpha;
     ctx.moveTo(this.start.x, this.start.y);
 
-    this.lines.forEach((line) => {
+    (this.items as LinePath[]).forEach((line) => {
       ctx.lineWidth = line.lineWidth;
       if (line.strokeStyle) {
         ctx.strokeStyle = line.strokeStyle;
@@ -170,45 +121,13 @@ export class CanvasPath {
       ctx.fill();
     }
 
-    this.rectangle = this.getRectangle();
+    this.area = this.getArea();
 
-    if (withDashedRectangle && this.lines.length > 1 && this.rectangle) {
+    if (withDashedRectangle && this.items.length > 1 && this.area) {
       this.drawDashedRectangle(ctx);
     }
 
     return true;
-  }
-
-  drawCornerButton(ctx: CanvasRenderingContext2D | null, opacity: number) {
-    if (!ctx || !this.rectangle) {
-      return;
-    }
-    const badge = badgePosition(this.rectangle, ctx.canvas.width);
-    if (badge) {
-      drawCornerButton(
-        ctx,
-        badge.centerX,
-        badge.centerY,
-        opacity === 1 ? badge.radius * 1.6 : badge.radius,
-        opacity
-      );
-      this.lastButtonOpacity = opacity;
-    }
-  }
-
-  drawDashedRectangle(
-    ctx: CanvasRenderingContext2D | null,
-    mouseOnRectangle: string | null = null
-  ) {
-    if (!ctx || !this.rectangle) {
-      return;
-    }
-    drawDashedRectangle(ctx, this.rectangle, 0.35);
-
-    this.drawCornerButton(
-      ctx,
-      mouseOnRectangle === BORDER.ON_BUTTON ? 1 : DEFAULT_OPACITY
-    );
   }
 
   setParams(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
@@ -248,26 +167,21 @@ export class CanvasPath {
     ) {
       newLine.globalAlpha = line.globalAlpha;
     }
-    this.lines.push(newLine);
-    this.rectangle = this.getRectangle();
+    this.addItem(newLine);
+    this.area = this.getArea();
   }
 
   cancelLastLine() {
-    if (this.lines.length > 0) {
-      this.lines.pop();
-      // Recalculate the rectangle after removing the last line
-      this.rectangle = this.getRectangle();
-      this.angleFound = -1;
+    if (this.items.length > 0) {
+      this.cancelLastItem();
       this.closed = false;
       return true;
     }
     return false;
   }
+
   getLastLine() {
-    if (this.lines.length > 0) {
-      return this.lines[this.lines.length - 1];
-    }
-    return null;
+    return this.getLastItem();
   }
 
   setFillStyle(fillStyle: string | null = null) {
@@ -287,189 +201,28 @@ export class CanvasPath {
   }
 
   close() {
-    if (this.lines.length > 0) {
-      const lastLine = this.lines[this.lines.length - 1];
-      if (
-        lastLine.type === LineType.CURVE &&
-        lastLine.end &&
-        Math.abs(lastLine.end.x - this.start.x) < MARGIN &&
-        Math.abs(lastLine.end.y - this.start.y) < MARGIN
-      ) {
-        const dx = this.start.x - lastLine.end.x;
-        const dy = this.start.y - lastLine.end.y;
-        lastLine.end = {
+    if (this.items.length > 0) {
+      const lastItem: LinePath | null = this.getLastItem() as LinePath;
+      if (lastItem && lastItem.type === LineType.CURVE && lastItem.end) {
+        const dx = this.start.x - lastItem.end.x;
+        const dy = this.start.y - lastItem.end.y;
+        lastItem.end = {
           x: this.start.x,
           y: this.start.y,
         };
-
-        if (lastLine.coordinates) {
-          lastLine.coordinates = {
-            x: lastLine.coordinates.x + dx / 2,
-            y: lastLine.coordinates.y + dy / 2,
+        if (lastItem.coordinates) {
+          lastItem.coordinates = {
+            x: lastItem.coordinates.x + dx / 2,
+            y: lastItem.coordinates.y + dy / 2,
           };
         }
       }
     }
 
     this.closed = true;
-    // console.log("closed", this);
   }
 
   isClosed() {
     return this.closed;
-  }
-
-  isInRectangle(coord: Coordinate): boolean {
-    if (!this.rectangle) {
-      return false;
-    }
-    return (
-      coord.x >= this.rectangle.x &&
-      coord.x <= this.rectangle.x + this.rectangle.width &&
-      coord.y >= this.rectangle.y &&
-      coord.y <= this.rectangle.y + this.rectangle.height
-    );
-  }
-
-  findAngle(coord: Coordinate): boolean {
-    // Vérifier le point de départ
-    if (
-      Math.abs(this.start.x - coord.x) < MARGIN &&
-      Math.abs(this.start.y - coord.y) < MARGIN
-    ) {
-      this.angleFound = 0; // 1 pour le point de départ (0 + 1)
-      return true;
-    }
-
-    // Vérifier les points de fin de chaque ligne
-    for (let i = 0; i < this.lines.length; i++) {
-      const line = this.lines[i];
-      if (line.end) {
-        if (
-          Math.abs(line.end.x - coord.x) < MARGIN &&
-          Math.abs(line.end.y - coord.y) < MARGIN
-        ) {
-          this.angleFound = i + 1; // i + 2 car i commence à 0 et on ajoute 1
-          return true;
-        }
-      }
-    }
-
-    // Aucun angle trouvé
-    this.angleFound = -1;
-    return false;
-  }
-
-  moveAngle(newCoord: Coordinate) {
-    if (this.angleFound === 0) {
-      this.start = newCoord;
-      this.rectangle = this.getRectangle();
-      return true;
-    }
-    if (this.angleFound > 0 && this.angleFound <= this.lines.length) {
-      this.lines[this.angleFound - 1].end = { ...newCoord };
-      this.rectangle = this.getRectangle();
-      return true;
-    }
-    return false;
-  }
-
-  move(offset: Coordinate) {
-    this.start.x += offset.x;
-    this.start.y += offset.y;
-    this.lines.forEach((line) => {
-      if (line.end) {
-        line.end.x += offset.x;
-        line.end.y += offset.y;
-      }
-      if (line.coordinates) {
-        line.coordinates.x += offset.x;
-        line.coordinates.y += offset.y;
-      }
-    });
-    if (this.rectangle) {
-      this.rectangle.x += offset.x;
-      this.rectangle.y += offset.y;
-    }
-    this.angleFound = -1;
-  }
-
-  mouseDown(ctx: CanvasRenderingContext2D | null, mousePosition: Coordinate) {
-    this.lastMousePosition = mousePosition;
-    if (this.rectangle) {
-      const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
-      if (mouseOnRectangle === BORDER.ON_BUTTON) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  throttleMovePath = throttle(
-    (ctx: CanvasRenderingContext2D | null, newMousePosition: Coordinate) => {
-      if (this.lastMousePosition) {
-        const coord = { ...newMousePosition } as Coordinate;
-        coord.x = Math.round(coord.x - this.lastMousePosition.x);
-        coord.y = Math.round(coord.y - this.lastMousePosition.y);
-        ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.move(coord);
-        this.draw(ctx);
-        this.lastMousePosition = newMousePosition;
-      }
-    },
-    25
-  );
-
-  mouseOverPath(
-    ctx: CanvasRenderingContext2D | null,
-    mousePosition: Coordinate,
-    btnPressed: boolean
-  ) {
-    let cursorType = "default";
-    let inRectangle = false;
-    if (this.isInRectangle(mousePosition)) {
-      // action after the path is closed
-      cursorType = "move";
-      inRectangle = true;
-    }
-    if ((btnPressed || inRectangle) && this.findAngle(mousePosition)) {
-      cursorType = "pointer";
-      if (btnPressed) {
-        ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.moveAngle(mousePosition);
-        this.draw(ctx);
-      }
-    } else if (btnPressed && inRectangle && this.lastMousePosition) {
-      this.throttleMovePath(ctx, mousePosition);
-    } else {
-      const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
-      if (mouseOnRectangle === BORDER.ON_BUTTON) {
-        this.drawCornerButton(ctx, 1);
-        cursorType = "pointer";
-      } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
-        ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        this.draw(ctx);
-      }
-    }
-    return cursorType;
-  }
-
-  handleMouseOnRectange(
-    ctx: CanvasRenderingContext2D | null,
-    mousePosition: Coordinate
-  ): string | null {
-    if (!this.rectangle || !ctx) {
-      return null;
-    }
-    const argsMouseOnRectangle: ArgsMouseOnShape = {
-      coordinate: mousePosition,
-      area: this.rectangle,
-      withResize: false,
-      withCornerButton: true,
-      withTurningButtons: false,
-      maxWidth: ctx.canvas.width,
-    };
-
-    return isOnSquareBorder(argsMouseOnRectangle);
   }
 }

@@ -334,6 +334,9 @@ export class drawLine extends drawingHandler {
             this.line.setStartCoordinates(lastLine.end);
           }
           return;
+        } else {
+          this.withPath = false;
+          this.line.eraseStartCoordinates();
         }
       }
     }
