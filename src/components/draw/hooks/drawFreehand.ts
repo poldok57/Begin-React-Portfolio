@@ -13,16 +13,23 @@ import {
   mouseCircle,
   AllParams,
 } from "../../../lib/canvas/canvas-defines";
-import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
+
+import { throttle } from "@/lib/utils/throttle";
+
+// const thorttleBasicLine = throttle(basicLine, 50);
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
 export class drawFreehand extends drawingHandler {
   private drawing: boolean = false;
+  private freeCurve: CanvasFreeCurve;
 
   constructor(canvas: HTMLCanvasElement) {
     super(canvas);
+    this.freeCurve = new CanvasFreeCurve();
     this.ctxTempory = null;
     this.extendedMouseArea = false;
     this.setType(DRAWING_MODES.DRAW);
@@ -104,6 +111,7 @@ export class drawFreehand extends drawingHandler {
           context: ctxTempory,
           coordinate: coord,
         } as drawingCircle);
+        this.freeCurve.drawCurve(ctxTempory);
         break;
       case DRAWING_MODES.ERASE:
         ctxTempory.globalAlpha = 0.7;
@@ -126,6 +134,13 @@ export class drawFreehand extends drawingHandler {
 
     return "none"; //  cursorType;
   }
+
+  thorttleBasicLine = throttle(basicLine, 50);
+
+  memoPoints(freeCurve: CanvasFreeCurve, coord: Coordinate) {
+    freeCurve.addPoint(coord);
+  }
+
   /**
    * Function who recieve the mouse move event
    */
@@ -136,11 +151,15 @@ export class drawFreehand extends drawingHandler {
     const start: Coordinate | null = this.coordinates;
     this.setCoordinates(event);
     if (this.isDrawing()) {
-      basicLine(
-        this.context as CanvasRenderingContext2D,
-        start,
-        this.coordinates as Coordinate
-      );
+      if (this.getType() === DRAWING_MODES.DRAW) {
+        this.freeCurve.delayAddPoint(this.coordinates as Coordinate);
+      } else {
+        basicLine(
+          this.context as CanvasRenderingContext2D,
+          start as Coordinate,
+          this.coordinates as Coordinate
+        );
+      }
     }
     return this.followCursor() as string;
   }
@@ -158,9 +177,24 @@ export class drawFreehand extends drawingHandler {
     }
     // color and width painting
     this.setCoordinates(event);
+    if (this.getType() === DRAWING_MODES.DRAW) {
+      this.freeCurve.startCurve({
+        firstPoint: this.coordinates as Coordinate,
+        globalAlpha: this.data.general.opacity,
+        strokeStyle: this.data.general.color,
+        lineWidth: this.data.general.lineWidth,
+      });
+    }
 
     this.setDrawing(true);
     return { toContinue: false, pointer: "none" } as returnMouseDown;
+  }
+
+  endCurve() {
+    if (this.getType() === DRAWING_MODES.DRAW) {
+      this.freeCurve.drawCurve(this.context as CanvasRenderingContext2D);
+      this.freeCurve.clearPoints();
+    }
   }
   /**
    * Function to stop drawing on the canvas
@@ -172,6 +206,8 @@ export class drawFreehand extends drawingHandler {
     this.coordinates = null;
 
     if (this.isDrawing()) {
+      this.endCurve();
+
       this.setDrawing(false);
       this.saveCanvasPicture();
     }
@@ -181,9 +217,9 @@ export class drawFreehand extends drawingHandler {
     if (this.getType() === DRAWING_MODES.PAUSE) {
       return;
     }
-    clearCanvasByCtx(this.ctxTempory);
-
+    this.clearTemporyCanvas();
     this.setDrawing(false);
+    this.endCurve();
   }
   endAction() {
     if (this.getType() === DRAWING_MODES.PAUSE) {

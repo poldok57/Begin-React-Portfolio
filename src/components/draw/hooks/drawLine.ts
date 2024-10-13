@@ -226,8 +226,8 @@ export class drawLine extends drawingHandler {
   actionMouseDown(event: MouseEvent): returnMouseDown {
     // first point must be inside the canvas
     if (
-      !mouseIsInsideComponent(event, this.mCanvas) &&
-      this.line.getStartCoordinates() == null
+      this.line.getStartCoordinates() == null &&
+      !mouseIsInsideComponent(event, this.mCanvas)
     ) {
       return { toContinue: false, toReset: false, pointer: "default" };
     }

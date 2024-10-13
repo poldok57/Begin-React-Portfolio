@@ -271,7 +271,10 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         />
         <DrawControlText
           mode={mode}
-          hidden={mode != DRAWING_MODES.TEXT && withText === false}
+          hidden={
+            mode != DRAWING_MODES.TEXT &&
+            (withText === false || !isDrawingShape(mode))
+          }
           drawingParams={drawingParams}
           handleTextParams={handleParamChange}
           isTouch={isTouch}

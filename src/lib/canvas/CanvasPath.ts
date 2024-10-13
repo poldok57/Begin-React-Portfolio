@@ -13,7 +13,7 @@ import {
   ArgsMouseOnShape,
 } from "./types";
 import { badgePosition, BORDER } from "../mouse-position";
-import { drawBadge } from "./canvas-buttons";
+import { drawCornerButton } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { ParamsPath } from "./canvas-defines";
@@ -179,13 +179,13 @@ export class CanvasPath {
     return true;
   }
 
-  drawBadge(ctx: CanvasRenderingContext2D | null, opacity: number) {
+  drawCornerButton(ctx: CanvasRenderingContext2D | null, opacity: number) {
     if (!ctx || !this.rectangle) {
       return;
     }
     const badge = badgePosition(this.rectangle, ctx.canvas.width);
     if (badge) {
-      drawBadge(
+      drawCornerButton(
         ctx,
         badge.centerX,
         badge.centerY,
@@ -205,7 +205,7 @@ export class CanvasPath {
     }
     drawDashedRectangle(ctx, this.rectangle, 0.35);
 
-    this.drawBadge(
+    this.drawCornerButton(
       ctx,
       mouseOnRectangle === BORDER.ON_BUTTON ? 1 : DEFAULT_OPACITY
     );
@@ -239,7 +239,6 @@ export class CanvasPath {
       newLine.coordinates = roundCoordinates(line.coordinates);
     }
     if (line.strokeStyle && line.strokeStyle !== strokeStyle) {
-      console.log("add new Style", line.strokeStyle);
       newLine.strokeStyle = line.strokeStyle;
     }
     if (
@@ -445,7 +444,7 @@ export class CanvasPath {
     } else {
       const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
       if (mouseOnRectangle === BORDER.ON_BUTTON) {
-        this.drawBadge(ctx, 1);
+        this.drawCornerButton(ctx, 1);
         cursorType = "pointer";
       } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
         ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);

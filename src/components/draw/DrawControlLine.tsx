@@ -94,7 +94,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             Filled
             <ToggleSwitch
               id="toggle-border"
-              defaultChecked={drawingParams.shape.withBorder}
+              defaultChecked={drawingParams.path.filled}
               onChange={(event) => {
                 setWithPathFilled(event.target.checked);
                 handlePath({ filled: event.target.checked });
@@ -114,6 +114,8 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
               id="path-color-picker"
               type="color"
               defaultValue={drawingParams.path.color}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => handlePath({ color: e.target.value })}
             />
           </label>

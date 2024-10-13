@@ -58,7 +58,7 @@ const drawDisk = (
   ctx.closePath();
 };
 
-export const drawBadge = (
+export const drawCornerButton = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,

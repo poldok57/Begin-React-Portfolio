@@ -373,6 +373,8 @@ export const useCanvas = ({
       case DRAWING_MODES.CLOSE_PATH:
         if (lineRef.current !== null) {
           lineRef.current?.actionClosePath();
+          stopExtendMouseEvent();
+          setMode(DRAWING_MODES.CLOSED_PATH);
         }
         break;
       default:

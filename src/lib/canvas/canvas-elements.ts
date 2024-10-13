@@ -6,7 +6,7 @@ import {
   ShapeDefinition,
   ParamsGeneral,
 } from "./canvas-defines";
-import { drawBadge, drawTurningButtons } from "./canvas-buttons";
+import { drawCornerButton, drawTurningButtons } from "./canvas-buttons";
 import { drawDashedRectangle } from "./canvas-dashed-rect";
 
 const TEXT_PADDING = 20;
@@ -378,7 +378,7 @@ const drawButtonsAndLines = (
   if (square.withCornerButton) {
     const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
     const bPos = badgePosition(square.size, ctx.canvas.width);
-    drawBadge(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
+    drawCornerButton(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
   }
   /**
    * draw the middle button used to rotate the shape
