@@ -1,71 +1,76 @@
-import { Coordinate } from "./types";
+import { Coordinate, LinePath } from "./types";
 import { basicLine } from "./canvas-basic";
 import { throttle } from "@/lib/utils/throttle";
 import { CanvasPoints } from "./CanvasPoints";
+import { ParamsGeneral } from "./canvas-defines";
 
 const MARGIN = 5;
 const DELAY = 50;
 
 export class CanvasFreeCurve extends CanvasPoints {
-  private points: Coordinate[] = [];
-  private globalAlpha: number = 1;
-  private strokeStyle: string = "#000";
-  private lineWidth: number = 1;
-
   constructor() {
     super();
-    this.start = { x: 0, y: 0 };
   }
 
   clearPoints() {
-    this.points = [];
+    this.items = [];
   }
 
   startCurve({
     firstPoint,
-    globalAlpha,
-    strokeStyle,
-    lineWidth,
+    general,
   }: {
     firstPoint: Coordinate;
-    globalAlpha?: number;
-    strokeStyle?: string;
-    lineWidth?: number;
+    general: ParamsGeneral;
   }) {
-    this.points = [];
-    this.start = firstPoint;
-    this.globalAlpha = globalAlpha || 1;
-    this.strokeStyle = strokeStyle || "#000";
-    this.lineWidth = lineWidth || 1;
-  }
+    this.items = [];
+    this.items.push(firstPoint as Coordinate & LinePath);
 
-  addPoint(point: Coordinate) {
-    this.points.push(point);
+    this.setParamsGeneral({
+      opacity: general.opacity || 1,
+      color: general.color || "#000",
+      lineWidth: general.lineWidth || 1,
+    });
+    this.startArea(firstPoint);
   }
 
   delayAddPoint(point: Coordinate) {
     // Utilisation de throttle pour limiter la fréquence d'ajout de points
     const throttledAddPoint = throttle((point: Coordinate) => {
-      this.points.push(point);
+      this.addItem(point);
     }, DELAY); // 50ms de délai
 
     throttledAddPoint(point);
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    if (this.points.length < 2) return;
-    if (this.points.length === 2) {
-      basicLine(ctx, this.points[0], this.points[1]);
+  draw(ctx: CanvasRenderingContext2D, withDashedRectangle: boolean = false) {
+    if (this.items.length < 2) return;
+
+    ctx.globalAlpha = this.general.opacity;
+    ctx.strokeStyle = this.general.color;
+    ctx.lineWidth = this.general.lineWidth;
+
+    if (this.items.length === 2) {
+      basicLine(ctx, this.items[0] as Coordinate, this.items[1] as Coordinate);
       return;
     }
 
-    // Calcul d'une suite de courbes passant près de tous les points avec une marge maximale
+    // calculate list of curves
     ctx.beginPath();
-    ctx.moveTo(this.start.x, this.start.y);
+    ctx.moveTo(
+      (this.items[0] as Coordinate).x,
+      (this.items[0] as Coordinate).y
+    );
 
-    for (let i = 0; i < this.points.length - 2; i += 2) {
-      const xc = (this.points[i].x + this.points[i + 1].x) / 2;
-      const yc = (this.points[i].y + this.points[i + 1].y) / 2;
+    for (let i = 1; i < this.items.length - 2; i += 2) {
+      const xc =
+        ((this.items[i] as Coordinate).x +
+          (this.items[i + 1] as Coordinate).x) /
+        2;
+      const yc =
+        ((this.items[i] as Coordinate).y +
+          (this.items[i + 1] as Coordinate).y) /
+        2;
 
       // Vérification de la marge
       const distanceToLine = (
@@ -103,33 +108,45 @@ export class CanvasFreeCurve extends CanvasPoints {
 
       if (
         distanceToLine(
-          this.points[i],
-          i === 0 ? this.start : this.points[i - 1],
+          this.items[i] as Coordinate,
+          this.items[i - 1] as Coordinate,
           { x: xc, y: yc }
         ) <= MARGIN
       ) {
-        ctx.quadraticCurveTo(this.points[i].x, this.points[i].y, xc, yc);
+        ctx.quadraticCurveTo(
+          (this.items[i] as Coordinate).x,
+          (this.items[i] as Coordinate).y,
+          xc,
+          yc
+        );
       } else {
-        ctx.lineTo(this.points[i].x, this.points[i].y);
+        ctx.lineTo(
+          (this.items[i] as Coordinate).x,
+          (this.items[i] as Coordinate).y
+        );
         ctx.lineTo(xc, yc);
       }
     }
 
     // Gestion des derniers points
-    if (this.points.length % 2 === 0) {
+    if (this.items.length % 2 === 0) {
       ctx.quadraticCurveTo(
-        this.points[this.points.length - 2].x,
-        this.points[this.points.length - 2].y,
-        this.points[this.points.length - 1].x,
-        this.points[this.points.length - 1].y
+        (this.items[this.items.length - 2] as Coordinate).x,
+        (this.items[this.items.length - 2] as Coordinate).y,
+        (this.items[this.items.length - 1] as Coordinate).x,
+        (this.items[this.items.length - 1] as Coordinate).y
       );
     } else {
       ctx.lineTo(
-        this.points[this.points.length - 1].x,
-        this.points[this.points.length - 1].y
+        (this.items[this.items.length - 1] as Coordinate).x,
+        (this.items[this.items.length - 1] as Coordinate).y
       );
     }
 
     ctx.stroke();
+
+    if (withDashedRectangle && this.items.length > 1 && this.area) {
+      this.drawDashedRectangle(ctx);
+    }
   }
 }

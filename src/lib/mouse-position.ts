@@ -104,12 +104,18 @@ export const coordinateIsInsideRect = (
 };
 
 export const mouseIsInsideComponent = (
-  event: MouseEvent,
+  event: MouseEvent | TouchEvent,
   component: HTMLElement | null
 ): boolean => {
   if (component) {
     const rect = component.getBoundingClientRect();
-    const coordinates = { x: event.clientX, y: event.clientY };
+    let coordinates: Coordinate;
+    if ("touches" in event) {
+      const touch = event.touches[0];
+      coordinates = { x: touch.clientX, y: touch.clientY };
+    } else {
+      coordinates = { x: event.clientX, y: event.clientY };
+    }
     return coordinateIsInsideRect(coordinates, rect);
   }
   return false;

@@ -15,6 +15,7 @@ export const Draw = () => {
 
   const drawingParamsRef = useRef(DEFAULT_PARAMS);
   const [mode, setMode] = useState(drawingParamsRef.current.mode);
+  const [background, setBackground] = useState("#f0f0f0f0");
   setHistoryMaxLen(MAX_HISTORY);
 
   const getDrawingParams = () => {
@@ -35,12 +36,42 @@ export const Draw = () => {
 
   return (
     <div className="flex relative flex-col gap-8 justify-center items-center py-5 w-full h-full">
-      <Canvas
-        width={WIDTH}
-        height={HEIGHT}
-        canvasRef={canvasRef}
-        canvasTemporyRef={canvasTemporyRef}
-      />
+      <div className="flex flex-row justify-center items-center">
+        <Canvas
+          width={WIDTH}
+          height={HEIGHT}
+          canvasRef={canvasRef}
+          canvasTemporyRef={canvasTemporyRef}
+          background={background}
+        />
+        <div className="flex flex-col justify-center items-center">
+          <div className="flex flex-col items-center">
+            <label
+              htmlFor="background-range"
+              className="mb-2 text-sm text-gray-500"
+            >
+              Background
+            </label>
+            <input
+              id="background-range"
+              type="range"
+              min="0"
+              max="255"
+              defaultValue={parseInt(background.slice(1), 16)}
+              onChange={(e) => {
+                const grayValue = e.target.value;
+                const hexValue = `#${parseInt(grayValue)
+                  .toString(16)
+                  .padStart(2, "0")
+                  .repeat(3)}`;
+                setBackground(hexValue);
+              }}
+              className="w-32 h-64 -rotate-90"
+            />
+          </div>
+        </div>
+      </div>
+
       <DrawControlWP
         mode={mode}
         setMode={setMode}

@@ -1,4 +1,3 @@
-import { getMouseCoordinates } from "./canvas-tools";
 import { basicLine, crossLine } from "./canvas-basic";
 import { Coordinate, LinePath, LineType } from "./types";
 
@@ -31,11 +30,8 @@ export class CanvasLine implements LinePath {
     this.type = type;
   }
 
-  setCoordinates(event: MouseEvent, canvas: HTMLCanvasElement | null = null) {
-    if (!event) return { x: 0, y: 0 };
-    if (!canvas) canvas = this.mCanvas;
-
-    this.coordinates = getMouseCoordinates(event, canvas);
+  setCoordinates(coord: Coordinate) {
+    this.coordinates = coord;
     return this.coordinates;
   }
 

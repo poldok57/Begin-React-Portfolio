@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
@@ -12,6 +12,8 @@ import {
 } from "@/lib/canvas/canvas-defines";
 import { MdTimeline } from "react-icons/md";
 import { Spline } from "lucide-react";
+
+export const MODE_PATH_AUTO = false;
 
 interface DrawControlLineProps {
   mode: string;
@@ -31,11 +33,19 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   isTouch = false,
 }) => {
   const [withPathFilled, setWithPathFilled] = useState(false);
-  const [withPath, setWithPath] = useState(false);
+  const [withPath, setWithPath] = useState(MODE_PATH_AUTO);
   const handlePath = (param: Params) => {
     drawingParams.path = { ...drawingParams.path, ...param };
     handleParamChange({ path: drawingParams.path });
   };
+  useEffect(() => {
+    if (mode === DRAWING_MODES.END_PATH) {
+      handleModeChange(DRAWING_MODES.LINE);
+
+      setWithPath(MODE_PATH_AUTO);
+      setWithPathFilled(false);
+    }
+  }, [mode]);
   return (
     <div
       className={clsx(
@@ -81,6 +91,13 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       {withPath && (
         <>
           <Button
+            onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
+            className="w-20 h-8"
+            title="Stop path"
+          >
+            Stop path
+          </Button>
+          <Button
             onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
             className="w-20 h-8"
             title="Close path"
@@ -94,7 +111,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             Filled
             <ToggleSwitch
               id="toggle-border"
-              defaultChecked={drawingParams.path.filled}
+              defaultChecked={withPathFilled}
               onChange={(event) => {
                 setWithPathFilled(event.target.checked);
                 handlePath({ filled: event.target.checked });
@@ -114,8 +131,8 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
               id="path-color-picker"
               type="color"
               defaultValue={drawingParams.path.color}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
+              // onClick={(e) => e.stopPropagation()}
+              // onMouseDown={(e) => e.stopPropagation()}
               onChange={(e) => handlePath({ color: e.target.value })}
             />
           </label>

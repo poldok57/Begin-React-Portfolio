@@ -18,19 +18,21 @@ import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 
 import { throttle } from "@/lib/utils/throttle";
 
-// const thorttleBasicLine = throttle(basicLine, 50);
-
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
 export class drawFreehand extends drawingHandler {
   private drawing: boolean = false;
   private freeCurve: CanvasFreeCurve;
+  private finishedDrawing: boolean = false;
 
-  constructor(canvas: HTMLCanvasElement) {
-    super(canvas);
+  constructor(
+    canvas: HTMLCanvasElement,
+    temporyCanvas: HTMLCanvasElement | null,
+    setMode: (mode: string) => void
+  ) {
+    super(canvas, temporyCanvas, setMode);
     this.freeCurve = new CanvasFreeCurve();
-    this.ctxTempory = null;
     this.extendedMouseArea = false;
     this.setType(DRAWING_MODES.DRAW);
   }
@@ -67,16 +69,6 @@ export class drawFreehand extends drawingHandler {
     this.ctxTempory = canvas.getContext("2d");
   }
 
-  setTemporyCanvas(canvas: HTMLCanvasElement | null) {
-    if (canvas === null) {
-      console.error("setTemporyCanvas canvas is null");
-      return;
-    }
-    this.ctxTempory = canvas.getContext("2d");
-  }
-
-  // setStartCoordinates(_coord: Coordinate | null = null) {}
-
   isExtendedMouseArea() {
     return this.extendedMouseArea;
   }
@@ -97,6 +89,10 @@ export class drawFreehand extends drawingHandler {
       return;
     }
 
+    if (this.finishedDrawing) {
+      return "move";
+    }
+
     clearCanvasByCtx(ctxTempory);
     ctxTempory.globalAlpha = 0.4;
 
@@ -109,7 +105,9 @@ export class drawFreehand extends drawingHandler {
           context: ctxTempory,
           coordinate: coord,
         } as drawingCircle);
-        this.freeCurve.draw(ctxTempory);
+        ctxTempory.strokeStyle = this.data.general.color;
+        ctxTempory.lineWidth = this.data.general.lineWidth;
+        this.freeCurve.draw(ctxTempory, false);
         break;
       case DRAWING_MODES.ERASE:
         ctxTempory.globalAlpha = 0.7;
@@ -134,18 +132,30 @@ export class drawFreehand extends drawingHandler {
   thorttleBasicLine = throttle(basicLine, 50);
 
   memoPoints(freeCurve: CanvasFreeCurve, coord: Coordinate) {
-    freeCurve.addPoint(coord);
+    freeCurve.addItem(coord);
   }
 
   /**
    * Function who recieve the mouse move event
    */
-  actionMouseMove(event: MouseEvent): string | null {
+  actionMouseMove(
+    event: MouseEvent | TouchEvent,
+    coord: Coordinate
+  ): string | null {
     if (this.getType() === DRAWING_MODES.PAUSE) {
       return null;
     }
     const start: Coordinate | null = this.coordinates;
-    this.setCoordinates(event);
+    this.setCoordinates(coord);
+
+    if (this.finishedDrawing) {
+      return this.freeCurve.mouseOverPath(
+        this.ctxTempory,
+        event,
+        this.getCoordinates() as Coordinate
+      );
+    }
+
     if (this.isDrawing()) {
       if (this.getType() === DRAWING_MODES.DRAW) {
         this.freeCurve.delayAddPoint(this.coordinates as Coordinate);
@@ -167,18 +177,49 @@ export class drawFreehand extends drawingHandler {
    * @param {MouseEvent} event
    * @returns {boolean} to continue or not
    */
-  actionMouseDown(event: MouseEvent): returnMouseDown {
+  actionMouseDown(
+    event: MouseEvent | TouchEvent,
+    coord: Coordinate
+  ): returnMouseDown {
     if (this.getType() === DRAWING_MODES.PAUSE) {
       return { toContinue: false } as returnMouseDown;
     }
     // color and width painting
-    this.setCoordinates(event);
+    this.setCoordinates(coord);
+
+    if (this.finishedDrawing && this.freeCurve) {
+      if (
+        this.freeCurve.mouseDown(
+          this.ctxTempory,
+          this.getCoordinates() as Coordinate
+        )
+      ) {
+        // path has been validated
+        this.freeCurve.draw(this.context as CanvasRenderingContext2D, false);
+        this.clearTemporyCanvas();
+        this.finishedDrawing = false;
+        this.setDrawing(false);
+        this.saveCanvasPicture(null);
+        this.freeCurve.clearPoints();
+        return {
+          pointer: "none",
+        };
+      }
+      return {
+        pointer: "grabbing",
+      };
+    }
+
     if (this.getType() === DRAWING_MODES.DRAW) {
+      const ctx = this.ctxTempory;
+      if (ctx === null) {
+        console.error("ctxTempory is null");
+        return { toContinue: false } as returnMouseDown;
+      }
+
       this.freeCurve.startCurve({
         firstPoint: this.coordinates as Coordinate,
-        globalAlpha: this.data.general.opacity,
-        strokeStyle: this.data.general.color,
-        lineWidth: this.data.general.lineWidth,
+        general: this.data.general,
       });
     }
 
@@ -186,10 +227,11 @@ export class drawFreehand extends drawingHandler {
     return { toContinue: false, pointer: "none" } as returnMouseDown;
   }
 
-  endCurve() {
+  validCurve() {
     if (this.getType() === DRAWING_MODES.DRAW) {
       this.freeCurve.draw(this.context as CanvasRenderingContext2D);
       this.freeCurve.clearPoints();
+      this.saveCanvasPicture();
     }
   }
   /**
@@ -202,10 +244,13 @@ export class drawFreehand extends drawingHandler {
     this.coordinates = null;
 
     if (this.isDrawing()) {
-      this.endCurve();
+      // this.validCurve();
+      this.finishedDrawing = true;
+      this.freeCurve.setFinished(true);
+      this.clearTemporyCanvas();
+      this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
 
       this.setDrawing(false);
-      this.saveCanvasPicture();
     }
   }
 
@@ -213,10 +258,24 @@ export class drawFreehand extends drawingHandler {
     if (this.getType() === DRAWING_MODES.PAUSE) {
       return;
     }
+    if (this.finishedDrawing) {
+      return;
+    }
+    this.clearTemporyCanvas();
+
+    if (this.isDrawing()) {
+      this.setDrawing(false);
+      this.validCurve();
+    }
+  }
+
+  actionAbort() {
+    this.finishedDrawing = false;
+    this.freeCurve.clearPoints();
     this.clearTemporyCanvas();
     this.setDrawing(false);
-    this.endCurve();
   }
+
   endAction() {
     if (this.getType() === DRAWING_MODES.PAUSE) {
       return;

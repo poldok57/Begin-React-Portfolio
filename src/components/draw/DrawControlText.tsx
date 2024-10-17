@@ -90,11 +90,11 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
         <RangeInput
           className={inputRangeVariants({ width: "12", size: "sm" })}
           id="text-bold-picker"
-          value={drawingParams.text.bold}
-          min="100"
-          max="900"
-          step="100"
-          onChange={(value) => handleText({ bold: value })}
+          value={drawingParams.text.bold / 100}
+          min="1"
+          max="9"
+          step="1"
+          onChange={(value) => handleText({ bold: value * 100 })}
           label="Bold"
           isTouch={isTouch}
         />

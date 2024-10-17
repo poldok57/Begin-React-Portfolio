@@ -1,14 +1,11 @@
-import { Coordinate, Area, ArgsMouseOnShape } from "../../../lib/canvas/types";
-import {
-  getMouseCoordinates,
-  clearCanvasByCtx,
-} from "../../../lib/canvas/canvas-tools";
-import { showElement } from "../../../lib/canvas/canvas-elements";
-import { mousePointer, isInside } from "../../../lib/mouse-position";
+import { Coordinate, Area, ArgsMouseOnShape } from "@/lib/canvas/types";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { showElement } from "@/lib/canvas/canvas-elements";
+import { mousePointer, isInside } from "@/lib/mouse-position";
 import {
   addPictureToHistory,
   CanvasPicture,
-} from "../../../lib/canvas/canvas-history";
+} from "@/lib/canvas/canvas-history";
 
 import {
   DRAWING_MODES,
@@ -16,8 +13,8 @@ import {
   ShapeDefinition,
   AllParams,
   ParamsGeneral,
-} from "../../../lib/canvas/canvas-defines";
-import { isOnSquareBorder } from "../../../lib/square-position";
+} from "@/lib/canvas/canvas-defines";
+import { isOnSquareBorder } from "@/lib/square-position";
 
 export type returnMouseDown = {
   toContinue?: boolean;
@@ -32,11 +29,11 @@ export abstract class drawingHandler {
   protected context: CanvasRenderingContext2D | null = null;
   protected ctxTempory: CanvasRenderingContext2D | null = null;
   protected lastMouseOnShape: string | null = null;
+  protected setMode: (mode: string) => void;
 
   protected data: ThingsToDraw | ShapeDefinition = {
     type: DRAWING_MODES.DRAW,
     rotation: 0,
-    lockRatio: false,
     withTurningButtons: false,
     withCornerButton: false,
     withResize: true,
@@ -52,9 +49,15 @@ export abstract class drawingHandler {
 
   protected extendedMouseArea: boolean = false;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    temporyCanvas: HTMLCanvasElement | null,
+    setMode: (mode: string) => void
+  ) {
     if (canvas) this.setCanvas(canvas);
     this.extendedMouseArea = false;
+    this.setTemporyCanvas(temporyCanvas);
+    this.setMode = setMode;
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
@@ -93,10 +96,8 @@ export abstract class drawingHandler {
     this.extendedMouseArea = value;
   }
 
-  setCoordinates(event: MouseEvent) {
-    if (!event || !this.mCanvas) return { x: 0, y: 0 };
-
-    this.coordinates = getMouseCoordinates(event, this.mCanvas);
+  setCoordinates(coord: Coordinate) {
+    this.coordinates = coord;
     return this.coordinates;
   }
 
@@ -194,8 +195,14 @@ export abstract class drawingHandler {
   abstract changeData(data: AllParams): void;
   abstract initData(data: AllParams): void;
 
-  abstract actionMouseDown(event: MouseEvent): returnMouseDown;
-  abstract actionMouseMove(_event: MouseEvent): string | null;
+  abstract actionMouseDown(
+    event: MouseEvent | TouchEvent,
+    coord: Coordinate
+  ): returnMouseDown;
+  abstract actionMouseMove(
+    event: MouseEvent | TouchEvent,
+    coord: Coordinate
+  ): string | null;
   abstract actionMouseUp(): void;
   abstract actionMouseLeave(): void;
 

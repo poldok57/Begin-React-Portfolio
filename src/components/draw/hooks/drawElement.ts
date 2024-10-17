@@ -1,4 +1,3 @@
-import { getMouseCoordinates } from "../../../lib/canvas/canvas-tools";
 import {
   DRAWING_MODES,
   AllParams,
@@ -6,16 +5,16 @@ import {
   ParamsShape,
   ParamsText,
   ShapeDefinition,
-} from "../../../lib/canvas/canvas-defines";
-import { BORDER, isOnTurnButton } from "../../../lib/mouse-position";
-import { showElement } from "../../../lib/canvas/canvas-elements";
-import { resizingElement } from "../../../lib/canvas/canvas-resize";
+} from "@/lib/canvas/canvas-defines";
+import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
+import { showElement } from "@/lib/canvas/canvas-elements";
+import { resizingElement } from "@/lib/canvas/canvas-resize";
 
-import { Coordinate, Area } from "../../../lib/canvas/types";
+import { Coordinate, Area } from "@/lib/canvas/types";
 
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { alertMessage } from "../../alert-messages/alertMessage";
-import { isInsideSquare } from "../../../lib/square-position";
+import { isInsideSquare } from "@/lib/square-position";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
@@ -27,8 +26,12 @@ export class drawElement extends drawingHandler {
     size: { x: 0, y: 0, width: 0, height: 0 },
   } as ShapeDefinition;
 
-  constructor(canvas: HTMLCanvasElement) {
-    super(canvas);
+  constructor(
+    canvas: HTMLCanvasElement,
+    temporyCanvas: HTMLCanvasElement | null,
+    setMode: (mode: string) => void
+  ) {
+    super(canvas, temporyCanvas, setMode);
 
     if (!canvas) return;
 
@@ -52,11 +55,8 @@ export class drawElement extends drawingHandler {
     this.data = { ...this.data, ...params } as ShapeDefinition;
   }
 
-  setCoordinates(e: MouseEvent, canvas: HTMLCanvasElement | null = null) {
-    if (!e) return { x: 0, y: 0 };
-    if (!canvas) canvas = this.mCanvas;
-
-    this.coordinates = getMouseCoordinates(e, canvas);
+  setCoordinates(coord: Coordinate) {
+    this.coordinates = coord;
     if (this.coordinates && this.offset && !this.fixed) {
       const x = this.coordinates.x + this.offset.x;
       const y = this.coordinates.y + this.offset.y;
@@ -105,13 +105,14 @@ export class drawElement extends drawingHandler {
   initData(initData: AllParams) {
     this.data = { ...this.data, ...initData };
     this.changeData(initData);
-    if (this.mCanvas !== null)
+    if (this.mCanvas !== null) {
       this.setDataSize({
         x: this.mCanvas.width / 2,
         y: this.mCanvas.height / 2,
         width: SQUARE_WIDTH,
         height: SQUARE_HEIGHT,
       });
+    }
     this.data.rotation = 0;
     this.data.text.rotation = 0;
     this.data.size.ratio = 0;
@@ -211,6 +212,9 @@ export class drawElement extends drawingHandler {
     showElement(this.context, this.data, false);
     this.saveCanvasPicture();
     this.clearTemporyCanvas();
+    // add 15px to the size to avoid the shape to be one on the other
+    this.data.size.x += 15;
+    this.data.size.y += 15;
   }
 
   /**
@@ -218,13 +222,13 @@ export class drawElement extends drawingHandler {
    * @param {string} mode - drawing mode
    * @param {MouseEvent} event - mouse event
    */
-  actionMouseDown(event: MouseEvent) {
+  actionMouseDown(event: MouseEvent | TouchEvent, coord: Coordinate) {
     // if (!this.isFixed()) {
     //   return false;
     // }
     let toReset = false;
     let pointer: string | null = null;
-    this.setCoordinates(event);
+    this.setCoordinates(coord);
     const mouseOnShape = this.handleMouseOnShape();
     if (mouseOnShape) {
       // console.log("mode", mode, "mouseOnShape: ", mouseOnShape);
@@ -258,8 +262,11 @@ export class drawElement extends drawingHandler {
    * @param {MouseEvent} event - mouse event
    * @returns {string | null} - cursor type
    */
-  actionMouseMove(event: MouseEvent): string | null {
-    this.setCoordinates(event);
+  actionMouseMove(
+    event: MouseEvent | TouchEvent,
+    coord: Coordinate
+  ): string | null {
+    this.setCoordinates(coord);
     if (this.resizing !== null) {
       this.resizingSquare(this.resizing);
       return null;

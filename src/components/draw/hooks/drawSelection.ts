@@ -1,32 +1,28 @@
-import { Area, Size, Coordinate } from "../../../lib/canvas/types";
-import { getMouseCoordinates } from "../../../lib/canvas/canvas-tools";
+import { Area, Size, Coordinate } from "@/lib/canvas/types";
 import {
   makeWhiteTransparent,
   makeWhiteTransparent2,
-} from "../../../lib/canvas/image-transparency";
+} from "@/lib/canvas/image-transparency";
 import {
   DRAWING_MODES,
   AllParams,
   ShapeDefinition,
-} from "../../../lib/canvas/canvas-defines";
-import { BORDER, isOnTurnButton } from "../../../lib/mouse-position";
-import { showElement } from "../../../lib/canvas/canvas-elements";
-import { resizingElement } from "../../../lib/canvas/canvas-resize";
-import { isInsideSquare } from "../../../lib/square-position";
+} from "@/lib/canvas/canvas-defines";
+import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
+import { showElement } from "@/lib/canvas/canvas-elements";
+import { resizingElement } from "@/lib/canvas/canvas-resize";
+import { isInsideSquare } from "@/lib/square-position";
 
-import {
-  copyInVirtualCanvas,
-  calculateSize,
-} from "../../../lib/canvas/canvas-images";
+import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { alertMessage } from "../../alert-messages/alertMessage";
-import { imageSize, cutOutArea } from "../../../lib/canvas/canvas-size";
+import { imageSize, cutOutArea } from "@/lib/canvas/canvas-size";
 import {
   downloadCanvasToPNG,
   downloadCanvasToSVG,
   downloadCanvasToGIF,
-} from "../../../lib/canvas/canvas-save";
+} from "@/lib/canvas/canvas-save";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
@@ -42,8 +38,12 @@ export class drawSelection extends drawingHandler {
   // original size of the selection or loaded image
   private originalSize: Size | null = null;
 
-  constructor(canvas: HTMLCanvasElement) {
-    super(canvas);
+  constructor(
+    canvas: HTMLCanvasElement,
+    temporyCanvas: HTMLCanvasElement | null,
+    setMode: (mode: string) => void
+  ) {
+    super(canvas, temporyCanvas, setMode);
 
     if (!canvas) return;
 
@@ -63,11 +63,8 @@ export class drawSelection extends drawingHandler {
     };
   }
 
-  setCoordinates(event: MouseEvent, canvas: HTMLCanvasElement | null = null) {
-    if (!event) return { x: 0, y: 0 };
-    if (!canvas) canvas = this.mCanvas;
-
-    this.coordinates = getMouseCoordinates(event, canvas);
+  setCoordinates(coord: Coordinate) {
+    this.coordinates = coord;
     if (this.coordinates && this.offset && !this.fixed) {
       const x = this.coordinates.x + this.offset.x;
       const y = this.coordinates.y + this.offset.y;
@@ -217,13 +214,16 @@ export class drawSelection extends drawingHandler {
    * @param {MouseEvent} event - mouse event
    * @returns {object} - {toReset, toContinue, pointer} - toReset: reset the action, toContinue: continue the action, pointer: cursor pointer
    */
-  actionMouseDown(event: MouseEvent): returnMouseDown {
+  actionMouseDown(
+    event: MouseEvent | TouchEvent,
+    coord: Coordinate
+  ): returnMouseDown {
     // if (!this.isFixed()) {
     //   return false;
     // }
     let toReset = false;
     let pointer: string | null = null;
-    this.setCoordinates(event);
+    this.setCoordinates(coord);
 
     const mouseOnShape = this.handleMouseOnShape();
 
@@ -256,8 +256,8 @@ export class drawSelection extends drawingHandler {
    * @param {MouseEvent} event - mouse event
    * @returns {string | null} - cursor type
    */
-  actionMouseMove(event: MouseEvent) {
-    this.setCoordinates(event);
+  actionMouseMove(event: MouseEvent | TouchEvent, coord: Coordinate) {
+    this.setCoordinates(coord);
     if (this.resizing !== null) {
       this.resizingSquare();
       if (this.getType() === DRAWING_MODES.SELECT) {

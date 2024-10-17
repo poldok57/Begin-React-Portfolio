@@ -41,6 +41,7 @@ export type MouseCircle = {
 };
 
 export enum LineType {
+  START = "s",
   LINE = "l",
   CURVE = "c",
 }
@@ -48,7 +49,7 @@ export interface LinePath {
   type: LineType;
   end?: Coordinate | null;
   coordinates?: Coordinate | null;
-  lineWidth: number;
+  lineWidth?: number;
   globalAlpha?: number | null;
   strokeStyle?: string | null;
 }

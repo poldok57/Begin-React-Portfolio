@@ -19,6 +19,7 @@ const DRAWING_ACTIONS = {
   ABORT: "abort",
   VALID: "valid",
   CLOSE_PATH: "closePath",
+  STOP_PATH: "stopPath",
 };
 const IMAGE_ACTIONS = {
   IMAGE_RADIUS: "imageRadius",
@@ -37,6 +38,7 @@ export const DRAWING_MODES = {
   ARC: "arc",
   PATH: "path",
   CLOSED_PATH: "closedPath",
+  END_PATH: "endPath",
   ERASE: "erase",
 
   CONTROL_PANEL: {
@@ -56,6 +58,7 @@ const LINE_MODES = [
   DRAWING_MODES.ARC,
   DRAWING_MODES.PATH,
   DRAWING_MODES.CLOSED_PATH,
+  DRAWING_MODES.END_PATH,
 ];
 const FREEHAND_MODES = [
   DRAWING_MODES.DRAW,
@@ -173,14 +176,15 @@ export type GroupParams = {
 export interface ThingsToDraw {
   type: string;
   rotation: number;
-  lockRatio: boolean;
   size: Area;
   general: ParamsGeneral;
   withTurningButtons: boolean;
   withCornerButton: boolean;
   withResize: boolean;
 }
+
 export interface ShapeDefinition extends ThingsToDraw {
+  lockRatio: boolean;
   blackWhite: boolean;
   canvasImage: HTMLCanvasElement | null;
   canvasImageTransparent: HTMLCanvasElement | null;

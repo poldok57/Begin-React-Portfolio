@@ -5,6 +5,7 @@ interface CanvasProps {
   height: number;
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
+  background: string;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -12,6 +13,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   height,
   canvasRef,
   canvasTemporyRef,
+  background,
 }) => {
   return (
     <div
@@ -19,6 +21,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         position: "relative",
         height: height + 5,
         width: width + 5,
+        backgroundColor: background,
       }}
       className="border-2 border-blue-300 border-spacing-2"
     >
@@ -31,7 +34,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           left: 0,
           top: 0,
         }}
-        className="m-auto bg-white rounded-md shadow-md border-spacing-3"
+        className="m-auto rounded-md shadow-md border-spacing-3"
       />
       <canvas
         width={width}

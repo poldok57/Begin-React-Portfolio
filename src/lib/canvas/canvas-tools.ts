@@ -1,18 +1,43 @@
 import { Coordinate } from "./types";
 
 export const getMouseCoordinates: (
-  event: MouseEvent,
+  event: MouseEvent | Coordinate,
   canvas: HTMLCanvasElement | null
 ) => Coordinate | null = (event, canvas) => {
   if (!canvas) return null;
 
   const rect = canvas.getBoundingClientRect();
 
-  const coord: Coordinate = {
+  // conversion with mouse event
+  if ("clientX" in event) {
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    } as Coordinate;
+  }
+  // conversion with coordinate
+  return { x: event.x - rect.left, y: event.y - rect.top } as Coordinate;
+};
+
+export const getCoordinatesInCanvas: (
+  event: MouseEvent | TouchEvent,
+  canvas: HTMLCanvasElement
+) => Coordinate = (event, canvas) => {
+  const rect = canvas.getBoundingClientRect();
+
+  // conversion with touch event
+  if ("touches" in event) {
+    const touch = event.touches[0];
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    } as Coordinate;
+  }
+  // conversion with mouse event
+  return {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top,
-  };
-  return coord;
+  } as Coordinate;
 };
 
 /**

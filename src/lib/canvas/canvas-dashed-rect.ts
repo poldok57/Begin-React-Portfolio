@@ -3,6 +3,9 @@
  */
 import { Area, Rectangle } from "./types";
 
+const INTERVAL = 5;
+export const OVERAGE = Math.round(INTERVAL * 1.6);
+
 /**
  * Function to draw a dashed rectangle on the canvas
  * @param {CanvasRenderingContext2D} ctx
@@ -16,7 +19,6 @@ export const drawDashedRectangle = (
 ) => {
   if (!bounds || !ctx) return;
   const alpha = ctx.globalAlpha;
-  const interval = 5;
   ctx.globalAlpha = globalAlpha;
   ctx.beginPath();
   ctx.strokeStyle = "#201010";
@@ -32,9 +34,7 @@ export const drawDashedRectangle = (
     y = bounds.y;
   }
 
-  const overage = interval * 1.6;
-
-  ctx.setLineDash([interval, (interval * 2) / 3]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
+  ctx.setLineDash([INTERVAL, (INTERVAL * 2) / 3]); // Configure the dashes: 5 pixels painted, 5 pixels unpainted
 
   ctx.fillStyle = "rgba(70, 70, 70, 0.20)";
   ctx.beginPath();
@@ -46,14 +46,14 @@ export const drawDashedRectangle = (
   y -= 1;
   width += 2;
   height += 2;
-  ctx.moveTo(x - overage, y);
-  ctx.lineTo(x + width + overage, y);
-  ctx.moveTo(x, y - overage);
-  ctx.lineTo(x, y + height + overage);
-  ctx.moveTo(x + width, y - overage);
-  ctx.lineTo(x + width, y + height + overage);
-  ctx.moveTo(x - overage, y + height);
-  ctx.lineTo(x + width + overage, y + height);
+  ctx.moveTo(x - OVERAGE, y);
+  ctx.lineTo(x + width + OVERAGE, y);
+  ctx.moveTo(x, y - OVERAGE);
+  ctx.lineTo(x, y + height + OVERAGE);
+  ctx.moveTo(x + width, y - OVERAGE);
+  ctx.lineTo(x + width, y + height + OVERAGE);
+  ctx.moveTo(x - OVERAGE, y + height);
+  ctx.lineTo(x + width + OVERAGE, y + height);
   ctx.stroke();
   ctx.setLineDash([]); // Resets to a solid line for other drawings
 
