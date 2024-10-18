@@ -9,7 +9,7 @@ import {
   selectBoxVariants,
 } from "@/styles/taskbar-variants";
 import { CloseButton } from "./CloseButton";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 const TASKBAR_PARAMS_KEY = "taskbarParams";
 
@@ -62,7 +62,7 @@ const TaskbarTypeSelect: React.FC<TaskbarTypeSelectProps> = ({
   return (
     <div
       ref={menuRef}
-      className={clsx(
+      className={cn(
         "absolute  bottom-full z-40 p-2 bg-gray-300 rounded-md border border-gray-500 shadow-lg text-nowrap w-fit",
         position === "left" ? "left-0" : "right-0"
       )}
@@ -154,12 +154,12 @@ export const Taskbar = () => {
     >
       {taskbarItems.length > 0 && (
         <div
-          className={clsx("relative", {
+          className={cn("relative", {
             "w-full": barParams.layout !== "horizontal",
           })}
         >
           <div
-            className={clsx("flex flex-row items-end", {
+            className={cn("flex flex-row items-end", {
               "w-full": barParams.layout !== "horizontal",
               "justify-end": barParams.position === "right",
               "justify-start": barParams.position === "left",

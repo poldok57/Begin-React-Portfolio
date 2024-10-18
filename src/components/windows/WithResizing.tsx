@@ -28,7 +28,7 @@ import { isTouchDevice } from "@/lib/utils/device";
 
 import { Size, Rectangle, Coordinate } from "../../lib/canvas/types";
 import { EVENT, POSITION } from "./types";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 interface ComponentSizeContext {
   componentSize: Size;
@@ -815,7 +815,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
       {isResizable.current && (
         <button
-          className={clsx([
+          className={cn([
             "absolute -right-2 -bottom-2 p-1 text-gray-700 bg-gray-300 rounded-xl",
             "opacity-0 group-hover/resizable:opacity-40 hover:opacity-80 cursor-nw-resize group-focus/resizable:opacity-60",
           ])}

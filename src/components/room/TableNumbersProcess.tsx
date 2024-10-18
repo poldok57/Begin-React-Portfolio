@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useTableDataStore } from "./stores/tables";
 import { useRoomContext } from "./RoomProvider";
-import { drawArrow } from "@/lib/utils/canvasUtils";
+import { drawArrow } from "@/lib/canvas/canvas-arrow";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { Rectangle } from "@/lib/canvas/types";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";

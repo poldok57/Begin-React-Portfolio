@@ -204,7 +204,17 @@ export abstract class drawingHandler {
     coord: Coordinate
   ): string | null;
   abstract actionMouseUp(): void;
+
   abstract actionMouseLeave(): void;
 
   abstract refreshDrawing(opacity?: number, mouseOnShape?: string | null): void;
+
+  // default actions for touch events
+  actionTouchEnd() {
+    this?.actionMouseUp();
+  }
+  actionTouchDown(event: TouchEvent, coord: Coordinate) {
+    console.log("Default actionTouchDown");
+    return this?.actionMouseDown(event, coord);
+  }
 }

@@ -12,7 +12,7 @@ import { generateRandomKey } from "./store";
 import { getContrastColor } from "../../lib/utils/colors";
 import { isAlignedRight, isAlignedBottom } from "../../lib/utils/position";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 import { Coordinate, RectPosition } from "../../lib/canvas/types";
 import { EVENT, POSITION } from "./types";
@@ -493,7 +493,7 @@ export function withMousePosition<P extends object>(
         id={id}
         style={{ ...styleRef.current }}
         onClick={(e: React.MouseEvent<HTMLDivElement>) => onClick?.(e)}
-        className={clsx("hover:z-30", className, {
+        className={cn("hover:z-30", className, {
           "h-fit": resizable,
           "group/draggable": !withTitleBar || titleHidden,
           "group/resizable": resizable,
@@ -531,7 +531,7 @@ export function withMousePosition<P extends object>(
                   }
                 : {}),
             }}
-            className={clsx("group-hover/draggable:z-40", titleClassName, {
+            className={cn("group-hover/draggable:z-40", titleClassName, {
               "bg-primary rounded border border-gray-500 text-secondary":
                 titleClassName === null && withTitleBar,
               "group/draggable": withTitleBar && !titleHidden,

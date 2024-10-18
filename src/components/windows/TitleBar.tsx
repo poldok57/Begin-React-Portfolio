@@ -16,7 +16,7 @@ import { copyDivStyle, toggleWindowSize } from "./window-size";
 import { useComponentSize } from "./WithResizing";
 import { isTouchDevice } from "@/lib/utils/device";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 export enum STATUS {
   MINIMIZED = "minimized",
@@ -242,7 +242,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     return (
       <div
         ref={ref}
-        className={clsx(
+        className={cn(
           "flex absolute top-0 left-0 items-center w-full",
           className
         )}
@@ -253,7 +253,7 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
           {children}
         </div>
         <div
-          className={clsx(
+          className={cn(
             "flex absolute flex-row gap-4 justify-between items-center p-1 w-full h-full",
             "opacity-20 group-hover/draggable:opacity-100",
             {

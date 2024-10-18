@@ -50,9 +50,7 @@ export class drawLine extends drawingHandler {
   }
 
   setCoordinates(coord: Coordinate) {
-    if (this.mCanvas !== null) {
-      this.line.setCoordinates(coord);
-    }
+    this.line.setCoordinates(coord);
     return this.line.getCoordinates() as Coordinate;
   }
 
@@ -81,6 +79,7 @@ export class drawLine extends drawingHandler {
       this.line.eraseStartCoordinates();
     }
   }
+
   changeData(data: AllParams) {
     this.setDataGeneral(data.general);
     if (data.path) {
@@ -161,6 +160,7 @@ export class drawLine extends drawingHandler {
    * Function follow the cursor on the canvas
    */
   followCursor() {
+    console.log("followCursor", this.getType());
     const ctxMouse = this.ctxTempory;
     if (ctxMouse === null) {
       console.error("ctxTempory is null");
@@ -196,6 +196,10 @@ export class drawLine extends drawingHandler {
       } as drawingCircle);
     } else {
       this.line.show(this.ctxTempory, true);
+
+      if (this.ctxTempory) {
+        this.line.showLineEnds(this.ctxTempory);
+      }
     }
     return cursorType as string;
   }
@@ -226,6 +230,39 @@ export class drawLine extends drawingHandler {
     return this.followCursor() as string;
   }
 
+  showLineAndArcInPath() {
+    console.log("showLineAndArc");
+    let toContinue = false;
+    switch (this.getType()) {
+      case DRAWING_MODES.LINE:
+      case DRAWING_MODES.ARC:
+        if (!this.path) {
+          this.initPath();
+        } else if (this.line.setPositions()) {
+          this.line.show(this.ctxTempory);
+          this.addLineToPath();
+          this.line.setStartFromEnd();
+        }
+        this.clearTemporyCanvas();
+        this.path?.draw(this.ctxTempory);
+
+        toContinue = true;
+        break;
+    }
+    this.line.show(this.ctxTempory);
+    return toContinue;
+  }
+
+  showLineAndArc() {
+    if (this.line.setPositions()) {
+      this.line.show();
+      this.line.setStartFromEnd();
+      this.saveCanvasPicture(this.line.getStartCoordinates() as Coordinate);
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Function who recieve the mouse down event
    * to start drawing on the canvas.
@@ -238,6 +275,7 @@ export class drawLine extends drawingHandler {
     coord: Coordinate
   ): returnMouseDown {
     // first point must be inside the canvas
+    console.log("actionMouseDown start:", this.line.getStartCoordinates());
     if (
       this.line.getStartCoordinates() == null &&
       !mouseIsInsideComponent(event, this.mCanvas)
@@ -274,45 +312,18 @@ export class drawLine extends drawingHandler {
           };
         }
       } else {
-        switch (this.getType()) {
-          case DRAWING_MODES.LINE:
-          case DRAWING_MODES.ARC:
-            if (!this.path) {
-              this.initPath();
-            } else if (this.line.setPositions()) {
-              this.line.show(this.ctxTempory);
-              this.addLineToPath();
-              this.line.setStartFromEnd();
-            }
-            this.clearTemporyCanvas();
-            this.path?.draw(this.ctxTempory);
-
-            toContinue = true;
-            break;
-        }
+        toContinue = this.showLineAndArcInPath();
       }
     } else {
-      // mouse down on line
-      switch (this.getType()) {
-        case DRAWING_MODES.PATH:
-          if (!this.withPath) {
-            // starting mode path
-            this.line.setStartCoordinates();
-            this.initPath();
-          }
-          changeMode = DRAWING_MODES.LINE;
-          break;
-        case DRAWING_MODES.LINE:
-        case DRAWING_MODES.ARC:
-          if (this.line.setPositions()) {
-            this.line.show();
-            this.line.setStartFromEnd();
-            this.saveCanvasPicture(
-              this.line.getStartCoordinates() as Coordinate
-            );
-          }
-          toContinue = true;
-          break;
+      if (this.getType() === DRAWING_MODES.PATH) {
+        if (!this.withPath) {
+          // starting mode path
+          this.line.setStartCoordinates();
+          this.initPath();
+        }
+        changeMode = DRAWING_MODES.LINE;
+      } else {
+        toContinue = this.showLineAndArc();
       }
     }
     return {
@@ -321,6 +332,50 @@ export class drawLine extends drawingHandler {
       pointer,
       changeMode,
     } as returnMouseDown;
+  }
+
+  /**
+   * Function who recieve the touch down event
+   * to start drawing on the canvas.
+   * @param {TouchEvent} event
+   * @param {Coordinate} coord
+   * @returns {boolean} to continue or not
+   */
+  actionTouchDown(event: TouchEvent, coord: Coordinate): returnMouseDown {
+    // first point must be inside the canvas
+    if (
+      this.line.getStartCoordinates() == null &&
+      !mouseIsInsideComponent(event, this.mCanvas)
+    ) {
+      return {};
+    }
+    // color and width painting
+    this.setCoordinates(coord);
+
+    if (this.line.getStartCoordinates() == null) {
+      console.log("setStartCoordinates");
+      this.line.setStartCoordinates();
+    }
+    this.followCursor();
+    return { toContinue: false };
+  }
+
+  /**
+   * Function who recieve the touch end event
+   */
+  actionTouchEnd() {
+    if (this.finishedDrawing) {
+      return;
+    }
+    if (this.withPath && this.path) {
+      this.showLineAndArcInPath();
+    } else {
+      this.showLineAndArc();
+      this.clearTemporyCanvas();
+      if (this.ctxTempory) {
+        this.line.showLineEnds(this.ctxTempory, true);
+      }
+    }
   }
   /**
    * Function to stop drawing on the canvas
@@ -384,6 +439,7 @@ export class drawLine extends drawingHandler {
   }
 
   endAction(nextMode: string = DRAWING_MODES.DRAW) {
+    console.log("endAction", nextMode);
     if (!isDrawingLine(nextMode)) {
       this.clearTemporyCanvas();
       if (this.withPath && this.path) {
@@ -393,11 +449,14 @@ export class drawLine extends drawingHandler {
         this.line.eraseStartCoordinates();
       }
       this.line.eraseLastCoordinates();
+    } else if (this.getType() === DRAWING_MODES.ARC) {
+      this.line.eraseCoordinate();
     }
     this.clearTemporyCanvas();
   }
 
   actionEndPath(eventAction: string) {
+    console.log("actionEndPath", eventAction);
     if (this.withPath && this.path) {
       // console.log("close path", this.path);
       if (eventAction === DRAWING_MODES.CLOSE_PATH) {

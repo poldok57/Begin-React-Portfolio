@@ -1,3 +1,4 @@
+"use client";
 import { FULL_NAME } from "../../lib/config";
 import { withMousePosition } from "../windows/withMousePosition";
 import { ImageResizable } from "../windows/ImageResizable";

@@ -1,5 +1,6 @@
 import { basicLine, crossLine } from "./canvas-basic";
 import { Coordinate, LinePath, LineType } from "./types";
+import { drawArrow } from "./canvas-arrow";
 
 export class CanvasLine implements LinePath {
   mCanvas: HTMLCanvasElement | null = null;
@@ -15,7 +16,7 @@ export class CanvasLine implements LinePath {
   constructor(canvas: HTMLCanvasElement | null = null) {
     this.setCanvas(canvas);
 
-    this.coordinates = { x: 0, y: 0 };
+    this.coordinates = null;
     this.start = null;
     this.end = null;
   }
@@ -201,6 +202,70 @@ export class CanvasLine implements LinePath {
       this.showArc(context, withCross);
     } else {
       this.showLine(context);
+    }
+  }
+
+  showLineEnds(ctx: CanvasRenderingContext2D, withLine: boolean = false) {
+    const crossWidth = Math.min(ctx.lineWidth * 2, 30);
+    if (this.start) {
+      crossLine(ctx, this.start, crossWidth);
+    }
+    if (this.end) {
+      crossLine(ctx, this.end, crossWidth);
+    }
+    if (withLine && this.start && this.end) {
+      const alpha = ctx.globalAlpha;
+      ctx.globalAlpha = 0.25;
+      this.showLine(ctx);
+      ctx.globalAlpha = alpha;
+
+      // Dessiner deux petites flèches grises perpendiculaires au milieu de la ligne
+      if (this.start && this.end) {
+        const midX = (this.start.x + this.end.x) / 2;
+        const midY = (this.start.y + this.end.y) / 2;
+
+        // Calculer le vecteur perpendiculaire à la ligne
+        const dx = this.end.x - this.start.x;
+        const dy = this.end.y - this.start.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const perpX = -dy / length;
+        const perpY = dx / length;
+
+        // Définir les points de départ et d'arrivée pour les flèches
+        const arrowLength = 40;
+        const from = { x: midX, y: midY };
+        const to1 = {
+          x: midX + perpX * arrowLength,
+          y: midY + perpY * arrowLength,
+        };
+        const to2 = {
+          x: midX - perpX * arrowLength,
+          y: midY - perpY * arrowLength,
+        };
+
+        // Dessiner les flèches
+        drawArrow({
+          ctx: ctx,
+          from: from,
+          to: to1,
+          color: "rgba(128, 128, 128, 0.7)",
+          curvature: 0,
+          lineWidth: 6,
+          opacity: 0.5,
+          padding: 8,
+        });
+
+        drawArrow({
+          ctx: ctx,
+          from: from,
+          to: to2,
+          color: "rgba(128, 128, 128, 0.7)",
+          curvature: 0,
+          lineWidth: 6,
+          opacity: 0.5,
+          padding: 8,
+        });
+      }
     }
   }
 }

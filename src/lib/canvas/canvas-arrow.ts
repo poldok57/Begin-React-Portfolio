@@ -22,7 +22,8 @@ export function drawArrow({
   opacity?: number;
   padding?: number;
 }) {
-  const headLength = 20 + lineWidth;
+  // Calculer la distance entre les points from et to
+
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
@@ -38,6 +39,9 @@ export function drawArrow({
     x: to.x - unitX * padding,
     y: to.y - unitY * padding,
   };
+
+  const adjustedDistance = distance - padding * 2;
+  const headLength = Math.min(20, adjustedDistance * 0.6);
 
   const midX = (adjustedFrom.x + adjustedTo.x) / 2;
   const midY = (adjustedFrom.y + adjustedTo.y) / 2;

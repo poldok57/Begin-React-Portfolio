@@ -26,12 +26,16 @@ export const getCoordinatesInCanvas: (
   const rect = canvas.getBoundingClientRect();
 
   // conversion with touch event
-  if ("touches" in event) {
-    const touch = event.touches[0];
-    return {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top,
-    } as Coordinate;
+  if (event instanceof TouchEvent) {
+    if (event.touches.length > 0) {
+      const touch = event.touches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      } as Coordinate;
+    } else {
+      return { x: 0, y: 0 } as Coordinate;
+    }
   }
   // conversion with mouse event
   return {

@@ -5,7 +5,7 @@ import React, {
   useRef,
   useEffect,
 } from "react";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 import { TitleBar, STATUS } from "./TitleBar";
 import { WindowRect } from "./types";
@@ -107,7 +107,7 @@ export const FullScreenWindow = forwardRef<
   return (
     <div
       ref={ref}
-      className={clsx(
+      className={cn(
         "z-20 p-4 rounded-lg border-2 border-red-700 shadow-xl bg-paper",
         {
           invisible: !isOpen,
@@ -128,7 +128,7 @@ export const FullScreenWindow = forwardRef<
           <>
             <TitleBar
               id={id}
-              className={clsx("group/draggable", {
+              className={cn("group/draggable", {
                 "text-lg rounded border border-gray-500 bg-primary text-paper":
                   title,
               })}
@@ -150,7 +150,7 @@ export const FullScreenWindow = forwardRef<
               {title}
             </TitleBar>
             <div
-              className={clsx("absolute mx-0 my-2", {
+              className={cn("absolute mx-0 my-2", {
                 "mt-10": title,
               })}
               style={{ width: "calc(100% - 20px)" }}

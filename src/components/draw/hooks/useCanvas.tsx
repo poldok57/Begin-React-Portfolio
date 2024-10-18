@@ -201,10 +201,18 @@ export const useCanvas = ({
       return;
     }
 
+    console.log("handleMouseDownExtend", event);
+
     const coord = getCoordinatesInCanvas(event, canvasTemporyRef.current);
 
-    const toContinue = drawingRef.current.actionMouseDown(event, coord);
-
+    let toContinue: boolean | undefined = false;
+    if (event instanceof TouchEvent) {
+      const ret = drawingRef.current.actionTouchDown(event, coord);
+      toContinue = ret.toContinue;
+    } else {
+      const ret = drawingRef.current.actionMouseDown(event, coord);
+      toContinue = ret.toContinue;
+    }
     if (!toContinue) {
       stopExtendMouseEvent();
     }
@@ -433,13 +441,31 @@ export const useCanvas = ({
     const coord = getCoordinatesInCanvas(event, canvasRef.current);
 
     drawingRef.current.setType(currentParams.mode);
-    const { toContinue, toReset, pointer, changeMode } =
-      drawingRef.current.actionMouseDown(event, coord);
+    let toContinue = false;
+    let toReset = false;
+    let pointer = null;
+    let changeMode = null;
+
+    console.log("actionMouseDown", event);
+    if (event instanceof MouseEvent) {
+      const mouseResult = drawingRef.current.actionMouseDown(event, coord);
+      toContinue = mouseResult.toContinue ?? false;
+      toReset = mouseResult.toReset ?? false;
+      pointer = mouseResult.pointer ?? null;
+      changeMode = mouseResult.changeMode ?? null;
+    } else {
+      const touchResult = drawingRef.current.actionTouchDown(event, coord);
+      toContinue = touchResult.toContinue ?? false;
+      toReset = touchResult.toReset ?? false;
+      changeMode = touchResult.changeMode ?? null;
+    }
+
     if (toContinue) {
       extendMouseEvent();
     } else {
       stopExtendMouseEvent();
     }
+
     if (toReset && drawingRef.current) {
       drawingRef.current.endAction();
       // restart with basic drawing mode
@@ -541,7 +567,9 @@ export const useCanvas = ({
     };
 
     const handleTouchEnd = () => {
-      drawingRef.current?.actionMouseUp();
+      if (canvasRef.current) {
+        drawingRef.current?.actionTouchEnd();
+      }
       stopExtendMouseEvent();
     };
     const handleDoubleTap = () => {
@@ -598,6 +626,5 @@ export const useCanvas = ({
 
   useEffect(() => {
     actionChangeMode(mode);
-    // clearTemporyCanvas();
   }, [mode]);
 };
