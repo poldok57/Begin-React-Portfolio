@@ -214,7 +214,6 @@ export abstract class drawingHandler {
     this?.actionMouseUp();
   }
   actionTouchDown(event: TouchEvent, coord: Coordinate) {
-    console.log("Default actionTouchDown");
     return this?.actionMouseDown(event, coord);
   }
 }

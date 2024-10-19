@@ -55,7 +55,7 @@ export class CanvasLine implements LinePath {
     this.end = null;
   }
 
-  eraseLastCoordinates() {
+  eraseEndCoordinates() {
     if (this.end) {
       this.end = null;
       return;
@@ -205,8 +205,21 @@ export class CanvasLine implements LinePath {
     }
   }
 
+  arrowForArc(ctx: CanvasRenderingContext2D, from: Coordinate, to: Coordinate) {
+    drawArrow({
+      ctx: ctx,
+      from: from,
+      to: to,
+      color: "rgba(128, 128, 128, 0.7)",
+      curvature: 0,
+      lineWidth: 6,
+      opacity: 0.5,
+      padding: 8,
+    });
+  }
   showLineEnds(ctx: CanvasRenderingContext2D, withLine: boolean = false) {
     const crossWidth = Math.min(ctx.lineWidth * 2, 30);
+
     if (this.start) {
       crossLine(ctx, this.start, crossWidth);
     }
@@ -219,20 +232,20 @@ export class CanvasLine implements LinePath {
       this.showLine(ctx);
       ctx.globalAlpha = alpha;
 
-      // Dessiner deux petites flèches grises perpendiculaires au milieu de la ligne
+      // Draw two small gray perpendicular arrows in the middle of the line
       if (this.start && this.end) {
         const midX = (this.start.x + this.end.x) / 2;
         const midY = (this.start.y + this.end.y) / 2;
 
-        // Calculer le vecteur perpendiculaire à la ligne
+        // Calculate the perpendicular vector to the line
         const dx = this.end.x - this.start.x;
         const dy = this.end.y - this.start.y;
         const length = Math.sqrt(dx * dx + dy * dy);
         const perpX = -dy / length;
         const perpY = dx / length;
 
-        // Définir les points de départ et d'arrivée pour les flèches
-        const arrowLength = 40;
+        // Define the start and end points for the arrows
+        const arrowLength = 32;
         const from = { x: midX, y: midY };
         const to1 = {
           x: midX + perpX * arrowLength,
@@ -243,28 +256,9 @@ export class CanvasLine implements LinePath {
           y: midY - perpY * arrowLength,
         };
 
-        // Dessiner les flèches
-        drawArrow({
-          ctx: ctx,
-          from: from,
-          to: to1,
-          color: "rgba(128, 128, 128, 0.7)",
-          curvature: 0,
-          lineWidth: 6,
-          opacity: 0.5,
-          padding: 8,
-        });
-
-        drawArrow({
-          ctx: ctx,
-          from: from,
-          to: to2,
-          color: "rgba(128, 128, 128, 0.7)",
-          curvature: 0,
-          lineWidth: 6,
-          opacity: 0.5,
-          padding: 8,
-        });
+        // Draw the arrows
+        this.arrowForArc(ctx, from, to1);
+        this.arrowForArc(ctx, from, to2);
       }
     }
   }

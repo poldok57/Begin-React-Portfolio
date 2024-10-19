@@ -41,7 +41,10 @@ export function drawArrow({
   };
 
   const adjustedDistance = distance - padding * 2;
-  const headLength = Math.min(20, adjustedDistance * 0.6);
+  const headLength = Math.max(
+    Math.min(30, adjustedDistance * 0.6),
+    2 * lineWidth
+  );
 
   const midX = (adjustedFrom.x + adjustedTo.x) / 2;
   const midY = (adjustedFrom.y + adjustedTo.y) / 2;

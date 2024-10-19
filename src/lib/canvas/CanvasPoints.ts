@@ -69,6 +69,26 @@ export abstract class CanvasPoints {
   }
 
   addItem(item: LinePath | Coordinate) {
+    const prevItem = this.items[this.items.length - 1];
+    if (prevItem && "end" in prevItem && prevItem.end) {
+      const prevEnd = prevItem.end as Coordinate;
+      const currentEnd = (item as LinePath).end as Coordinate;
+      if (prevEnd.x === currentEnd.x && prevEnd.y === currentEnd.y) {
+        console.log("ignore add item", prevEnd, currentEnd);
+        return; // Ignore adding the current item if it's the same as the previous item
+      }
+    }
+    // Vérifier si l'élément actuel est de type Coordinate
+    if ("x" in item && "y" in item) {
+      const currentPoint = item as Coordinate;
+      if (prevItem && "x" in prevItem && "y" in prevItem) {
+        const prevPoint = prevItem as Coordinate;
+        if (prevPoint.x === currentPoint.x && prevPoint.y === currentPoint.y) {
+          return; // Ignorer l'ajout du point actuel s'il est identique au point précédent
+        }
+      }
+    }
+
     this.items.push(item as LinePath & Coordinate);
     if ("end" in item && (item as LinePath).end) {
       const end = (item as LinePath).end as Coordinate;
@@ -203,8 +223,17 @@ export abstract class CanvasPoints {
     );
   }
 
+  private lastCallTime: number = 0;
+
   findSameAnge(coord: Coordinate): boolean {
-    const marginPlus = MARGIN * 2;
+    const currentTime = Date.now();
+    if (currentTime - this.lastCallTime > 100) {
+      this.lastCallTime = currentTime;
+      return false;
+    }
+    this.lastCallTime = currentTime;
+
+    const marginPlus = MARGIN * 1.5;
     // Verify found angle with marginPlus
     if (this.angleFound >= 0) {
       const element = (this.items[this.angleFound] as LinePath).end;
@@ -345,6 +374,7 @@ export abstract class CanvasPoints {
         lastItem.end.x === firstItem.end.x &&
         lastItem.end.y === firstItem.end.y
       ) {
+        console.log("close line", lastItem.end, firstItem.end);
         lastItem.end = { ...newCoord };
         firstItem.end = { ...newCoord };
       }
@@ -390,10 +420,10 @@ export abstract class CanvasPoints {
     const btnPressed =
       event === null
         ? false
-        : "buttons" in event
+        : event instanceof MouseEvent
         ? event.buttons === 1
-        : "touches" in event && event.touches.length > 0
-        ? true
+        : event instanceof TouchEvent
+        ? event.touches.length > 0
         : false;
 
     if ((btnPressed || inArea) && this.findAngle(mousePosition)) {

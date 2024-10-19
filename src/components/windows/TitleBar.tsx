@@ -1,3 +1,4 @@
+"use client";
 import React, {
   forwardRef,
   MutableRefObject,
@@ -17,6 +18,7 @@ import { useComponentSize } from "./WithResizing";
 import { isTouchDevice } from "@/lib/utils/device";
 
 import { cn } from "@/lib/utils/cn";
+import { IconSize } from "@/styles/button-variants";
 
 export enum STATUS {
   MINIMIZED = "minimized",
@@ -71,12 +73,9 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
     const { lockResize, hideComponent } = useComponentSize();
 
     const maximizeId = useMaximizedWindowId();
-
+    const [isTouch, setIsTouch] = useState(false);
     const btnRef = referrer ? referrer.current : undefined;
-
-    const btnSize = isTouchDevice() ? "xl" : "md";
-
-    const isTouch = isTouchDevice();
+    let btnSize: IconSize = "md";
     /**
      * Gère la fermeture de la fenêtre
      */
@@ -204,6 +203,13 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
       maximizeOn();
     };
 
+    // detect if the device is a touch device
+    useEffect(() => {
+      const touch = isTouchDevice();
+      setIsTouch(touch);
+      btnSize = touch ? "xl" : "md";
+    }, []);
+
     // controle the scroll bar of the body
     useEffect(() => {
       const windowClosed = () => {
@@ -255,8 +261,9 @@ export const TitleBar = forwardRef<HTMLDivElement, TitleBarProps>(
         <div
           className={cn(
             "flex absolute flex-row gap-4 justify-between items-center p-1 w-full h-full",
-            "opacity-20 group-hover/draggable:opacity-100",
+            "group-hover/draggable:opacity-100",
             {
+              "opacity-20": !isTouch,
               "opacity-85": isTouch,
             }
           )}

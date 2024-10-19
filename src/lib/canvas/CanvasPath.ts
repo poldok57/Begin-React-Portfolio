@@ -299,10 +299,11 @@ export class CanvasPath extends CanvasPoints {
             y: lastItem.coordinates.y + dy / 2,
           };
         }
+        console.log("close curve", lastItem.end);
         return;
       }
     }
-
+    console.log("close line", lastItem.end);
     if (lastItem.end.x !== start.x && lastItem.end.y !== start.y) {
       // add a line to the start point
       const newLine: LinePath = {

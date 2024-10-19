@@ -176,6 +176,11 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     return { width: newWidth, height: newHeight };
   };
 
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    setIsTouch(isTouchDevice());
+  }, []);
+
   const resizeComponent = (size: Size | Rectangle) => {
     const { component } = selectComponent();
     if (!component) {
@@ -821,7 +826,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
           ])}
           onClick={setResizeOn}
         >
-          <MoveDiagonal2 size={isTouchDevice() ? 20 : 14} />
+          <MoveDiagonal2 size={isTouch ? 20 : 14} />
         </button>
       )}
     </SizeContext.Provider>

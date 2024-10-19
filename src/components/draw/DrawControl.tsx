@@ -51,7 +51,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
-  const isTouch: boolean = isTouchDevice();
+  const [isTouch, setIsTouch] = useState(false);
 
   const addEvent = (detail: EventDetail) => {
     const event = new CustomEvent("modeChanged", detail);
@@ -174,9 +174,13 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   };
 
   useEffect(() => {
+    setIsTouch(isTouchDevice());
+  }, []);
+
+  useEffect(() => {
     modeRef.current = mode;
 
-    if (isTouchDevice()) {
+    if (isTouch) {
       // touch device, no keyboard events
       return;
     }

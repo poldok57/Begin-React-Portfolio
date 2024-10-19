@@ -201,8 +201,6 @@ export const useCanvas = ({
       return;
     }
 
-    console.log("handleMouseDownExtend", event);
-
     const coord = getCoordinatesInCanvas(event, canvasTemporyRef.current);
 
     let toContinue: boolean | undefined = false;
@@ -446,7 +444,6 @@ export const useCanvas = ({
     let pointer = null;
     let changeMode = null;
 
-    console.log("actionMouseDown", event);
     if (event instanceof MouseEvent) {
       const mouseResult = drawingRef.current.actionMouseDown(event, coord);
       toContinue = mouseResult.toContinue ?? false;
