@@ -73,6 +73,7 @@ export class CanvasLine implements LinePath {
   setStartFromEnd() {
     this.start = this.end;
     this.end = null;
+    this.coordinates = null;
   }
 
   setGlobalAlpha(alpha: number | null = null) {
@@ -157,7 +158,20 @@ export class CanvasLine implements LinePath {
     const start = this.getStartCoordinates();
     const end = this.getEndCoordinates();
 
-    if (!context || !current) return false;
+    if (current && start && !end) {
+      // draw preview line
+      drawArrow({
+        ctx: context,
+        from: start,
+        to: current,
+        color: this.strokeStyle,
+        opacity: 0.2,
+        lineWidth: this.lineWidth,
+        headSize: 15,
+        padding: 10,
+      });
+      return false;
+    }
 
     if (start && end && current) {
       if (this.strokeStyle) {
@@ -217,6 +231,7 @@ export class CanvasLine implements LinePath {
       padding: 8,
     });
   }
+
   showLineEnds(ctx: CanvasRenderingContext2D, withLine: boolean = false) {
     const crossWidth = Math.min(ctx.lineWidth * 2, 30);
 

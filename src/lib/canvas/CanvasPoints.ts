@@ -74,7 +74,7 @@ export abstract class CanvasPoints {
       const prevEnd = prevItem.end as Coordinate;
       const currentEnd = (item as LinePath).end as Coordinate;
       if (prevEnd.x === currentEnd.x && prevEnd.y === currentEnd.y) {
-        console.log("ignore add item", prevEnd, currentEnd);
+        // console.log("ignore add item", prevEnd, currentEnd);
         return; // Ignore adding the current item if it's the same as the previous item
       }
     }
@@ -233,7 +233,7 @@ export abstract class CanvasPoints {
     }
     this.lastCallTime = currentTime;
 
-    const marginPlus = MARGIN * 1.5;
+    const marginPlus = MARGIN * 2;
     // Verify found angle with marginPlus
     if (this.angleFound >= 0) {
       const element = (this.items[this.angleFound] as LinePath).end;
@@ -284,6 +284,7 @@ export abstract class CanvasPoints {
           Math.abs(coord.y - line.coordinates.y) < MARGIN
         ) {
           this.coordFound = i;
+          this.angleFound = -1;
           return true;
         }
       }
@@ -374,7 +375,7 @@ export abstract class CanvasPoints {
         lastItem.end.x === firstItem.end.x &&
         lastItem.end.y === firstItem.end.y
       ) {
-        console.log("close line", lastItem.end, firstItem.end);
+        // console.log("close line", lastItem.end, firstItem.end);
         lastItem.end = { ...newCoord };
         firstItem.end = { ...newCoord };
       }

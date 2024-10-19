@@ -299,7 +299,7 @@ export class CanvasPath extends CanvasPoints {
             y: lastItem.coordinates.y + dy / 2,
           };
         }
-        console.log("close curve", lastItem.end);
+        // console.log("close curve", lastItem.end);
         return;
       }
     }

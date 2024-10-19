@@ -275,6 +275,22 @@ export class drawLine extends drawingHandler {
       this.line.eraseStartCoordinates();
     }
   }
+
+  clicOnArcEnd(coord: Coordinate) {
+    if (this.getType() === DRAWING_MODES.ARC) {
+      const MARGIN_POINT = 10;
+      const endCoord = this.line.getEndCoordinates() as Coordinate;
+      // console.log("endCoord", endCoord, " coord", coord);
+      if (
+        endCoord &&
+        Math.abs(endCoord.x - coord.x) < MARGIN_POINT &&
+        Math.abs(endCoord.y - coord.y) < MARGIN_POINT
+      ) {
+        // console.log("same point than end");
+        this.line.eraseEndCoordinates();
+      }
+    }
+  }
   /**
    * Function who recieve the mouse down event
    * to start drawing on the canvas.
@@ -330,6 +346,7 @@ export class drawLine extends drawingHandler {
         }
         changeMode = DRAWING_MODES.LINE;
       } else {
+        this.clicOnArcEnd(coord);
         toContinue = this.showLineAndArc();
       }
     }
@@ -355,7 +372,6 @@ export class drawLine extends drawingHandler {
    */
   actionTouchDown(event: TouchEvent, coord: Coordinate): returnMouseDown {
     // first point must be inside the canvas
-    let changeMode = null;
     if (
       this.line.getStartCoordinates() == null &&
       !mouseIsInsideComponent(event, this.mCanvas)
@@ -389,12 +405,16 @@ export class drawLine extends drawingHandler {
       this.line.setStartCoordinates();
     }
 
-    if (this.getType() === DRAWING_MODES.PATH) {
-      this.initPath();
-      changeMode = DRAWING_MODES.LINE;
+    switch (this.getType()) {
+      case DRAWING_MODES.PATH:
+        this.initPath();
+        return { toContinue: false, changeMode: DRAWING_MODES.LINE };
+      case DRAWING_MODES.ARC:
+        this.clicOnArcEnd(coord);
+        break;
     }
     this.followCursor();
-    return { toContinue: false, changeMode: changeMode as string };
+    return {};
   }
 
   /**
@@ -480,7 +500,6 @@ export class drawLine extends drawingHandler {
   }
 
   endAction(nextMode: string = DRAWING_MODES.DRAW) {
-    console.log("endAction", nextMode);
     if (!isDrawingLine(nextMode)) {
       this.clearTemporyCanvas();
       if (this.withPath && this.path) {

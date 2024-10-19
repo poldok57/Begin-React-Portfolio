@@ -239,7 +239,6 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
 
     // Update state tableCurrentNumber
     updateTableNumber(null, currentNumber);
-
     clearSelection(false);
   };
 
@@ -336,7 +335,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
             ctx: ctxTemporary,
             from: { x: startX, y: startY },
             to: { x: endX, y: endY },
-            color: "rgba(120, 20, 20, 0.6)",
+            color: "rgba(120, 20, 20, 0.5)",
             curvature: 0.15,
             lineWidth: 10,
             padding: 10,
@@ -353,10 +352,10 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
               ctx: ctxTemporary,
               from: { x: startX, y: startY },
               to: { x: endX, y: endY },
-              color: "rgba(20, 80, 20, 0.6)",
+              color: "rgba(20, 80, 20, 0.5)",
               curvature: 0.2,
-              lineWidth: 20,
-              padding: 25,
+              lineWidth: 15,
+              padding: 10,
             });
           }
 
