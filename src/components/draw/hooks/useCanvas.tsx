@@ -452,7 +452,6 @@ export const useCanvas = ({
       changeMode = mouseResult.changeMode ?? null;
     } else {
       const touchResult = drawingRef.current.actionTouchDown(event, coord);
-      toContinue = touchResult.toContinue ?? false;
       toReset = touchResult.toReset ?? false;
       changeMode = touchResult.changeMode ?? null;
     }

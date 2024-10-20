@@ -460,11 +460,10 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
         confirmMessage={`Confirm reset ${
           nbSelectedTables > 0 ? nbSelectedTables : "all"
         } tables number`}
-        className="btn btn-warning"
+        confirmClassName="btn btn-warning"
+        className="btn btn-outline btn-warning"
       >
-        <button className="btn btn-outline btn-warning">
-          Reset tables number
-        </button>
+        Reset tables number
       </DeleteWithConfirm>
     </div>
   );

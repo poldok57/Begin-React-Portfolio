@@ -282,7 +282,8 @@ export const GroupCreat = ({
                 <div className="justify-between items-center card-actions">
                   {currentId && (
                     <DeleteWithConfirm
-                      className="p-2 m-1 btn btn-sm"
+                      confirmClassName="p-2 m-1 btn btn-sm"
+                      className="btn btn-warning btn-sm"
                       position="right"
                       onConfirm={() => {
                         resetTable();
@@ -290,9 +291,7 @@ export const GroupCreat = ({
                         setCurrentId(null);
                       }}
                     >
-                      <button className="btn btn-warning btn-sm">
-                        <Trash2 size={btnSize} />
-                      </button>
+                      <Trash2 size={btnSize} />
                     </DeleteWithConfirm>
                   )}
 

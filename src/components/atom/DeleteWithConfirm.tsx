@@ -5,6 +5,7 @@ interface DeleteWithConfirmProps {
   onConfirm?: () => void;
   children?: React.ReactNode;
   confirmMessage?: string;
+  confirmClassName?: string;
 }
 
 export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
@@ -12,6 +13,7 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
   position = "top",
   onConfirm,
   children = "Delete",
+  confirmClassName,
   confirmMessage = "Confirm delete?",
 }) => {
   return (
@@ -24,17 +26,21 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
           "dropdown-right": position === "right",
         })}
       >
-        <div tabIndex={0}>{children}</div>
-        <ul
-          tabIndex={0}
-          className="dropdown-content menu bg-base-100 rounded-box z-[1] w-fit min-w-40 p-2 text-nowrap shadow"
-        >
-          <li className="z-40 p-1 text-nowrap">
-            <button className={className} onClick={onConfirm}>
-              {confirmMessage}
-            </button>
-          </li>
-        </ul>
+        <details>
+          <summary tabIndex={0} className={className} role="button">
+            {children}
+          </summary>
+          <ul
+            // tabIndex={0}
+            className="dropdown-content menu bg-base-100 rounded-box z-[1] w-fit min-w-40 p-1 text-nowrap shadow"
+          >
+            <li className="z-40 p-1 text-nowrap">
+              <button className={confirmClassName} onClick={onConfirm}>
+                {confirmMessage}
+              </button>
+            </li>
+          </ul>
+        </details>
       </div>
     </>
   );

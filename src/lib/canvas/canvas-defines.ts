@@ -178,9 +178,9 @@ export interface ThingsToDraw {
   rotation: number;
   size: Area;
   general: ParamsGeneral;
-  withTurningButtons: boolean;
-  withCornerButton: boolean;
-  withResize: boolean;
+  withTurningButtons?: boolean;
+  withCornerButton?: boolean;
+  withResize?: boolean;
 }
 
 export interface ShapeDefinition extends ThingsToDraw {

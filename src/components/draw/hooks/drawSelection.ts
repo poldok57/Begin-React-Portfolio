@@ -55,7 +55,6 @@ export class drawSelection extends drawingHandler {
     this.data = {
       ...this.data,
       ...{
-        withTurningButtons: false,
         withCornerButton: false,
         type: DRAWING_MODES.SQUARE,
         rotation: 0,

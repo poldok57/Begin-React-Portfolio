@@ -113,15 +113,15 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
               />
             </DialogContent>
           </Dialog>
+
           <DeleteWithConfirm
             position="top"
             onConfirm={handlePowerOff}
             confirmMessage={`Close ${selectedTablesCount} tables ?`}
-            className="p-0 w-36 btn btn-warning"
+            confirmClassName="p-0 w-36 btn btn-circle btn-warning"
+            className="btn btn-sm"
           >
-            <button className="btn btn-circle btn-sm">
-              <PowerOff size={btnSize} />
-            </button>
+            <PowerOff size={btnSize} />
           </DeleteWithConfirm>
 
           <DeleteSelectedTables

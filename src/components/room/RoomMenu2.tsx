@@ -185,25 +185,27 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               </>
             )}
             <li>
-              <ul>
-                <a>View type</a>
-                <li>
-                  <a
-                    className={typeListMode === "plan" ? "active" : ""}
-                    onClick={() => setTypeListMode("plan")}
-                  >
-                    Floor plan
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className={typeListMode === "list" ? "active" : ""}
-                    onClick={() => setTypeListMode("list")}
-                  >
-                    List tables
-                  </a>
-                </li>
-              </ul>
+              <details open>
+                <summary>View type</summary>
+                <ul>
+                  <li>
+                    <a
+                      className={typeListMode === "plan" ? "active" : ""}
+                      onClick={() => setTypeListMode("plan")}
+                    >
+                      Floor plan
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className={typeListMode === "list" ? "active" : ""}
+                      onClick={() => setTypeListMode("list")}
+                    >
+                      List tables
+                    </a>
+                  </li>
+                </ul>
+              </details>
             </li>
           </ul>
         </div>

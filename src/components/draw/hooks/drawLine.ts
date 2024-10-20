@@ -58,14 +58,14 @@ export class drawLine extends drawingHandler {
     return this.line.getCoordinates() as Coordinate;
   }
 
-  setDataGeneral(data: ParamsGeneral) {
-    this.line.setLineWidth(data.lineWidth);
-    this.line.setStrokeStyle(data.color);
-    this.line.setGlobalAlpha(data.opacity);
+  setDataGeneral(dataGeneral: ParamsGeneral) {
+    this.line.setLineWidth(dataGeneral.lineWidth);
+    this.line.setStrokeStyle(dataGeneral.color);
+    this.line.setGlobalAlpha(dataGeneral.opacity);
 
     if (this.ctxTempory !== null) {
-      this.ctxTempory.lineWidth = data.lineWidth;
-      this.ctxTempory.strokeStyle = data.color;
+      this.ctxTempory.lineWidth = dataGeneral.lineWidth;
+      this.ctxTempory.strokeStyle = dataGeneral.color;
     }
   }
 
@@ -277,20 +277,47 @@ export class drawLine extends drawingHandler {
   }
 
   clicOnArcEnd(coord: Coordinate) {
-    if (this.getType() === DRAWING_MODES.ARC) {
-      const MARGIN_POINT = 10;
-      const endCoord = this.line.getEndCoordinates() as Coordinate;
-      // console.log("endCoord", endCoord, " coord", coord);
-      if (
-        endCoord &&
-        Math.abs(endCoord.x - coord.x) < MARGIN_POINT &&
-        Math.abs(endCoord.y - coord.y) < MARGIN_POINT
-      ) {
-        // console.log("same point than end");
-        this.line.eraseEndCoordinates();
+    if (this.getType() !== DRAWING_MODES.ARC) {
+      return;
+    }
+    const MARGIN_POINT = 10;
+    const endCoord = this.line.getEndCoordinates() as Coordinate;
+    // console.log("endCoord", endCoord, " coord", coord);
+    if (
+      endCoord &&
+      Math.abs(endCoord.x - coord.x) < MARGIN_POINT &&
+      Math.abs(endCoord.y - coord.y) < MARGIN_POINT
+    ) {
+      // console.log("same point than end");
+      this.line.eraseEndCoordinates();
+      return;
+    }
+    // Vérifier si coord est proche de line.getStartCoordinates()
+    const startCoord = this.line.getStartCoordinates();
+    console.log("startCoord", startCoord, "coord", coord);
+    // clic near end of last line
+    if (
+      startCoord &&
+      Math.abs(startCoord.x - coord.x) < MARGIN_POINT &&
+      Math.abs(startCoord.y - coord.y) < MARGIN_POINT &&
+      this.withPath &&
+      this.path &&
+      this.path.getItemsLength() >= 2
+    ) {
+      this.path.cancelLastLine();
+
+      // Récupérer le dernier élément du path
+      const lastLine: LinePath | null = this.path?.getLastLine() as LinePath;
+
+      if (lastLine) {
+        const lastCoord = lastLine.end as Coordinate;
+        this.line.setStartCoordinates(lastCoord);
+
+        console.log("clic on last line", lastCoord);
       }
     }
   }
+
   /**
    * Function who recieve the mouse down event
    * to start drawing on the canvas.
@@ -381,6 +408,7 @@ export class drawLine extends drawingHandler {
 
     this.setCoordinates(coord);
 
+    // touch a finished path
     if (this.withPath && this.finishedDrawing && this.path) {
       if (
         this.path.mouseDown(
@@ -392,15 +420,14 @@ export class drawLine extends drawingHandler {
         this.validatePath();
         this.hasBeenTouched = true;
         return {
-          toContinue: true,
           toReset: false,
-          pointer: "move",
           changeMode: DRAWING_MODES.END_PATH,
         };
       }
       return {};
     }
 
+    // start a new line
     if (this.line.getStartCoordinates() == null) {
       this.line.setStartCoordinates();
     }

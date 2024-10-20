@@ -192,11 +192,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               position="right"
               onConfirm={() => onDelete(table.id)}
               confirmMessage="Delete this table?"
-              className="p-0 w-36 btn btn-warning"
+              confirmClassName="p-0 w-36 btn btn-warning"
+              className="absolute -right-4 btn btn-circle btn-sm"
             >
-              <button className="absolute -right-4 btn btn-circle btn-sm">
-                <Trash2 size={btnSize} />
-              </button>
+              <Trash2 size={btnSize} />
             </DeleteWithConfirm>
           </div>
         </div>

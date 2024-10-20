@@ -6,7 +6,7 @@
 
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import { Coordinate, Area, LinePath, ArgsMouseOnShape } from "./types";
-import { ParamsGeneral } from "./canvas-defines";
+import { ParamsGeneral, ThingsToDraw } from "./canvas-defines";
 import { badgePosition, BORDER } from "../mouse-position";
 import { drawCornerButton } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
@@ -17,37 +17,48 @@ import { OVERAGE } from "./canvas-dashed-rect";
 export const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
 
+interface CanvasPointsData extends ThingsToDraw {
+  items: LinePath[] | Coordinate[];
+}
+
 export abstract class CanvasPoints {
-  protected general: ParamsGeneral;
-  protected area?: Area | null;
+  protected data: CanvasPointsData;
+
   protected angleFound: number;
   protected coordFound: number;
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
   protected isFinished: boolean = false;
 
-  items: LinePath[] | Coordinate[];
-
   constructor() {
-    this.items = [];
     this.angleFound = -1;
     this.coordFound = -1;
     this.lastMousePosition = null;
     this.isFinished = false;
 
-    this.general = {
-      color: "#000",
-      lineWidth: 1,
-      opacity: 1,
+    this.data = {
+      type: "",
+      rotation: 0,
+      size: { x: 0, y: 0, width: 0, height: 0 },
+      general: {
+        color: "#000",
+        lineWidth: 1,
+        opacity: 1,
+      },
+      items: [],
     };
   }
 
   setParamsGeneral(params: ParamsGeneral) {
-    this.general = { ...this.general, ...params };
+    this.data.general = { ...this.data.general, ...params };
+  }
+
+  setDataType(name: string) {
+    this.data.type = name;
   }
 
   startArea(firstPoint: Coordinate) {
-    this.area = {
+    this.data.size = {
       x: firstPoint.x - 1,
       y: firstPoint.y - 1,
       width: 2,
@@ -56,20 +67,22 @@ export abstract class CanvasPoints {
   }
 
   addPointInArea(coord: Coordinate) {
-    if (!this.area) {
+    if (!this.data.size) {
       return;
     }
-    const right = Math.max(this.area.x + this.area.width, coord.x);
-    const bottom = Math.max(this.area.y + this.area.height, coord.y);
-    this.area.x = Math.min(this.area.x, coord.x);
-    this.area.y = Math.min(this.area.y, coord.y);
 
-    this.area.width = right - this.area.x;
-    this.area.height = bottom - this.area.y;
+    const size = this.data.size;
+    const right = Math.max(size.x + size.width, coord.x);
+    const bottom = Math.max(size.y + size.height, coord.y);
+    size.x = Math.min(size.x, coord.x);
+    size.y = Math.min(size.y, coord.y);
+
+    size.width = right - size.x;
+    size.height = bottom - size.y;
   }
 
   addItem(item: LinePath | Coordinate) {
-    const prevItem = this.items[this.items.length - 1];
+    const prevItem = this.data.items[this.data.items.length - 1];
     if (prevItem && "end" in prevItem && prevItem.end) {
       const prevEnd = prevItem.end as Coordinate;
       const currentEnd = (item as LinePath).end as Coordinate;
@@ -89,7 +102,7 @@ export abstract class CanvasPoints {
       }
     }
 
-    this.items.push(item as LinePath & Coordinate);
+    this.data.items.push(item as LinePath & Coordinate);
     if ("end" in item && (item as LinePath).end) {
       const end = (item as LinePath).end as Coordinate;
       this.addPointInArea(end);
@@ -103,10 +116,10 @@ export abstract class CanvasPoints {
   }
 
   cancelLastItem() {
-    if (this.items.length > 0) {
-      this.items.pop();
+    if (this.data.items.length > 0) {
+      this.data.items.pop();
       // Recalculate the rectangle after removing the last line
-      this.area = this.getArea(null);
+      this.data.size = this.getArea(null);
       this.angleFound = -1;
       this.coordFound = -1;
       return true;
@@ -115,8 +128,8 @@ export abstract class CanvasPoints {
   }
 
   getLastItem() {
-    if (this.items.length > 0) {
-      return this.items[this.items.length - 1];
+    if (this.data.items.length > 0) {
+      return this.data.items[this.data.items.length - 1];
     }
     return null;
   }
@@ -131,16 +144,16 @@ export abstract class CanvasPoints {
   ): void;
 
   getItemsLength() {
-    return this.items.length;
+    return this.data.items.length;
   }
 
-  protected getArea(insidePoint: Coordinate | null): Area | null {
+  protected getArea(insidePoint: Coordinate | null): Area {
     let left = insidePoint ? insidePoint.x : 99999;
     let top = insidePoint ? insidePoint.y : 99999;
     let right = 0;
     let bottom = 0;
 
-    this.items.forEach((line) => {
+    this.data.items.forEach((line) => {
       const coord: Coordinate | null =
         "end" in line ? (line.end as Coordinate) : (line as Coordinate);
 
@@ -166,10 +179,10 @@ export abstract class CanvasPoints {
   }
 
   drawCornerButton(ctx: CanvasRenderingContext2D | null, opacity: number) {
-    if (!ctx || !this.area) {
+    if (!ctx || !this.data.size) {
       return;
     }
-    const badge = badgePosition(this.area, ctx.canvas.width);
+    const badge = badgePosition(this.data.size, ctx.canvas.width);
     if (badge) {
       drawCornerButton(
         ctx,
@@ -186,10 +199,10 @@ export abstract class CanvasPoints {
     ctx: CanvasRenderingContext2D | null,
     mouseOnRectangle: string | null = null
   ) {
-    if (!ctx || !this.area) {
+    if (!ctx || !this.data.size) {
       return;
     }
-    drawDashedRectangle(ctx, this.area, 0.35);
+    drawDashedRectangle(ctx, this.data.size, 0.35);
 
     if (this.isFinished) {
       this.drawCornerButton(
@@ -200,26 +213,26 @@ export abstract class CanvasPoints {
   }
 
   clearAreaOnCanvas(ctx: CanvasRenderingContext2D | null) {
-    if (this.area) {
-      const width = Math.max(this.general.lineWidth, OVERAGE + 1);
+    if (this.data.size) {
+      const width = Math.max(this.data.general.lineWidth, OVERAGE + 1);
       ctx?.clearRect(
-        this.area.x - width,
-        this.area.y - width,
-        this.area.width + width * 2,
-        this.area.height + width * 2
+        this.data.size.x - width,
+        this.data.size.y - width,
+        this.data.size.width + width * 2,
+        this.data.size.height + width * 2
       );
     }
   }
 
   isInArea(coord: Coordinate): boolean {
-    if (!this.area || !coord) {
+    if (!this.data.size || !coord) {
       return false;
     }
     return (
-      coord.x >= this.area.x &&
-      coord.x <= this.area.x + this.area.width &&
-      coord.y >= this.area.y &&
-      coord.y <= this.area.y + this.area.height
+      coord.x >= this.data.size.x &&
+      coord.x <= this.data.size.x + this.data.size.width &&
+      coord.y >= this.data.size.y &&
+      coord.y <= this.data.size.y + this.data.size.height
     );
   }
 
@@ -236,7 +249,7 @@ export abstract class CanvasPoints {
     const marginPlus = MARGIN * 2;
     // Verify found angle with marginPlus
     if (this.angleFound >= 0) {
-      const element = (this.items[this.angleFound] as LinePath).end;
+      const element = (this.data.items[this.angleFound] as LinePath).end;
       if (element) {
         return (
           Math.abs(element.x - coord.x) < marginPlus &&
@@ -246,7 +259,8 @@ export abstract class CanvasPoints {
     }
 
     if (this.coordFound >= 0) {
-      const element = (this.items[this.coordFound] as LinePath).coordinates;
+      const element = (this.data.items[this.coordFound] as LinePath)
+        .coordinates;
 
       if (element)
         return (
@@ -266,8 +280,8 @@ export abstract class CanvasPoints {
     }
 
     // Verify end of each line
-    for (let i = 0; i < this.items.length; i++) {
-      const line = this.items[i];
+    for (let i = 0; i < this.data.items.length; i++) {
+      const line = this.data.items[i];
       if ("end" in line && line.end) {
         if (
           Math.abs(coord.x - line.end.x) < MARGIN &&
@@ -302,9 +316,9 @@ export abstract class CanvasPoints {
   }
 
   move(offset: Coordinate) {
-    const item = this.items[0];
+    const item = this.data.items[0];
     if (typeof item === "object" && item !== null && "end" in item) {
-      const lines = this.items as LinePath[];
+      const lines = this.data.items as LinePath[];
 
       lines.forEach((line) => {
         if (line.end) {
@@ -318,16 +332,16 @@ export abstract class CanvasPoints {
         }
       });
     } else {
-      const points = this.items as Coordinate[];
+      const points = this.data.items as Coordinate[];
       points.forEach((point) => {
         point.x += offset.x;
         point.y += offset.y;
       });
     }
 
-    if (this.area) {
-      this.area.x += offset.x;
-      this.area.y += offset.y;
+    if (this.data.size) {
+      this.data.size.x += offset.x;
+      this.data.size.y += offset.y;
     }
     this.angleFound = -1;
     this.coordFound = -1;
@@ -335,7 +349,7 @@ export abstract class CanvasPoints {
 
   mouseDown(ctx: CanvasRenderingContext2D | null, mousePosition: Coordinate) {
     this.lastMousePosition = mousePosition;
-    if (this.area) {
+    if (this.data.size) {
       const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
 
       if (mouseOnRectangle === BORDER.ON_BUTTON) {
@@ -365,7 +379,7 @@ export abstract class CanvasPoints {
       // first angle
 
       const lastItem = this.getLastItem();
-      const firstItem = this.items[0];
+      const firstItem = this.data.items[0];
       if (
         lastItem &&
         "end" in lastItem &&
@@ -380,27 +394,27 @@ export abstract class CanvasPoints {
         firstItem.end = { ...newCoord };
       }
 
-      this.area = this.getArea(newCoord);
+      this.data.size = this.getArea(newCoord);
       return true;
     }
 
-    if (this.angleFound > 0 && this.angleFound <= this.items.length) {
-      const line = this.items[this.angleFound];
+    if (this.angleFound > 0 && this.angleFound <= this.data.items.length) {
+      const line = this.data.items[this.angleFound];
       if ("end" in line) {
         line.end = newCoord;
       } else {
         (line as Coordinate).x = newCoord.x;
         (line as Coordinate).y = newCoord.y;
       }
-      this.area = this.getArea(newCoord);
+      this.data.size = this.getArea(newCoord);
       return true;
     }
-    if (this.coordFound > 0 && this.coordFound <= this.items.length) {
-      const line = this.items[this.coordFound];
+    if (this.coordFound > 0 && this.coordFound <= this.data.items.length) {
+      const line = this.data.items[this.coordFound];
       if ("coordinates" in line) {
         line.coordinates = newCoord;
       }
-      this.area = this.getArea(newCoord);
+      this.data.size = this.getArea(newCoord);
       return true;
     }
     return false;
@@ -460,13 +474,13 @@ export abstract class CanvasPoints {
     ctx: CanvasRenderingContext2D | null,
     mousePosition: Coordinate
   ): string | null {
-    if (!this.area || !ctx || !mousePosition) {
+    if (!this.data.size || !ctx || !mousePosition) {
       return null;
     }
-    // console.log("area", this.area, "mousePosition", mousePosition);
+    // console.log("area", this.data.size, "mousePosition", mousePosition);
     const argsMouseOnArea: ArgsMouseOnShape = {
       coordinate: mousePosition,
-      area: this.area,
+      area: this.data.size,
       withResize: false,
       withCornerButton: true,
       withTurningButtons: false,

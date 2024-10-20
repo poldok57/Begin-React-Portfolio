@@ -2,7 +2,7 @@ import { Coordinate, LinePath } from "./types";
 import { basicLine } from "./canvas-basic";
 import { throttle } from "@/lib/utils/throttle";
 import { CanvasPoints } from "./CanvasPoints";
-import { ParamsGeneral } from "./canvas-defines";
+import { DRAWING_MODES, ParamsGeneral } from "./canvas-defines";
 
 const MARGIN = 5;
 const DELAY = 50;
@@ -10,10 +10,11 @@ const DELAY = 50;
 export class CanvasFreeCurve extends CanvasPoints {
   constructor() {
     super();
+    this.setDataType(DRAWING_MODES.PATH);
   }
 
   clearPoints() {
-    this.items = [];
+    this.data.items = [];
   }
 
   startCurve({
@@ -23,8 +24,8 @@ export class CanvasFreeCurve extends CanvasPoints {
     firstPoint: Coordinate;
     general: ParamsGeneral;
   }) {
-    this.items = [];
-    this.items.push(firstPoint as Coordinate & LinePath);
+    this.data.items = [];
+    this.data.items.push(firstPoint as Coordinate & LinePath);
 
     this.setParamsGeneral({
       opacity: general.opacity || 1,
@@ -44,33 +45,27 @@ export class CanvasFreeCurve extends CanvasPoints {
   }
 
   draw(ctx: CanvasRenderingContext2D, withDashedRectangle: boolean = false) {
-    if (this.items.length < 2) return;
+    const items = this.data.items;
+    if (items.length < 2) return;
 
-    ctx.globalAlpha = this.general.opacity;
-    ctx.strokeStyle = this.general.color;
-    ctx.lineWidth = this.general.lineWidth;
+    ctx.globalAlpha = this.data.general.opacity;
+    ctx.strokeStyle = this.data.general.color;
+    ctx.lineWidth = this.data.general.lineWidth;
 
-    if (this.items.length === 2) {
-      basicLine(ctx, this.items[0] as Coordinate, this.items[1] as Coordinate);
+    if (items.length === 2) {
+      basicLine(ctx, items[0] as Coordinate, items[1] as Coordinate);
       return;
     }
 
     // calculate list of curves
     ctx.beginPath();
-    ctx.moveTo(
-      (this.items[0] as Coordinate).x,
-      (this.items[0] as Coordinate).y
-    );
+    ctx.moveTo((items[0] as Coordinate).x, (items[0] as Coordinate).y);
 
-    for (let i = 1; i < this.items.length - 2; i += 2) {
+    for (let i = 1; i < items.length - 2; i += 2) {
       const xc =
-        ((this.items[i] as Coordinate).x +
-          (this.items[i + 1] as Coordinate).x) /
-        2;
+        ((items[i] as Coordinate).x + (items[i + 1] as Coordinate).x) / 2;
       const yc =
-        ((this.items[i] as Coordinate).y +
-          (this.items[i + 1] as Coordinate).y) /
-        2;
+        ((items[i] as Coordinate).y + (items[i + 1] as Coordinate).y) / 2;
 
       // Vérification de la marge
       const distanceToLine = (
@@ -107,45 +102,41 @@ export class CanvasFreeCurve extends CanvasPoints {
       };
 
       if (
-        distanceToLine(
-          this.items[i] as Coordinate,
-          this.items[i - 1] as Coordinate,
-          { x: xc, y: yc }
-        ) <= MARGIN
+        distanceToLine(items[i] as Coordinate, items[i - 1] as Coordinate, {
+          x: xc,
+          y: yc,
+        }) <= MARGIN
       ) {
         ctx.quadraticCurveTo(
-          (this.items[i] as Coordinate).x,
-          (this.items[i] as Coordinate).y,
+          (items[i] as Coordinate).x,
+          (items[i] as Coordinate).y,
           xc,
           yc
         );
       } else {
-        ctx.lineTo(
-          (this.items[i] as Coordinate).x,
-          (this.items[i] as Coordinate).y
-        );
+        ctx.lineTo((items[i] as Coordinate).x, (items[i] as Coordinate).y);
         ctx.lineTo(xc, yc);
       }
     }
 
     // Gestion des derniers points
-    if (this.items.length % 2 === 0) {
+    if (items.length % 2 === 0) {
       ctx.quadraticCurveTo(
-        (this.items[this.items.length - 2] as Coordinate).x,
-        (this.items[this.items.length - 2] as Coordinate).y,
-        (this.items[this.items.length - 1] as Coordinate).x,
-        (this.items[this.items.length - 1] as Coordinate).y
+        (items[items.length - 2] as Coordinate).x,
+        (items[items.length - 2] as Coordinate).y,
+        (items[items.length - 1] as Coordinate).x,
+        (items[items.length - 1] as Coordinate).y
       );
     } else {
       ctx.lineTo(
-        (this.items[this.items.length - 1] as Coordinate).x,
-        (this.items[this.items.length - 1] as Coordinate).y
+        (items[items.length - 1] as Coordinate).x,
+        (items[items.length - 1] as Coordinate).y
       );
     }
 
     ctx.stroke();
 
-    if (withDashedRectangle && this.items.length > 1 && this.area) {
+    if (withDashedRectangle && items.length > 1 && this.data.size) {
       this.drawDashedRectangle(ctx);
     }
   }

@@ -124,11 +124,12 @@ export const ShowTable: React.FC<ShowTableProps> = ({
       onMouseLeave={(e) => e.stopPropagation()}
     >
       <div className="flex z-[1] mx-3 justify-between border-b-2 border-gray-200 pb-1 w-full">
-        <div className="flex flex-row gap-3">
+        <div className="flex flex-row gap-4">
           <button
             onClick={() => changeRotation(-rotationStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
+              "btn-md": isTouch,
             })}
           >
             <RotateCcw size={btnSize} />
@@ -137,6 +138,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             onClick={() => changeRotation(rotationStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
+              "btn-md": isTouch,
             })}
           >
             <RotateCw size={btnSize} />
@@ -153,11 +155,12 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           onChange={(v) => setFlashDuration(v)}
           isTouch={isTouch}
         />
-        <div className="flex flex-row gap-3">
+        <div className="flex flex-row gap-4">
           <button
             onClick={() => changeSize(-sizeStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
+              "btn-md": isTouch,
             })}
           >
             <Minus size={btnSize} />
@@ -166,6 +169,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             onClick={() => changeSize(sizeStep)}
             className={clsx("btn btn-circle", {
               "btn-sm": !isTouch,
+              "btn-md": isTouch,
             })}
           >
             <Plus size={btnSize} />
@@ -217,21 +221,18 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           >
             {resetTable && (
               <DeleteWithConfirm
-                className="p-2 m-1 btn btn-sm"
+                confirmClassName="p-2 m-1 btn btn-sm"
+                className={clsx("btn btn-circle", {
+                  "btn-sm": !isTouch,
+                  "btn-md": isTouch,
+                })}
                 position="top"
-                confirmMessage="Confirm reset table?"
+                confirmMessage="Reset table?"
                 onConfirm={() => {
                   resetTable();
                 }}
               >
-                <button
-                  className={clsx("btn btn-circle", {
-                    "btn-sm": !isTouch,
-                  })}
-                  title="Reset table"
-                >
-                  <ListRestart size={btnSize} />
-                </button>
+                <ListRestart size={btnSize} />
               </DeleteWithConfirm>
             )}
             <button

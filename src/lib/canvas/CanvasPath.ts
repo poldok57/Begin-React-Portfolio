@@ -5,7 +5,7 @@
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
-import { ParamsPath } from "./canvas-defines";
+import { DRAWING_MODES, ParamsPath } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { MARGIN } from "./CanvasPoints";
@@ -28,6 +28,7 @@ export class CanvasPath extends CanvasPoints {
 
   constructor(line: LinePath) {
     super();
+    this.setDataType(DRAWING_MODES.PATH);
     if (!line.coordinates) {
       throw new Error("Line coordinates are required");
     }
@@ -49,10 +50,10 @@ export class CanvasPath extends CanvasPoints {
 
   private getLastParams() {
     let strokeStyle: string = "black";
-    let globalAlpha: number = this.general.opacity;
+    let globalAlpha: number = this.data.general.opacity;
     let lineWidth: number = 1;
 
-    (this.items as LinePath[]).forEach((line) => {
+    (this.data.items as LinePath[]).forEach((line) => {
       if (line.strokeStyle) {
         strokeStyle = line.strokeStyle;
       }
@@ -70,16 +71,16 @@ export class CanvasPath extends CanvasPoints {
     };
   }
 
-  fillPath(ctx: CanvasRenderingContext2D | null) {
+  fillPath(ctx: CanvasRenderingContext2D | null, minWidth: number) {
     if (!ctx) {
       return false;
     }
     ctx.globalAlpha = 0;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = minWidth;
     ctx.fillStyle = "transparent";
     ctx.beginPath();
 
-    (this.items as LinePath[]).forEach((line) => {
+    (this.data.items as LinePath[]).forEach((line) => {
       switch (line.type) {
         case LineType.START:
           if (line.end) {
@@ -105,7 +106,7 @@ export class CanvasPath extends CanvasPoints {
     });
     ctx.stroke();
 
-    ctx.globalAlpha = this.general.opacity;
+    ctx.globalAlpha = this.data.general.opacity;
     ctx.fillStyle = this.fillStyle;
     ctx.fill();
     return true;
@@ -119,18 +120,20 @@ export class CanvasPath extends CanvasPoints {
       return false;
     }
 
-    if (this.items.length <= 0) {
+    if (this.data.items.length <= 0) {
       return true;
     }
 
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
 
-    const firstItem: LinePath | null = this.items[0] as LinePath;
+    const firstItem: LinePath | null = this.data.items[0] as LinePath;
 
     let start: Coordinate | null = firstItem?.end as Coordinate;
 
-    (this.items as LinePath[]).forEach((line) => {
+    let minWidth = firstItem?.lineWidth || 100;
+
+    (this.data.items as LinePath[]).forEach((line) => {
       ctx.beginPath();
       if (start) {
         ctx.moveTo(start.x, start.y);
@@ -138,6 +141,7 @@ export class CanvasPath extends CanvasPoints {
 
       if (line.lineWidth) {
         ctx.lineWidth = line.lineWidth;
+        minWidth = Math.min(minWidth, line.lineWidth);
       }
       if (line.strokeStyle) {
         ctx.strokeStyle = line.strokeStyle;
@@ -176,10 +180,14 @@ export class CanvasPath extends CanvasPoints {
     });
 
     if (this.filled) {
-      this.fillPath(ctx);
+      this.fillPath(ctx, minWidth);
     }
 
-    if (!withDashedRectangle || this.items.length <= 1 || !this.area) {
+    if (
+      !withDashedRectangle ||
+      this.data.items.length <= 1 ||
+      !this.data.size
+    ) {
       return false;
     }
     this.drawDashedRectangle(ctx);
@@ -187,7 +195,7 @@ export class CanvasPath extends CanvasPoints {
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.5;
     // Dessiner des croix à chaque point correspondant à l'argument coordinate des éléments PathLine
-    this.items.forEach((item) => {
+    this.data.items.forEach((item) => {
       if ("end" in item) {
         const line = item as LinePath;
         if (line.end) {
@@ -209,11 +217,11 @@ export class CanvasPath extends CanvasPoints {
     const hasChanged =
       this.filled !== filled ||
       this.fillStyle !== color ||
-      this.general.opacity !== opacity;
+      this.data.general.opacity !== opacity;
     if (hasChanged) {
       this.filled = filled;
       this.fillStyle = color;
-      this.general.opacity = opacity;
+      this.data.general.opacity = opacity;
 
       this.draw(ctx);
     }
@@ -246,19 +254,18 @@ export class CanvasPath extends CanvasPoints {
       newLine.globalAlpha = line.globalAlpha;
     }
     this.addItem(newLine);
-    // this.area = this.getArea();
   }
 
   cancelLastLine() {
-    if (this.items.length > 0) {
+    if (this.data.items.length > 0) {
       this.cancelLastItem();
       return true;
     }
     return false;
   }
 
-  getLastLine() {
-    return this.getLastItem();
+  getLastLine(): LinePath | null {
+    return this.getLastItem() as LinePath;
   }
 
   setFillStyle(fillStyle: string | null = null) {
@@ -271,7 +278,7 @@ export class CanvasPath extends CanvasPoints {
   }
 
   close() {
-    if (this.items.length <= 0) {
+    if (this.data.items.length <= 0) {
       return;
     }
 
@@ -280,7 +287,7 @@ export class CanvasPath extends CanvasPoints {
     if (!lastItem || !lastItem.end) {
       return;
     }
-    const firstItem: LinePath | null = this.items[0] as LinePath;
+    const firstItem: LinePath | null = this.data.items[0] as LinePath;
     const start: Coordinate = firstItem?.end as Coordinate;
 
     // for curve we can move last point to start point
@@ -303,7 +310,6 @@ export class CanvasPath extends CanvasPoints {
         return;
       }
     }
-    console.log("close line", lastItem.end);
     if (lastItem.end.x !== start.x && lastItem.end.y !== start.y) {
       // add a line to the start point
       const newLine: LinePath = {

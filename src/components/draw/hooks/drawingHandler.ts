@@ -143,9 +143,9 @@ export abstract class drawingHandler {
     const argsMouseOnShape: ArgsMouseOnShape = {
       coordinate: this.coordinates,
       area: this.data.size,
-      withResize: this.data.withResize,
-      withCornerButton: this.data.withCornerButton,
-      withTurningButtons: this.data.withTurningButtons,
+      withResize: this.data?.withResize || false,
+      withCornerButton: this.data?.withCornerButton || false,
+      withTurningButtons: this.data?.withTurningButtons || false,
       maxWidth: this.mCanvas.width,
     };
 

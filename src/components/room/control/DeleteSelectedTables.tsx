@@ -14,15 +14,14 @@ export const DeleteSelectedTables: React.FC<DeleteSelectedTablesProps> = ({
   onDelete,
 }) => (
   <DeleteWithConfirm
-    className="p-2 btn btn-sm"
+    confirmClassName="p-1 btn btn-sm"
+    className="btn btn-circle btn-sm"
     position="right"
     onConfirm={onDelete}
     confirmMessage={`delete ${selectedTablesCount} table${
       selectedTablesCount > 1 ? "s" : ""
     }`}
   >
-    <button className="btn btn-circle btn-sm">
-      <Trash2 size={btnSize} />
-    </button>
+    <Trash2 size={btnSize} />
   </DeleteWithConfirm>
 );
