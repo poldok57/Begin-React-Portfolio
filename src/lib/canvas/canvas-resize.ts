@@ -32,16 +32,17 @@ export const resizingElement = (
   ctx: CanvasRenderingContext2D,
   square: ShapeDefinition,
   coordinate: Coordinate,
+  lockRatio: boolean,
   mouseOnShape: string | null
 ) => {
-  if (square.lockRatio && !square.size.ratio) {
+  if (lockRatio && !square.size.ratio) {
     square.size.ratio = square.size.width / square.size.height;
   } else {
     square.size.ratio = 0;
   }
   if (mouseOnShape) {
     let { newArea } = resizeSquare(coordinate, square.size, mouseOnShape);
-    if (square.lockRatio && square.size.ratio) {
+    if (lockRatio && square.size.ratio) {
       newArea = calculateRatio(newArea, square.size.ratio, mouseOnShape);
     }
 

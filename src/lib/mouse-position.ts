@@ -24,7 +24,8 @@ const MIDDLE_BTN_RADIUS = 12;
 const BADGE_RADIUS_TOUCH = 15;
 const MIDDLE_BTN_RADIUS_TOUCH = 18;
 
-let margin = 6;
+export const MARGIN_ON_BORDER = 6;
+let margin = MARGIN_ON_BORDER;
 
 export const setMargin = (newMargin: number): void => {
   margin = newMargin;

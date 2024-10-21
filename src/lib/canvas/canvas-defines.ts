@@ -97,8 +97,8 @@ const DEFAULT = {
   COLOR: "#ff0000",
   SIZE: 4,
   OPACITY: 1,
-  BORDER_COLOR: "#aaa",
-  PATH_COLOR: "#666",
+  BORDER_COLOR: "#8b8080",
+  PATH_COLOR: "#20d0d0",
   TEXT_COLOR: "#404080",
 };
 
@@ -184,13 +184,12 @@ export interface ThingsToDraw {
 }
 
 export interface ShapeDefinition extends ThingsToDraw {
-  lockRatio: boolean;
-  blackWhite: boolean;
-  canvasImage: HTMLCanvasElement | null;
-  canvasImageTransparent: HTMLCanvasElement | null;
-  shape: ParamsShape;
-  border: ParamsGeneral;
-  text: ParamsText;
+  blackWhite?: boolean;
+  canvasImage?: HTMLCanvasElement | null;
+  canvasImageTransparent?: HTMLCanvasElement | null;
+  shape?: ParamsShape;
+  border?: ParamsGeneral;
+  text?: ParamsText;
 }
 
 export const DEFAULT_PARAMS: AllParams = {
@@ -214,7 +213,7 @@ export const DEFAULT_PARAMS: AllParams = {
     font: "Arial",
     bold: 100,
     italic: false,
-    fontSize: 20,
+    fontSize: 24,
     rotation: 0,
   },
   border: {
@@ -226,6 +225,6 @@ export const DEFAULT_PARAMS: AllParams = {
   path: {
     filled: false,
     color: DEFAULT.PATH_COLOR,
-    opacity: 1,
+    opacity: 0.5,
   },
 };

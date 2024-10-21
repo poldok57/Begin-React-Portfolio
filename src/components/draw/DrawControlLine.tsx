@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { Button } from "../atom/Button";
 import { ToggleSwitch } from "../atom/ToggleSwitch";
+import { ColorPicker } from "../atom/ColorPicker";
 import {
   AllParams,
   DRAWING_MODES,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/canvas/canvas-defines";
 import { MdTimeline } from "react-icons/md";
 import { Spline } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 
 export const MODE_PATH_AUTO = false;
 
@@ -48,18 +49,13 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   }, [mode]);
   return (
     <div
-      className={clsx(
-        [
-          "flex flex-row gap-4 px-2 py-1 align-middle border border-secondary",
-          "bg-paper",
-        ],
-        {
-          "gap-8": isTouch,
-        }
-      )}
+      className={cn([
+        "flex flex-row gap-2 px-2 py-1 align-middle border border-secondary",
+        "bg-paper",
+      ])}
     >
       <Button
-        className="px-5 py-1"
+        className="px-4 py-1"
         selected={mode == DRAWING_MODES.LINE}
         onClick={() => {
           handleModeChange(DRAWING_MODES.LINE);
@@ -70,7 +66,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       </Button>
 
       <Button
-        className="px-5 py-1"
+        className="px-4 py-1"
         selected={mode == DRAWING_MODES.ARC}
         onClick={() => handleModeChange(DRAWING_MODES.ARC)}
         title="Draw arcs"
@@ -83,7 +79,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
           setWithPathFilled(false);
           setWithPath(true);
         }}
-        className="w-20 h-8"
+        className="w-16 h-8"
         title="Start path"
       >
         Start path
@@ -92,14 +88,14 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
         <>
           <Button
             onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
-            className="w-20 h-8"
+            className="w-16 h-8"
             title="Stop path"
           >
             Stop path
           </Button>
           <Button
             onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
-            className="w-20 h-8"
+            className="w-16 h-8"
             title="Close path"
           >
             Close path
@@ -127,13 +123,10 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             className="flex flex-col gap-1 justify-center items-center text-sm"
           >
             color
-            <input
+            <ColorPicker
               id="path-color-picker"
-              type="color"
               defaultValue={drawingParams.path.color}
-              // onClick={(e) => e.stopPropagation()}
-              // onMouseDown={(e) => e.stopPropagation()}
-              onChange={(e) => handlePath({ color: e.target.value })}
+              onChange={(c) => handlePath({ color: c })}
             />
           </label>
           <RangeInput

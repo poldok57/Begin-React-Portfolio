@@ -131,14 +131,24 @@ export class CanvasLine implements LinePath {
   }
 
   setArc() {
-    if (this.getStartCoordinates() === null) {
+    if (this.start === null) {
       // set first coordinates
       this.setStartCoordinates();
       return false;
     }
-    const end = this.getEndCoordinates();
+
+    const end = this.end;
     if (!end) {
       this.setEndCoordinates();
+      return false;
+    }
+
+    // if the start and end are too close, we don't draw the arc
+    if (
+      Math.abs(this.start.x - end.x) < 2 &&
+      Math.abs(this.start.y - end.y) < 2
+    ) {
+      this.end = null;
       return false;
     }
     // definition of the arc is done

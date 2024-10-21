@@ -117,7 +117,7 @@ export class drawSelection extends drawingHandler {
     this.data.shape = { ...data.shape };
     this.data.border = { ...data.border };
 
-    this.data.lockRatio = data.lockRatio;
+    this.lockRatio = data.lockRatio;
   }
 
   getData() {
@@ -145,6 +145,7 @@ export class drawSelection extends drawingHandler {
       this.ctxTempory,
       this.data,
       this.coordinates,
+      this.lockRatio,
       this.resizing
     );
 
@@ -296,10 +297,11 @@ export class drawSelection extends drawingHandler {
   /**
    * Function to abort the action on the canvas (Escape key pressed)
    */
-  actionAbort(): void {
+  actionAbort(): string | null {
     this.eraseSelectedArea();
     this.setType(DRAWING_MODES.SELECT);
     this.refreshDrawing(1, BORDER.INSIDE);
+    return null;
   }
 
   /**
@@ -389,14 +391,14 @@ export class drawSelection extends drawingHandler {
 
       if (delta < 100)
         makeWhiteTransparent(
-          this.data.canvasImage,
-          this.data.canvasImageTransparent,
+          this.data.canvasImage ?? null,
+          this.data.canvasImageTransparent ?? null,
           delta
         );
       else
         makeWhiteTransparent2(
-          this.data.canvasImage,
-          this.data.canvasImageTransparent,
+          this.data.canvasImage ?? null,
+          this.data.canvasImageTransparent ?? null,
           delta
         );
     }

@@ -11,7 +11,7 @@ import { badgePosition, BORDER } from "../mouse-position";
 import { drawCornerButton } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
-
+import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { OVERAGE } from "./canvas-dashed-rect";
 
 export const MARGIN = 10;
@@ -21,7 +21,7 @@ interface CanvasPointsData extends ThingsToDraw {
   items: LinePath[] | Coordinate[];
 }
 
-export abstract class CanvasPoints {
+export abstract class CanvasPoints extends CanvasDrawableObject {
   protected data: CanvasPointsData;
 
   protected angleFound: number;
@@ -29,8 +29,10 @@ export abstract class CanvasPoints {
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
   protected isFinished: boolean = false;
+  protected maxWidthLine: number = 0;
 
   constructor() {
+    super();
     this.angleFound = -1;
     this.coordFound = -1;
     this.lastMousePosition = null;
@@ -51,10 +53,11 @@ export abstract class CanvasPoints {
 
   setParamsGeneral(params: ParamsGeneral) {
     this.data.general = { ...this.data.general, ...params };
+    this.maxWidthLine = Math.max(this.maxWidthLine, params.lineWidth);
   }
 
-  setDataType(name: string) {
-    this.data.type = name;
+  setMaxWidthLine(width: number) {
+    this.maxWidthLine = Math.max(this.maxWidthLine, width);
   }
 
   startArea(firstPoint: Coordinate) {
@@ -91,13 +94,13 @@ export abstract class CanvasPoints {
         return; // Ignore adding the current item if it's the same as the previous item
       }
     }
-    // Vérifier si l'élément actuel est de type Coordinate
+    // Verify if the current item is of type Coordinate
     if ("x" in item && "y" in item) {
       const currentPoint = item as Coordinate;
       if (prevItem && "x" in prevItem && "y" in prevItem) {
         const prevPoint = prevItem as Coordinate;
         if (prevPoint.x === currentPoint.x && prevPoint.y === currentPoint.y) {
-          return; // Ignorer l'ajout du point actuel s'il est identique au point précédent
+          return; // Ignore adding the current item if it's the same as the previous item
         }
       }
     }
@@ -138,18 +141,13 @@ export abstract class CanvasPoints {
     this.isFinished = isFinished;
   }
 
-  abstract draw(
-    ctx: CanvasRenderingContext2D | null,
-    withDashedRectangle?: boolean
-  ): void;
-
   getItemsLength() {
     return this.data.items.length;
   }
 
   protected getArea(insidePoint: Coordinate | null): Area {
-    let left = insidePoint ? insidePoint.x : 99999;
-    let top = insidePoint ? insidePoint.y : 99999;
+    let left = insidePoint ? insidePoint.x : Infinity;
+    let top = insidePoint ? insidePoint.y : Infinity;
     let right = 0;
     let bottom = 0;
 
@@ -214,7 +212,7 @@ export abstract class CanvasPoints {
 
   clearAreaOnCanvas(ctx: CanvasRenderingContext2D | null) {
     if (this.data.size) {
-      const width = Math.max(this.data.general.lineWidth, OVERAGE + 1);
+      const width = Math.max(this.maxWidthLine, OVERAGE + 1);
       ctx?.clearRect(
         this.data.size.x - width,
         this.data.size.y - width,

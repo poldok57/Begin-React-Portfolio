@@ -5,7 +5,7 @@
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
-import { DRAWING_MODES, ParamsPath } from "./canvas-defines";
+import { DRAWING_MODES, ParamsGeneral, ParamsPath } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { MARGIN } from "./CanvasPoints";
@@ -26,7 +26,7 @@ export class CanvasPath extends CanvasPoints {
   filled: boolean;
   fillStyle: string = "gray";
 
-  constructor(line: LinePath) {
+  constructor(general: ParamsGeneral, line: LinePath) {
     super();
     this.setDataType(DRAWING_MODES.PATH);
     if (!line.coordinates) {
@@ -41,11 +41,7 @@ export class CanvasPath extends CanvasPoints {
     };
     this.addItem(item);
 
-    this.setParamsGeneral({
-      opacity: line.globalAlpha || 1,
-      color: line.strokeStyle || "#000",
-      lineWidth: line.lineWidth || 1,
-    });
+    this.setParamsGeneral(general);
   }
 
   private getLastParams() {
@@ -130,24 +126,33 @@ export class CanvasPath extends CanvasPoints {
     const firstItem: LinePath | null = this.data.items[0] as LinePath;
 
     let start: Coordinate | null = firstItem?.end as Coordinate;
+    let hasChanged: boolean = true; // true if we need to begin a new path
 
     let minWidth = firstItem?.lineWidth || 100;
+    let maxWidth = firstItem?.lineWidth || 0;
 
     (this.data.items as LinePath[]).forEach((line) => {
-      ctx.beginPath();
-      if (start) {
-        ctx.moveTo(start.x, start.y);
-      }
-
       if (line.lineWidth) {
         ctx.lineWidth = line.lineWidth;
         minWidth = Math.min(minWidth, line.lineWidth);
+        maxWidth = Math.max(maxWidth, line.lineWidth);
+        hasChanged = true;
       }
       if (line.strokeStyle) {
         ctx.strokeStyle = line.strokeStyle;
+        hasChanged = true;
       }
       if (line.globalAlpha !== null && line.globalAlpha !== undefined) {
         ctx.globalAlpha = line.globalAlpha;
+        hasChanged = true;
+      }
+
+      if (hasChanged) {
+        ctx.beginPath();
+        if (start) {
+          ctx.moveTo(start.x, start.y);
+        }
+        hasChanged = false;
       }
 
       switch (line.type) {
@@ -182,6 +187,8 @@ export class CanvasPath extends CanvasPoints {
     if (this.filled) {
       this.fillPath(ctx, minWidth);
     }
+
+    this.setMaxWidthLine(maxWidth);
 
     if (
       !withDashedRectangle ||
@@ -311,6 +318,30 @@ export class CanvasPath extends CanvasPoints {
       }
     }
     if (lastItem.end.x !== start.x && lastItem.end.y !== start.y) {
+      // Verify if the end point is close to the start point
+      const dx = start.x - lastItem.end.x;
+      const dy = start.y - lastItem.end.y;
+
+      if (Math.abs(dx) < MARGIN && Math.abs(dy) < MARGIN) {
+        // Calculate the middle point
+        const midX = (start.x + lastItem.end.x) / 2;
+        const midY = (start.y + lastItem.end.y) / 2;
+
+        // Move the start point and the end point to the middle point
+        start.x = midX;
+        start.y = midY;
+        lastItem.end.x = midX;
+        lastItem.end.y = midY;
+
+        // Update the first element of the path
+        if (firstItem && firstItem.end) {
+          firstItem.end.x = midX;
+          firstItem.end.y = midY;
+        }
+
+        return;
+      }
+
       // add a line to the start point
       const newLine: LinePath = {
         type: LineType.LINE,

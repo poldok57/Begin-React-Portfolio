@@ -249,8 +249,8 @@ const drawImage = ({
 /**
  * Function to show a border around a square or an ellipse on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color,  rotation}
  * @param {object} squareBorder - {color, lineWidth, opacity, interval}
+ * @param {object} squareSize - {x, y, width, height}
  * @param {number} radius - radius of the shape
  * @param {string} shapeType - type of the shape
  * @param {Function} drawingFunction - function to draw the shape
@@ -299,6 +299,7 @@ const drawBorder = (
  */
 const drawText = (ctx: CanvasRenderingContext2D, square: ShapeDefinition) => {
   let paddingX: number, paddingY: number;
+  if (!square.text) return;
   const rotation: number = square.rotation + square.text.rotation;
   if (rotation !== 0) {
     rotateElement(ctx, square.size, rotation);
@@ -361,7 +362,7 @@ const drawButtonsAndLines = (
     ctx.globalAlpha = 0.8;
     ctx.beginPath();
     if (border && isBorder(border)) {
-      ctx.strokeStyle = "#c44";
+      ctx.strokeStyle = "#c04040";
       ctx.lineWidth = 1;
     } else {
       ctx.strokeStyle = "silver";
@@ -389,7 +390,7 @@ const drawButtonsAndLines = (
 
   const rotation =
     square.rotation +
-    (square.type === SHAPE_TYPE.TEXT ? square.text.rotation : 0);
+    (square.type === SHAPE_TYPE.TEXT ? square.text?.rotation ?? 0 : 0);
   if (rotation !== 0) {
     rotateElement(ctx, square.size, square.rotation);
   }
@@ -455,6 +456,7 @@ const shapeDrawing = (
   if (square.rotation !== 0) {
     rotateElement(ctx, square.size, square.rotation);
   }
+  if (!square.shape) return;
 
   const { radius = 0, filled } = square.shape;
   const color = square.general.color;
@@ -471,9 +473,11 @@ const shapeDrawing = (
     lineWidth,
     radius,
     type: square.type,
-    blackWhite: square.blackWhite,
+    blackWhite: square?.blackWhite ?? false,
     virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
   } as drawingProps);
+
+  if (!square.border) return;
 
   if (isDrawingShape(square.type)) {
     if (filled) {
@@ -547,7 +551,7 @@ export const showElement = (
   }
 
   if (isDrawingShape(square.type)) {
-    if (square.shape.withText) {
+    if (square?.shape?.withText) {
       // text inside the square
       drawText(ctx, square);
     }

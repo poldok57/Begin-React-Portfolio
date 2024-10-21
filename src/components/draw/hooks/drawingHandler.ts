@@ -30,6 +30,7 @@ export abstract class drawingHandler {
   protected ctxTempory: CanvasRenderingContext2D | null = null;
   protected lastMouseOnShape: string | null = null;
   protected setMode: (mode: string) => void;
+  protected lockRatio: boolean = false;
 
   protected data: ThingsToDraw | ShapeDefinition = {
     type: DRAWING_MODES.DRAW,
@@ -186,7 +187,9 @@ export abstract class drawingHandler {
 
   startAction(): void {}
   actionKeyDown(_event: KeyboardEvent): void {}
-  actionAbort(): void {}
+  actionAbort(): string | null {
+    return null;
+  }
   actionValid(): void {}
 
   actionMouseDblClick(): void {}

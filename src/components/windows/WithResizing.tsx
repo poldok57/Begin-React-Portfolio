@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { MoveDiagonal2 } from "lucide-react";
 import {
   BORDER,
+  MARGIN_ON_BORDER,
   mouseIsOnBorderRect,
   mousePointer,
   isBorder,
@@ -500,6 +501,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     },
     200
   );
+
   /**
    * Event for resize the component
    */
@@ -540,15 +542,21 @@ export const WithResizing: React.FC<WithResizingProps> = ({
     const extendMouseMoveStop = () => {
       document.removeEventListener(EVENT.MOUSE_MOVE, handleResize);
     };
+
+    // if component is locked, only resize on the right or bottom border
+    const isOnABorder = (mousePos: string) => {
+      return isLocked ? isBorderRightOrBottom(mousePos) : isBorder(mousePos);
+    };
+
     const handleResizingStart = (coord: Coordinate) => {
       const rect = component.getBoundingClientRect();
 
       const mousePos = mouseIsOnBorderRect(coord, rect);
 
       if (mousePos && isResizable.current) {
-        const mouseCursor = mousePointer(mousePos);
-        if (isLocked ? isBorderRightOrBottom(mousePos) : isBorder(mousePos)) {
+        if (isOnABorder(mousePos)) {
           borderResizeRef.current = mousePos;
+          const mouseCursor = mousePointer(mousePos);
 
           if (setResizing) setResizing(true);
           if (trace)
@@ -556,7 +564,6 @@ export const WithResizing: React.FC<WithResizingProps> = ({
               `[${componentName}] resize Component Start : ${mousePos}`
             );
           component.style.cursor = mouseCursor;
-          console.log(componentName, "Resize Start ");
           extendMouseMove();
 
           changeAlign(component, mousePos);
@@ -593,42 +600,46 @@ export const WithResizing: React.FC<WithResizingProps> = ({
           ? borderResizeRef.current
           : mouseIsOnBorderRect(mouseCoord, rect);
 
-      if (mousePos && isResizable.current) {
-        const mouseCursor = mousePointer(mousePos);
-        if (isLocked ? isBorderRightOrBottom(mousePos) : isBorder(mousePos)) {
-          if (borderResizeRef.current !== "" && event.buttons === 1) {
-            event.preventDefault();
-            const newRect = resizeRect(mouseCoord, rect, mousePos, false);
-
-            if (trace) {
-              console.log(
-                `[${componentName}] resize Component: ${mousePos}: `,
-                newRect
-              );
-            }
-
-            const newSize = resizeComponent(newRect as Size);
-            setComponentSize(newSize);
-          }
-          component.style.cursor = mouseCursor;
-        } else {
-          if (isLocked) {
-            component.style.cursor = "default";
-          } else {
-            component.style.cursor = "move";
-          }
-        }
-      } else {
+      if (!mousePos || !isResizable.current) {
+        // mouse is not in the component
         const distance = mouseDistanceFromBorder(mouseCoord, rect);
-        if (distance > 20) {
+        if (distance > MARGIN_ON_BORDER) {
           extendMouseMoveStop();
         }
+        return false;
       }
+
+      // mouse is on a valid border
+      if (isOnABorder(mousePos)) {
+        if (borderResizeRef.current !== "" && event.buttons === 1) {
+          const newRect = resizeRect(mouseCoord, rect, mousePos, false);
+
+          if (trace) {
+            console.log(
+              `[${componentName}] resize Component: ${mousePos}: `,
+              newRect
+            );
+          }
+
+          const newSize = resizeComponent(newRect as Size);
+          setComponentSize(newSize);
+        }
+        component.style.cursor = mousePointer(mousePos);
+        return true;
+      }
+      if (isLocked) {
+        component.style.cursor = "default";
+      } else {
+        component.style.cursor = "move";
+      }
+      return false;
     };
 
     const handleMouseMove = (event: MouseEvent) => {
       if (event.buttons === 1) {
-        handleResize(event);
+        if (handleResize(event)) {
+          event.preventDefault();
+        }
       } else if (borderResizeRef.current !== "") {
         handleResizingStop(event, "mouseMove");
       }
@@ -636,13 +647,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
 
     const handleResizingStop = (e: MouseEvent, origine = "mouseUp") => {
       if (!borderResizeRef.current) return;
-      console.log(
-        componentName,
-        "handleResizingStop",
-        origine,
-        "border:",
-        borderResizeRef.current
-      );
+
       restoreAlign(component, borderResizeRef.current);
       borderResizeRef.current = "";
       extendMouseMoveStop();
@@ -665,6 +670,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
           y: touch.clientY,
         });
         if (cursor) {
+          console.log(`[${componentName}] touchStart preventDefault`);
           event.preventDefault();
         }
       } else if (event.touches.length === 2) {
@@ -690,16 +696,16 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       if (!isResizable.current) return;
 
       if (event.touches.length === 1) {
-        event.preventDefault();
         const touch = event.touches[0];
         const mouseEvent = new MouseEvent("mousemove", {
           clientX: touch.clientX,
           clientY: touch.clientY,
         });
-        handleResize(mouseEvent);
+        if (handleResize(mouseEvent)) {
+          event.preventDefault();
+        }
       }
       if (event.touches.length === 2 && initialDistance.current) {
-        event.preventDefault();
         const touch1 = event.touches[0];
         const touch2 = event.touches[1];
         const distance = Math.sqrt(
@@ -720,6 +726,8 @@ export const WithResizing: React.FC<WithResizingProps> = ({
           // dont move the component, when is locked
           return;
         }
+        event.preventDefault();
+
         const centerX = (touch1.clientX + touch2.clientX) / 2;
         const centerY = (touch1.clientY + touch2.clientY) / 2;
 

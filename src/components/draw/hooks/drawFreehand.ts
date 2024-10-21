@@ -274,6 +274,7 @@ export class drawFreehand extends drawingHandler {
     this.freeCurve.clearPoints();
     this.clearTemporyCanvas();
     this.setDrawing(false);
+    return null;
   }
 
   endAction() {

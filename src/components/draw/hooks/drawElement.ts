@@ -93,6 +93,18 @@ export class drawElement extends drawingHandler {
   addData(data: AllParams) {
     this.data = { ...this.data, ...data };
   }
+  setDataSize(data: Area): void {
+    this.data.size = { ...data };
+  }
+  setDataGeneral(data: ParamsGeneral): void {
+    this.data.general = { ...data };
+  }
+  changeRotation(rotation: number): void {
+    this.data.rotation += rotation;
+  }
+  setRotation(rotation: number): void {
+    this.data.rotation = rotation;
+  }
   setDataBorder(data: ParamsGeneral) {
     this.data.border = { ...data };
   }
@@ -114,7 +126,9 @@ export class drawElement extends drawingHandler {
       });
     }
     this.data.rotation = 0;
-    this.data.text.rotation = 0;
+    if (this.data.text) {
+      this.data.text.rotation = 0;
+    }
     this.data.size.ratio = 0;
     this.fixed = false;
   }
@@ -125,7 +139,7 @@ export class drawElement extends drawingHandler {
     this.setDataText(param.text);
 
     this.data.type = param.mode;
-    this.data.lockRatio = param.lockRatio;
+    this.lockRatio = param.lockRatio;
 
     this.setWithTurningButtons();
   }
@@ -154,7 +168,7 @@ export class drawElement extends drawingHandler {
       square.type === DRAWING_MODES.TEXT ||
       (square.type === DRAWING_MODES.CIRCLE &&
         sSize.width === sSize.height &&
-        !square.shape.withText)
+        !square.shape?.withText)
     ) {
       this.data.withTurningButtons = false;
       return;
@@ -176,6 +190,7 @@ export class drawElement extends drawingHandler {
       this.ctxTempory,
       this.data,
       this.coordinates,
+      this.lockRatio,
       witchBorder
     );
 
@@ -318,20 +333,24 @@ export class drawElement extends drawingHandler {
       return;
     }
 
+    const size = this.data.size;
+
     const diagonal = Math.sqrt(
-      Math.pow(this.data.size.width, 2) + Math.pow(this.data.size.height, 2)
+      Math.pow(size.width, 2) + Math.pow(size.height, 2)
     );
     const newSize = diagonal / Math.sqrt(2);
 
-    const centerX = this.data.size.x + this.data.size.width / 2;
-    const centerY = this.data.size.y + this.data.size.height / 2;
-
-    this.data.size.width = newSize;
-    this.data.size.height = newSize;
+    const centerX = size.x + size.width / 2;
+    const centerY = size.y + size.height / 2;
 
     // center the square at same place
-    this.data.size.x = centerX - newSize / 2;
-    this.data.size.y = centerY - newSize / 2;
+    this.data.size = {
+      x: centerX - newSize / 2,
+      y: centerY - newSize / 2,
+      width: newSize,
+      height: newSize,
+    };
+
     // if the element is rond, set rotation to 0
     if (this.data.type === DRAWING_MODES.CIRCLE) {
       this.data.rotation = 0;

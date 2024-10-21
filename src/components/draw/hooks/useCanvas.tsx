@@ -326,7 +326,10 @@ export const useCanvas = ({
         previousPicture(canvasRef.current);
         break;
       case DRAWING_MODES.ABORT:
-        drawingRef.current.actionAbort();
+        const mode = drawingRef.current.actionAbort();
+        if (mode) {
+          setMode(mode);
+        }
         break;
       case DRAWING_MODES.VALID:
         drawingRef.current.actionValid();

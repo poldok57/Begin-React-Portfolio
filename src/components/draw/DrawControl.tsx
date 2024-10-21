@@ -19,7 +19,7 @@ import {
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
-import { DrawControlBasic } from "./DrawControlBasic";
+import { DrawControlGeneral } from "./DrawControlGeneral";
 import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../alert-messages/alertMessage";
@@ -283,7 +283,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleTextParams={handleParamChange}
           isTouch={isTouch}
         />
-        <DrawControlBasic
+        <DrawControlGeneral
           mode={mode}
           handleParamChange={handleParamChange}
           drawingParams={drawingParams}

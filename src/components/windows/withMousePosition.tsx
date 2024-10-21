@@ -336,6 +336,7 @@ export function withMousePosition<P extends object>(
           setCanMove(false);
           return false;
         }
+        // console.log(`[${WrappedComponent.name}] handleMove preventDefault`);
         event.stopPropagation();
         event.preventDefault();
         setMouseCoordinates(coord.x, coord.y);
@@ -403,10 +404,10 @@ export function withMousePosition<P extends object>(
          * when the mouse is down on the title bar
          */
         if (isLocked) return;
-
-        if (startDrag(event, { x: event.clientX, y: event.clientY })) {
-          // event.preventDefault();
-        }
+        startDrag(event, { x: event.clientX, y: event.clientY });
+        // if (startDrag(event, { x: event.clientX, y: event.clientY })) {
+        // event.preventDefault();
+        // }
       };
 
       /**

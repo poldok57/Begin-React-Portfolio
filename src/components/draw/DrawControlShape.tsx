@@ -7,6 +7,7 @@ import { WiMoonFirstQuarter } from "react-icons/wi";
 import { Button } from "../atom/Button";
 import { RangeInput } from "../atom/RangeInput";
 import ToggleSwitch from "../atom/ToggleSwitch";
+import { ColorPicker } from "../atom/ColorPicker";
 
 import {
   DRAWING_MODES,
@@ -181,11 +182,10 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
             className="flex flex-col gap-1 justify-center items-center text-sm"
           >
             color
-            <input
+            <ColorPicker
               id="border-color-picker"
-              type="color"
               defaultValue={drawingParams.border.color}
-              onChange={(e) => handleBorder({ color: e.target.value })}
+              onChange={(color) => handleBorder({ color: color })}
             />
           </label>
           <RangeInput

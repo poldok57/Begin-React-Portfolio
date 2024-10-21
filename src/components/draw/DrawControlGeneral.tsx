@@ -12,7 +12,7 @@ import {
   Params,
 } from "@/lib/canvas/canvas-defines";
 
-interface DrawControlBasicProps {
+interface DrawControlGeneralProps {
   mode: string;
   handleParamChange: (params: GroupParams) => void;
   drawingParams: AllParams;
@@ -21,7 +21,7 @@ interface DrawControlBasicProps {
   isTouch?: boolean;
 }
 
-export const DrawControlBasic: React.FC<DrawControlBasicProps> = ({
+export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   mode,
   handleParamChange,
   drawingParams,
