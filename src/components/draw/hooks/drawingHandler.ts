@@ -1,7 +1,5 @@
-import { Coordinate, Area, ArgsMouseOnShape } from "@/lib/canvas/types";
+import { Coordinate } from "@/lib/canvas/types";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
-import { showElement } from "@/lib/canvas/canvas-elements";
-import { mousePointer, isInside } from "@/lib/mouse-position";
 import {
   addPictureToHistory,
   CanvasPicture,
@@ -14,7 +12,6 @@ import {
   AllParams,
   ParamsGeneral,
 } from "@/lib/canvas/canvas-defines";
-import { isOnSquareBorder } from "@/lib/square-position";
 
 export type returnMouseDown = {
   toContinue?: boolean;
@@ -31,6 +28,7 @@ export abstract class drawingHandler {
   protected lastMouseOnShape: string | null = null;
   protected setMode: (mode: string) => void;
   protected lockRatio: boolean = false;
+  protected type: string = DRAWING_MODES.PAUSE;
 
   protected data: ThingsToDraw | ShapeDefinition = {
     type: DRAWING_MODES.DRAW,
@@ -77,18 +75,8 @@ export abstract class drawingHandler {
     if (!this.ctxTempory) return;
     clearCanvasByCtx(this.ctxTempory);
   }
-  setDataSize(data: Area): void {
-    this.data.size = { ...data };
-  }
-  setDataGeneral(data: ParamsGeneral): void {
-    this.data.general = { ...data };
-  }
-  changeRotation(rotation: number): void {
-    this.data.rotation += rotation;
-  }
-  setRotation(rotation: number): void {
-    this.data.rotation = rotation;
-  }
+
+  abstract setDataGeneral(data: ParamsGeneral): void;
 
   isExtendedMouseArea(): boolean {
     return this.extendedMouseArea;
@@ -107,20 +95,12 @@ export abstract class drawingHandler {
   }
 
   setType(type: string) {
-    this.data.type = type;
+    this.type = type;
   }
   getType() {
-    return this.data.type;
+    return this.type;
   }
-  setWithTurningButtons(value: boolean) {
-    this.data.withTurningButtons = value;
-  }
-  setWithCornerButton(value: boolean) {
-    this.data.withCornerButton = value;
-  }
-  setWithResize(value: boolean) {
-    this.data.withResize = value;
-  }
+
   /**
    * Function to save the picture in the history
    */
@@ -133,56 +113,6 @@ export abstract class drawingHandler {
       image: null,
     };
     addPictureToHistory(savePicture as CanvasPicture);
-  }
-  /**
-   * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
-   * handle special cases for the border of the square
-   */
-  handleMouseOnShape(): string | null {
-    if (this.mCanvas === null || !this.coordinates) return null;
-
-    const argsMouseOnShape: ArgsMouseOnShape = {
-      coordinate: this.coordinates,
-      area: this.data.size,
-      withResize: this.data?.withResize || false,
-      withCornerButton: this.data?.withCornerButton || false,
-      withTurningButtons: this.data?.withTurningButtons || false,
-      maxWidth: this.mCanvas.width,
-    };
-
-    return isOnSquareBorder(argsMouseOnShape);
-  }
-  /**
-   * Function to follow the cursor on the canvas
-   * @param {number} opacity - opacity of the element
-   */
-  followCursorOnElement(opacity: number) {
-    let cursorType = "default";
-
-    if (!this.ctxTempory || !this.coordinates) return cursorType;
-
-    const mouseOnShape = this.handleMouseOnShape();
-
-    if (mouseOnShape) {
-      cursorType = mousePointer(mouseOnShape);
-
-      if (isInside(mouseOnShape)) {
-        // show real color when mouse is inside the square
-        this.ctxTempory.globalAlpha = opacity;
-      }
-    }
-    if (mouseOnShape !== this.lastMouseOnShape) {
-      this.clearTemporyCanvas();
-      showElement(
-        this.ctxTempory,
-        this.data as ShapeDefinition,
-        true,
-        mouseOnShape
-      );
-      this.lastMouseOnShape = mouseOnShape;
-    }
-
-    return cursorType;
   }
 
   startAction(): void {}

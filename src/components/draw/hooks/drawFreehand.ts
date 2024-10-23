@@ -12,6 +12,7 @@ import {
   DRAWING_MODES,
   mouseCircle,
   AllParams,
+  ParamsGeneral,
 } from "../../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
@@ -25,6 +26,11 @@ export class drawFreehand extends drawingHandler {
   private drawing: boolean = false;
   private freeCurve: CanvasFreeCurve;
   private finishedDrawing: boolean = false;
+  private general: ParamsGeneral = {
+    color: "#000",
+    lineWidth: 1,
+    opacity: 1,
+  };
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -41,6 +47,11 @@ export class drawFreehand extends drawingHandler {
     this.setType(initData.mode);
     this.changeData(initData);
   }
+
+  setDataGeneral(dataGeneral: ParamsGeneral) {
+    this.general = { ...dataGeneral };
+  }
+
   changeData(data: AllParams): void {
     this.setDataGeneral(data.general);
     if (this.ctxTempory === null) return;
@@ -105,8 +116,8 @@ export class drawFreehand extends drawingHandler {
           context: ctxTempory,
           coordinate: coord,
         } as drawingCircle);
-        ctxTempory.strokeStyle = this.data.general.color;
-        ctxTempory.lineWidth = this.data.general.lineWidth;
+        ctxTempory.strokeStyle = this.general.color;
+        ctxTempory.lineWidth = this.general.lineWidth;
         this.freeCurve.draw(ctxTempory, false);
         break;
       case DRAWING_MODES.ERASE:
@@ -219,7 +230,7 @@ export class drawFreehand extends drawingHandler {
 
       this.freeCurve.startCurve({
         firstPoint: this.coordinates as Coordinate,
-        general: this.data.general,
+        general: this.general,
       });
     }
 

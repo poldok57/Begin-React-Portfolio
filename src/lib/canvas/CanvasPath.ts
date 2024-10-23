@@ -5,7 +5,7 @@
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
-import { DRAWING_MODES, ParamsGeneral, ParamsPath } from "./canvas-defines";
+import { DRAWING_MODES, ParamsPath } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { MARGIN } from "./CanvasPoints";
@@ -26,7 +26,7 @@ export class CanvasPath extends CanvasPoints {
   filled: boolean;
   fillStyle: string = "gray";
 
-  constructor(general: ParamsGeneral, line: LinePath) {
+  constructor(line: LinePath) {
     super();
     this.setDataType(DRAWING_MODES.PATH);
     if (!line.coordinates) {
@@ -40,8 +40,6 @@ export class CanvasPath extends CanvasPoints {
       end: end,
     };
     this.addItem(item);
-
-    this.setParamsGeneral(general);
   }
 
   private getLastParams() {

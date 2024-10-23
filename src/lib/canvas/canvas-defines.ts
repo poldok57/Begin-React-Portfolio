@@ -133,10 +133,10 @@ export type ParamsGeneral = {
   interval?: number;
 };
 export type ParamsShape = {
-  filled: boolean;
-  radius: number;
-  withText: boolean;
-  withBorder: boolean;
+  filled?: boolean;
+  radius?: number;
+  withText?: boolean;
+  withBorder?: boolean;
 };
 export type ParamsText = {
   text: string;

@@ -9,13 +9,12 @@ import {
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
-import { showElement } from "@/lib/canvas/canvas-elements";
-import { resizingElement } from "@/lib/canvas/canvas-resize";
 import { isInsideSquare } from "@/lib/square-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
-import { drawingHandler, returnMouseDown } from "./drawingHandler";
+import { returnMouseDown } from "./drawingHandler";
+import { drawingShapeHandler } from "./drawingShapHandler";
 import { alertMessage } from "../../alert-messages/alertMessage";
 import { imageSize, cutOutArea } from "@/lib/canvas/canvas-size";
 import {
@@ -26,10 +25,7 @@ import {
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
-export class drawSelection extends drawingHandler {
-  private fixed: boolean = false;
-  private resizing: string | null = null;
-  private offset: Coordinate | null = null;
+export class drawSelection extends drawingShapeHandler {
   protected data: ShapeDefinition = {
     size: { x: 0, y: 0, width: 0, height: 0 },
     type: DRAWING_MODES.SELECT,
@@ -48,123 +44,32 @@ export class drawSelection extends drawingHandler {
     if (!canvas) return;
 
     this.coordinates = { x: 0, y: 0 };
-
-    this.fixed = false;
-    this.resizing = null;
-    this.offset = null;
-    this.data = {
-      ...this.data,
-      ...{
-        withCornerButton: false,
-        type: DRAWING_MODES.SQUARE,
-        rotation: 0,
-      },
-    };
-  }
-
-  setCoordinates(coord: Coordinate) {
-    this.coordinates = coord;
-    if (this.coordinates && this.offset && !this.fixed) {
-      const x = this.coordinates.x + this.offset.x;
-      const y = this.coordinates.y + this.offset.y;
-
-      this.data.size.x = x;
-      this.data.size.y = y;
-    }
-    return this.coordinates;
-  }
-
-  setResizing(value: string | null) {
-    this.resizing = value;
-  }
-
-  setFixed(value: boolean) {
-    this.fixed = value;
-  }
-  isFixed() {
-    return this.fixed;
-  }
-
-  eraseOffset() {
-    this.offset = null;
-  }
-  calculOffset() {
-    if (!this.coordinates) return;
-    this.offset = {
-      x: this.data.size.x - this.coordinates.x,
-      y: this.data.size.y - this.coordinates.y,
-    };
   }
 
   initData(initData: AllParams) {
-    this.data = { ...this.data, ...initData };
-    this.changeData(initData);
+    this.shape.initData(initData);
     if (this.mCanvas !== null)
-      this.setDataSize({
+      this.shape.setDataSize({
         x: this.mCanvas.width / 2,
         y: this.mCanvas.height / 2,
         width: SQUARE_WIDTH,
         height: SQUARE_HEIGHT,
       });
-    this.data.rotation = 0;
-    this.data.canvasImage = null;
-    this.data.canvasImageTransparent = null;
+    this.shape.setWithCornerButton(false);
     this.fixed = false;
-    this.setWithTurningButtons(true);
   }
   changeData(data: AllParams) {
-    this.setDataGeneral(data.general);
-    this.data.shape = { ...data.shape };
-    this.data.border = { ...data.border };
-
+    this.shape.changeData(data);
     this.lockRatio = data.lockRatio;
   }
 
-  getData() {
-    return this.data;
-  }
   setType(type: string) {
-    this.data.type = type;
+    this.shape.setType(type);
     if (type === DRAWING_MODES.SELECT) {
-      this.setWithTurningButtons(false);
-      this.setWithCornerButton(false);
+      this.shape.setWithAllButtons(false);
     } else {
-      this.setWithTurningButtons(true);
-      this.setWithCornerButton(true);
+      this.shape.setWithAllButtons(true);
     }
-  }
-  /**
-   * Function to resize the square on the canvas
-   */
-  resizingSquare() {
-    this.clearTemporyCanvas();
-
-    if (!this.coordinates || !this.ctxTempory) return;
-
-    const newCoord = resizingElement(
-      this.ctxTempory,
-      this.data,
-      this.coordinates,
-      this.lockRatio,
-      this.resizing
-    );
-
-    if (newCoord) {
-      this.setDataSize(newCoord);
-    }
-  }
-
-  /**
-   * Function to refresh the element on the tempory canvas
-   */
-  refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
-    if (!this.ctxTempory) {
-      return;
-    }
-    this.clearTemporyCanvas();
-    if (opacity > 0) this.ctxTempory.globalAlpha = opacity;
-    showElement(this.ctxTempory, this.data, true, mouseOnShape);
-    this.lastMouseOnShape = mouseOnShape;
   }
 
   /**
@@ -178,7 +83,7 @@ export class drawSelection extends drawingHandler {
       this.setFixed(true);
       this.setType(DRAWING_MODES.SELECT);
     } else {
-      area = { ...this.data.size };
+      area = this.shape.getDataSize();
     }
     this.selectedArea = area;
     this.originalSize = { ...area };
@@ -203,7 +108,7 @@ export class drawSelection extends drawingHandler {
       console.error("context is null");
       return;
     }
-    showElement(this.context, this.data, false);
+    this.shape.draw(this.context, false, null);
     this.saveCanvasPicture();
     this.clearTemporyCanvas();
   }
@@ -218,14 +123,14 @@ export class drawSelection extends drawingHandler {
     event: MouseEvent | TouchEvent,
     coord: Coordinate
   ): returnMouseDown {
-    // if (!this.isFixed()) {
-    //   return false;
-    // }
     let toReset = false;
     let pointer: string | null = null;
     this.setCoordinates(coord);
 
-    const mouseOnShape = this.handleMouseOnShape();
+    const mouseOnShape = this.shape.handleMouseOnShape(
+      this.mCanvas,
+      this.coordinates
+    );
 
     if (mouseOnShape) {
       // console.log("mode", mode, "mouseOnShape: ", mouseOnShape);
@@ -258,8 +163,8 @@ export class drawSelection extends drawingHandler {
    */
   actionMouseMove(event: MouseEvent | TouchEvent, coord: Coordinate) {
     this.setCoordinates(coord);
-    if (this.resizing !== null) {
-      this.resizingSquare();
+    if (this.resizingBorder !== null) {
+      this.resizingSquare(this.resizingBorder);
       if (this.getType() === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
       }
@@ -267,14 +172,16 @@ export class drawSelection extends drawingHandler {
     }
     if (!this.isFixed()) {
       this.clearTemporyCanvas();
-      if (this.ctxTempory) showElement(this.ctxTempory, this.data, true);
+      if (this.ctxTempory) {
+        this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
+      }
       if (this.getType() === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
       }
       return "pointer";
     }
 
-    return this.followCursorOnElement(this.data.general.opacity);
+    return this.followCursorOnElement(this.shape.getOpacity());
   }
 
   /**
@@ -286,9 +193,9 @@ export class drawSelection extends drawingHandler {
 
     if (this.ctxTempory === null) return;
 
-    if (isInsideSquare(this.coordinates, this.data.size)) {
-      this.ctxTempory.globalAlpha = this.data.general.opacity;
-      showElement(this.ctxTempory, this.data, true, BORDER.INSIDE);
+    if (isInsideSquare(this.coordinates, this.shape.getDataSize())) {
+      this.ctxTempory.globalAlpha = this.shape.getOpacity();
+      this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
     }
   }
 
@@ -330,15 +237,12 @@ export class drawSelection extends drawingHandler {
         // Zone selection
         const rect = imageSize(this.mCanvas);
         this.memorizeSelectedArea(rect);
-
-        this.setWithTurningButtons(false);
-        this.setWithCornerButton(false);
-        this.data.canvasImageTransparent = null;
+        this.shape.setWithAllButtons(false);
+        this.shape.setCanvasImageTransparent(null);
         break;
       case DRAWING_MODES.IMAGE:
-        this.setWithTurningButtons(true);
-        this.setWithCornerButton(true);
-        this.data.canvasImageTransparent = null;
+        this.shape.setWithAllButtons(true);
+        this.shape.setCanvasImageTransparent(null);
     }
   }
   /**
@@ -347,7 +251,7 @@ export class drawSelection extends drawingHandler {
   copySelection(): void {
     const area = this.getSelectedArea();
     if (area === null || this.context === null) return;
-    this.data.canvasImage = copyInVirtualCanvas(this.context, area);
+    this.shape.setCanvasImage(copyInVirtualCanvas(this.context, area));
     this.setType(DRAWING_MODES.IMAGE);
     this.setRotation(0);
     console.log("copySelection:", area, " refreshDrawing");
@@ -371,7 +275,7 @@ export class drawSelection extends drawingHandler {
   cutSelection() {
     const area = this.getSelectedArea();
     if (area === null || this.context === null) return;
-    this.data.canvasImage = copyInVirtualCanvas(this.context, area);
+    this.shape.setCanvasImage(copyInVirtualCanvas(this.context, area));
     this.context?.clearRect(area.x, area.y, area.width, area.height);
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.IMAGE);
@@ -385,20 +289,20 @@ export class drawSelection extends drawingHandler {
     // console.log("transparency " + delta);
     if (delta <= 0) {
       // Reset the transparency
-      this.data.canvasImageTransparent = null;
+      this.shape.setCanvasImageTransparent(null);
     } else {
-      this.data.canvasImageTransparent = document.createElement("canvas");
+      this.shape.setCanvasImageTransparent(document.createElement("canvas"));
 
       if (delta < 100)
         makeWhiteTransparent(
-          this.data.canvasImage ?? null,
-          this.data.canvasImageTransparent ?? null,
+          this.shape.getCanvasImage() ?? null,
+          this.shape.getCanvasImageTransparent() ?? null,
           delta
         );
       else
         makeWhiteTransparent2(
-          this.data.canvasImage ?? null,
-          this.data.canvasImageTransparent ?? null,
+          this.shape.getCanvasImage() ?? null,
+          this.shape.getCanvasImageTransparent() ?? null,
           delta
         );
     }
@@ -410,7 +314,7 @@ export class drawSelection extends drawingHandler {
    * Function to change the selected zone in black and white
    */
   blackWhiteSelection(blackWhite: boolean) {
-    this.data.blackWhite = blackWhite;
+    this.shape.setBlackWhite(blackWhite);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
   /**
@@ -418,8 +322,7 @@ export class drawSelection extends drawingHandler {
    * @param {number} radius - radius of the corners
    */
   radiusSelection(radius: number) {
-    this.data.shape.radius = radius;
-
+    this.shape.setRadius(radius);
     // console.log("radius ", radius);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
@@ -487,8 +390,8 @@ export class drawSelection extends drawingHandler {
       virtualCanvas.height = img.height;
       const ratio = img.width / img.height;
       ctx.drawImage(img, 0, 0);
-      this.data.canvasImage = virtualCanvas;
-      this.data.canvasImageTransparent = null;
+      this.shape.setCanvasImage(virtualCanvas);
+      this.shape.setCanvasImageTransparent(null);
 
       alertMessage(
         "Image '" + name + "' loaded w:" + img.width + " h:" + img.height
@@ -509,25 +412,31 @@ export class drawSelection extends drawingHandler {
   }
 
   actionMouseDblClick = () => {
-    const mouseOnShape = this.handleMouseOnShape();
+    const mouseOnShape = this.shape.handleMouseOnShape(
+      this.mCanvas,
+      this.coordinates
+    );
     if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
       return;
     }
     if (!this.originalSize) {
       return;
     }
+    const size = this.shape.getDataSize();
     const originalRatio = this.originalSize.width / this.originalSize.height;
-    const currentRatio = this.data.size.width / this.data.size.height;
+    const currentRatio = size.width / size.height;
     // current center
-    const centreX = this.data.size.x + this.data.size.width / 2;
-    const centreY = this.data.size.y + this.data.size.height / 2;
+    const centreX = size.x + size.width / 2;
+    const centreY = size.y + size.height / 2;
     if (currentRatio === originalRatio) {
       this.setRotation(0);
       // return to the original size
-      this.data.size.width = this.originalSize.width;
-      this.data.size.height = this.originalSize.height;
-      this.data.size.x = centreX - this.originalSize.width / 2;
-      this.data.size.y = centreY - this.originalSize.height / 2;
+      this.shape.setDataSize({
+        x: centreX - this.originalSize.width / 2,
+        y: centreY - this.originalSize.height / 2,
+        width: this.originalSize.width,
+        height: this.originalSize.height,
+      } as Area);
       this.refreshDrawing(1, BORDER.INSIDE);
 
       return;
@@ -535,7 +444,7 @@ export class drawSelection extends drawingHandler {
 
     // calculate the current diagonal
     const currentDiagonal = Math.sqrt(
-      Math.pow(this.data.size.width, 2) + Math.pow(this.data.size.height, 2)
+      Math.pow(size.width, 2) + Math.pow(size.height, 2)
     );
 
     // Calculate the new dimensions keeping the diagonal and the original ratio
@@ -544,11 +453,12 @@ export class drawSelection extends drawingHandler {
     const newWidth = newHeight * originalRatio;
 
     // update the dimensions keeping the center
-    this.data.size.width = newWidth;
-    this.data.size.height = newHeight;
-    this.data.size.x = centreX - newWidth / 2;
-    this.data.size.y = centreY - newHeight / 2;
-    // this.setRotation(0);
+    this.shape.setDataSize({
+      x: centreX - newWidth / 2,
+      y: centreY - newHeight / 2,
+      width: newWidth,
+      height: newHeight,
+    } as Area);
     this.refreshDrawing(1, BORDER.INSIDE);
   };
 }

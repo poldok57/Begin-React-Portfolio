@@ -111,7 +111,7 @@ export class drawLine extends drawingHandler {
   }
 
   initPath = () => {
-    this.path = new CanvasPath(this.data.general, this.line as LinePath);
+    this.path = new CanvasPath(this.line as LinePath);
     this.withPath = true;
     this.finishedDrawing = false;
   };

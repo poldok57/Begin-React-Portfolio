@@ -1,44 +1,42 @@
-export type Coordinate = {
+export interface Coordinate {
   x: number;
   y: number;
-};
+}
 
-export type Size = {
+export interface Size {
   width: number;
   height: number;
-};
+}
 
-export type Area = Coordinate &
-  Size & {
-    ratio?: number;
-  };
+export interface Area extends Coordinate, Size {
+  ratio?: number;
+}
 
-export type RectPosition = {
+export interface RectPosition {
   left: number;
   top: number;
-};
+}
 
-export type Rectangle = RectPosition &
-  Size & {
-    right?: number;
-    bottom?: number;
-  };
+export interface Rectangle extends RectPosition, Size {
+  right?: number;
+  bottom?: number;
+}
 
-export type ArgsMouseOnShape = {
+export interface ArgsMouseOnShape {
   coordinate: Coordinate;
   area: Area;
   withResize: boolean;
   withCornerButton: boolean | null;
   withTurningButtons: boolean | null;
   maxWidth: number;
-};
+}
 
-export type MouseCircle = {
+export interface MouseCircle {
   color: string;
   width: number;
   filled: boolean;
   lineWidth: number;
-};
+}
 
 export enum LineType {
   START = "s",

@@ -427,6 +427,7 @@ const drawButtonsAndLines = (
       // show the rectangle around the shape
       if (
         square.shape &&
+        square.shape.radius &&
         square.shape.radius >= 10 &&
         square.shape.withBorder === false
       ) {
