@@ -7,7 +7,8 @@ import {
   ParamsText,
   // ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
-import { mousePointer, isInside } from "@/lib/mouse-position";
+import { BORDER, mousePointer, isInside } from "@/lib/mouse-position";
+import { isInsideSquare } from "@/lib/square-position";
 
 import { drawingHandler } from "./drawingHandler";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
@@ -46,6 +47,10 @@ export abstract class drawingShapeHandler extends drawingHandler {
   }
   changeData(param: AllParams) {
     this.shape.changeData(param);
+  }
+
+  getType() {
+    return this.shape.getType();
   }
 
   setCoordinates(coord: Coordinate) {
@@ -142,6 +147,27 @@ export abstract class drawingShapeHandler extends drawingHandler {
   }
 
   /**
+   * Function to draw an element on the MAIN canvas
+   */
+  validDrawedElement(withOffset: boolean = false) {
+    if (!this.context) {
+      console.error("context is null");
+      return;
+    }
+    this.shape.draw(this.context, false, null);
+    this.saveCanvasPicture();
+    this.clearTemporyCanvas();
+    if (withOffset) {
+      // add 15px to the size to avoid the shape to be one on the other
+      const size = this.shape.getDataSize();
+      this.shape.setDataSize({
+        ...size,
+        ...{ x: size.x + 15, y: size.y + 15 },
+      });
+    }
+  }
+
+  /**
    * Function to refresh the element on the tempory canvas
    */
   refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
@@ -184,5 +210,17 @@ export abstract class drawingShapeHandler extends drawingHandler {
     }
 
     return cursorType;
+  }
+
+  actionMouseUp() {
+    this.setFixed(true);
+    this.setResizing(null);
+
+    if (this.ctxTempory === null) return;
+
+    if (isInsideSquare(this.coordinates, this.shape.getDataSize())) {
+      this.ctxTempory.globalAlpha = this.shape.getOpacity();
+      this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
+    }
   }
 }

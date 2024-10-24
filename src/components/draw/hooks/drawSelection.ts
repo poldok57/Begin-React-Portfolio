@@ -9,7 +9,6 @@ import {
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
-import { isInsideSquare } from "@/lib/square-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
@@ -47,6 +46,7 @@ export class drawSelection extends drawingShapeHandler {
   }
 
   initData(initData: AllParams) {
+    console.log("initData: ", initData);
     this.shape.initData(initData);
     if (this.mCanvas !== null)
       this.shape.setDataSize({
@@ -59,7 +59,9 @@ export class drawSelection extends drawingShapeHandler {
     this.fixed = false;
   }
   changeData(data: AllParams) {
-    this.shape.changeData(data);
+    this.setDataGeneral(data.general);
+    this.data.shape = { ...data.shape };
+    this.data.border = { ...data.border };
     this.lockRatio = data.lockRatio;
   }
 
@@ -94,23 +96,6 @@ export class drawSelection extends drawingShapeHandler {
   }
   eraseSelectedArea() {
     this.selectedArea = null;
-  }
-
-  /**
-   * Function to draw an element on the MAIN canvas
-   */
-  validDrawedElement() {
-    if (this.getType() === DRAWING_MODES.SELECT) {
-      return;
-    }
-    // console.log("validDrawedElement: ", this.getType());
-    if (!this.context) {
-      console.error("context is null");
-      return;
-    }
-    this.shape.draw(this.context, false, null);
-    this.saveCanvasPicture();
-    this.clearTemporyCanvas();
   }
 
   /**
@@ -163,9 +148,12 @@ export class drawSelection extends drawingShapeHandler {
    */
   actionMouseMove(event: MouseEvent | TouchEvent, coord: Coordinate) {
     this.setCoordinates(coord);
+
+    const type = this.shape.getType();
+
     if (this.resizingBorder !== null) {
       this.resizingSquare(this.resizingBorder);
-      if (this.getType() === DRAWING_MODES.SELECT) {
+      if (type === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
       }
       return null;
@@ -175,28 +163,13 @@ export class drawSelection extends drawingShapeHandler {
       if (this.ctxTempory) {
         this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
       }
-      if (this.getType() === DRAWING_MODES.SELECT) {
+      if (type === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
       }
       return "pointer";
     }
 
     return this.followCursorOnElement(this.shape.getOpacity());
-  }
-
-  /**
-   * Function to handle the mouse up event
-   */
-  actionMouseUp() {
-    this.setFixed(true);
-    this.setResizing(null);
-
-    if (this.ctxTempory === null) return;
-
-    if (isInsideSquare(this.coordinates, this.shape.getDataSize())) {
-      this.ctxTempory.globalAlpha = this.shape.getOpacity();
-      this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
-    }
   }
 
   actionMouseLeave() {}
@@ -231,11 +204,13 @@ export class drawSelection extends drawingShapeHandler {
    * Function to start the action on the canvas, after changing the mode
    */
   startAction(): void {
-    const mode = this.getType();
+    const mode = this.shape.getType();
+    console.log("startAction: ", mode);
     switch (mode) {
       case DRAWING_MODES.SELECT:
         // Zone selection
         const rect = imageSize(this.mCanvas);
+        console.log("startAction: ", rect);
         this.memorizeSelectedArea(rect);
         this.shape.setWithAllButtons(false);
         this.shape.setCanvasImageTransparent(null);

@@ -6,7 +6,6 @@ import { Coordinate } from "@/lib/canvas/types";
 import { returnMouseDown } from "./drawingHandler";
 import { drawingShapeHandler } from "./drawingShapHandler";
 import { alertMessage } from "../../alert-messages/alertMessage";
-import { isInsideSquare } from "@/lib/square-position";
 
 export class drawElement extends drawingShapeHandler {
   constructor(
@@ -31,26 +30,6 @@ export class drawElement extends drawingShapeHandler {
   }
 
   /**
-   * Function to draw an element on the MAIN canvas
-   */
-  validDrawedElement() {
-    // console.log("validDrawedElement: ", this.getType());
-    if (!this.context) {
-      console.error("context is null");
-      return;
-    }
-    this.shape.draw(this.context, false, null);
-    this.saveCanvasPicture();
-    this.clearTemporyCanvas();
-    // add 15px to the size to avoid the shape to be one on the other
-    const size = this.shape.getDataSize();
-    this.shape.setDataSize({
-      ...size,
-      ...{ x: size.x + 15, y: size.y + 15 },
-    });
-  }
-
-  /**
    * Function to handle the mouse down event
    * @param {string} mode - drawing mode
    * @param {MouseEvent} event - mouse event
@@ -63,7 +42,7 @@ export class drawElement extends drawingShapeHandler {
       ? this.shape.handleMouseOnShape(this.mCanvas, this.coordinates)
       : null;
     if (mouseOnShape) {
-      console.log("mode", this.type, "mouseOnShape: ", mouseOnShape);
+      console.log("mode", this.shape.getType(), "mouseOnShape: ", mouseOnShape);
       // Clic on the shape --------
       if (mouseOnShape === BORDER.INSIDE) {
         this.calculOffset();
@@ -71,7 +50,7 @@ export class drawElement extends drawingShapeHandler {
         this.setFixed(false);
       } else if (mouseOnShape === BORDER.ON_BUTTON) {
         pointer = "pointer";
-        this.validDrawedElement();
+        this.validDrawedElement(true);
         toReset = true;
       } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
         this.changeRotation(-Math.PI / 16);
@@ -110,18 +89,6 @@ export class drawElement extends drawingShapeHandler {
     return this.followCursorOnElement(this.shape.getOpacity());
   }
 
-  actionMouseUp() {
-    this.setFixed(true);
-    this.setResizing(null);
-
-    if (this.ctxTempory === null) return;
-
-    if (isInsideSquare(this.coordinates, this.shape.getDataSize())) {
-      this.ctxTempory.globalAlpha = this.shape.getOpacity();
-      this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
-    }
-  }
-
   actionMouseLeave() {
     if (this.isFixed()) {
       return;
@@ -130,7 +97,7 @@ export class drawElement extends drawingShapeHandler {
   }
 
   actionValid() {
-    this.validDrawedElement();
+    this.validDrawedElement(true);
   }
 
   endAction() {
