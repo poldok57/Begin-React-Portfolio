@@ -16,6 +16,7 @@ import { resizingElement } from "./canvas-resize";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { showElement } from "./canvas-elements";
 import { isOnSquareBorder } from "@/lib/square-position";
+import { throttle } from "@/lib/utils/throttle";
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
@@ -46,6 +47,7 @@ export class CanvasShape extends CanvasDrawableObject {
 
   setType(type: string): void {
     this.data.type = type;
+    this.calculateWithTurningButtons(type);
   }
   getType() {
     return this.data.type;
@@ -104,18 +106,17 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.withTurningButtons = value;
   }
   /**
-   * Function to set the value of the middle button
+   * Function to set if the middle button should be shown
    */
-  private calculateWithTurningButtons(): void {
+  calculateWithTurningButtons(type: string | null = null): void {
     const sSize = this.getDataSize();
-    const type = this.getType();
+    if (type === null) type = this.getType();
 
     // don't show the middle button if the shape is a circle without text
     if (
-      type === DRAWING_MODES.TEXT ||
-      (type === DRAWING_MODES.CIRCLE &&
-        sSize.width === sSize.height &&
-        !this.getWithText())
+      type === DRAWING_MODES.CIRCLE &&
+      sSize.width === sSize.height &&
+      !this.getWithText()
     ) {
       this.data.withTurningButtons = false;
       return;
@@ -127,7 +128,11 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.withCornerButton = value;
   }
   setWithAllButtons(value: boolean) {
-    this.data.withTurningButtons = value;
+    if (value) {
+      this.calculateWithTurningButtons();
+    } else {
+      this.data.withTurningButtons = false;
+    }
     this.data.withCornerButton = value;
   }
 
@@ -184,13 +189,14 @@ export class CanvasShape extends CanvasDrawableObject {
   ) {
     const newCoord = resizingElement(
       ctx,
-      this.data,
+      this.data.size,
       coordinates,
       lockRatio,
       witchBorder
     );
 
     if (newCoord) {
+      this.draw(ctx, lockRatio, witchBorder);
       this.setDataSize(newCoord);
       this.calculateWithTurningButtons();
     }
@@ -219,12 +225,33 @@ export class CanvasShape extends CanvasDrawableObject {
     return isOnSquareBorder(argsMouseOnShape);
   }
 
+  /**
+   * Function to draw the shape on tempory canvas with throttling
+   */
+  drawToTrottle(
+    ctx: CanvasRenderingContext2D | null,
+    data: ShapeDefinition,
+    withBorder: boolean,
+    borderInfo?: string | null
+  ) {
+    ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    showElement(ctx, data, withBorder, borderInfo);
+  }
+
+  showElementThrottled = throttle(this.drawToTrottle, 20);
+  /**
+   * Function to draw the shape on the canvas
+   */
   draw(
     ctx: CanvasRenderingContext2D | null,
-    withBorder?: boolean,
+    temporyDraw?: boolean,
     borderInfo?: string | null
   ) {
     // console.log("draw", this.data);
-    showElement(ctx, this.data, withBorder, borderInfo);
+    if (temporyDraw) {
+      this.showElementThrottled(ctx, this.data, temporyDraw, borderInfo);
+    } else {
+      showElement(ctx, this.data, false, null);
+    }
   }
 }

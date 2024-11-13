@@ -28,6 +28,7 @@ const IMAGE_ACTIONS = {
   COPY: "copy",
   PASTE: "paste",
   DELETE: "delete",
+  SELECT_AREA: "selectArea",
   BLACK_WHITE: "blackWhite",
 };
 

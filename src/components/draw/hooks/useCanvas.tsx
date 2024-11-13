@@ -408,6 +408,13 @@ export const useCanvas = ({
           setMode(DRAWING_MODES.CLOSED_PATH);
         }
         break;
+      case DRAWING_MODES.SELECT_AREA:
+        // restart action for selection zone
+        if (selectionRef.current !== null) {
+          selectionRef.current.startAction();
+          selectionRef.current.refreshDrawing();
+        }
+        break;
       default:
         console.error("Action not found : ", eventAction);
     }

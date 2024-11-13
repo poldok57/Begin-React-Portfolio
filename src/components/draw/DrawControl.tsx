@@ -112,8 +112,14 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   };
 
   const handleSelectZone = () => {
-    handleModeChange(DRAWING_MODES.SELECT);
-    handleChangeRatio(false);
+    if (mode !== DRAWING_MODES.SELECT) {
+      // active selection mode
+      handleModeChange(DRAWING_MODES.SELECT);
+      handleChangeRatio(false);
+      return;
+    }
+    // reselect zone
+    addEventAction(DRAWING_MODES.SELECT_AREA);
   };
 
   const handleChangeRatio = (ratio: boolean) => {

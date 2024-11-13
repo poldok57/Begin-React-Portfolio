@@ -27,7 +27,6 @@ export class drawLine extends drawingHandler {
   private path: CanvasPath | null = null;
   private withPath: boolean = false;
   private finishedDrawing: boolean = false;
-  private lastCoordinates: Coordinate | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -110,15 +109,15 @@ export class drawLine extends drawingHandler {
     this.line.setStartCoordinates(coord);
   }
 
-  initPath = () => {
+  initPath = (withPath: boolean = true) => {
     this.path = new CanvasPath(this.line as LinePath);
-    this.withPath = true;
+    this.withPath = withPath;
     this.finishedDrawing = false;
   };
 
   addLineToPath() {
     if (!this.path) {
-      this.initPath();
+      this.initPath(true);
     }
     if (this.path) {
       this.path.addLine(this.line as LinePath);
@@ -169,8 +168,11 @@ export class drawLine extends drawingHandler {
     this.clearTemporyCanvas();
     let cursorType = "default";
 
-    if (this.withPath && this.path) {
-      this.path.draw(ctxMouse);
+    // if (this.withPath && this.path) {
+    //   this.path.draw(ctxMouse);
+    // }
+    if (this.path) {
+      this.path.draw(ctxMouse, this.withPath);
     }
     const coord = this.line.getCoordinates() as Coordinate;
 
@@ -219,20 +221,20 @@ export class drawLine extends drawingHandler {
     return this.followCursor() as string;
   }
 
-  showLineAndArcInPath() {
+  showLineAndArcInPath(withPath: boolean = true) {
     let toContinue = false;
     switch (this.getType()) {
       case DRAWING_MODES.LINE:
       case DRAWING_MODES.ARC:
         if (!this.path) {
-          this.initPath();
+          this.initPath(withPath);
         } else if (this.line.setPositions()) {
           this.line.show(this.ctxTempory);
           this.addLineToPath();
           this.line.setStartFromEnd();
         }
         this.clearTemporyCanvas();
-        this.path?.draw(this.ctxTempory);
+        this.path?.draw(this.ctxTempory, withPath);
 
         toContinue = true;
         break;
@@ -242,28 +244,26 @@ export class drawLine extends drawingHandler {
   }
 
   showLineAndArc() {
-    if (this.line.setPositions()) {
-      this.line.show();
-      this.line.setStartFromEnd();
-      this.saveCanvasPicture(this.line.getStartCoordinates() as Coordinate);
-      return false;
-    }
-    this.line.show(this.ctxTempory);
-    return true;
+    return this.showLineAndArcInPath(false);
+    // if (this.line.setPositions()) {
+    //   this.line.show();
+    //   this.line.setStartFromEnd();
+    //   this.saveCanvasPicture(this.line.getStartCoordinates() as Coordinate);
+    //   return false;
+    // }
+    // this.line.show(this.ctxTempory);
+    // return true;
   }
 
   validatePath() {
     if (this.path) {
       // path has been validated
-      this.path.draw(this.context, false);
-      this.clearTemporyCanvas();
+      this.saveLastDrawing(false);
       this.withPath = MODE_PATH_AUTO;
-      this.finishedDrawing = false;
-      this.saveCanvasPicture(null);
-      this.line.eraseStartCoordinates();
     }
   }
 
+  // search if the mouse click on the end of the arc
   clicOnArcEnd(coord: Coordinate) {
     if (this.getType() !== DRAWING_MODES.ARC) {
       return;
@@ -276,11 +276,11 @@ export class drawLine extends drawingHandler {
       Math.abs(endCoord.x - coord.x) < MARGIN_POINT &&
       Math.abs(endCoord.y - coord.y) < MARGIN_POINT
     ) {
-      // console.log("same point than end");
+      console.log("same point than end");
       this.line.eraseEndCoordinates();
-      return;
+      return true;
     }
-    // Vérifier si coord est proche de line.getStartCoordinates()
+    // verify if coord is near to start coordinates
     const startCoord = this.line.getStartCoordinates();
     // clic near end of last line
     if (
@@ -293,7 +293,7 @@ export class drawLine extends drawingHandler {
     ) {
       this.path.cancelLastLine();
 
-      // Récupérer le dernier élément du path
+      // get last line of path
       const lastLine: LinePath | null = this.path?.getLastLine() as LinePath;
 
       if (lastLine) {
@@ -301,8 +301,10 @@ export class drawLine extends drawingHandler {
         this.line.setStartCoordinates(lastCoord);
 
         console.log("clic on last line", lastCoord);
+        return true;
       }
     }
+    return false;
   }
 
   /**
@@ -349,19 +351,30 @@ export class drawLine extends drawingHandler {
           };
         }
       } else {
-        toContinue = this.showLineAndArcInPath();
+        toContinue = this.showLineAndArcInPath(true);
       }
     } else {
       if (this.getType() === DRAWING_MODES.PATH) {
         if (!this.withPath) {
           // starting mode path
+          if (this.path) {
+            this.saveLastDrawing(true);
+          }
+
           this.line.setStartCoordinates();
-          this.initPath();
+          this.initPath(true);
         }
         changeMode = DRAWING_MODES.LINE;
       } else {
-        this.clicOnArcEnd(coord);
-        toContinue = this.showLineAndArc();
+        if (this.clicOnArcEnd(coord)) {
+          toContinue = true;
+        } else {
+          if (this.line.getStartCoordinates() == null) {
+            this.line.setStartCoordinates();
+            this.initPath(false);
+          }
+          toContinue = this.showLineAndArc();
+        }
       }
     }
     return {
@@ -423,7 +436,7 @@ export class drawLine extends drawingHandler {
 
     switch (this.getType()) {
       case DRAWING_MODES.PATH:
-        this.initPath();
+        this.initPath(true);
         return { toContinue: false, changeMode: DRAWING_MODES.LINE };
       case DRAWING_MODES.ARC:
         this.clicOnArcEnd(coord);
@@ -445,10 +458,10 @@ export class drawLine extends drawingHandler {
       return;
     }
     if (this.withPath && this.path) {
-      this.showLineAndArcInPath();
+      this.showLineAndArcInPath(true);
     } else {
       this.showLineAndArc();
-      this.clearTemporyCanvas();
+      // this.clearTemporyCanvas();
     }
     if (this.ctxTempory) {
       this.line.showLineEnds(this.ctxTempory, true);
@@ -463,8 +476,11 @@ export class drawLine extends drawingHandler {
 
     this.clearTemporyCanvas();
     // console.log("actionMouseUp", this.withPath, this.path);
-    if (this.withPath && this.path) {
-      this.path?.draw(this.ctxTempory, true);
+    // if (this.withPath && this.path) {
+    //   this.path?.draw(this.ctxTempory, true);
+    // }
+    if (this.path) {
+      this.path?.draw(this.ctxTempory, this.withPath);
     }
   }
 
@@ -474,6 +490,24 @@ export class drawLine extends drawingHandler {
       return this.followCursorOnFinisedPath(null) as string;
     }
     clearCanvasByCtx(this.ctxTempory);
+  }
+
+  /**
+   * Function to draw and save the last drawing
+   */
+  saveLastDrawing(withCoordinates: boolean = false) {
+    if (this.path) {
+      // draw finised line
+      this.clearTemporyCanvas();
+      this.path.draw(this.context, false);
+      this.saveCanvasPicture(
+        withCoordinates ? (this.line.getStartCoordinates() as Coordinate) : null
+      );
+      this.withPath = false;
+      this.finishedDrawing = false;
+      this.line.eraseStartCoordinates();
+      this.path = null;
+    }
   }
 
   // escape action
@@ -497,6 +531,10 @@ export class drawLine extends drawingHandler {
       this.withPath = false;
       this.line.eraseStartCoordinates();
     }
+    if (this.path && !this.withPath) {
+      // draw finised line
+      this.saveLastDrawing(true);
+    }
 
     this.clearTemporyCanvas();
     this.line.eraseEndCoordinates();
@@ -505,12 +543,7 @@ export class drawLine extends drawingHandler {
 
   actionValid() {
     if (this.withPath && this.path) {
-      this.clearTemporyCanvas();
-      this.path.draw(this.context, false);
-      this.saveCanvasPicture(null);
-      this.withPath = false;
-      this.finishedDrawing = false;
-      this.line.eraseStartCoordinates();
+      this.saveLastDrawing(false);
 
       // console.log("actionValid", this.getType());
       this.setMode(DRAWING_MODES.END_PATH);
@@ -519,12 +552,9 @@ export class drawLine extends drawingHandler {
 
   endAction(nextMode: string = DRAWING_MODES.DRAW) {
     if (!isDrawingLine(nextMode)) {
-      this.clearTemporyCanvas();
-      if (this.withPath && this.path) {
-        this.path.draw(this.context, false);
-        this.saveCanvasPicture(this.line.getStartCoordinates() as Coordinate);
-        this.withPath = false;
-        this.line.eraseStartCoordinates();
+      // if (this.withPath && this.path) {
+      if (this.path) {
+        this.saveLastDrawing(!this.withPath);
       }
       this.line.eraseEndCoordinates();
     } else if (this.getType() === DRAWING_MODES.ARC) {

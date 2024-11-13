@@ -1,18 +1,17 @@
-import { Area, Size, Coordinate } from "@/lib/canvas/types";
+import { Area, Size } from "@/lib/canvas/types";
 import {
   makeWhiteTransparent,
   makeWhiteTransparent2,
 } from "@/lib/canvas/image-transparency";
 import {
   DRAWING_MODES,
-  AllParams,
+  // AllParams,
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
-import { returnMouseDown } from "./drawingHandler";
 import { drawingShapeHandler } from "./drawingShapHandler";
 import { alertMessage } from "../../alert-messages/alertMessage";
 import { imageSize, cutOutArea } from "@/lib/canvas/canvas-size";
@@ -45,26 +44,6 @@ export class drawSelection extends drawingShapeHandler {
     this.coordinates = { x: 0, y: 0 };
   }
 
-  initData(initData: AllParams) {
-    console.log("initData: ", initData);
-    this.shape.initData(initData);
-    if (this.mCanvas !== null)
-      this.shape.setDataSize({
-        x: this.mCanvas.width / 2,
-        y: this.mCanvas.height / 2,
-        width: SQUARE_WIDTH,
-        height: SQUARE_HEIGHT,
-      });
-    this.shape.setWithCornerButton(false);
-    this.fixed = false;
-  }
-  changeData(data: AllParams) {
-    this.setDataGeneral(data.general);
-    this.data.shape = { ...data.shape };
-    this.data.border = { ...data.border };
-    this.lockRatio = data.lockRatio;
-  }
-
   setType(type: string) {
     this.shape.setType(type);
     if (type === DRAWING_MODES.SELECT) {
@@ -72,6 +51,7 @@ export class drawSelection extends drawingShapeHandler {
     } else {
       this.shape.setWithAllButtons(true);
     }
+    this.setWithResize(true);
   }
 
   /**
@@ -80,7 +60,7 @@ export class drawSelection extends drawingShapeHandler {
    */
   memorizeSelectedArea(area: Area | null = null) {
     if (area) {
-      this.setDataSize(area);
+      this.shape.setDataSize(area);
 
       this.setFixed(true);
       this.setType(DRAWING_MODES.SELECT);
@@ -99,82 +79,6 @@ export class drawSelection extends drawingShapeHandler {
   }
 
   /**
-   * Action on the canvas when the mouse is down
-   * @param {string} mode - mode of the action
-   * @param {MouseEvent} event - mouse event
-   * @returns {object} - {toReset, toContinue, pointer} - toReset: reset the action, toContinue: continue the action, pointer: cursor pointer
-   */
-  actionMouseDown(
-    event: MouseEvent | TouchEvent,
-    coord: Coordinate
-  ): returnMouseDown {
-    let toReset = false;
-    let pointer: string | null = null;
-    this.setCoordinates(coord);
-
-    const mouseOnShape = this.shape.handleMouseOnShape(
-      this.mCanvas,
-      this.coordinates
-    );
-
-    if (mouseOnShape) {
-      // console.log("mode", mode, "mouseOnShape: ", mouseOnShape);
-      // Clic on the shape --------
-      if (mouseOnShape === BORDER.INSIDE) {
-        this.calculOffset();
-        pointer = "pointer";
-        this.setFixed(false);
-      } else if (mouseOnShape === BORDER.ON_BUTTON) {
-        pointer = "pointer";
-        this.validDrawedElement();
-        toReset = true;
-      } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
-        this.changeRotation(-Math.PI / 16);
-        this.refreshDrawing(0, mouseOnShape);
-      } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
-        this.changeRotation(Math.PI / 16);
-        this.refreshDrawing(0, mouseOnShape);
-      } else {
-        alertMessage("resizing: " + mouseOnShape);
-        this.setResizing(mouseOnShape);
-      }
-    }
-    return { toReset, toContinue: false, pointer } as returnMouseDown;
-  }
-  /**
-   * Function to handle the mouse move event
-   * @param {MouseEvent} event - mouse event
-   * @returns {string | null} - cursor type
-   */
-  actionMouseMove(event: MouseEvent | TouchEvent, coord: Coordinate) {
-    this.setCoordinates(coord);
-
-    const type = this.shape.getType();
-
-    if (this.resizingBorder !== null) {
-      this.resizingSquare(this.resizingBorder);
-      if (type === DRAWING_MODES.SELECT) {
-        this.memorizeSelectedArea();
-      }
-      return null;
-    }
-    if (!this.isFixed()) {
-      this.clearTemporyCanvas();
-      if (this.ctxTempory) {
-        this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
-      }
-      if (type === DRAWING_MODES.SELECT) {
-        this.memorizeSelectedArea();
-      }
-      return "pointer";
-    }
-
-    return this.followCursorOnElement(this.shape.getOpacity());
-  }
-
-  actionMouseLeave() {}
-
-  /**
    * Function to abort the action on the canvas (Escape key pressed)
    */
   actionAbort(): string | null {
@@ -185,32 +89,14 @@ export class drawSelection extends drawingShapeHandler {
   }
 
   /**
-   * Function to validate the action on the canvas (Enter key pressed)
-   */
-  actionValid() {
-    this.validDrawedElement();
-  }
-
-  /**
-   * Function to end the action on the canvas affter changing the mode
-   */
-  endAction() {
-    this.setFixed(true);
-    this.setResizing(null);
-    this.clearTemporyCanvas();
-  }
-
-  /**
    * Function to start the action on the canvas, after changing the mode
    */
   startAction(): void {
     const mode = this.shape.getType();
-    console.log("startAction: ", mode);
     switch (mode) {
       case DRAWING_MODES.SELECT:
         // Zone selection
         const rect = imageSize(this.mCanvas);
-        console.log("startAction: ", rect);
         this.memorizeSelectedArea(rect);
         this.shape.setWithAllButtons(false);
         this.shape.setCanvasImageTransparent(null);
@@ -228,8 +114,7 @@ export class drawSelection extends drawingShapeHandler {
     if (area === null || this.context === null) return;
     this.shape.setCanvasImage(copyInVirtualCanvas(this.context, area));
     this.setType(DRAWING_MODES.IMAGE);
-    this.setRotation(0);
-    console.log("copySelection:", area, " refreshDrawing");
+    this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
   /**
@@ -241,7 +126,7 @@ export class drawSelection extends drawingShapeHandler {
     this.context?.clearRect(area.x, area.y, area.width, area.height);
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.SELECT);
-    this.setRotation(0);
+    this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
   /**
@@ -254,7 +139,7 @@ export class drawSelection extends drawingShapeHandler {
     this.context?.clearRect(area.x, area.y, area.width, area.height);
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.IMAGE);
-    this.setRotation(0);
+    this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
   /**
@@ -298,7 +183,6 @@ export class drawSelection extends drawingShapeHandler {
    */
   radiusSelection(radius: number) {
     this.shape.setRadius(radius);
-    // console.log("radius ", radius);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
 
@@ -374,8 +258,8 @@ export class drawSelection extends drawingShapeHandler {
 
       const area: Area = calculateSize(img as Size, maxSize);
       area.ratio = ratio;
-      this.setDataSize(area);
-      this.setRotation(0);
+      this.shape.setDataSize(area);
+      this.shape.setRotation(0);
       this.originalSize = { ...area };
 
       this.setType(DRAWING_MODES.IMAGE);
@@ -404,7 +288,7 @@ export class drawSelection extends drawingShapeHandler {
     const centreX = size.x + size.width / 2;
     const centreY = size.y + size.height / 2;
     if (currentRatio === originalRatio) {
-      this.setRotation(0);
+      this.shape.setRotation(0);
       // return to the original size
       this.shape.setDataSize({
         x: centreX - this.originalSize.width / 2,

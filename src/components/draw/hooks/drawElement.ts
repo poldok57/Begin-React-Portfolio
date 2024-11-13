@@ -1,11 +1,7 @@
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
-import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
+import { isOnTurnButton } from "@/lib/mouse-position";
 
-import { Coordinate } from "@/lib/canvas/types";
-
-import { returnMouseDown } from "./drawingHandler";
 import { drawingShapeHandler } from "./drawingShapHandler";
-import { alertMessage } from "../../alert-messages/alertMessage";
 
 export class drawElement extends drawingShapeHandler {
   constructor(
@@ -27,84 +23,6 @@ export class drawElement extends drawingShapeHandler {
     } else {
       this.setWithResize(true);
     }
-  }
-
-  /**
-   * Function to handle the mouse down event
-   * @param {string} mode - drawing mode
-   * @param {MouseEvent} event - mouse event
-   */
-  actionMouseDown(event: MouseEvent | TouchEvent, coord: Coordinate) {
-    let toReset = false;
-    let pointer: string | null = null;
-    this.setCoordinates(coord);
-    const mouseOnShape = this.coordinates
-      ? this.shape.handleMouseOnShape(this.mCanvas, this.coordinates)
-      : null;
-    if (mouseOnShape) {
-      console.log("mode", this.shape.getType(), "mouseOnShape: ", mouseOnShape);
-      // Clic on the shape --------
-      if (mouseOnShape === BORDER.INSIDE) {
-        this.calculOffset();
-        pointer = "pointer";
-        this.setFixed(false);
-      } else if (mouseOnShape === BORDER.ON_BUTTON) {
-        pointer = "pointer";
-        this.validDrawedElement(true);
-        toReset = true;
-      } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
-        this.changeRotation(-Math.PI / 16);
-        this.refreshDrawing(0, mouseOnShape);
-      } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
-        this.shape.changeRotation(Math.PI / 16);
-        this.refreshDrawing(0, mouseOnShape);
-      } else {
-        alertMessage("resizing: " + mouseOnShape);
-        this.setResizing(mouseOnShape);
-      }
-    }
-    return { toReset, toContinue: false, pointer } as returnMouseDown;
-  }
-
-  /**
-   * Function to handle the mouse move event
-   * @param {MouseEvent} event - mouse event
-   * @returns {string | null} - cursor type
-   */
-  actionMouseMove(
-    event: MouseEvent | TouchEvent,
-    coord: Coordinate
-  ): string | null {
-    this.setCoordinates(coord);
-    if (this.resizingBorder !== null) {
-      this.resizingSquare(this.resizingBorder);
-      return null;
-    }
-    if (!this.isFixed()) {
-      this.clearTemporyCanvas();
-      this.shape.draw(this.ctxTempory, true, null);
-      return "pointer";
-    }
-
-    return this.followCursorOnElement(this.shape.getOpacity());
-  }
-
-  actionMouseLeave() {
-    if (this.isFixed()) {
-      return;
-    }
-    this.clearTemporyCanvas();
-  }
-
-  actionValid() {
-    this.validDrawedElement(true);
-  }
-
-  endAction() {
-    this.setFixed(true);
-    this.setResizing(null);
-    this.clearTemporyCanvas();
-    this.eraseOffset();
   }
 
   /// egalise the size of the square
@@ -140,9 +58,9 @@ export class drawElement extends drawingShapeHandler {
     // if the element is rond, set rotation to 0
     if (this.shape.getType() === DRAWING_MODES.CIRCLE) {
       this.shape.setRotation(0);
+      this.shape.calculateWithTurningButtons();
     }
 
-    this.clearTemporyCanvas();
     this.shape.draw(this.ctxTempory, true, null);
   }
 }

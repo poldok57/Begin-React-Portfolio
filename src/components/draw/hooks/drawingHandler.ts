@@ -7,8 +7,7 @@ import {
 
 import {
   DRAWING_MODES,
-  ThingsToDraw,
-  ShapeDefinition,
+  // ThingsToDraw,
   AllParams,
   ParamsGeneral,
 } from "@/lib/canvas/canvas-defines";
@@ -29,20 +28,6 @@ export abstract class drawingHandler {
   protected setMode: (mode: string) => void;
   protected lockRatio: boolean = false;
   protected type: string = DRAWING_MODES.PAUSE;
-
-  protected data: ThingsToDraw | ShapeDefinition = {
-    type: DRAWING_MODES.DRAW,
-    rotation: 0,
-    withTurningButtons: false,
-    withCornerButton: false,
-    withResize: true,
-    size: { x: 0, y: 0, width: 0, height: 0 },
-    general: {
-      color: "#000000",
-      lineWidth: 1,
-      opacity: 1,
-    },
-  } as ThingsToDraw;
 
   protected coordinates: Coordinate | null = { x: 0, y: 0 };
 

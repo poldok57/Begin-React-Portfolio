@@ -4,8 +4,6 @@
 import { BORDER } from "../mouse-position";
 import { resizeSquare } from "../square-position";
 import { Coordinate, Area } from "./types";
-import { ShapeDefinition } from "./canvas-defines";
-import { showElement } from "./canvas-elements";
 
 const calculateRatio = (area: Area, ratio: number, mouseOnShape: string) => {
   const newArea: Area = { ...area };
@@ -30,23 +28,22 @@ const calculateRatio = (area: Area, ratio: number, mouseOnShape: string) => {
  */
 export const resizingElement = (
   ctx: CanvasRenderingContext2D,
-  square: ShapeDefinition,
+  size: Area,
   coordinate: Coordinate,
   lockRatio: boolean,
   mouseOnShape: string | null
 ) => {
-  if (lockRatio && !square.size.ratio) {
-    square.size.ratio = square.size.width / square.size.height;
+  if (lockRatio && !size.ratio) {
+    size.ratio = size.width / size.height;
   } else {
-    square.size.ratio = 0;
+    size.ratio = 0;
   }
   if (mouseOnShape) {
-    let { newArea } = resizeSquare(coordinate, square.size, mouseOnShape);
-    if (lockRatio && square.size.ratio) {
-      newArea = calculateRatio(newArea, square.size.ratio, mouseOnShape);
+    let { newArea } = resizeSquare(coordinate, size, mouseOnShape);
+    if (lockRatio && size.ratio) {
+      newArea = calculateRatio(newArea, size.ratio, mouseOnShape);
     }
 
-    showElement(ctx, { ...square, ...newArea });
     return newArea;
   }
   return null;

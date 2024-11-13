@@ -255,12 +255,12 @@ export class drawFreehand extends drawingHandler {
     this.coordinates = null;
 
     if (this.isDrawing()) {
-      // this.validCurve();
-      this.finishedDrawing = true;
-      this.freeCurve.setFinished(true);
-      this.clearTemporyCanvas();
-      this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
-
+      if (this.getType() === DRAWING_MODES.DRAW) {
+        this.finishedDrawing = true;
+        this.freeCurve.setFinished(true);
+        this.clearTemporyCanvas();
+        this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
+      }
       this.setDrawing(false);
     }
   }
