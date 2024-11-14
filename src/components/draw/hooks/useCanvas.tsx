@@ -253,7 +253,6 @@ export const useCanvas = ({
   const drawingParamChanged = () => {
     currentParams = getParams();
     if (!drawingRef.current) return;
-
     drawingRef.current.changeData(currentParams);
     drawingRef.current.refreshDrawing(currentParams.general.opacity);
   };

@@ -50,6 +50,7 @@ export class drawFreehand extends drawingHandler {
 
   setDataGeneral(dataGeneral: ParamsGeneral) {
     this.general = { ...dataGeneral };
+    this.freeCurve.setParamsGeneral(dataGeneral);
   }
 
   changeData(data: AllParams): void {
@@ -80,15 +81,10 @@ export class drawFreehand extends drawingHandler {
     this.ctxTempory = canvas.getContext("2d");
   }
 
-  isExtendedMouseArea() {
-    return this.extendedMouseArea;
+  refreshDrawing() {
+    this.clearTemporyCanvas();
+    this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
   }
-
-  setExtendedMouseArea(value: boolean) {
-    this.extendedMouseArea = value;
-  }
-
-  refreshDrawing() {}
   /**
    * Function follow the cursor on the canvas
    * @param {DRAWING_MODES} mode

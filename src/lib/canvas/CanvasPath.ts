@@ -5,7 +5,7 @@
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
-import { DRAWING_MODES, ParamsPath } from "./canvas-defines";
+import { DRAWING_MODES, ParamsPath, ParamsGeneral } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { MARGIN } from "./CanvasPoints";
@@ -51,7 +51,7 @@ export class CanvasPath extends CanvasPoints {
       if (line.strokeStyle) {
         strokeStyle = line.strokeStyle;
       }
-      if (line.globalAlpha !== null && line.globalAlpha !== undefined) {
+      if (line.globalAlpha) {
         globalAlpha = line.globalAlpha;
       }
       if (line.lineWidth) {
@@ -114,39 +114,57 @@ export class CanvasPath extends CanvasPoints {
       return false;
     }
 
-    if (this.data.items.length <= 0) {
+    if (this.data.items.length <= 1) {
       return true;
     }
 
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
+    ctx.strokeStyle = "#000000";
 
-    const firstItem: LinePath | null = this.data.items[0] as LinePath;
+    let minWidth = 100;
+    let maxWidth = 0;
+    let start: Coordinate | null = null;
 
-    let start: Coordinate | null = firstItem?.end as Coordinate;
-    let hasChanged: boolean = true; // true if we need to begin a new path
-
-    let minWidth = firstItem?.lineWidth || 100;
-    let maxWidth = firstItem?.lineWidth || 0;
+    let hasChanged = false;
+    let lineWidth: number | null = null;
+    let strokeStyle: string | null = null;
+    let globalAlpha: number | null = null;
 
     (this.data.items as LinePath[]).forEach((line) => {
-      if (line.lineWidth) {
-        ctx.lineWidth = line.lineWidth;
+      if (line.lineWidth && line.lineWidth !== ctx.lineWidth) {
         minWidth = Math.min(minWidth, line.lineWidth);
         maxWidth = Math.max(maxWidth, line.lineWidth);
+        lineWidth = line.lineWidth;
         hasChanged = true;
       }
-      if (line.strokeStyle) {
-        ctx.strokeStyle = line.strokeStyle;
+      if (line.strokeStyle && line.strokeStyle !== ctx.strokeStyle) {
+        strokeStyle = line.strokeStyle;
         hasChanged = true;
       }
-      if (line.globalAlpha !== null && line.globalAlpha !== undefined) {
-        ctx.globalAlpha = line.globalAlpha;
+      if (line.globalAlpha && line.globalAlpha !== ctx.globalAlpha) {
+        globalAlpha = line.globalAlpha;
         hasChanged = true;
       }
 
       if (hasChanged) {
+        if (start) {
+          // finish the previous line
+          ctx.stroke();
+        }
         ctx.beginPath();
+        if (lineWidth) {
+          ctx.lineWidth = lineWidth;
+          lineWidth = null;
+        }
+        if (strokeStyle) {
+          ctx.strokeStyle = strokeStyle;
+        }
+        if (globalAlpha) {
+          ctx.globalAlpha = globalAlpha;
+          globalAlpha = null;
+        }
+
         if (start) {
           ctx.moveTo(start.x, start.y);
         }
@@ -176,11 +194,11 @@ export class CanvasPath extends CanvasPoints {
           }
           break;
       }
-      ctx.stroke();
       if (line.end) {
         start = line.end;
       }
     });
+    ctx.stroke();
 
     if (this.filled) {
       this.fillPath(ctx, minWidth);
@@ -233,13 +251,24 @@ export class CanvasPath extends CanvasPoints {
     return hasChanged;
   }
 
+  changeParamsGeneral(params: ParamsGeneral) {
+    // Apply color, line width and opacity to the first path item
+    if (this.data.items.length > 1) {
+      // first item is start point
+      const secondItem = this.data.items[1] as LinePath;
+      secondItem.strokeStyle = params.color;
+      secondItem.lineWidth = params.lineWidth;
+      secondItem.globalAlpha = params.opacity;
+    }
+    //  this.setParamsGeneral(params);
+  }
+
   addLine(line: LinePath) {
     const { lineWidth, strokeStyle, globalAlpha } = this.getLastParams();
 
     const newLine: LinePath = {
       type: line.type,
       end: roundCoordinates(line.end),
-      lineWidth: line.lineWidth,
     };
     if (line.coordinates) {
       newLine.coordinates = roundCoordinates(line.coordinates);
@@ -251,11 +280,7 @@ export class CanvasPath extends CanvasPoints {
       newLine.lineWidth = line.lineWidth;
     }
 
-    if (
-      line.globalAlpha !== null &&
-      line.globalAlpha !== undefined &&
-      line.globalAlpha !== globalAlpha
-    ) {
+    if (line.globalAlpha && line.globalAlpha !== globalAlpha) {
       newLine.globalAlpha = line.globalAlpha;
     }
     this.addItem(newLine);

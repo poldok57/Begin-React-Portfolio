@@ -14,8 +14,6 @@ import { MdTimeline } from "react-icons/md";
 import { Spline } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-export const MODE_PATH_AUTO = false;
-
 interface DrawControlLineProps {
   mode: string;
   handleParamChange: (params: GroupParams) => void;
@@ -34,7 +32,6 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   isTouch = false,
 }) => {
   const [withPathFilled, setWithPathFilled] = useState(false);
-  const [withPath, setWithPath] = useState(MODE_PATH_AUTO);
   const handlePath = (param: Params) => {
     drawingParams.path = { ...drawingParams.path, ...param };
     handleParamChange({ path: drawingParams.path });
@@ -43,7 +40,6 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
     if (mode === DRAWING_MODES.END_PATH) {
       handleModeChange(DRAWING_MODES.LINE);
 
-      setWithPath(MODE_PATH_AUTO);
       setWithPathFilled(false);
     }
   }, [mode]);
@@ -73,49 +69,37 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       >
         <Spline size={28} />
       </Button>
-      <Button
-        onClick={() => {
-          handleModeChange(DRAWING_MODES.PATH);
-          setWithPathFilled(false);
-          setWithPath(true);
-        }}
-        className="w-16 h-8"
-        title="Start path"
-      >
-        Start path
-      </Button>
-      {withPath && (
-        <>
-          <Button
-            onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
-            className="w-16 h-8"
-            title="Stop path"
-          >
-            Stop path
-          </Button>
-          <Button
-            onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
-            className="w-16 h-8"
-            title="Close path"
-          >
-            Close path
-          </Button>
-          <label
-            htmlFor="toggle-border"
-            className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
-          >
-            Filled
-            <ToggleSwitch
-              id="toggle-border"
-              defaultChecked={withPathFilled}
-              onChange={(event) => {
-                setWithPathFilled(event.target.checked);
-                handlePath({ filled: event.target.checked });
-              }}
-            />
-          </label>
-        </>
-      )}
+      <>
+        <Button
+          onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
+          className="w-16 h-8"
+          title="Stop path"
+        >
+          Stop path
+        </Button>
+        <Button
+          onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
+          className="w-16 h-8"
+          title="Close path"
+        >
+          Close path
+        </Button>
+        <label
+          htmlFor="toggle-border"
+          className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
+        >
+          Filled
+          <ToggleSwitch
+            id="toggle-border"
+            defaultChecked={withPathFilled}
+            onChange={(event) => {
+              setWithPathFilled(event.target.checked);
+              handlePath({ filled: event.target.checked });
+            }}
+          />
+        </label>
+      </>
+
       {withPathFilled && (
         <>
           <label

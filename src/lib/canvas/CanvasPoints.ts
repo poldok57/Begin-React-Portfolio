@@ -200,7 +200,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!ctx || !this.data.size) {
       return;
     }
-    drawDashedRectangle(ctx, this.data.size, 0.35);
+    drawDashedRectangle(ctx, this.data.size, 0.3);
 
     if (this.isFinished) {
       this.drawCornerButton(
