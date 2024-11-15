@@ -13,6 +13,7 @@ import {
   mouseCircle,
   AllParams,
   ParamsGeneral,
+  ThingsToDraw,
 } from "../../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
@@ -79,6 +80,13 @@ export class drawFreehand extends drawingHandler {
       return;
     }
     this.ctxTempory = canvas.getContext("2d");
+  }
+
+  setDraw(draw: ThingsToDraw) {
+    this.freeCurve.setData(draw);
+  }
+  getDraw(): ThingsToDraw | null {
+    return this.freeCurve.getData();
   }
 
   refreshDrawing() {
@@ -189,7 +197,7 @@ export class drawFreehand extends drawingHandler {
     coord: Coordinate
   ): returnMouseDown {
     if (this.getType() === DRAWING_MODES.PAUSE) {
-      return { toContinue: false } as returnMouseDown;
+      return { toExtend: false } as returnMouseDown;
     }
     // color and width painting
     this.setCoordinates(coord);
@@ -221,7 +229,7 @@ export class drawFreehand extends drawingHandler {
       const ctx = this.ctxTempory;
       if (ctx === null) {
         console.error("ctxTempory is null");
-        return { toContinue: false } as returnMouseDown;
+        return { toExtend: false } as returnMouseDown;
       }
 
       this.freeCurve.startCurve({
@@ -231,7 +239,7 @@ export class drawFreehand extends drawingHandler {
     }
 
     this.setDrawing(true);
-    return { toContinue: false, pointer: "none" } as returnMouseDown;
+    return { toExtend: false, pointer: "none" } as returnMouseDown;
   }
 
   validCurve() {

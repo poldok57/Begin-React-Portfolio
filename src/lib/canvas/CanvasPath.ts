@@ -5,7 +5,7 @@
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
-import { DRAWING_MODES, ParamsPath, ParamsGeneral } from "./canvas-defines";
+import { DRAW_TYPE, ParamsPath, ParamsGeneral } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { MARGIN } from "./CanvasPoints";
@@ -23,18 +23,20 @@ const roundCoordinates = (
 };
 
 export class CanvasPath extends CanvasPoints {
-  filled: boolean;
+  filled: boolean = false;
   fillStyle: string = "gray";
 
-  constructor(line: LinePath) {
+  constructor(line: LinePath | null) {
     super();
-    this.setDataType(DRAWING_MODES.PATH);
+    this.setDataType(DRAW_TYPE.PATH);
+    if (!line) {
+      return;
+    }
     if (!line.coordinates) {
       throw new Error("Line coordinates are required");
     }
     const end: Coordinate = roundCoordinates(line.coordinates) as Coordinate;
     this.startArea(end);
-    this.filled = false;
     const item: LinePath = {
       type: LineType.START,
       end: end,

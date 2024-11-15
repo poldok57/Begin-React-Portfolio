@@ -1,10 +1,15 @@
 import React, { useRef, useState } from "react";
-import { DrawControlWP } from "./DrawControl";
+import { withMousePosition } from "../windows/withMousePosition";
+import { DrawControl } from "./DrawControl";
 import { ShowAlertMessagesWP } from "@/components/alert-messages/ShowAlertMessages";
 import { Canvas } from "./Canvas";
 import { DEFAULT_PARAMS, GroupParams } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 import { useCanvas } from "./hooks/useCanvas";
+import { DrawList } from "./DrawList";
+
+const DrawControlWP = withMousePosition(DrawControl);
+const DrawListWP = withMousePosition(DrawList);
 
 const MAX_HISTORY = 40;
 const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
@@ -71,7 +76,21 @@ export const Draw = () => {
           </div>
         </div>
       </div>
-
+      <DrawListWP
+        canvasRef={canvasRef}
+        canvasTemporyRef={canvasTemporyRef}
+        withMinimize={true}
+        style={{
+          top: "40px",
+          right: "40px",
+          position: "absolute",
+          zIndex: 5,
+        }}
+        withTitleBar={true}
+        titleText="Design elements"
+        titleHidden={false}
+        draggable={false}
+      />
       <DrawControlWP
         mode={mode}
         setMode={setMode}
@@ -93,6 +112,7 @@ export const Draw = () => {
         setParams={setDrawingParams}
         drawingParams={drawingParamsRef.current}
       />
+
       <ShowAlertMessagesWP
         display={true}
         close={true}

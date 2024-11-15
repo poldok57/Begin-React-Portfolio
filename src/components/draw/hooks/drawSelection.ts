@@ -12,7 +12,7 @@ import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
-import { drawingShapeHandler } from "./drawingShapHandler";
+import { drawElement } from "./drawElement";
 import { alertMessage } from "../../alert-messages/alertMessage";
 import { imageSize, cutOutArea } from "@/lib/canvas/canvas-size";
 import {
@@ -23,7 +23,7 @@ import {
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 
-export class drawSelection extends drawingShapeHandler {
+export class drawSelection extends drawElement {
   protected data: ShapeDefinition = {
     size: { x: 0, y: 0, width: 0, height: 0 },
     type: DRAWING_MODES.SELECT,
@@ -31,18 +31,6 @@ export class drawSelection extends drawingShapeHandler {
   private selectedArea: Area | null = null;
   // original size of the selection or loaded image
   private originalSize: Size | null = null;
-
-  constructor(
-    canvas: HTMLCanvasElement,
-    temporyCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void
-  ) {
-    super(canvas, temporyCanvas, setMode);
-
-    if (!canvas) return;
-
-    this.coordinates = { x: 0, y: 0 };
-  }
 
   setType(type: string) {
     this.shape.setType(type);

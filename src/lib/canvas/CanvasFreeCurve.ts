@@ -2,7 +2,7 @@ import { Coordinate, LinePath } from "./types";
 import { basicLine } from "./canvas-basic";
 import { throttle } from "@/lib/utils/throttle";
 import { CanvasPoints } from "./CanvasPoints";
-import { DRAWING_MODES, ParamsGeneral } from "./canvas-defines";
+import { DRAW_TYPE, ParamsGeneral } from "./canvas-defines";
 
 const MARGIN = 5;
 const DELAY = 50;
@@ -10,7 +10,7 @@ const DELAY = 50;
 export class CanvasFreeCurve extends CanvasPoints {
   constructor() {
     super();
-    this.setDataType(DRAWING_MODES.PATH);
+    this.setDataType(DRAW_TYPE.DRAW);
   }
 
   clearPoints() {

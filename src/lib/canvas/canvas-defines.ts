@@ -11,6 +11,13 @@ export const SHAPE_TYPE = {
   TEXT: "text",
 };
 
+export const DRAW_TYPE = {
+  BACKGROUND: "background",
+  DRAW: "draw",
+  PATH: "path",
+  ...SHAPE_TYPE,
+};
+
 const DRAWING_ACTIONS = {
   UNDO: "undo",
   SAVE: "save",
@@ -175,6 +182,7 @@ export type GroupParams = {
 };
 
 export interface ThingsToDraw {
+  id: string;
   type: string;
   rotation: number;
   size: Area;

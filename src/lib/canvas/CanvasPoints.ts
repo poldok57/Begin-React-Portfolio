@@ -39,6 +39,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.isFinished = false;
 
     this.data = {
+      id: "",
       type: "",
       rotation: 0,
       size: { x: 0, y: 0, width: 0, height: 0 },
@@ -49,6 +50,14 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       },
       items: [],
     };
+  }
+
+  getData(): CanvasPointsData {
+    return this.data;
+  }
+
+  setData(data: ThingsToDraw) {
+    this.data = data as CanvasPointsData;
   }
 
   setParamsGeneral(params: ParamsGeneral) {

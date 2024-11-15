@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { TableData, DesignElement } from "../types";
 import { produce } from "immer";
 import { StateCreator } from "zustand";
-import { generateUniqueId } from "./unique-id";
+import { generateUniqueId } from "../../../lib/utils/unique-id";
 import { DesignType } from "../types";
 interface TableDataState {
   tables: TableData[];

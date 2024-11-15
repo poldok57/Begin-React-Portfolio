@@ -28,6 +28,10 @@ export abstract class CanvasDrawableObject {
     borderInfo?: string | null
   ): void;
 
+  abstract getData(): ThingsToDraw;
+
+  abstract setData(data: ThingsToDraw): void;
+
   setDataType(name: string) {
     this.data.type = name;
   }

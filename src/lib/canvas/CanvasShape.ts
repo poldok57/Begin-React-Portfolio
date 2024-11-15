@@ -24,6 +24,7 @@ export class CanvasShape extends CanvasDrawableObject {
   constructor() {
     super();
     this.data = {
+      id: "",
       type: "",
       rotation: 0,
       size: { x: 0, y: 0, width: 0, height: 0 },
@@ -41,6 +42,11 @@ export class CanvasShape extends CanvasDrawableObject {
   getData(): ShapeDefinition {
     return this.data;
   }
+
+  setData(data: ShapeDefinition) {
+    this.data = data;
+  }
+
   setDataParams(params: Area | ParamsGeneral | ParamsShape | ParamsText) {
     this.data = { ...this.data, ...params } as ShapeDefinition;
   }
@@ -251,6 +257,7 @@ export class CanvasShape extends CanvasDrawableObject {
     if (temporyDraw) {
       this.showElementThrottled(ctx, this.data, temporyDraw, borderInfo);
     } else {
+      if (ctx) ctx.globalAlpha = this.data.general.opacity;
       showElement(ctx, this.data, false, null);
     }
   }

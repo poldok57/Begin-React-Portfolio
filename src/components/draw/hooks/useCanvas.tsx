@@ -203,15 +203,15 @@ export const useCanvas = ({
 
     const coord = getCoordinatesInCanvas(event, canvasTemporyRef.current);
 
-    let toContinue: boolean | undefined = false;
+    let toExtend: boolean | undefined = false;
     if (event instanceof TouchEvent) {
       const ret = drawingRef.current.actionTouchDown(event, coord);
-      toContinue = ret.toContinue;
+      toExtend = ret.toExtend;
     } else {
       const ret = drawingRef.current.actionMouseDown(event, coord);
-      toContinue = ret.toContinue;
+      toExtend = ret.toExtend;
     }
-    if (!toContinue) {
+    if (!toExtend) {
       stopExtendMouseEvent();
     }
   };
@@ -448,14 +448,14 @@ export const useCanvas = ({
     const coord = getCoordinatesInCanvas(event, canvasRef.current);
 
     drawingRef.current.setType(currentParams.mode);
-    let toContinue = false;
+    let toExtend = false;
     let toReset = false;
     let pointer = null;
     let changeMode = null;
 
     if (event instanceof MouseEvent) {
       const mouseResult = drawingRef.current.actionMouseDown(event, coord);
-      toContinue = mouseResult.toContinue ?? false;
+      toExtend = mouseResult.toExtend ?? false;
       toReset = mouseResult.toReset ?? false;
       pointer = mouseResult.pointer ?? null;
       changeMode = mouseResult.changeMode ?? null;
@@ -465,7 +465,7 @@ export const useCanvas = ({
       changeMode = touchResult.changeMode ?? null;
     }
 
-    if (toContinue) {
+    if (toExtend) {
       extendMouseEvent();
     } else {
       stopExtendMouseEvent();

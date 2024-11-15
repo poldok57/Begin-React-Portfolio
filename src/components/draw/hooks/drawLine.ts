@@ -14,6 +14,7 @@ import {
   ParamsGeneral,
   AllParams,
   isDrawingLine,
+  ThingsToDraw,
 } from "@/lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
@@ -125,6 +126,13 @@ export class drawLine extends drawingHandler {
     this.finishedDrawing = false;
   };
 
+  setDraw(draw: ThingsToDraw) {
+    this.path?.setData(draw);
+  }
+  getDraw(): ThingsToDraw | null {
+    return this.path?.getData() as ThingsToDraw | null;
+  }
+  
   /**
    * Debonce draw of the path
    */
@@ -229,7 +237,7 @@ export class drawLine extends drawingHandler {
   }
 
   showLineAndArc(withPath: boolean = true) {
-    let toContinue = false;
+    let toExtend = false;
     switch (this.getType()) {
       case DRAWING_MODES.LINE:
       case DRAWING_MODES.ARC:
@@ -242,11 +250,11 @@ export class drawLine extends drawingHandler {
         }
         this.drawTmpPath();
 
-        toContinue = true;
+        toExtend = true;
         break;
     }
     this.line.show(this.ctxTempory);
-    return toContinue;
+    return toExtend;
   }
 
   validatePath() {
@@ -318,11 +326,11 @@ export class drawLine extends drawingHandler {
       this.line.getStartCoordinates() == null &&
       !mouseIsInsideComponent(event, this.mCanvas)
     ) {
-      return { toContinue: false, toReset: false, pointer: "default" };
+      return { toExtend: false, toReset: false, pointer: "default" };
     }
     // color and width painting
     this.setCoordinates(coord);
-    let toContinue = false;
+    let toExtend = false;
     const pointer = "none";
 
     if (this.withPath) {
@@ -338,24 +346,24 @@ export class drawLine extends drawingHandler {
           // path has been validated
           this.validatePath();
           return {
-            toContinue: true,
+            toExtend: true,
             toReset: false,
             pointer: "move",
             changeMode: DRAWING_MODES.END_PATH,
           };
         }
       } else {
-        toContinue = this.showLineAndArc(true);
+        toExtend = this.showLineAndArc(true);
       }
     } else {
       if (this.clicOnArcEnd(coord)) {
-        toContinue = true;
+        toExtend = true;
       } else {
         if (this.line.getStartCoordinates() == null) {
           this.line.setStartCoordinates();
           this.initPath(false);
         }
-        toContinue = this.showLineAndArc(false);
+        toExtend = this.showLineAndArc(false);
 
         if (this.path && this.path.getItemsLength() > 2) {
           // path has been created if we have at least 2 lines
@@ -364,7 +372,7 @@ export class drawLine extends drawingHandler {
       }
     }
     return {
-      toContinue,
+      toExtend,
       toReset: false,
       pointer,
     } as returnMouseDown;

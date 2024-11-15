@@ -1,5 +1,4 @@
 import React, { useRef, useMemo, useState, useEffect } from "react";
-import { withMousePosition } from "../windows/withMousePosition";
 import { isTouchDevice } from "@/lib/utils/device";
 import { SlActionUndo } from "react-icons/sl";
 import { CiEraser } from "react-icons/ci";
@@ -373,5 +372,3 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     );
   }, [mode, withText, drawingParams, , lockRatio, opacity]);
 };
-
-export const DrawControlWP = withMousePosition(DrawControl);

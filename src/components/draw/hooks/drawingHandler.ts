@@ -7,13 +7,15 @@ import {
 
 import {
   DRAWING_MODES,
-  // ThingsToDraw,
+  ThingsToDraw,
   AllParams,
   ParamsGeneral,
 } from "@/lib/canvas/canvas-defines";
 
+import { useDesignStore } from "@/lib/stores/design";
+
 export type returnMouseDown = {
-  toContinue?: boolean;
+  toExtend?: boolean;
   toReset?: boolean;
   changeMode?: string;
   pointer?: string | null;
@@ -33,6 +35,8 @@ export abstract class drawingHandler {
 
   protected extendedMouseArea: boolean = false;
 
+  protected addDesignElement: (draw: ThingsToDraw) => void;
+
   constructor(
     canvas: HTMLCanvasElement,
     temporyCanvas: HTMLCanvasElement | null,
@@ -42,6 +46,9 @@ export abstract class drawingHandler {
     this.extendedMouseArea = false;
     this.setTemporyCanvas(temporyCanvas);
     this.setMode = setMode;
+
+    const { addDesignElement } = useDesignStore.getState();
+    this.addDesignElement = addDesignElement;
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
@@ -98,7 +105,14 @@ export abstract class drawingHandler {
       image: null,
     };
     addPictureToHistory(savePicture as CanvasPicture);
+
+    // reccord the draw in the design store
+    const draw = this.getDraw();
+    if (draw) this.addDesignElement(draw);
   }
+
+  abstract setDraw(draw: ThingsToDraw): void;
+  abstract getDraw(): ThingsToDraw | null;
 
   startAction(): void {}
   actionKeyDown(_event: KeyboardEvent): void {}
