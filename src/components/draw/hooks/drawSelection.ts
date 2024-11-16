@@ -39,7 +39,6 @@ export class drawSelection extends drawElement {
     } else {
       this.shape.setWithAllButtons(true);
     }
-    this.setWithResize(true);
   }
 
   /**

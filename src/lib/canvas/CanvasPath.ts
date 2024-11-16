@@ -23,9 +23,6 @@ const roundCoordinates = (
 };
 
 export class CanvasPath extends CanvasPoints {
-  filled: boolean = false;
-  fillStyle: string = "gray";
-
   constructor(line: LinePath | null) {
     super();
     this.setDataType(DRAW_TYPE.PATH);
@@ -40,6 +37,11 @@ export class CanvasPath extends CanvasPoints {
     const item: LinePath = {
       type: LineType.START,
       end: end,
+    };
+    this.data.path = {
+      filled: false,
+      color: "gray",
+      opacity: 0,
     };
     this.addItem(item);
   }
@@ -68,12 +70,11 @@ export class CanvasPath extends CanvasPoints {
   }
 
   fillPath(ctx: CanvasRenderingContext2D | null, minWidth: number) {
-    if (!ctx) {
+    if (!ctx || !this.data.path) {
       return false;
     }
     ctx.globalAlpha = 0;
     ctx.lineWidth = minWidth;
-    ctx.fillStyle = "transparent";
     ctx.beginPath();
 
     (this.data.items as LinePath[]).forEach((line) => {
@@ -102,8 +103,8 @@ export class CanvasPath extends CanvasPoints {
     });
     ctx.stroke();
 
-    ctx.globalAlpha = this.data.general.opacity;
-    ctx.fillStyle = this.fillStyle;
+    ctx.globalAlpha = this.data.path.opacity;
+    ctx.fillStyle = this.data.path.color;
     ctx.fill();
     return true;
   }
@@ -123,6 +124,8 @@ export class CanvasPath extends CanvasPoints {
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
     ctx.strokeStyle = "#000000";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     let minWidth = 100;
     let maxWidth = 0;
@@ -202,8 +205,9 @@ export class CanvasPath extends CanvasPoints {
     });
     ctx.stroke();
 
-    if (this.filled) {
+    if (this.data.path && this.data.path.filled) {
       this.fillPath(ctx, minWidth);
+      this.data.general.color = this.data.path.color;
     }
 
     this.setMaxWidthLine(maxWidth);
@@ -239,14 +243,14 @@ export class CanvasPath extends CanvasPoints {
 
   setParams(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
     const { filled, color, opacity } = params;
+    this.data.path = { ...params };
     const hasChanged =
-      this.filled !== filled ||
-      this.fillStyle !== color ||
-      this.data.general.opacity !== opacity;
+      this.data.path &&
+      (this.data.path.filled !== filled ||
+        this.data.path.color !== color ||
+        this.data.path.opacity !== opacity);
     if (hasChanged) {
-      this.filled = filled;
-      this.fillStyle = color;
-      this.data.general.opacity = opacity;
+      this.data.path = { ...params };
 
       this.draw(ctx);
     }
@@ -261,7 +265,11 @@ export class CanvasPath extends CanvasPoints {
       secondItem.strokeStyle = params.color;
       secondItem.lineWidth = params.lineWidth;
       secondItem.globalAlpha = params.opacity;
+
+      if (!this.data.path || !this.data.path.filled)
+        this.data.general.color = params.color;
     }
+
     //  this.setParamsGeneral(params);
   }
 
@@ -302,11 +310,18 @@ export class CanvasPath extends CanvasPoints {
 
   setFillStyle(fillStyle: string | null = null) {
     if (fillStyle == null) {
-      this.filled = false;
+      this.data.path = {
+        filled: false,
+        color: "gray",
+        opacity: 0,
+      };
       return;
     }
-    this.filled = true;
-    this.fillStyle = fillStyle;
+    this.data.path = {
+      filled: true,
+      color: fillStyle,
+      opacity: 1,
+    };
   }
 
   close() {

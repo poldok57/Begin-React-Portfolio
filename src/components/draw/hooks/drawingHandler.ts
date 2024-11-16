@@ -47,8 +47,8 @@ export abstract class drawingHandler {
     this.setTemporyCanvas(temporyCanvas);
     this.setMode = setMode;
 
-    const { addDesignElement } = useDesignStore.getState();
-    this.addDesignElement = addDesignElement;
+    const { addOrUpdateDesignElement } = useDesignStore.getState();
+    this.addDesignElement = addOrUpdateDesignElement;
   }
 
   setCanvas(canvas: HTMLCanvasElement) {

@@ -338,11 +338,25 @@ const drawText = (ctx: CanvasRenderingContext2D, square: ShapeDefinition) => {
 };
 
 const drawShadowRectangle = (ctx: CanvasRenderingContext2D, square: Area) => {
-  ctx.lineWidth = 0.5;
-  ctx.strokeStyle = "rgba(132,132,192,0.6)";
-  ctx.rect(square.x, square.y, square.width, square.height);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(132,132,192,0.8)";
+  ctx.setLineDash([5, 2]);
+
+  const overflow = 12;
+  ctx.beginPath();
+  ctx.moveTo(square.x - overflow, square.y);
+  ctx.lineTo(square.x + square.width + overflow, square.y);
+  ctx.moveTo(square.x - overflow, square.y + square.height);
+  ctx.lineTo(square.x + square.width + overflow, square.y + square.height);
+  ctx.moveTo(square.x, square.y - overflow);
+  ctx.lineTo(square.x, square.y + square.height + overflow);
+  ctx.moveTo(square.x + square.width, square.y - overflow);
+  ctx.lineTo(square.x + square.width, square.y + square.height + overflow);
+
+  // ctx.rect(square.x - overflow, square.y - overflow, square.width + overflow, square.height + overflow);
   ctx.stroke();
-  ctx.fillStyle = "rgba(172,172,192,0.20)";
+  ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(172,172,192,0.25)";
   ctx.fill();
 };
 /**
@@ -376,7 +390,7 @@ const drawButtonsAndLines = (
     ctx.setLineDash([]);
   }
 
-  if (square.withCornerButton) {
+  if (square?.withCornerButton) {
     const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
     const bPos = badgePosition(square.size, ctx.canvas.width);
     drawCornerButton(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
@@ -384,7 +398,7 @@ const drawButtonsAndLines = (
   /**
    * draw the middle button used to rotate the shape
    */
-  if (square.withTurningButtons) {
+  if (square?.withTurningButtons) {
     drawTurningButtons(ctx, sSize, border);
   }
 
@@ -428,8 +442,8 @@ const drawButtonsAndLines = (
       if (
         square.shape &&
         square.shape.radius &&
-        square.shape.radius >= 10 &&
-        square.shape.withBorder === false
+        square.shape.radius >= 10
+        //  && square.shape.withBorder === false
       ) {
         drawShadowRectangle(ctx, sSize);
       }
@@ -445,12 +459,12 @@ const drawButtonsAndLines = (
  * function to shapDraw a shape on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, color, type, rotation}
- * @param {boolean} withBtn - show button to resize the square
+ * @param {boolean} withButton - show button to resize the square
  */
 const shapeDrawing = (
   ctx: CanvasRenderingContext2D,
   square: ShapeDefinition,
-  withBtn: boolean,
+  withButton: boolean,
   drawingFunction: (props: drawingProps) => void,
   drawingBorderFunction?: (props: drawingProps) => void
 ) => {
@@ -478,8 +492,6 @@ const shapeDrawing = (
     virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
   } as drawingProps);
 
-  if (!square.border) return;
-
   if (isDrawingShape(square.type)) {
     if (filled) {
       ctx.fill();
@@ -489,8 +501,8 @@ const shapeDrawing = (
   }
 
   // Draw the border if needed
-  if (square.shape.withBorder) {
-    if (!withBtn) {
+  if (square.shape?.withBorder && square.border) {
+    if (!withButton) {
       ctx.globalAlpha = square.border.opacity;
     }
     if (!drawingBorderFunction) {
@@ -515,13 +527,13 @@ const shapeDrawing = (
  * Function to show a element (square, ellipse or text) on the canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {object} square - {x, y, width, height, rotation, type, text}
- * @param {boolean} withBtn - show button to resize the square
+ * @param {boolean} withButton - show button to resize the square
  * @param {string} mouseOnShape - border where the mouse is
  */
 export const showElement = (
   ctx: CanvasRenderingContext2D | null,
   square: ShapeDefinition,
-  withBtn: boolean = true,
+  withButton: boolean = true,
   mouseOnShape: string | null = null
 ) => {
   if (!ctx) return;
@@ -535,19 +547,18 @@ export const showElement = (
       drawDashedRectangle(ctx, square.size);
       return;
     case SHAPE_TYPE.IMAGE:
-      shapeDrawing(ctx, square, withBtn, drawImage, drawSquare);
+      shapeDrawing(ctx, square, withButton, drawImage, drawSquare);
       break;
     case SHAPE_TYPE.SQUARE:
       // drawSquare(ctx, square);
-      shapeDrawing(ctx, square, withBtn, drawSquare);
+      shapeDrawing(ctx, square, withButton, drawSquare);
       break;
     case SHAPE_TYPE.CIRCLE:
-      shapeDrawing(ctx, square, withBtn, drawEllipse);
+      shapeDrawing(ctx, square, withButton, drawEllipse);
       break;
 
-    default:
-      shapeDrawing(ctx, square, withBtn, drawSquareWithRoundedCorner);
-      // drawSquareWithRoundedCorner(ctx, square);
+    default: // all square with rounded corner
+      shapeDrawing(ctx, square, withButton, drawSquareWithRoundedCorner);
       break;
   }
 
@@ -558,7 +569,7 @@ export const showElement = (
     }
   }
 
-  if (withBtn) {
+  if (withButton) {
     drawButtonsAndLines(ctx, square, mouseOnShape);
   }
 };

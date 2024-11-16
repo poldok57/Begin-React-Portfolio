@@ -42,11 +42,6 @@ export class drawElement extends drawingHandler {
 
   setType(type: string): void {
     this.shape.setType(type);
-    if (type === DRAWING_MODES.TEXT) {
-      this.setWithResize(false);
-    } else {
-      this.setWithResize(true);
-    }
   }
 
   initData(initData: AllParams) {
@@ -120,10 +115,6 @@ export class drawElement extends drawingHandler {
 
   setDataGeneral(data: ParamsGeneral) {
     this.shape.setDataGeneral(data);
-  }
-
-  setWithResize(value: boolean) {
-    this.shape.setWithResize(value);
   }
 
   /**

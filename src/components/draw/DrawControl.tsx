@@ -26,6 +26,7 @@ import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";
+import { useDesignStore } from "@/lib/stores/design";
 
 interface DrawControlProps {
   setParams: (params: GroupParams) => void;
@@ -51,6 +52,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
   const [isTouch, setIsTouch] = useState(false);
+
+  const { eraseDesignElement } = useDesignStore.getState();
 
   const addEvent = (detail: EventDetail) => {
     const event = new CustomEvent("modeChanged", detail);
@@ -88,6 +91,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     // Mode for the control panel
     setMode(DRAWING_MODES.INIT);
     eraseHistory();
+    eraseDesignElement();
   };
 
   const handleParamChange = (newParams: GroupParams) => {

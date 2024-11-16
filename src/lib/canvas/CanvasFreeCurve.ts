@@ -28,8 +28,8 @@ export class CanvasFreeCurve extends CanvasPoints {
     this.data.items.push(firstPoint as Coordinate & LinePath);
 
     this.setParamsGeneral({
-      opacity: general.opacity || 1,
-      color: general.color || "#000",
+      opacity: general.opacity || 0,
+      color: general.color || "#fff",
       lineWidth: general.lineWidth || 1,
     });
     this.startArea(firstPoint);

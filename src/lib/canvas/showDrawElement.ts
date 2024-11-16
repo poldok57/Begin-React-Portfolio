@@ -5,7 +5,7 @@ import { CanvasPath } from "@/lib/canvas/CanvasPath";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
 import { CanvasDrawableObject } from "@/lib/canvas/CanvasDrawableObject";
 
-export const showDrowElement = (
+export const showDrawElement = (
   ctx: CanvasRenderingContext2D,
   element: ThingsToDraw,
   withDetails: boolean = true

@@ -11,13 +11,14 @@ export abstract class CanvasDrawableObject {
 
   constructor() {
     this.data = {
+      id: "",
       type: "",
       rotation: 0,
       size: { x: 0, y: 0, width: 0, height: 0 },
       general: {
         color: "#000",
         lineWidth: 1,
-        opacity: 1,
+        opacity: 0,
       },
     };
   }

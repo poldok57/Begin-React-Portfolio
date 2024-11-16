@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import {
-  undoHistory,
-  getCurrentHistory,
-} from "../../../lib/canvas/canvas-history";
+// import {
+//   undoHistory,
+//   getCurrentHistory,
+// } from "../../../lib/canvas/canvas-history";
 import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
 
 import {
@@ -25,6 +25,7 @@ import { drawFreehand } from "./drawFreehand";
 import { drawingHandler } from "./drawingHandler";
 import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
+import { useDesignStore } from "@/lib/stores/design";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -52,6 +53,8 @@ export const useCanvas = ({
   const lineRef = useRef<drawLine | null>(null);
   const selectionRef = useRef<drawSelection | null>(null);
   const elementRef = useRef<drawElement | null>(null);
+
+  const { deleteLastDesignElement, refreshCanvas } = useDesignStore.getState();
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -59,21 +62,23 @@ export const useCanvas = ({
     if (canvasRef.current === null) {
       return;
     }
-    undoHistory();
-    const item = getCurrentHistory();
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return;
-    }
+    deleteLastDesignElement();
+    refreshCanvas(canvas.getContext("2d"));
+    // undoHistory();
+    // const item = getCurrentHistory();
+    // const ctx = canvas.getContext("2d");
+    // if (!ctx) {
+    //   return;
+    // }
 
-    if (!item || !item.image) {
-      clearCanvasByCtx(ctx);
-      if (lineRef.current !== null) lineRef.current.setStartCoordinates(null);
-      return;
-    }
-    ctx.putImageData(item.image, 0, 0);
-    if (lineRef.current !== null)
-      lineRef.current.setStartCoordinates(item.coordinates);
+    // if (!item || !item.image) {
+    //   clearCanvasByCtx(ctx);
+    //   if (lineRef.current !== null) lineRef.current.setStartCoordinates(null);
+    //   return;
+    // }
+    // ctx.putImageData(item.image, 0, 0);
+    // if (lineRef.current !== null)
+    //   lineRef.current.setStartCoordinates(item.coordinates);
   };
 
   /**

@@ -31,7 +31,7 @@ export class CanvasShape extends CanvasDrawableObject {
       general: {
         color: "#000",
         lineWidth: 1,
-        opacity: 1,
+        opacity: 0,
       },
     };
   }
@@ -40,7 +40,30 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data = { ...this.data, ...data };
   }
   getData(): ShapeDefinition {
-    return this.data;
+    const d = this.data;
+
+    // return d;
+
+    const cpy: ShapeDefinition = {
+      id: d.id,
+      type: d.type,
+      rotation: d.rotation,
+      size: { ...d.size },
+      general: { ...d.general },
+      shape: { ...d.shape },
+    };
+
+    if (d.shape?.withBorder && d.border) cpy.border = { ...d.border };
+    if ((d.type === DRAWING_MODES.TEXT || d.shape?.withText) && d.text)
+      cpy.text = { ...d.text };
+
+    if (d.type === DRAWING_MODES.IMAGE) {
+      cpy.blackWhite = d.blackWhite;
+      cpy.canvasImage = d.canvasImage;
+      cpy.canvasImageTransparent = d.canvasImageTransparent;
+    }
+
+    return cpy;
   }
 
   setData(data: ShapeDefinition) {
@@ -87,7 +110,7 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.text = { ...data };
   }
   initData(initData: AllParams) {
-    this.data = { ...this.data, ...initData };
+    // this.data = { ...this.data, ...initData };
     this.changeData(initData);
     this.data.rotation = 0;
     if (this.data.text) {
@@ -122,7 +145,7 @@ export class CanvasShape extends CanvasDrawableObject {
     if (
       type === DRAWING_MODES.CIRCLE &&
       sSize.width === sSize.height &&
-      !this.getWithText()
+      !this.data.shape?.withText
     ) {
       this.data.withTurningButtons = false;
       return;
@@ -142,29 +165,12 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.withCornerButton = value;
   }
 
-  setWithResize(value: boolean) {
-    this.data.withResize = value;
-  }
-  getWithResize() {
-    return this.data.withResize;
-  }
-
-  setWithText(value: boolean) {
-    if (this.data.shape) {
-      this.data.shape.withText = value;
-    } else {
-      this.data.shape = { withText: value };
-    }
-  }
   setRadius(radius: number) {
     if (this.data.shape) {
       this.data.shape.radius = radius;
     } else {
       this.data.shape = { radius: radius };
     }
-  }
-  getWithText() {
-    return this.data.shape?.withText;
   }
   getOpacity() {
     return this.data.general.opacity;
@@ -222,7 +228,7 @@ export class CanvasShape extends CanvasDrawableObject {
     const argsMouseOnShape: ArgsMouseOnShape = {
       coordinate: coordinate,
       area: this.getDataSize(),
-      withResize: this.data.withResize || false,
+      withResize: this.data.type !== DRAWING_MODES.TEXT,
       withCornerButton: this.data.withCornerButton || false,
       withTurningButtons: this.data.withTurningButtons || false,
       maxWidth: canvas.width,
@@ -253,7 +259,6 @@ export class CanvasShape extends CanvasDrawableObject {
     temporyDraw?: boolean,
     borderInfo?: string | null
   ) {
-    // console.log("draw", this.data);
     if (temporyDraw) {
       this.showElementThrottled(ctx, this.data, temporyDraw, borderInfo);
     } else {

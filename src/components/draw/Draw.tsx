@@ -15,8 +15,8 @@ const MAX_HISTORY = 40;
 const [WIDTH, HEIGHT] = [768, 432]; // 16:9 aspact ratio
 
 export const Draw = () => {
-  const canvasRef = useRef(null);
-  const canvasTemporyRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasTemporyRef = useRef<HTMLCanvasElement>(null);
 
   const drawingParamsRef = useRef(DEFAULT_PARAMS);
   const [mode, setMode] = useState(drawingParamsRef.current.mode);
@@ -76,9 +76,11 @@ export const Draw = () => {
           </div>
         </div>
       </div>
+
       <DrawListWP
         canvasRef={canvasRef}
         canvasTemporyRef={canvasTemporyRef}
+        setMode={setMode}
         withMinimize={true}
         style={{
           top: "40px",
