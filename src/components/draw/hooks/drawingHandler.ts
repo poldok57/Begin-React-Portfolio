@@ -1,15 +1,13 @@
 import { Coordinate } from "@/lib/canvas/types";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
-import {
-  addPictureToHistory,
-  CanvasPicture,
-} from "@/lib/canvas/canvas-history";
 
 import {
   DRAWING_MODES,
   ThingsToDraw,
   AllParams,
   ParamsGeneral,
+  CanvasPointsData,
+  ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 
 import { useDesignStore } from "@/lib/stores/design";
@@ -96,18 +94,10 @@ export abstract class drawingHandler {
   /**
    * Function to save the picture in the history
    */
-  saveCanvasPicture(coordinate: Coordinate | null = null) {
-    const coord: Coordinate | null = coordinate;
-    const savePicture = {
-      type: this.getType(),
-      canvas: this.mCanvas,
-      coordinates: coord,
-      image: null,
-    };
-    addPictureToHistory(savePicture as CanvasPicture);
+  saveCanvasPicture(_coordinate: Coordinate | null = null) {
+    const draw: ThingsToDraw | CanvasPointsData | ShapeDefinition | null =
+      this.getDraw();
 
-    // reccord the draw in the design store
-    const draw = this.getDraw();
     if (draw) this.addDesignElement(draw);
   }
 

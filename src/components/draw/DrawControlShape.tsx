@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdRadioButtonUnchecked } from "react-icons/md";
 import { BiSquare } from "react-icons/bi";
 import { AiOutlineRadiusUpright } from "react-icons/ai";
@@ -52,6 +52,10 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
     setWithText(event.target.checked);
     handleShape({ withText: event.target.checked });
   };
+
+  useEffect(() => {
+    setWithBorder(drawingParams.shape.withBorder);
+  }, [drawingParams.shape.withBorder]);
 
   return (
     <div

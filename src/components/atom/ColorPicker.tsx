@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import clsx from "clsx";
 
 interface ColorPickerProps {
@@ -29,19 +29,23 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     }
   };
 
+  useEffect(() => {
+    setColor(defaultValue || "#000000");
+  }, [defaultValue]);
+
   return (
-    <div className="relative m-0 inline-block">
+    <div className="inline-block relative m-0">
       <input
         id={id}
         ref={pickerRef}
         type="color"
         value={color}
         onChange={handleColorChange}
-        className="absolute inset-0 cursor-pointer opacity-0"
+        className="absolute inset-0 opacity-0 cursor-pointer"
       />
       <div
         className={clsx(
-          "opacity-1 inline-block cursor-pointer border",
+          "inline-block border cursor-pointer opacity-1",
           className
         )}
         style={{

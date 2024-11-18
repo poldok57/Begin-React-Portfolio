@@ -4,7 +4,7 @@ import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { ColorPicker } from "../atom/ColorPicker";
 import {
-  AllParams,
+  ParamsGeneral,
   DRAWING_MODES,
   GroupParams,
   isDrawingAllLines,
@@ -15,24 +15,21 @@ import {
 interface DrawControlGeneralProps {
   mode: string;
   handleParamChange: (params: GroupParams) => void;
-  drawingParams: AllParams;
-  opacity: number;
-  setOpacity: (opacity: number) => void;
+  paramsGeneral: ParamsGeneral;
   isTouch?: boolean;
 }
 
 export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   mode,
   handleParamChange,
-  drawingParams,
-  opacity,
-  setOpacity,
+  paramsGeneral,
   isTouch = false,
 }) => {
   const handleGeneral = (param: Params) => {
-    drawingParams.general = { ...drawingParams.general, ...param };
-    handleParamChange({ general: drawingParams.general });
+    paramsGeneral = { ...paramsGeneral, ...param };
+    handleParamChange({ general: paramsGeneral });
   };
+
   return (
     <>
       <div
@@ -54,7 +51,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             id="draw-color-picker"
             height={isTouch ? 50 : 40}
             width={isTouch ? 50 : 40}
-            defaultValue={drawingParams.general.color}
+            defaultValue={paramsGeneral.color}
             onChange={(color) => handleGeneral({ color: color })}
           />
         </label>
@@ -62,7 +59,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
           id="draw-size-picker"
           label="Line width"
           className={inputRangeVariants({ width: "24", size: "sm" })}
-          value={drawingParams.general.lineWidth}
+          value={paramsGeneral.lineWidth}
           onChange={(value: number) => handleGeneral({ lineWidth: value })}
           min="2"
           max="32"
@@ -73,11 +70,11 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
           className={inputRangeVariants({ width: "20", size: "sm" })}
           label="Opacity"
           id="draw-size-picker"
-          value={opacity}
+          value={paramsGeneral.opacity * 100}
           min="5"
           max="100"
           step="5"
-          onChange={(value: number) => setOpacity(value)}
+          onChange={(value: number) => handleGeneral({ opacity: value / 100 })}
           isTouch={isTouch}
         />
       </div>

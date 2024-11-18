@@ -14,7 +14,7 @@ import {
   ParamsGeneral,
   AllParams,
   isDrawingLine,
-  ThingsToDraw,
+  CanvasPointsData,
 } from "@/lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
@@ -65,12 +65,13 @@ export class drawLine extends drawingHandler {
     if (
       this.path &&
       this.finishedDrawing &&
-      this.getType() === DRAWING_MODES.CLOSED_PATH
+      this.getType() === DRAWING_MODES.LINES_PATH
     ) {
       if (this.finishedDrawingStep1) {
         this.finishedDrawingStep1 = false;
         return;
       }
+      // console.log("changeParamsGeneral", dataGeneral);
       // after finised path we can change the color of the path, by the beginning of the path
       this.path.changeParamsGeneral(dataGeneral);
       return;
@@ -126,13 +127,21 @@ export class drawLine extends drawingHandler {
     this.finishedDrawing = false;
   };
 
-  setDraw(draw: ThingsToDraw) {
+  setDraw(draw: CanvasPointsData) {
+    this.path = new CanvasPath(null);
     this.path?.setData(draw);
+    this.withPath = true;
+
+    this.setType(DRAWING_MODES.LINES_PATH);
+    this.finishedDrawing = true;
+    this.finishedDrawingStep1 = true;
+
+    this.path.setFinished(true);
   }
-  getDraw(): ThingsToDraw | null {
-    return this.path?.getData() as ThingsToDraw | null;
+  getDraw(): CanvasPointsData | null {
+    return this.path?.getData() as CanvasPointsData | null;
   }
-  
+
   /**
    * Debonce draw of the path
    */

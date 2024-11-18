@@ -6,7 +6,7 @@
 
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import { Coordinate, Area, LinePath, ArgsMouseOnShape } from "./types";
-import { ParamsGeneral, ThingsToDraw } from "./canvas-defines";
+import { ParamsGeneral, CanvasPointsData } from "./canvas-defines";
 import { badgePosition, BORDER } from "../mouse-position";
 import { drawCornerButton } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
@@ -16,10 +16,6 @@ import { OVERAGE } from "./canvas-dashed-rect";
 
 export const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
-
-interface CanvasPointsData extends ThingsToDraw {
-  items: LinePath[] | Coordinate[];
-}
 
 export abstract class CanvasPoints extends CanvasDrawableObject {
   protected data: CanvasPointsData;
@@ -53,11 +49,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   }
 
   getData(): CanvasPointsData {
-    return this.data;
+    return { ...this.data };
   }
 
-  setData(data: ThingsToDraw) {
-    this.data = data as CanvasPointsData;
+  setData(data: CanvasPointsData) {
+    this.data = { ...data };
   }
 
   setParamsGeneral(params: ParamsGeneral) {

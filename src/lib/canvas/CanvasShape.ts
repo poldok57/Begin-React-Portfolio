@@ -39,15 +39,14 @@ export class CanvasShape extends CanvasDrawableObject {
   addData(data: AllParams) {
     this.data = { ...this.data, ...data };
   }
+
   getData(): ShapeDefinition {
     const d = this.data;
-
-    // return d;
 
     const cpy: ShapeDefinition = {
       id: d.id,
       type: d.type,
-      rotation: d.rotation,
+      rotation: Number(d.rotation.toFixed(4)),
       size: { ...d.size },
       general: { ...d.general },
       shape: { ...d.shape },
@@ -56,6 +55,9 @@ export class CanvasShape extends CanvasDrawableObject {
     if (d.shape?.withBorder && d.border) cpy.border = { ...d.border };
     if ((d.type === DRAWING_MODES.TEXT || d.shape?.withText) && d.text)
       cpy.text = { ...d.text };
+    if (d.type === DRAWING_MODES.TEXT) {
+      cpy.general.color = d.text?.color ?? "gray";
+    }
 
     if (d.type === DRAWING_MODES.IMAGE) {
       cpy.blackWhite = d.blackWhite;
@@ -66,8 +68,28 @@ export class CanvasShape extends CanvasDrawableObject {
     return cpy;
   }
 
+  setDataId(id: string) {
+    this.data.id = id;
+  }
+
   setData(data: ShapeDefinition) {
-    this.data = data;
+    this.data = { ...data };
+
+    if (!data.shape?.withBorder && data.border) {
+      console.log(data.type, "withBorder error", data.border);
+      this.data.border = undefined;
+    }
+    if (
+      data.type !== DRAWING_MODES.TEXT &&
+      !data.shape?.withText &&
+      data.text
+    ) {
+      console.log(data.type, "withText error", data.text);
+      this.data.text = undefined;
+    }
+
+    this.calculateWithTurningButtons(data.type);
+    this.data.withCornerButton = true;
   }
 
   setDataParams(params: Area | ParamsGeneral | ParamsShape | ParamsText) {
@@ -112,6 +134,7 @@ export class CanvasShape extends CanvasDrawableObject {
   initData(initData: AllParams) {
     // this.data = { ...this.data, ...initData };
     this.changeData(initData);
+    this.data.id = "";
     this.data.rotation = 0;
     if (this.data.text) {
       this.data.text.rotation = 0;

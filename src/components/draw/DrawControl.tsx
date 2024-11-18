@@ -1,4 +1,10 @@
-import React, { useRef, useMemo, useState, useEffect } from "react";
+import React, {
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { isTouchDevice } from "@/lib/utils/device";
 import { SlActionUndo } from "react-icons/sl";
 import { CiEraser } from "react-icons/ci";
@@ -19,7 +25,7 @@ import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
 import { DrawControlGeneral } from "./DrawControlGeneral";
-import { eraseHistory } from "../../lib/canvas/canvas-history";
+// import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../alert-messages/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
@@ -27,6 +33,8 @@ import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";
 import { useDesignStore } from "@/lib/stores/design";
+import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
+import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 
 interface DrawControlProps {
   setParams: (params: GroupParams) => void;
@@ -46,14 +54,17 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
   const [lockRatio, setLockRatio] = useState(false);
-  const [opacity, setOpacity] = useState(drawingParams.general.opacity * 100);
 
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
   const [isTouch, setIsTouch] = useState(false);
 
-  const { eraseDesignElement } = useDesignStore.getState();
+  const {
+    eraseDesignElement,
+    selectedDesignElement,
+    getSelectedDesignElement,
+  } = useDesignStore.getState();
 
   const addEvent = (detail: EventDetail) => {
     const event = new CustomEvent("modeChanged", detail);
@@ -90,7 +101,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     addEventAction(DRAWING_MODES.INIT);
     // Mode for the control panel
     setMode(DRAWING_MODES.INIT);
-    eraseHistory();
+    // eraseHistory();
     eraseDesignElement();
   };
 
@@ -99,7 +110,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     addEventDetail({ mode: DRAWING_MODES.CHANGE });
   };
   const handleOpacity = (value: number) => {
-    setOpacity(value);
     drawingParams.general.opacity = value / 100;
     handleParamChange({ general: drawingParams.general });
   };
@@ -136,7 +146,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     handleParamChange({ shape: drawingParams.shape });
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
     switch (event.key) {
       case "Escape":
         addEventAction(DRAWING_MODES.ABORT);
@@ -180,7 +190,19 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       default:
         break;
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (selectedDesignElement) {
+      const newMode = updateParamFromElement(
+        setParams,
+        getSelectedDesignElement
+      );
+      if (newMode) {
+        setMode(newMode);
+      }
+    }
+  }, [selectedDesignElement]);
 
   useEffect(() => {
     setIsTouch(isTouchDevice());
@@ -223,7 +245,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           </Button>
           <Button
             className="px-5 py-1"
-            selected={mode == DRAWING_MODES.LINE}
+            selected={isDrawingLine(mode)}
             onClick={() => handleModeChange(DRAWING_MODES.LINE)}
             title="Draw lines"
           >
@@ -295,9 +317,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         <DrawControlGeneral
           mode={mode}
           handleParamChange={handleParamChange}
-          drawingParams={drawingParams}
-          opacity={opacity}
-          setOpacity={handleOpacity}
+          paramsGeneral={drawingParams.general}
           isTouch={isTouch}
         />
         {isDrawingLine(mode) && (
@@ -306,7 +326,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             handleParamChange={handleParamChange}
             handleModeChange={handleModeChange}
             addEventAction={addEventAction}
-            drawingParams={drawingParams}
+            paramsPath={drawingParams.path}
             isTouch={isTouch}
           />
         )}
@@ -328,14 +348,15 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           >
             <SlActionUndo size="20px" />
           </Button>
-          <ButtonConfirmModal
-            position="over"
-            className="bg-red-500 hover:bg-red-600"
-            value="Reset"
+          <DeleteWithConfirm
+            position="top"
+            className="text-sm font-medium text-white bg-red-500 rounded transition btn hover:bg-red-600 border-primary"
+            confirmClassName="btn btn-sm w-fit"
+            confirmMessage="Erase your drawing?"
             onConfirm={handleConfirmReset}
           >
-            Do you want to erase all your drawing ?
-          </ButtonConfirmModal>
+            Reset
+          </DeleteWithConfirm>
           <ButtonConfirmModal
             position="modal"
             className="bg-blue-500 hover:bg-blue-600"
@@ -374,5 +395,5 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, , lockRatio, opacity]);
+  }, [mode, withText, drawingParams, lockRatio]);
 };

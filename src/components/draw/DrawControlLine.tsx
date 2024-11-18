@@ -5,10 +5,10 @@ import { Button } from "../atom/Button";
 import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { ColorPicker } from "../atom/ColorPicker";
 import {
-  AllParams,
   DRAWING_MODES,
   GroupParams,
   Params,
+  ParamsPath,
 } from "@/lib/canvas/canvas-defines";
 import { MdTimeline } from "react-icons/md";
 import { Spline } from "lucide-react";
@@ -19,7 +19,7 @@ interface DrawControlLineProps {
   handleParamChange: (params: GroupParams) => void;
   handleModeChange: (mode: string) => void;
   addEventAction: (action: string) => void;
-  drawingParams: AllParams;
+  paramsPath: ParamsPath;
   isTouch?: boolean;
 }
 
@@ -28,13 +28,13 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   handleParamChange,
   handleModeChange,
   addEventAction,
-  drawingParams,
+  paramsPath,
   isTouch = false,
 }) => {
   const [withPathFilled, setWithPathFilled] = useState(false);
   const handlePath = (param: Params) => {
-    drawingParams.path = { ...drawingParams.path, ...param };
-    handleParamChange({ path: drawingParams.path });
+    paramsPath = { ...paramsPath, ...param };
+    handleParamChange({ path: paramsPath });
   };
   useEffect(() => {
     if (mode === DRAWING_MODES.END_PATH) {
@@ -43,6 +43,11 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       setWithPathFilled(false);
     }
   }, [mode]);
+
+  useEffect(() => {
+    setWithPathFilled(paramsPath.filled);
+  }, [paramsPath.filled]);
+
   return (
     <div
       className={cn([
@@ -109,7 +114,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             color
             <ColorPicker
               id="path-color-picker"
-              defaultValue={drawingParams.path.color}
+              defaultValue={paramsPath.color}
               onChange={(c) => handlePath({ color: c })}
             />
           </label>
@@ -121,7 +126,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             })}
             id="path-opacity-picker"
             label="Opacity"
-            value={drawingParams.path.opacity * 100}
+            value={paramsPath.opacity * 100}
             min="0"
             max="100"
             step="10"

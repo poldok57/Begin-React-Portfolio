@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import clsx from "clsx";
 
@@ -83,6 +83,10 @@ export const RangeInput: React.FC<{
     // console.log("new value:", newValue);
     handleChange(newValue);
   };
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
   return (
     <div className="flex flex-col items-center">

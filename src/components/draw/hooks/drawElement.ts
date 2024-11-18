@@ -3,7 +3,7 @@ import {
   AllParams,
   DRAWING_MODES,
   ParamsGeneral,
-  ThingsToDraw,
+  ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 import {
   BORDER,
@@ -64,12 +64,12 @@ export class drawElement extends drawingHandler {
     return this.shape.getType();
   }
 
-  setDraw(draw: ThingsToDraw) {
+  setDraw(draw: ShapeDefinition) {
     this.shape.setData(draw);
   }
 
-  getDraw(): ThingsToDraw | null {
-    return this.shape.getData() as ThingsToDraw | null;
+  getDraw(): ShapeDefinition | null {
+    return this.shape.getData() as ShapeDefinition | null;
   }
 
   setCoordinates(coord: Coordinate) {
@@ -143,6 +143,7 @@ export class drawElement extends drawingHandler {
     }
     this.shape.draw(this.context, false);
     this.saveCanvasPicture();
+    this.shape.setDataId(""); // erase the id for next drawing
     this.clearTemporyCanvas();
     if (withOffset) {
       // add 15px to the size to avoid the shape to be one on the other

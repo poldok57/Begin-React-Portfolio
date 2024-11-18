@@ -1,8 +1,4 @@
 import React, { useEffect, useRef } from "react";
-// import {
-//   undoHistory,
-//   getCurrentHistory,
-// } from "../../../lib/canvas/canvas-history";
 import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
 
 import {
@@ -14,6 +10,7 @@ import {
   isDrawingSelect,
   AllParams,
   EventDetail,
+  ThingsToDraw,
 } from "../../../lib/canvas/canvas-defines";
 
 import { alertMessage } from "../../alert-messages/alertMessage";
@@ -26,6 +23,7 @@ import { drawingHandler } from "./drawingHandler";
 import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
 import { useDesignStore } from "@/lib/stores/design";
+import { DesignElement } from "@/components/room/types";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -54,7 +52,8 @@ export const useCanvas = ({
   const selectionRef = useRef<drawSelection | null>(null);
   const elementRef = useRef<drawElement | null>(null);
 
-  const { deleteLastDesignElement, refreshCanvas } = useDesignStore.getState();
+  const { deleteLastDesignElement, refreshCanvas, getSelectedDesignElement } =
+    useDesignStore.getState();
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -64,21 +63,6 @@ export const useCanvas = ({
     }
     deleteLastDesignElement();
     refreshCanvas(canvas.getContext("2d"));
-    // undoHistory();
-    // const item = getCurrentHistory();
-    // const ctx = canvas.getContext("2d");
-    // if (!ctx) {
-    //   return;
-    // }
-
-    // if (!item || !item.image) {
-    //   clearCanvasByCtx(ctx);
-    //   if (lineRef.current !== null) lineRef.current.setStartCoordinates(null);
-    //   return;
-    // }
-    // ctx.putImageData(item.image, 0, 0);
-    // if (lineRef.current !== null)
-    //   lineRef.current.setStartCoordinates(item.coordinates);
   };
 
   /**
@@ -273,6 +257,16 @@ export const useCanvas = ({
       generalInitialisation();
       return;
     }
+
+    const reload = newMode === DRAWING_MODES.RELOAD;
+
+    const selectedDesignElement: ThingsToDraw | DesignElement | null = reload
+      ? getSelectedDesignElement()
+      : null;
+
+    if (reload && selectedDesignElement) {
+      newMode = selectedDesignElement.type;
+    }
     currentParams.mode = newMode;
 
     // end previous action then changing mode
@@ -297,6 +291,12 @@ export const useCanvas = ({
 
     // set the new drawing mode
     drawingRef.current = selectDrawingHandler(newMode);
+
+    if (reload && selectedDesignElement) {
+      // reload draw from history
+      drawingRef.current.setDraw(selectedDesignElement);
+    }
+
     drawingRef.current.startAction();
     drawingRef.current.refreshDrawing();
   };
@@ -409,7 +409,7 @@ export const useCanvas = ({
         if (lineRef.current !== null) {
           lineRef.current?.actionEndPath(eventAction);
           stopExtendMouseEvent();
-          setMode(DRAWING_MODES.CLOSED_PATH);
+          setMode(DRAWING_MODES.LINES_PATH);
         }
         break;
       case DRAWING_MODES.SELECT_AREA:

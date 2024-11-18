@@ -13,7 +13,7 @@ import {
   mouseCircle,
   AllParams,
   ParamsGeneral,
-  ThingsToDraw,
+  CanvasPointsData,
 } from "../../../lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
@@ -82,10 +82,15 @@ export class drawFreehand extends drawingHandler {
     this.ctxTempory = canvas.getContext("2d");
   }
 
-  setDraw(draw: ThingsToDraw) {
+  setDraw(draw: CanvasPointsData) {
     this.freeCurve.setData(draw);
+    this.freeCurve.setFinished(true);
+
+    this.setDrawing(false);
+    this.finishedDrawing = true;
   }
-  getDraw(): ThingsToDraw | null {
+
+  getDraw(): CanvasPointsData | null {
     return this.freeCurve.getData();
   }
 

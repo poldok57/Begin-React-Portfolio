@@ -1,4 +1,26 @@
-import { Area, MouseCircle } from "./types";
+import { Area, Coordinate, LinePath, MouseCircle } from "./types";
+
+const DRAWING_ACTIONS = {
+  UNDO: "undo",
+  SAVE: "save",
+  LOAD: "load",
+  INIT: "init",
+  ABORT: "abort",
+  VALID: "valid",
+  CLOSE_PATH: "closePath",
+  STOP_PATH: "stopPath",
+};
+
+const IMAGE_ACTIONS = {
+  IMAGE_RADIUS: "imageRadius",
+  TRANSPARENCY: "transparency",
+  CUT: "cut",
+  COPY: "copy",
+  PASTE: "paste",
+  DELETE: "delete",
+  SELECT_AREA: "selectArea",
+  BLACK_WHITE: "blackWhite",
+};
 
 export const SHAPE_TYPE = {
   SQUARE: "square",
@@ -14,40 +36,18 @@ export const SHAPE_TYPE = {
 export const DRAW_TYPE = {
   BACKGROUND: "background",
   DRAW: "draw",
-  PATH: "path",
+  LINES_PATH: "Lines & Path",
   ...SHAPE_TYPE,
-};
-
-const DRAWING_ACTIONS = {
-  UNDO: "undo",
-  SAVE: "save",
-  LOAD: "load",
-  INIT: "init",
-  ABORT: "abort",
-  VALID: "valid",
-  CLOSE_PATH: "closePath",
-  STOP_PATH: "stopPath",
-};
-const IMAGE_ACTIONS = {
-  IMAGE_RADIUS: "imageRadius",
-  TRANSPARENCY: "transparency",
-  CUT: "cut",
-  COPY: "copy",
-  PASTE: "paste",
-  DELETE: "delete",
-  SELECT_AREA: "selectArea",
-  BLACK_WHITE: "blackWhite",
 };
 
 export const DRAWING_MODES = {
   PAUSE: "pause",
-  DRAW: "draw",
   LINE: "line",
   ARC: "arc",
-  PATH: "path",
-  CLOSED_PATH: "closedPath",
+  // PATH: "path",
   END_PATH: "endPath",
   ERASE: "erase",
+  RELOAD: "reload",
 
   CONTROL_PANEL: {
     IN: "in",
@@ -56,6 +56,7 @@ export const DRAWING_MODES = {
   CHANGE: "drawChange",
   ACTION: "drawAction",
 
+  ...DRAW_TYPE,
   ...DRAWING_ACTIONS,
   ...IMAGE_ACTIONS,
   ...SHAPE_TYPE,
@@ -64,8 +65,8 @@ export const DRAWING_MODES = {
 const LINE_MODES = [
   DRAWING_MODES.LINE,
   DRAWING_MODES.ARC,
-  DRAWING_MODES.PATH,
-  DRAWING_MODES.CLOSED_PATH,
+  // DRAWING_MODES.PATH,
+  DRAWING_MODES.LINES_PATH,
   DRAWING_MODES.END_PATH,
 ];
 const FREEHAND_MODES = [
@@ -192,6 +193,9 @@ export interface ThingsToDraw {
   withCornerButton?: boolean;
 }
 
+export interface CanvasPointsData extends ThingsToDraw {
+  items: LinePath[] | Coordinate[];
+}
 export interface ShapeDefinition extends ThingsToDraw {
   blackWhite?: boolean;
   canvasImage?: HTMLCanvasElement | null;

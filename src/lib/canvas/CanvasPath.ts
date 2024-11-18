@@ -5,7 +5,12 @@
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
-import { DRAW_TYPE, ParamsPath, ParamsGeneral } from "./canvas-defines";
+import {
+  DRAW_TYPE,
+  ParamsPath,
+  ParamsGeneral,
+  CanvasPointsData,
+} from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { MARGIN } from "./CanvasPoints";
@@ -25,7 +30,7 @@ const roundCoordinates = (
 export class CanvasPath extends CanvasPoints {
   constructor(line: LinePath | null) {
     super();
-    this.setDataType(DRAW_TYPE.PATH);
+    this.setDataType(DRAW_TYPE.LINES_PATH);
     if (!line) {
       return;
     }
@@ -44,6 +49,17 @@ export class CanvasPath extends CanvasPoints {
       opacity: 0,
     };
     this.addItem(item);
+  }
+
+  getData(): CanvasPointsData {
+    // select main color for illustration in draw list
+    if (this.data.path?.filled) {
+      this.data.general.color = this.data.path?.color;
+    } else if (this.data.items.length > 1) {
+      this.data.general.color =
+        (this.data.items[1] as LinePath).strokeStyle ?? "gray";
+    }
+    return { ...this.data };
   }
 
   private getLastParams() {
@@ -131,7 +147,7 @@ export class CanvasPath extends CanvasPoints {
     let maxWidth = 0;
     let start: Coordinate | null = null;
 
-    let hasChanged = false;
+    let hasChanged = true;
     let lineWidth: number | null = null;
     let strokeStyle: string | null = null;
     let globalAlpha: number | null = null;
@@ -207,7 +223,6 @@ export class CanvasPath extends CanvasPoints {
 
     if (this.data.path && this.data.path.filled) {
       this.fillPath(ctx, minWidth);
-      this.data.general.color = this.data.path.color;
     }
 
     this.setMaxWidthLine(maxWidth);
@@ -265,9 +280,6 @@ export class CanvasPath extends CanvasPoints {
       secondItem.strokeStyle = params.color;
       secondItem.lineWidth = params.lineWidth;
       secondItem.globalAlpha = params.opacity;
-
-      if (!this.data.path || !this.data.path.filled)
-        this.data.general.color = params.color;
     }
 
     //  this.setParamsGeneral(params);

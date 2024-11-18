@@ -1,5 +1,5 @@
-import clsx from "clsx";
-import React, { forwardRef } from "react";
+import React, { useState, forwardRef, useEffect } from "react";
+import { cn } from "@/lib/utils/cn";
 
 /**
  * Simple button for the application
@@ -19,25 +19,35 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   function Button({ children, disabled, selected, className, ...props }, ref) {
+    const [isSelected, setIsSelected] = useState(selected || false);
+    const [isDisabled, setIsDisabled] = useState(disabled || false);
+    const [lastChildren, setLastChildren] = useState(children);
+
+    useEffect(() => {
+      setIsSelected(selected || false);
+      setIsDisabled(disabled || false);
+      setLastChildren(children);
+    }, [disabled, selected, children]);
+
     return (
       <button
         ref={ref}
-        className={clsx(
+        className={cn(
           "inline-block text-sm font-medium text-white rounded transition btn btn-primary",
           "disabled:cursor-not-allowed disabled:bg-gray-400 dark:disabled:bg-gray-600",
           className,
           {
             "focus:outline-none focus:ring focus:ring-primary focus:ring-opacity-50":
-              !selected,
-            "ring-4 ring-opacity-80 outline-double ring-secondary": selected,
-            "hover:scale-105 hover:shadow-xl": !disabled,
-            "active:bg-primary active:opacity-80": !disabled,
+              !isSelected,
+            "ring-4 ring-opacity-80 outline-double ring-secondary": isSelected,
+            "hover:scale-105 hover:shadow-xl": !isDisabled,
+            "active:bg-primary active:opacity-80": !isDisabled,
           }
         )}
-        disabled={disabled}
+        disabled={isDisabled}
         {...props}
       >
-        {children}
+        {lastChildren}
       </button>
     );
   }
