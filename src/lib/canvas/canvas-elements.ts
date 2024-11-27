@@ -1,4 +1,4 @@
-import { BORDER, badgePosition, isBorder } from "../mouse-position";
+import { BORDER, topRightPosition, isBorder } from "../mouse-position";
 import { Area } from "./types";
 import {
   SHAPE_TYPE,
@@ -112,7 +112,8 @@ const rotateElement = (
   }
   if (saveContext) ctx.save();
   ctx.translate(sSize.x + sSize.width / 2, sSize.y + sSize.height / 2);
-  ctx.rotate(angle);
+  // ctx.rotate(angle);
+  ctx.rotate((angle * Math.PI) / 180);
   ctx.translate(-(sSize.x + sSize.width / 2), -(sSize.y + sSize.height / 2));
 };
 
@@ -337,10 +338,15 @@ const drawText = (ctx: CanvasRenderingContext2D, square: ShapeDefinition) => {
   }
 };
 
-const drawShadowRectangle = (ctx: CanvasRenderingContext2D, square: Area) => {
+const drawShadowRectangle = (
+  ctx: CanvasRenderingContext2D,
+  square: Area,
+  strockStyle = "rgba(132,132,192,0.8)",
+  lineDash = [5, 2]
+) => {
   ctx.lineWidth = 1;
-  ctx.strokeStyle = "rgba(132,132,192,0.8)";
-  ctx.setLineDash([5, 2]);
+  ctx.strokeStyle = strockStyle;
+  ctx.setLineDash(lineDash);
 
   const overflow = 12;
   ctx.beginPath();
@@ -371,28 +377,14 @@ const drawButtonsAndLines = (
   border: string | null
 ) => {
   const sSize: Area = square.size;
-  if (square.rotation !== 0 || square.type === SHAPE_TYPE.CIRCLE) {
-    const alpha: number = ctx.globalAlpha;
-    ctx.globalAlpha = 0.8;
-    ctx.beginPath();
-    if (border && isBorder(border)) {
-      ctx.strokeStyle = "#c04040";
-      ctx.lineWidth = 1;
-    } else {
-      ctx.strokeStyle = "silver";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 2]);
-    }
-
-    ctx.rect(sSize.x, sSize.y, sSize.width, sSize.height);
-    ctx.stroke();
-    ctx.globalAlpha = alpha;
-    ctx.setLineDash([]);
-  }
 
   if (square?.withCornerButton) {
     const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
-    const bPos = badgePosition(square.size, ctx.canvas.width);
+    const bPos = topRightPosition(
+      square.size,
+      ctx.canvas.width,
+      square.rotation
+    );
     drawCornerButton(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
   }
   /**
@@ -445,7 +437,10 @@ const drawButtonsAndLines = (
         square.shape.radius >= 10
         //  && square.shape.withBorder === false
       ) {
-        drawShadowRectangle(ctx, sSize);
+        const brd = border ? isBorder(border) : false;
+        const lineDash = brd ? [] : [5, 2];
+        const strokeStyle = brd ? "#60000" : "rgba(132,132,192,0.8)";
+        drawShadowRectangle(ctx, sSize, strokeStyle, lineDash);
       }
       break;
   }

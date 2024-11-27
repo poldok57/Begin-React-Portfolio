@@ -7,7 +7,7 @@
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import { Coordinate, Area, LinePath, ArgsMouseOnShape } from "./types";
 import { ParamsGeneral, CanvasPointsData } from "./canvas-defines";
-import { badgePosition, BORDER } from "../mouse-position";
+import { topRightPosition, BORDER } from "../mouse-position";
 import { drawCornerButton } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
@@ -54,6 +54,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   setData(data: CanvasPointsData) {
     this.data = { ...data };
+    // console.log("setData points", data);
   }
 
   setParamsGeneral(params: ParamsGeneral) {
@@ -95,7 +96,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       const prevEnd = prevItem.end as Coordinate;
       const currentEnd = (item as LinePath).end as Coordinate;
       if (prevEnd.x === currentEnd.x && prevEnd.y === currentEnd.y) {
-        // console.log("ignore add item", prevEnd, currentEnd);
         return; // Ignore adding the current item if it's the same as the previous item
       }
     }
@@ -185,7 +185,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!ctx || !this.data.size) {
       return;
     }
-    const badge = badgePosition(this.data.size, ctx.canvas.width);
+    const badge = topRightPosition(this.data.size, ctx.canvas.width);
     if (badge) {
       drawCornerButton(
         ctx,
@@ -392,7 +392,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         lastItem.end.x === firstItem.end.x &&
         lastItem.end.y === firstItem.end.y
       ) {
-        // console.log("close line", lastItem.end, firstItem.end);
         lastItem.end = { ...newCoord };
         firstItem.end = { ...newCoord };
       }
@@ -480,7 +479,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!this.data.size || !ctx || !mousePosition) {
       return null;
     }
-    // console.log("area", this.data.size, "mousePosition", mousePosition);
     const argsMouseOnArea: ArgsMouseOnShape = {
       coordinate: mousePosition,
       area: this.data.size,

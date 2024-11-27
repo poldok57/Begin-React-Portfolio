@@ -185,7 +185,7 @@ export const mousePointer = (mouseOnBorder: string): string => {
   }
 };
 
-export const badgePosition = (
+export const topRightPosition = (
   rect: {
     x?: number;
     y?: number;
@@ -193,13 +193,19 @@ export const badgePosition = (
     top?: number;
     width?: number;
     right?: number;
+    height?: number;
+    bottom?: number;
   },
-  maxWidth: number = 0
+  maxWidth: number = 0,
+  rotation: number = 0
 ) => {
   const x = rect.x ?? rect.left!;
   const y = Math.max(rect.y ?? rect.top!, 0);
   const w = rect.width ?? rect.right! - rect.left!;
+  const h = rect.height ?? rect.bottom! - rect.top!;
   const badgeRadius = isTouchDevice() ? BADGE_RADIUS_TOUCH : BADGE_RADIUS;
+
+  // Position de base du badge
   const badge = {
     width: badgeRadius * 2,
     height: badgeRadius * 2,
@@ -211,13 +217,46 @@ export const badgePosition = (
     centerX: 0,
     centerY: 0,
   };
+
   badge.right = badge.left + badge.width;
   if (maxWidth && badge.right > maxWidth) {
     badge.left = maxWidth - badge.width;
     badge.right = maxWidth;
   }
+
+  // Calculate the initial center of the badge
   badge.centerX = badge.left + badge.width / 2;
   badge.centerY = badge.top + badge.height / 2;
+
+  if (rotation !== 0) {
+    // Calculate the center of the rectangle
+    const rectCenterX = x + w / 2;
+    const rectCenterY = y + h / 2;
+
+    // Calculate the distance and angle between the center of the rectangle and the badge
+    const dx = badge.centerX - rectCenterX;
+    const dy = badge.centerY - rectCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const initialAngle = Math.atan2(dy, dx);
+
+    // Apply the rotation
+    const newAngle = initialAngle + (rotation * Math.PI) / 180;
+
+    // Calculate the new coordinates of the center of the badge
+    badge.centerX = rectCenterX + distance * Math.cos(newAngle);
+    badge.centerY = rectCenterY + distance * Math.sin(newAngle);
+
+    // Update the other coordinates of the badge
+    if (maxWidth) {
+      badge.centerX = Math.min(badge.centerX, maxWidth - badge.width / 2);
+    }
+    badge.centerY = Math.max(badge.centerY, badge.height / 2);
+    badge.left = badge.centerX - badge.width / 2;
+    badge.right = badge.left + badge.width;
+    badge.top = badge.centerY - badge.height / 2;
+    badge.bottom = badge.top + badge.height;
+  }
+
   return badge;
 };
 

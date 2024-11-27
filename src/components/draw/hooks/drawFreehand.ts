@@ -95,6 +95,7 @@ export class drawFreehand extends drawingHandler {
   }
 
   refreshDrawing() {
+    // console.log("refreshDrawing free curve");
     this.clearTemporyCanvas();
     this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
   }
@@ -302,7 +303,6 @@ export class drawFreehand extends drawingHandler {
       return;
     }
     this.setDrawing(false);
-
     clearCanvasByCtx(this.ctxTempory);
   }
 }

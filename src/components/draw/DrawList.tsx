@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useDesignStore } from "@/lib/stores/design";
 import { showDrawElement } from "../../lib/canvas/showDrawElement";
-import { X, RefreshCcw, GripVertical } from "lucide-react";
+import { X, RefreshCcw, GripVertical, Search } from "lucide-react";
 import {
   CanvasPointsData,
   DRAWING_MODES,
@@ -10,6 +10,9 @@ import {
 } from "@/lib/canvas/canvas-defines";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
+import { useFindElement } from "./hooks/useFindElement";
+import { useDragAndDrop } from "./hooks/useDragAndDrop";
+
 export const DrawList = ({
   canvasRef,
   canvasTemporyRef,
@@ -30,7 +33,6 @@ export const DrawList = ({
   } = useDesignStore();
 
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   const handleShowElement = (elementId: string) => {
     if (!canvasTemporyRef || !canvasTemporyRef.current) return;
@@ -43,7 +45,27 @@ export const DrawList = ({
     setSelectedDesignElement(elementId);
 
     refreshCanvas(ctx, false);
+    setFindMode(false);
     setMode(DRAWING_MODES.RELOAD);
+  };
+
+  const { findMode, setFindMode } = useFindElement({
+    canvasRef,
+    canvasTemporyRef,
+    designElements,
+    onElementFound: handleShowElement,
+  });
+
+  const handleFindMode = (value: boolean) => {
+    setFindMode(value);
+    if (value) {
+      setSelectedDesignElement(null);
+      refresh();
+      // Set cursor to hand when hovering over temporary canvas
+      if (canvasTemporyRef?.current) {
+        setMode(DRAWING_MODES.PAUSE);
+      }
+    }
   };
 
   const refresh = () => {
@@ -62,33 +84,15 @@ export const DrawList = ({
 
   const handleReset = () => {
     eraseDesignElement();
+    setFindMode(false);
     refresh();
   };
 
-  const handleDragStart = (elementId: string) => {
-    setDraggedItem(elementId);
-  };
-
-  const handleDragOver = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    if (!draggedItem || draggedItem === targetId) return;
-
-    const draggedIndex = designElements.findIndex(
-      (el) => el.id === draggedItem
-    );
-    const targetIndex = designElements.findIndex((el) => el.id === targetId);
-
-    if (draggedIndex < targetIndex) {
-      orderDesignElement(draggedItem, 1);
-    } else {
-      orderDesignElement(draggedItem, -1);
-    }
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    refresh();
-  };
+  const { draggedItem, dragItemRef } = useDragAndDrop({
+    designElements,
+    orderDesignElement,
+    onDragEnd: refresh,
+  });
 
   useEffect(() => {
     setCtx(canvasRef?.current?.getContext("2d") ?? null);
@@ -100,15 +104,32 @@ export const DrawList = ({
       className="flex flex-col gap-3 py-2 w-44 rounded-md border-2 bg-background border-accent"
     >
       {designElements.length === 0 ? (
-        <p className="italic text-gray-500">Empty list</p>
+        <p className="italic text-center text-gray-500">Empty list</p>
       ) : (
         <>
+          <div className="flex gap-2 items-center px-2">
+            <button
+              onClick={() => handleFindMode(!findMode)}
+              className={cn("btn btn-sm btn-circle", {
+                "bg-secondary": findMode,
+              })}
+              title="Find element by clicking on canvas"
+            >
+              <Search size={16} />
+            </button>
+            {findMode && (
+              <span className="text-xs italic text-gray-600">
+                Select an item in your drawing
+              </span>
+            )}
+          </div>
           <div className="flex overflow-auto flex-col gap-1 p-2 max-h-96">
             <ul className="space-y-2">
               {designElements.map(
                 (element: CanvasPointsData | ShapeDefinition) => (
                   <li
                     key={element.id}
+                    data-id={element.id}
                     className={cn(
                       "flex justify-between items-center p-1 rounded group",
                       {
@@ -120,11 +141,13 @@ export const DrawList = ({
                   >
                     <div className="flex gap-1 items-center w-full">
                       <span
-                        draggable
-                        onDragStart={() => handleDragStart(element.id)}
-                        onDragOver={(e) => handleDragOver(e, element.id)}
-                        onDragEnd={handleDragEnd}
-                        className="cursor-grab active:cursor-ns-resize"
+                        ref={dragItemRef}
+                        className={cn(
+                          "cursor-grab active:cursor-grabbing draggable-item",
+                          {
+                            "opacity-50": draggedItem === element.id,
+                          }
+                        )}
                       >
                         <div className="p-1 bg-gray-50 rounded-md opacity-50 group-hover:opacity-80">
                           <GripVertical
@@ -157,10 +180,11 @@ export const DrawList = ({
               )}
             </ul>
           </div>
-          <div className="flex justify-between items-center">
+
+          <div className="flex justify-between items-center px-2 mt-auto">
             <button
               onClick={refresh}
-              className="self-end btn btn-sm btn-circle hover:bg-gray-50"
+              className="btn btn-sm btn-circle hover:bg-gray-50"
             >
               <RefreshCcw size={16} />
             </button>

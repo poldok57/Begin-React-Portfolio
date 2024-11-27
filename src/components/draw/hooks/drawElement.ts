@@ -224,10 +224,10 @@ export class drawElement extends drawingHandler {
         this.validDrawedElement(true);
         toReset = true;
       } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
-        this.shape.changeRotation(-Math.PI / 16);
+        this.shape.changeRotation(-15);
         this.refreshDrawing(0, mouseOnShape);
       } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
-        this.shape.changeRotation(Math.PI / 16);
+        this.shape.changeRotation(15);
         this.refreshDrawing(0, mouseOnShape);
       } else {
         alertMessage("resizing: " + mouseOnShape);
@@ -278,7 +278,13 @@ export class drawElement extends drawingHandler {
 
     if (this.ctxTempory === null) return;
 
-    if (isInsideSquare(this.coordinates, this.shape.getDataSize())) {
+    if (
+      isInsideSquare(
+        this.coordinates,
+        this.shape.getDataSize(),
+        this.shape.getRotation()
+      )
+    ) {
       this.ctxTempory.globalAlpha = this.shape.getOpacity();
       this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
     }

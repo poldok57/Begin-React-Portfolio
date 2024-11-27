@@ -29,6 +29,7 @@ export interface ArgsMouseOnShape {
   withCornerButton: boolean | null;
   withTurningButtons: boolean | null;
   maxWidth: number;
+  rotation?: number;
 }
 
 export interface MouseCircle {

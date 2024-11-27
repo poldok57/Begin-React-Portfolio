@@ -31,15 +31,17 @@ export const resizingElement = (
   size: Area,
   coordinate: Coordinate,
   lockRatio: boolean,
-  mouseOnShape: string | null
+  mouseOnShape: string | null,
+  rotation: number = 0
 ) => {
   if (lockRatio && !size.ratio) {
     size.ratio = size.width / size.height;
   } else {
     size.ratio = 0;
   }
+
   if (mouseOnShape) {
-    let { newArea } = resizeSquare(coordinate, size, mouseOnShape);
+    let { newArea } = resizeSquare(coordinate, size, mouseOnShape, rotation);
     if (lockRatio && size.ratio) {
       newArea = calculateRatio(newArea, size.ratio, mouseOnShape);
     }

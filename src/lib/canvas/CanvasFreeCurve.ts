@@ -46,6 +46,7 @@ export class CanvasFreeCurve extends CanvasPoints {
 
   draw(ctx: CanvasRenderingContext2D, withDashedRectangle: boolean = false) {
     const items = this.data.items;
+
     if (items.length < 2) return;
 
     ctx.globalAlpha = this.data.general.opacity;

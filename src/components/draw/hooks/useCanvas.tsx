@@ -51,6 +51,7 @@ export const useCanvas = ({
   const lineRef = useRef<drawLine | null>(null);
   const selectionRef = useRef<drawSelection | null>(null);
   const elementRef = useRef<drawElement | null>(null);
+  const justReload = useRef(false);
 
   const { deleteLastDesignElement, refreshCanvas, getSelectedDesignElement } =
     useDesignStore.getState();
@@ -258,6 +259,11 @@ export const useCanvas = ({
       return;
     }
 
+    if (justReload.current) {
+      justReload.current = false;
+      return;
+    }
+
     const reload = newMode === DRAWING_MODES.RELOAD;
 
     const selectedDesignElement: ThingsToDraw | DesignElement | null = reload
@@ -288,6 +294,7 @@ export const useCanvas = ({
         TEMPORTY_OPACITY
       );
     }
+    // console.log("newMode", newMode, reload ? "reload" : "no reload");
 
     // set the new drawing mode
     drawingRef.current = selectDrawingHandler(newMode);
@@ -295,6 +302,8 @@ export const useCanvas = ({
     if (reload && selectedDesignElement) {
       // reload draw from history
       drawingRef.current.setDraw(selectedDesignElement);
+
+      justReload.current = true;
     }
 
     drawingRef.current.startAction();
@@ -346,7 +355,6 @@ export const useCanvas = ({
         break;
       case DRAWING_MODES.LOAD:
         {
-          // console.log("LOAD", event.detail, "type", currentParams.mode);
           const name = event.detail.name || "your file";
 
           if (selectionRef.current === null) {
@@ -552,7 +560,6 @@ export const useCanvas = ({
     };
 
     const handleTouchStart = (event: TouchEvent) => {
-      // console.log("touchstart");
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
       if (mouseIsInsideComponent(event, canvasTemporyRef.current)) {
         event.preventDefault();
@@ -566,7 +573,6 @@ export const useCanvas = ({
       if (!canvasTemporyRef.current) return;
 
       if (mouseIsInsideComponent(event, canvasTemporyRef.current)) {
-        // console.log("touchmove inside preventDefault");
         event.preventDefault();
       }
 

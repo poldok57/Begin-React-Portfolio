@@ -41,7 +41,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
    * @param {number} angle - The angle to rotate the text in grad
    */
   const handleTextRotation = (angle: number) => {
-    const newAngle = drawingParams.text.rotation + angle;
+    const newAngle = (drawingParams.text.rotation + angle + 360) % 360;
     handleText({ rotation: newAngle });
   };
 
@@ -137,16 +137,10 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           />
         </label>
         <div className="flex flex-row gap-3">
-          <Button
-            className="px-3 py-1"
-            onClick={() => handleTextRotation(-Math.PI / 16)}
-          >
+          <Button className="px-3 py-1" onClick={() => handleTextRotation(-15)}>
             <TbRotate2 size="20px" />
           </Button>
-          <Button
-            className="px-3 py-1"
-            onClick={() => handleTextRotation(Math.PI / 16)}
-          >
+          <Button className="px-3 py-1" onClick={() => handleTextRotation(15)}>
             <TbRotateClockwise2 size="20px" />
           </Button>
         </div>

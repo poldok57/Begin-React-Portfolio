@@ -117,10 +117,13 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.general = { ...data };
   }
   changeRotation(rotation: number): void {
-    this.data.rotation += rotation;
+    this.data.rotation = (this.data.rotation + rotation + 360) % 360;
   }
   setRotation(rotation: number): void {
     this.data.rotation = rotation;
+  }
+  getRotation() {
+    return this.data.rotation;
   }
   setDataBorder(data: ParamsGeneral) {
     this.data.border = { ...data };
@@ -227,7 +230,8 @@ export class CanvasShape extends CanvasDrawableObject {
       this.data.size,
       coordinates,
       lockRatio,
-      witchBorder
+      witchBorder,
+      this.data.rotation
     );
 
     if (newCoord) {
@@ -255,6 +259,7 @@ export class CanvasShape extends CanvasDrawableObject {
       withCornerButton: this.data.withCornerButton || false,
       withTurningButtons: this.data.withTurningButtons || false,
       maxWidth: canvas.width,
+      rotation: this.data.rotation,
     };
 
     return isOnSquareBorder(argsMouseOnShape);
