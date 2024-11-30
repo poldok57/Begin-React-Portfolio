@@ -9,6 +9,38 @@ import {
   resizeRect,
 } from "./mouse-position";
 
+export const rotateMouseCoord = (
+  coord: Coordinate,
+  rect: Rectangle | Area,
+  angle: number
+) => {
+  const x = "left" in rect ? rect.left : rect.x;
+  const y = "top" in rect ? rect.top : rect.y;
+
+  // Calculate the center of the rectangle
+  const centerX = x + rect.width / 2;
+  const centerY = y + rect.height / 2;
+
+  // Transform the coordinates of the point to cancel the rotation
+  const angleRad = (angle * Math.PI) / 180;
+  const cos = Math.cos(-angleRad);
+  const sin = Math.sin(-angleRad);
+
+  // Translate the point relative to the rotation center
+  const dx = coord.x - centerX;
+  const dy = coord.y - centerY;
+
+  // Apply the inverse rotation
+  const rotatedX = dx * cos - dy * sin + centerX;
+  const rotatedY = dx * sin + dy * cos + centerY;
+
+  // Create a point with the transformed coordinates
+  return {
+    x: rotatedX,
+    y: rotatedY,
+  } as Coordinate;
+};
+
 /**
  * is the mouse inside the square
  */
@@ -28,29 +60,14 @@ export const isInsideSquare = (
     );
   }
 
-  // Calculer le centre du rectangle
-  const centerX = size.x + size.width / 2;
-  const centerY = size.y + size.height / 2;
-
-  // Transformer les coordonnées du point pour annuler la rotation
-  const angleRad = (angle * Math.PI) / 180;
-  const cos = Math.cos(-angleRad);
-  const sin = Math.sin(-angleRad);
-
-  // Translater le point par rapport au centre de rotation
-  const dx = coord.x - centerX;
-  const dy = coord.y - centerY;
-
-  // Appliquer la rotation inverse
-  const rotatedX = dx * cos - dy * sin + centerX;
-  const rotatedY = dx * sin + dy * cos + centerY;
+  const rotatedCoord = rotateMouseCoord(coord, size, angle);
 
   // Vérifier si le point transformé est dans le rectangle non-rotaté
   return (
-    rotatedX >= size.x &&
-    rotatedX <= size.x + size.width &&
-    rotatedY >= size.y &&
-    rotatedY <= size.y + size.height
+    rotatedCoord.x >= size.x &&
+    rotatedCoord.x <= size.x + size.width &&
+    rotatedCoord.y >= size.y &&
+    rotatedCoord.y <= size.y + size.height
   );
 };
 
@@ -64,31 +81,10 @@ export const mouseIsOnBorderSquare = (
     return mouseIsOnBorderRect(coord, rect);
   }
 
-  // Calculate the center of the rectangle
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-
-  // Transform the coordinates of the point to cancel the rotation
-  const angleRad = (angle * Math.PI) / 180;
-  const cos = Math.cos(-angleRad);
-  const sin = Math.sin(-angleRad);
-
-  // Translate the point relative to the rotation center
-  const dx = coord.x - centerX;
-  const dy = coord.y - centerY;
-
-  // Apply the inverse rotation
-  const rotatedX = dx * cos - dy * sin + centerX;
-  const rotatedY = dx * sin + dy * cos + centerY;
-
-  // Create a point with the transformed coordinates
-  const transformedCoord: Coordinate = {
-    x: rotatedX,
-    y: rotatedY,
-  };
+  const rotatedCoord = rotateMouseCoord(coord, rect, angle);
 
   // Use mouseIsOnBorderRect with the transformed coordinates
-  return mouseIsOnBorderRect(transformedCoord, rect);
+  return mouseIsOnBorderRect(rotatedCoord, rect);
 };
 
 export const getSquareOffset = (coord: Coordinate, square: Coordinate) => {
@@ -153,53 +149,12 @@ export const resizeSquare = (
   border: string,
   rotation: number = 0
 ) => {
-  // Si pas de rotation, utiliser la logique existante
-  if (rotation === 0) {
-    const newArea: Area = { ...coordinate } as Area;
-    const rect: Rectangle = {
-      left: area.x,
-      top: area.y,
-      width: area.width,
-      height: area.height,
-      right: area.x + area.width,
-      bottom: area.y + area.height,
-    };
-
-    const newSquare = resizeRect(newArea, rect, border);
-    newArea.x = newSquare.left;
-    newArea.y = newSquare.top;
-    newArea.width = newSquare.width;
-    newArea.height = newSquare.height;
-
-    return { newArea, newSquare };
+  // if rotation calculate mouse position
+  if (rotation !== 0) {
+    const rotatedCoord = rotateMouseCoord(coordinate, area, rotation);
+    coordinate = rotatedCoord;
   }
-
-  // Calculer le centre du rectangle
-  const centerX = area.x + area.width / 2;
-  const centerY = area.y + area.height / 2;
-
-  // Transformer les coordonnées du point pour annuler la rotation
-  const angleRad = (rotation * Math.PI) / 180;
-  const cos = Math.cos(-angleRad);
-  const sin = Math.sin(-angleRad);
-
-  // Translater le point par rapport au centre de rotation
-  const dx = coordinate.x - centerX;
-  const dy = coordinate.y - centerY;
-
-  // Appliquer la rotation inverse
-  const rotatedX = dx * cos - dy * sin + centerX;
-  const rotatedY = dx * sin + dy * cos + centerY;
-
-  // Créer un point avec les coordonnées transformées
-  const transformedCoord: Coordinate = {
-    x: rotatedX,
-    y: rotatedY,
-  };
-
-  console.log("transformedCoord", transformedCoord);
-
-  // Utiliser la logique de redimensionnement existante avec les coordonnées transformées
+  const newArea: Area = { ...coordinate } as Area;
   const rect: Rectangle = {
     left: area.x,
     top: area.y,
@@ -209,28 +164,11 @@ export const resizeSquare = (
     bottom: area.y + area.height,
   };
 
-  const newSquare = resizeRect(transformedCoord, rect, border);
+  const newSquare = resizeRect(newArea, rect, border);
+  newArea.x = newSquare.left;
+  newArea.y = newSquare.top;
+  newArea.width = newSquare.width;
+  newArea.height = newSquare.height;
 
-  // Créer la nouvelle zone
-  const newArea: Area = {
-    x: newSquare.left,
-    y: newSquare.top,
-    width: newSquare.width,
-    height: newSquare.height,
-  };
-
-  // Appliquer la rotation inverse aux nouvelles coordonnées
-  const newCenterX = newArea.x + newArea.width / 2;
-  const newCenterY = newArea.y + newArea.height / 2;
-  const newDx = newArea.x - newCenterX;
-  const newDy = newArea.y - newCenterY;
-
-  // Rotation dans le sens original
-  const finalX = newCenterX + (newDx * cos + newDy * sin);
-  const finalY = newCenterY + (-newDx * sin + newDy * cos);
-
-  newArea.x = finalX;
-  newArea.y = finalY;
-
-  return { newArea, newSquare: newArea };
+  return { newArea, newSquare };
 };

@@ -137,6 +137,8 @@ export class CanvasPath extends CanvasPoints {
       return true;
     }
 
+    // console.error("draw path", this.data.items);
+
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
     ctx.strokeStyle = "#000000";
@@ -292,7 +294,7 @@ export class CanvasPath extends CanvasPoints {
       type: line.type,
       end: roundCoordinates(line.end),
     };
-    if (line.coordinates) {
+    if (line.type === LineType.CURVE && line.coordinates) {
       newLine.coordinates = roundCoordinates(line.coordinates);
     }
     if (line.strokeStyle && line.strokeStyle !== strokeStyle) {

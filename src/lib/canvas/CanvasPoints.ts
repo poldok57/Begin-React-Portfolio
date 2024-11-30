@@ -378,8 +378,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   );
 
   moveAngle(newCoord: Coordinate) {
+    newCoord.x = Math.round(newCoord.x);
+    newCoord.y = Math.round(newCoord.y);
     if (this.angleFound === 0) {
-      // first angle
+      // first angle on a closed path
 
       const lastItem = this.getLastItem();
       const firstItem = this.data.items[0];
@@ -394,13 +396,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       ) {
         lastItem.end = { ...newCoord };
         firstItem.end = { ...newCoord };
-      }
 
-      this.data.size = this.getArea(newCoord);
-      return true;
+        this.data.size = this.getArea(newCoord);
+        return true;
+      }
     }
 
-    if (this.angleFound > 0 && this.angleFound <= this.data.items.length) {
+    if (this.angleFound >= 0 && this.angleFound <= this.data.items.length) {
       const line = this.data.items[this.angleFound];
       if ("end" in line) {
         line.end = newCoord;

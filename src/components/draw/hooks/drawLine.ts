@@ -48,8 +48,6 @@ export class drawLine extends drawingHandler {
     } else {
       this.line.setType(LineType.LINE);
     }
-
-    // console.log("setType", type);
   }
 
   setCoordinates(coord: Coordinate) {
@@ -257,7 +255,7 @@ export class drawLine extends drawingHandler {
           this.path.addLine(this.line as LinePath);
           this.line.setStartFromEnd();
         }
-        this.drawTmpPath();
+        this.path?.draw(this.ctxTempory, this.withPath);
 
         toExtend = true;
         break;
@@ -330,14 +328,12 @@ export class drawLine extends drawingHandler {
     coord: Coordinate
   ): returnMouseDown {
     // first point must be inside the canvas
-    // console.log("actionMouseDown start:", this.line.getStartCoordinates());
     if (
       this.line.getStartCoordinates() == null &&
       !mouseIsInsideComponent(event, this.mCanvas)
     ) {
       return { toExtend: false, toReset: false, pointer: "default" };
     }
-    // color and width painting
     this.setCoordinates(coord);
     let toExtend = false;
     const pointer = "none";
@@ -433,8 +429,15 @@ export class drawLine extends drawingHandler {
     if (this.line.getStartCoordinates() == null) {
       this.line.setStartCoordinates();
       this.hasBeenTouched = true;
+
+      this.initPath(false);
       return {};
     }
+
+    // this.showLineAndArc(false);
+
+    // we are drawing a path
+    this.withPath = true;
 
     if (this.getType() === DRAWING_MODES.ARC) {
       this.clicOnArcEnd(coord);
@@ -454,9 +457,12 @@ export class drawLine extends drawingHandler {
       this.hasBeenTouched = false;
       return;
     }
-    if (this.path) {
-      this.showLineAndArc(this.withPath);
+
+    if (!this.path && this.line.getCoordinates() == null) {
+      return;
     }
+
+    this.showLineAndArc(this.withPath);
     if (this.ctxTempory) {
       this.line.showLineEnds(this.ctxTempory, true);
     }
@@ -551,7 +557,6 @@ export class drawLine extends drawingHandler {
 
   actionEndPath(eventAction: string) {
     if (this.withPath && this.path) {
-      // console.log("close path", this.path);
       if (eventAction === DRAWING_MODES.CLOSE_PATH) {
         this.path.close();
       }
