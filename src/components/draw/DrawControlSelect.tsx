@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { BsCircleHalf } from "react-icons/bs";
 import clsx from "clsx";
 import { Button } from "../atom/Button";
@@ -7,6 +7,9 @@ import {
   DRAWING_MODES,
   isDrawingSelect,
   EventModeAction,
+  GroupParams,
+  Params,
+  AllParams,
 } from "../../lib/canvas/canvas-defines";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { MutableRefObject } from "react";
@@ -15,8 +18,10 @@ import { MutableRefObject } from "react";
 interface DrawControlSelectProps {
   mode: string;
   setMode: (mode: string) => void;
+  drawingParams: AllParams;
   handleChangeRatio: (value: boolean) => void;
   handleChangeRadius: (value: number) => void;
+  handleParamChange: (params: GroupParams) => void;
   handleImage: (action: string) => void;
   addEventDetail: (detail: EventModeAction) => void;
   isTouch?: boolean;
@@ -25,12 +30,15 @@ interface DrawControlSelectProps {
 export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
   mode,
   setMode,
+  drawingParams,
   handleChangeRatio,
   handleChangeRadius,
+  handleParamChange,
   handleImage,
   addEventDetail,
   isTouch = false,
 }) => {
+  const [modeImage, setModeImage] = useState(false);
   const [isBlackWhite, setBlackWhite] = useState(false);
   const dialogRef: MutableRefObject<HTMLDialogElement | null> = useRef(null);
 
@@ -40,6 +48,15 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
   ) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action, value });
   };
+  const handleShape = (param: Params) => {
+    drawingParams.shape = { ...drawingParams.shape, ...param };
+    handleParamChange({ shape: drawingParams.shape });
+  };
+
+  useEffect(() => {
+    setModeImage(mode === DRAWING_MODES.IMAGE);
+    setBlackWhite(drawingParams.shape.blackWhite || false);
+  }, [mode, drawingParams.shape]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) {
@@ -113,18 +130,19 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
             onChange={handleFileChange}
           />
         </ButtonConfirmModal>
-        {mode === DRAWING_MODES.IMAGE && (
+        {modeImage && (
           <RangeInput
             className="w-20 h-4 bg-gray-300 opacity-70 transition-opacity outline-none hover:opacity-100"
             id="transparency-picker"
             label="Detouring"
-            value={0}
+            value={drawingParams.shape.transparency || 0}
             min="0"
             max="200"
             step="3"
-            onChange={(value) =>
-              addEventActionValue(DRAWING_MODES.TRANSPARENCY, value)
-            }
+            onChange={(value) => {
+              handleShape({ transparency: value });
+              addEventActionValue(DRAWING_MODES.TRANSPARENCY, value);
+            }}
             isTouch={isTouch}
           />
         )}
@@ -137,6 +155,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           })}
           onClick={() => {
             setBlackWhite(!isBlackWhite);
+            handleShape({ blackWhite: !isBlackWhite });
             addEventActionValue(DRAWING_MODES.BLACK_WHITE, !isBlackWhite);
           }}
         >
@@ -146,7 +165,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           className="w-20 h-2 bg-gray-300 opacity-70 transition-opacity outline-none hover:opacity-100"
           id="select-radius-picker"
           label="Radius"
-          value={0}
+          value={drawingParams.shape.radius || 0}
           min="0"
           max="150"
           step="1"

@@ -32,45 +32,10 @@ export const showDrawElement = (
   }
 
   canvasObject.setData(element);
-  canvasObject.draw(ctx, withDetails);
+  setTimeout(() => {
+    canvasObject.draw(ctx, withDetails);
+  }, 50);
 };
-
-// export const isInside = (size: Area, angle: number, coord: Coordinate) => {
-//   if (angle === 0) {
-//     // Si pas de rotation, calcul simple
-//     return (
-//       coord.x >= size.x &&
-//       coord.x <= size.x + size.width &&
-//       coord.y >= size.y &&
-//       coord.y <= size.y + size.height
-//     );
-//   }
-
-//   // Calculer le centre du rectangle
-//   const centerX = size.x + size.width / 2;
-//   const centerY = size.y + size.height / 2;
-
-//   // Transformer les coordonnées du point pour annuler la rotation
-//   const angleRad = (angle * Math.PI) / 180;
-//   const cos = Math.cos(-angleRad);
-//   const sin = Math.sin(-angleRad);
-
-//   // Translater le point par rapport au centre de rotation
-//   const dx = coord.x - centerX;
-//   const dy = coord.y - centerY;
-
-//   // Appliquer la rotation inverse
-//   const rotatedX = dx * cos - dy * sin + centerX;
-//   const rotatedY = dx * sin + dy * cos + centerY;
-
-//   // Vérifier si le point transformé est dans le rectangle non-rotaté
-//   return (
-//     rotatedX >= size.x &&
-//     rotatedX <= size.x + size.width &&
-//     rotatedY >= size.y &&
-//     rotatedY <= size.y + size.height
-//   );
-// };
 
 export const showAllDashedRectangles = (
   ctx: CanvasRenderingContext2D,

@@ -137,7 +137,12 @@ export const DrawList = ({
                           element.id === selectedDesignElement,
                       }
                     )}
-                    style={{ backgroundColor: element.general.color }}
+                    style={{
+                      backgroundColor:
+                        element.type !== DRAWING_MODES.IMAGE
+                          ? element.general.color
+                          : undefined,
+                    }}
                   >
                     <div className="flex gap-1 items-center w-full">
                       <span

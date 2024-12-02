@@ -1,9 +1,5 @@
 import { Area, Size } from "@/lib/canvas/types";
 import {
-  makeWhiteTransparent,
-  makeWhiteTransparent2,
-} from "@/lib/canvas/image-transparency";
-import {
   DRAWING_MODES,
   // AllParams,
   ShapeDefinition,
@@ -86,10 +82,13 @@ export class drawSelection extends drawElement {
         const rect = imageSize(this.mCanvas);
         this.memorizeSelectedArea(rect);
         this.shape.setWithAllButtons(false);
+        this.shape.setTransparency(0);
         this.shape.setCanvasImageTransparent(null);
+
         break;
       case DRAWING_MODES.IMAGE:
         this.shape.setWithAllButtons(true);
+        this.shape.setTransparency(0);
         this.shape.setCanvasImageTransparent(null);
     }
   }
@@ -133,28 +132,9 @@ export class drawSelection extends drawElement {
    * Function to change white to transparent in the selected zone
    */
   transparencySelection(delta: number) {
-    // console.log("transparency " + delta);
-    if (delta <= 0) {
-      // Reset the transparency
-      this.shape.setCanvasImageTransparent(null);
-    } else {
-      this.shape.setCanvasImageTransparent(document.createElement("canvas"));
-
-      if (delta < 100)
-        makeWhiteTransparent(
-          this.shape.getCanvasImage() ?? null,
-          this.shape.getCanvasImageTransparent() ?? null,
-          delta
-        );
-      else
-        makeWhiteTransparent2(
-          this.shape.getCanvasImage() ?? null,
-          this.shape.getCanvasImageTransparent() ?? null,
-          delta
-        );
+    if (this.shape.transparencySelection(delta)) {
+      this.refreshDrawing(1, BORDER.INSIDE);
     }
-
-    this.refreshDrawing(1, BORDER.INSIDE);
   }
 
   /**
@@ -237,8 +217,8 @@ export class drawSelection extends drawElement {
       const ratio = img.width / img.height;
       ctx.drawImage(img, 0, 0);
       this.shape.setCanvasImage(virtualCanvas);
+      this.shape.setTransparency(0);
       this.shape.setCanvasImageTransparent(null);
-
       alertMessage(
         "Image '" + name + "' loaded w:" + img.width + " h:" + img.height
       );
@@ -250,7 +230,9 @@ export class drawSelection extends drawElement {
       this.originalSize = { ...area };
 
       this.setType(DRAWING_MODES.IMAGE);
-      this.refreshDrawing(0, BORDER.INSIDE);
+      setTimeout(() => {
+        this.refreshDrawing(0, BORDER.INSIDE);
+      }, 50);
     };
     img.onerror = () => {
       alertMessage("Error loading the file");

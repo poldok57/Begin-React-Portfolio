@@ -1,13 +1,33 @@
 export const makeWhiteTransparent = (
-  canvas: HTMLCanvasElement | null,
-  canvasDest: HTMLCanvasElement | null,
+  canvas: HTMLCanvasElement,
   clarityLevel: number
-): void => {
-  if (canvas === null) return;
-  if (!canvasDest) canvasDest = canvas;
+): HTMLCanvasElement => {
   const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-  const ctxDest: CanvasRenderingContext2D = canvasDest?.getContext("2d") || ctx;
+
+  let imageData: ImageData;
+
+  if (clarityLevel === 0 || clarityLevel > 255)
+    imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+  else if (clarityLevel < 100)
+    imageData = transparencyWhiteLevel(ctx, clarityLevel);
+  else imageData = transparencyGrayLevel(ctx, clarityLevel);
+
+  // new destination canvas
+  const canvasDest = document.createElement("canvas");
+  const ctxDest = canvasDest.getContext("2d")!;
+  canvasDest.width = ctx.canvas.width;
+  canvasDest.height = ctx.canvas.height;
+  ctxDest.putImageData(imageData, 0, 0);
+
+  return canvasDest;
+};
+
+const transparencyWhiteLevel = (
+  ctx: CanvasRenderingContext2D,
+  clarityLevel: number
+): ImageData => {
   const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+
   const data = imageData.data;
   const maxWhite = 255 - clarityLevel;
   const maxTotal = 3.2 * maxWhite;
@@ -25,54 +45,34 @@ export const makeWhiteTransparent = (
       data[i + 3] = 0;
     }
   }
-  // remove transparency from the subject
-  canvasDest.width = canvas.width;
-  canvasDest.height = canvas.height;
 
-  // searchSubject(imageData);
-  ctxDest.putImageData(imageData, 0, 0);
+  return imageData;
 };
 
-export const makeWhiteTransparent2 = (
-  canvas: HTMLCanvasElement | null,
-  canvasDest: HTMLCanvasElement | null,
+export const transparencyGrayLevel = (
+  ctx: CanvasRenderingContext2D,
   clarityLevel: number
-): void => {
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Could not get 2D context");
-  }
-  const width = canvas.width;
-  const height = canvas.height;
+): ImageData => {
+  const width = ctx.canvas.width;
+  const height = ctx.canvas.height;
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
 
   clarityLevel = 255 - clarityLevel;
-  // Première passe : Supprimer les points clairs
+  // First pass: Remove the light points
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
 
-    // Convertir la couleur en niveau de gris
+    // Convert the color to gray level
     const gray = 0.3 * r + 0.59 * g + 0.11 * b;
 
-    // Supprimer les points clairs proches du gris
+    // Remove the light points close to gray
     if (gray > clarityLevel) {
-      data[i + 3] = 0; // Rendre transparent
+      data[i + 3] = 0; // Make transparent
     }
   }
 
-  if (canvasDest === null) {
-    ctx.putImageData(imageData, 0, 0);
-    return;
-  }
-  // put the modified image data in a new canvas
-  canvasDest.width = canvas.width;
-  canvasDest.height = canvas.height;
-  // Mettre à jour l'image après la deuxième passe
-  const ctxDest = canvasDest?.getContext("2d") || ctx;
-
-  ctxDest.putImageData(imageData, 0, 0);
+  return imageData;
 };

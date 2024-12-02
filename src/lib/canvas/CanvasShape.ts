@@ -17,6 +17,8 @@ import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { showElement } from "./canvas-elements";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
+import { imageLoadInCanvas } from "./image-load";
+import { makeWhiteTransparent } from "./image-transparency";
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
@@ -61,10 +63,11 @@ export class CanvasShape extends CanvasDrawableObject {
 
     if (d.type === DRAWING_MODES.IMAGE) {
       cpy.blackWhite = d.blackWhite;
-      cpy.canvasImage = d.canvasImage;
-      cpy.canvasImageTransparent = d.canvasImageTransparent;
+      if (d.transparency) {
+        cpy.transparency = d.transparency;
+      }
+      cpy.dataURL = d.canvasImage?.toDataURL();
     }
-
     return cpy;
   }
 
@@ -72,7 +75,29 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.id = id;
   }
 
-  setData(data: ShapeDefinition) {
+  private async loadImage(dataURL: string) {
+    try {
+      const canvas = await imageLoadInCanvas(dataURL);
+      do {
+        if (canvas) {
+          this.data.canvasImage = canvas;
+          if (this.data.transparency) {
+            const newCanvas = makeWhiteTransparent(
+              canvas,
+              this.data.transparency
+            );
+            this.data.canvasImageTransparent = newCanvas;
+          }
+        } else {
+          setTimeout(() => {}, 10);
+        }
+      } while (canvas === null);
+    } catch (error) {
+      console.error("Error loading image", error);
+    }
+  }
+
+  async setData(data: ShapeDefinition) {
     this.data = { ...data };
 
     if (!data.shape?.withBorder && data.border) {
@@ -86,6 +111,13 @@ export class CanvasShape extends CanvasDrawableObject {
     ) {
       console.log(data.type, "withText error", data.text);
       this.data.text = undefined;
+    }
+
+    if (this.data.type === DRAWING_MODES.IMAGE && data.dataURL) {
+      await this.loadImage(data.dataURL);
+      if (data.transparency) {
+        this.data.transparency = data.transparency;
+      }
     }
 
     this.calculateWithTurningButtons(data.type);
@@ -144,8 +176,6 @@ export class CanvasShape extends CanvasDrawableObject {
     }
     this.data.size.ratio = 0;
 
-    this.data.canvasImage = null;
-    this.data.canvasImageTransparent = null;
     this.data.withTurningButtons = true;
   }
   changeData(param: AllParams) {
@@ -155,6 +185,23 @@ export class CanvasShape extends CanvasDrawableObject {
     this.setDataText(param.text);
 
     this.data.type = param.mode;
+  }
+
+  transparencySelection(delta: number) {
+    if (delta <= 0) {
+      // Reset the transparency
+      this.data.transparency = 0;
+      this.data.canvasImageTransparent = null;
+      return true;
+    }
+    const canvas = this.data.canvasImage;
+    if (canvas) {
+      const newCanvas = makeWhiteTransparent(canvas, delta);
+      this.data.canvasImageTransparent = newCanvas;
+      this.data.transparency = delta;
+      return true;
+    }
+    return false;
   }
 
   setWithTurningButtons(value: boolean) {
@@ -202,19 +249,25 @@ export class CanvasShape extends CanvasDrawableObject {
     return this.data.general.opacity;
   }
 
-  setCanvasImage(value: HTMLCanvasElement | null) {
-    this.data.canvasImage = value;
+  setDataURL(value: string | null) {
+    this.data.dataURL = value;
   }
   getCanvasImage() {
     return this.data.canvasImage;
   }
+  setCanvasImage(value: HTMLCanvasElement | null) {
+    this.data.canvasImage = value;
+  }
   setCanvasImageTransparent(value: HTMLCanvasElement | null) {
     this.data.canvasImageTransparent = value;
   }
-  getCanvasImageTransparent() {
-    return this.data.canvasImageTransparent;
+  setTransparency(value: number) {
+    this.data.transparency = value;
   }
 
+  getDataURL() {
+    return this.data.dataURL;
+  }
   setBlackWhite(value: boolean) {
     this.data.blackWhite = value;
   }

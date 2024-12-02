@@ -304,6 +304,7 @@ export const useCanvas = ({
       drawingRef.current.setDraw(selectedDesignElement);
 
       justReload.current = true;
+      return;
     }
 
     drawingRef.current.startAction();

@@ -146,6 +146,8 @@ export type ParamsShape = {
   radius?: number;
   withText?: boolean;
   withBorder?: boolean;
+  transparency?: number;
+  blackWhite?: boolean;
 };
 export type ParamsText = {
   text: string;
@@ -198,8 +200,10 @@ export interface CanvasPointsData extends ThingsToDraw {
 }
 export interface ShapeDefinition extends ThingsToDraw {
   blackWhite?: boolean;
+  transparency?: number;
   canvasImage?: HTMLCanvasElement | null;
   canvasImageTransparent?: HTMLCanvasElement | null;
+  dataURL?: string | null;
   shape?: ParamsShape;
   border?: ParamsGeneral;
   text?: ParamsText;

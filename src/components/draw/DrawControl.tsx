@@ -301,6 +301,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleImage={handleImage}
           handleChangeRatio={handleChangeRatio}
           handleChangeRadius={handleChangeRadius}
+          handleParamChange={handleParamChange}
+          drawingParams={drawingParams}
           addEventDetail={addEventDetail}
           isTouch={isTouch}
         />

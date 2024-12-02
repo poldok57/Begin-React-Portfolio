@@ -23,7 +23,7 @@ export class drawElement extends drawingHandler {
   protected fixed: boolean = false;
   protected resizingBorder: string | null = null;
   protected offset: Coordinate | null = null;
-  protected shape: CanvasShape;
+  protected   shape: CanvasShape;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -64,8 +64,8 @@ export class drawElement extends drawingHandler {
     return this.shape.getType();
   }
 
-  setDraw(draw: ShapeDefinition) {
-    this.shape.setData(draw);
+  async setDraw(draw: ShapeDefinition) {
+    await this.shape.setData(draw);
   }
 
   getDraw(): ShapeDefinition | null {
