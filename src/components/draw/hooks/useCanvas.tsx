@@ -395,22 +395,10 @@ export const useCanvas = ({
         alertMessage("Cut the selection");
         selectionRef.current.cutSelection();
         break;
-      case DRAWING_MODES.TRANSPARENCY:
-        if (selectionRef.current !== null) {
-          alertMessage("Transparency (" + value + ") on selection");
-          selectionRef.current.transparencySelection(value as number);
-        }
-        break;
       case DRAWING_MODES.IMAGE_RADIUS:
         if (selectionRef.current !== null) {
           alertMessage("Radius (" + value + ") on selection");
           selectionRef.current.radiusSelection(value as number);
-        }
-        break;
-      case DRAWING_MODES.BLACK_WHITE:
-        if (selectionRef.current !== null) {
-          alertMessage("Black and white on selection");
-          selectionRef.current.blackWhiteSelection(value as boolean);
         }
         break;
       case DRAWING_MODES.CLOSE_PATH:

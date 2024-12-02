@@ -13,13 +13,11 @@ const DRAWING_ACTIONS = {
 
 const IMAGE_ACTIONS = {
   IMAGE_RADIUS: "imageRadius",
-  TRANSPARENCY: "transparency",
   CUT: "cut",
   COPY: "copy",
   PASTE: "paste",
   DELETE: "delete",
   SELECT_AREA: "selectArea",
-  BLACK_WHITE: "blackWhite",
 };
 
 export const SHAPE_TYPE = {
@@ -44,7 +42,6 @@ export const DRAWING_MODES = {
   PAUSE: "pause",
   LINE: "line",
   ARC: "arc",
-  // PATH: "path",
   END_PATH: "endPath",
   ERASE: "erase",
   RELOAD: "reload",
@@ -65,7 +62,6 @@ export const DRAWING_MODES = {
 const LINE_MODES = [
   DRAWING_MODES.LINE,
   DRAWING_MODES.ARC,
-  // DRAWING_MODES.PATH,
   DRAWING_MODES.LINES_PATH,
   DRAWING_MODES.END_PATH,
 ];
@@ -199,8 +195,7 @@ export interface CanvasPointsData extends ThingsToDraw {
   items: LinePath[] | Coordinate[];
 }
 export interface ShapeDefinition extends ThingsToDraw {
-  blackWhite?: boolean;
-  transparency?: number;
+  // transparency?: number;
   canvasImage?: HTMLCanvasElement | null;
   canvasImageTransparent?: HTMLCanvasElement | null;
   dataURL?: string | null;

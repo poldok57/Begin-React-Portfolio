@@ -42,12 +42,6 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
   const [isBlackWhite, setBlackWhite] = useState(false);
   const dialogRef: MutableRefObject<HTMLDialogElement | null> = useRef(null);
 
-  const addEventActionValue = (
-    action: string,
-    value: string | number | boolean
-  ) => {
-    addEventDetail({ mode: DRAWING_MODES.ACTION, action, value });
-  };
   const handleShape = (param: Params) => {
     drawingParams.shape = { ...drawingParams.shape, ...param };
     handleParamChange({ shape: drawingParams.shape });
@@ -141,7 +135,6 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
             step="3"
             onChange={(value) => {
               handleShape({ transparency: value });
-              addEventActionValue(DRAWING_MODES.TRANSPARENCY, value);
             }}
             isTouch={isTouch}
           />
@@ -156,7 +149,6 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           onClick={() => {
             setBlackWhite(!isBlackWhite);
             handleShape({ blackWhite: !isBlackWhite });
-            addEventActionValue(DRAWING_MODES.BLACK_WHITE, !isBlackWhite);
           }}
         >
           <BsCircleHalf />

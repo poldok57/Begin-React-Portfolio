@@ -22,6 +22,7 @@ import { makeWhiteTransparent } from "./image-transparency";
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
+  private previousTransparency: number = 0;
 
   constructor() {
     super();
@@ -62,10 +63,6 @@ export class CanvasShape extends CanvasDrawableObject {
     }
 
     if (d.type === DRAWING_MODES.IMAGE) {
-      cpy.blackWhite = d.blackWhite;
-      if (d.transparency) {
-        cpy.transparency = d.transparency;
-      }
       cpy.dataURL = d.canvasImage?.toDataURL();
     }
     return cpy;
@@ -81,12 +78,13 @@ export class CanvasShape extends CanvasDrawableObject {
       do {
         if (canvas) {
           this.data.canvasImage = canvas;
-          if (this.data.transparency) {
+          if (this.data.shape?.transparency) {
             const newCanvas = makeWhiteTransparent(
               canvas,
-              this.data.transparency
+              this.data.shape.transparency
             );
             this.data.canvasImageTransparent = newCanvas;
+            this.previousTransparency = this.data.shape.transparency;
           }
         } else {
           setTimeout(() => {}, 10);
@@ -115,9 +113,6 @@ export class CanvasShape extends CanvasDrawableObject {
 
     if (this.data.type === DRAWING_MODES.IMAGE && data.dataURL) {
       await this.loadImage(data.dataURL);
-      if (data.transparency) {
-        this.data.transparency = data.transparency;
-      }
     }
 
     this.calculateWithTurningButtons(data.type);
@@ -161,7 +156,11 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.border = { ...data };
   }
   setDataShape(data: ParamsShape) {
+    // console.log("setDataShape", data);
     this.data.shape = { ...data };
+    if (data?.transparency && data.transparency !== this.previousTransparency) {
+      this.transparencySelection(data.transparency);
+    }
   }
   setDataText(data: ParamsText) {
     this.data.text = { ...data };
@@ -190,7 +189,11 @@ export class CanvasShape extends CanvasDrawableObject {
   transparencySelection(delta: number) {
     if (delta <= 0) {
       // Reset the transparency
-      this.data.transparency = 0;
+      if (this.data.shape) {
+        this.data.shape.transparency = 0;
+      } else {
+        this.data.shape = { transparency: 0 };
+      }
       this.data.canvasImageTransparent = null;
       return true;
     }
@@ -198,7 +201,12 @@ export class CanvasShape extends CanvasDrawableObject {
     if (canvas) {
       const newCanvas = makeWhiteTransparent(canvas, delta);
       this.data.canvasImageTransparent = newCanvas;
-      this.data.transparency = delta;
+      if (this.data.shape) {
+        this.data.shape.transparency = delta;
+      } else {
+        this.data.shape = { transparency: delta };
+      }
+      this.previousTransparency = delta;
       return true;
     }
     return false;
@@ -262,14 +270,15 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.canvasImageTransparent = value;
   }
   setTransparency(value: number) {
-    this.data.transparency = value;
+    if (this.data.shape) {
+      this.data.shape.transparency = value;
+    } else {
+      this.data.shape = { transparency: value };
+    }
   }
 
   getDataURL() {
     return this.data.dataURL;
-  }
-  setBlackWhite(value: boolean) {
-    this.data.blackWhite = value;
   }
 
   resizingElement(
@@ -340,6 +349,7 @@ export class CanvasShape extends CanvasDrawableObject {
     temporyDraw?: boolean,
     borderInfo?: string | null
   ) {
+    // console.log("draw", this.data);
     if (temporyDraw) {
       this.showElementThrottled(ctx, this.data, temporyDraw, borderInfo);
     } else {

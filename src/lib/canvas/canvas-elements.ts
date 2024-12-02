@@ -468,7 +468,7 @@ const shapeDrawing = (
   }
   if (!square.shape) return;
 
-  const { radius = 0, filled } = square.shape;
+  const { radius = 0, filled, blackWhite = false } = square.shape;
   const color = square.general.color;
   const lineWidth = filled ? 0 : square.general.lineWidth;
 
@@ -483,7 +483,7 @@ const shapeDrawing = (
     lineWidth,
     radius,
     type: square.type,
-    blackWhite: square?.blackWhite ?? false,
+    blackWhite,
     virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
   } as drawingProps);
 

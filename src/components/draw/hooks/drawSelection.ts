@@ -128,22 +128,7 @@ export class drawSelection extends drawElement {
     this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
   }
-  /**
-   * Function to change white to transparent in the selected zone
-   */
-  transparencySelection(delta: number) {
-    if (this.shape.transparencySelection(delta)) {
-      this.refreshDrawing(1, BORDER.INSIDE);
-    }
-  }
 
-  /**
-   * Function to change the selected zone in black and white
-   */
-  blackWhiteSelection(blackWhite: boolean) {
-    this.shape.setBlackWhite(blackWhite);
-    this.refreshDrawing(1, BORDER.INSIDE);
-  }
   /**
    * Function to rounded corners in the selected zone
    * @param {number} radius - radius of the corners
