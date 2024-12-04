@@ -196,11 +196,36 @@ export class drawSelection extends drawElement {
         width: MAX_PC * (this.mCanvas?.width || SQUARE_WIDTH),
         height: MAX_PC * (this.mCanvas?.height || SQUARE_HEIGHT),
       };
+      const MAX_SIZE = 640;
+      // Get image format from file extension or default to png
+      const fileExtension = name.split(".").pop()?.toLowerCase();
+      const imageFormat =
+        fileExtension && ["png", "jpg", "gif", "svg"].includes(fileExtension)
+          ? fileExtension
+          : fileExtension === "jpeg"
+          ? "jpg"
+          : "png";
 
-      virtualCanvas.width = img.width;
-      virtualCanvas.height = img.height;
-      const ratio = img.width / img.height;
-      ctx.drawImage(img, 0, 0);
+      console.log(img.width, "x", img.height, imageFormat);
+
+      let width = img.width;
+      let height = img.height;
+      const ratio = width / height;
+
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (ratio > 1) {
+          width = MAX_SIZE;
+          height = MAX_SIZE / ratio;
+        } else {
+          height = MAX_SIZE;
+          width = MAX_SIZE * ratio;
+        }
+      }
+
+      virtualCanvas.width = width;
+      virtualCanvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      this.shape.setFormat(imageFormat);
       this.shape.setCanvasImage(virtualCanvas);
       this.shape.setTransparency(0);
       this.shape.setCanvasImageTransparent(null);

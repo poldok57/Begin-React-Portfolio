@@ -39,6 +39,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   useEffect(() => {
     if (mode === DRAWING_MODES.END_PATH) {
       handleModeChange(DRAWING_MODES.LINE);
+      console.log("end path");
 
       setWithPathFilled(false);
     }

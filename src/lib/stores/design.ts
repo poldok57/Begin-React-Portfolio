@@ -2,7 +2,11 @@ import { create } from "zustand";
 import { persist, StorageValue, PersistOptions } from "zustand/middleware";
 import { StateCreator } from "zustand";
 
-import { ThingsToDraw, DRAW_TYPE } from "../canvas/canvas-defines";
+import {
+  ThingsToDraw,
+  DRAW_TYPE,
+  ShapeDefinition,
+} from "../canvas/canvas-defines";
 import { generateUniqueId } from "../utils/unique-id";
 import { showDrawElement } from "../canvas/showDrawElement";
 
@@ -27,6 +31,7 @@ interface DesignState {
   addOrUpdateDesignElement: (designElement: ThingsToDraw) => string;
   orderDesignElement: (id: string, direction: 1 | -1) => void;
   eraseDesignElement: () => void;
+  getImageDataURL: (id: string) => string | null;
 }
 
 const designStore: StateCreator<DesignState> = (set, get) => ({
@@ -61,6 +66,20 @@ const designStore: StateCreator<DesignState> = (set, get) => ({
       ...designElement,
       id: designElement.id || generateUniqueId("des"),
     };
+    // If element is an image, store its dataURL in localStorage
+    if (
+      designElement.type === DRAW_TYPE.IMAGE &&
+      (designElement as ShapeDefinition).dataURL
+    ) {
+      const imageKey = `img_${newDesignElement.id}`;
+      localStorage.setItem(
+        imageKey,
+        (designElement as ShapeDefinition).dataURL ?? ""
+      );
+      // Remove dataURL from the element to avoid storing it twice
+      delete (newDesignElement as ShapeDefinition).dataURL;
+    }
+
     set((state: DesignState) => ({
       designElements: [...state.designElements, newDesignElement],
     }));
@@ -84,15 +103,35 @@ const designStore: StateCreator<DesignState> = (set, get) => ({
     return get().addDesignElement(designElement);
   },
   deleteDesignElement: (id: string) =>
-    set((state: DesignState) => ({
-      designElements: state.designElements.filter(
-        (designElement) => designElement.id !== id
-      ),
-    })),
+    set((state: DesignState) => {
+      // Trouver l'élément avant de le supprimer pour vérifier son type
+      const element = state.designElements.find((el) => el.id === id);
+
+      // Si c'est une image, nettoyer le localStorage
+      if (element?.type === DRAW_TYPE.IMAGE) {
+        const imageKey = `img_${id}`;
+        localStorage.removeItem(imageKey);
+      }
+
+      return {
+        designElements: state.designElements.filter(
+          (designElement) => designElement.id !== id
+        ),
+      };
+    }),
   deleteLastDesignElement: () =>
-    set((state: DesignState) => ({
-      designElements: state.designElements.slice(0, -1),
-    })),
+    set((state: DesignState) => {
+      // Vérifier si le dernier élément est une image
+      const lastElement = state.designElements[state.designElements.length - 1];
+      if (lastElement?.type === DRAW_TYPE.IMAGE) {
+        const imageKey = `img_${lastElement.id}`;
+        localStorage.removeItem(imageKey);
+      }
+
+      return {
+        designElements: state.designElements.slice(0, -1),
+      };
+    }),
   deleteDesignElementByType: (
     type: (typeof DRAW_TYPE)[keyof typeof DRAW_TYPE]
   ) =>
@@ -134,9 +173,23 @@ const designStore: StateCreator<DesignState> = (set, get) => ({
     });
   },
   eraseDesignElement: () => {
-    set(() => ({
-      designElements: [],
-    }));
+    set((state: DesignState) => {
+      // Nettoyer le localStorage pour toutes les images
+      state.designElements.forEach((element) => {
+        if (element.type === DRAW_TYPE.IMAGE) {
+          const imageKey = `img_${element.id}`;
+          localStorage.removeItem(imageKey);
+        }
+      });
+
+      return {
+        designElements: [],
+      };
+    });
+  },
+  getImageDataURL: (id: string) => {
+    const imageKey = `img_${id}`;
+    return localStorage.getItem(imageKey) ?? null;
   },
 });
 

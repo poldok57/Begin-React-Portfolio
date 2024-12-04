@@ -199,6 +199,7 @@ export interface ShapeDefinition extends ThingsToDraw {
   canvasImage?: HTMLCanvasElement | null;
   canvasImageTransparent?: HTMLCanvasElement | null;
   dataURL?: string | null;
+  format?: string;
   shape?: ParamsShape;
   border?: ParamsGeneral;
   text?: ParamsText;

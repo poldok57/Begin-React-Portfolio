@@ -141,10 +141,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     setLockRatio(ratio);
     addEventMode(DRAWING_MODES.CHANGE);
   };
-  const handleChangeRadius = (radius: number) => {
-    drawingParams.shape = { ...drawingParams.shape, radius };
-    handleParamChange({ shape: drawingParams.shape });
-  };
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     switch (event.key) {
@@ -300,7 +296,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           setMode={setMode}
           handleImage={handleImage}
           handleChangeRatio={handleChangeRatio}
-          handleChangeRadius={handleChangeRadius}
           handleParamChange={handleParamChange}
           drawingParams={drawingParams}
           addEventDetail={addEventDetail}
@@ -337,7 +332,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           drawingParams={drawingParams}
           handleParamChange={handleParamChange}
           handleModeChange={handleModeChange}
-          handleChangeRadius={handleChangeRadius}
           setWithText={setWithText}
           isTouch={isTouch}
         />

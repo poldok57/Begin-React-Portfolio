@@ -20,7 +20,6 @@ interface DrawControlSelectProps {
   setMode: (mode: string) => void;
   drawingParams: AllParams;
   handleChangeRatio: (value: boolean) => void;
-  handleChangeRadius: (value: number) => void;
   handleParamChange: (params: GroupParams) => void;
   handleImage: (action: string) => void;
   addEventDetail: (detail: EventModeAction) => void;
@@ -32,7 +31,6 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
   setMode,
   drawingParams,
   handleChangeRatio,
-  handleChangeRadius,
   handleParamChange,
   handleImage,
   addEventDetail,
@@ -161,7 +159,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           min="0"
           max="150"
           step="1"
-          onChange={(value) => handleChangeRadius(value)}
+          onChange={(value) => handleShape({ radius: value })}
           isTouch={isTouch}
         />
       </div>

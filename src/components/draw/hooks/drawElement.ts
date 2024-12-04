@@ -10,6 +10,7 @@ import {
   mousePointer,
   isInside,
   isOnTurnButton,
+  isBorder,
 } from "@/lib/mouse-position";
 import { isInsideSquare } from "@/lib/square-position";
 import { alertMessage } from "@/components/alert-messages/alertMessage";
@@ -18,12 +19,13 @@ import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [120, 120];
+const MIN_ROTATION = 7.5;
 
 export class drawElement extends drawingHandler {
   protected fixed: boolean = false;
   protected resizingBorder: string | null = null;
   protected offset: Coordinate | null = null;
-  protected   shape: CanvasShape;
+  protected shape: CanvasShape;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -156,6 +158,50 @@ export class drawElement extends drawingHandler {
   }
 
   /**
+   * Function to change the cursor according to the rotation
+   * @param {string} cursorType - cursor type
+   * @returns {string} - cursor type
+   */
+  turnCursor(cursorType: string): string {
+    let rotation = this.shape.getRotation() % 360;
+    if (rotation < 0) rotation += 360;
+
+    // No rotation or 180° rotation, keep the default cursor
+    if (rotation === 0 || rotation === 180) return cursorType;
+
+    // Calculate the effective angle according to the cursor type
+    let angle = rotation;
+    switch (cursorType) {
+      case "ns-resize": // Vertical cursor
+        angle = (rotation + 90) % 360; // Add 90° to align with the vertical axis
+        break;
+      case "nesw-resize": // Diagonal cursor north-east/south-west
+        angle = (rotation + 135) % 360; // Add 135° to align with the diagonal NE/SO
+        break;
+      case "nwse-resize": // Diagonal cursor north-west/south-east
+        angle = (rotation + 45) % 360; // Add 45° to align with the diagonal NW/SE
+        break;
+      case "ew-resize":
+        angle = rotation;
+        break;
+      default:
+        return cursorType; // For other cursor types, do not modify
+    }
+
+    // Determine the appropriate cursor according to the final angle
+    // Divide the circle into 8 sections of 45° each
+    if (angle <= 22.5 || angle > 337.5) return "ew-resize"; // ←→
+    if (angle <= 67.5) return "nwse-resize"; // ↘↖
+    if (angle <= 112.5) return "ns-resize"; // ↑↓
+    if (angle <= 157.5) return "nesw-resize"; // ↙↗
+    if (angle <= 202.5) return "ew-resize"; // ←→
+    if (angle <= 247.5) return "nwse-resize"; // ↘↖
+    if (angle <= 292.5) return "ns-resize"; // ↑↓
+    if (angle <= 337.5) return "nesw-resize"; // ↙↗
+
+    return cursorType; // Default
+  }
+  /**
    * Function to refresh the element on the tempory canvas
    */
   refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
@@ -184,6 +230,9 @@ export class drawElement extends drawingHandler {
       if (isInside(mouseOnShape)) {
         // show real color when mouse is inside the square
         this.ctxTempory.globalAlpha = opacity;
+      }
+      if (this.shape.getRotation() !== 0 && isBorder(mouseOnShape)) {
+        cursorType = this.turnCursor(cursorType);
       }
     }
     if (mouseOnShape !== this.lastMouseOnShape) {
@@ -224,10 +273,10 @@ export class drawElement extends drawingHandler {
         this.validDrawedElement(true);
         toReset = true;
       } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
-        this.shape.changeRotation(-15);
+        this.shape.changeRotation(-MIN_ROTATION);
         this.refreshDrawing(0, mouseOnShape);
       } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
-        this.shape.changeRotation(15);
+        this.shape.changeRotation(MIN_ROTATION);
         this.refreshDrawing(0, mouseOnShape);
       } else {
         alertMessage("resizing: " + mouseOnShape);

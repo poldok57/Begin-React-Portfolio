@@ -19,10 +19,27 @@ import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { imageLoadInCanvas } from "./image-load";
 import { makeWhiteTransparent } from "./image-transparency";
+import { useDesignStore } from "@/lib/stores/design";
+
+const compressImage = (canvasImage: HTMLCanvasElement) => {
+  const tempCanvas = document.createElement("canvas");
+  const ctx = tempCanvas.getContext("2d");
+
+  tempCanvas.width = canvasImage.width / 2;
+  tempCanvas.height = canvasImage.height / 2;
+
+  if (ctx) {
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(canvasImage, 0, 0, tempCanvas.width, tempCanvas.height);
+    return tempCanvas.toDataURL("image/png");
+  }
+  return null;
+};
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
   private previousTransparency: number = 0;
+  private getImageDataURL: (id: string) => string | null;
 
   constructor() {
     super();
@@ -37,6 +54,7 @@ export class CanvasShape extends CanvasDrawableObject {
         opacity: 0,
       },
     };
+    this.getImageDataURL = useDesignStore.getState().getImageDataURL;
   }
 
   addData(data: AllParams) {
@@ -62,8 +80,22 @@ export class CanvasShape extends CanvasDrawableObject {
       cpy.general.color = d.text?.color ?? "gray";
     }
 
-    if (d.type === DRAWING_MODES.IMAGE) {
-      cpy.dataURL = d.canvasImage?.toDataURL();
+    if (d.type === DRAWING_MODES.IMAGE && d.canvasImage) {
+      cpy.format = d.format;
+
+      if (d.format && d.format === "jpg") {
+        cpy.dataURL = d.canvasImage.toDataURL("image/jpeg");
+        const quality = 0.9;
+        while (cpy.dataURL.length > 500000 && quality > 0.1) {
+          cpy.dataURL = d.canvasImage.toDataURL("image/jpeg", quality);
+        }
+      } else {
+        cpy.dataURL = d.canvasImage.toDataURL("image/png");
+
+        if (cpy.dataURL.length > 500000) {
+          cpy.dataURL = compressImage(d.canvasImage);
+        }
+      }
     }
     return cpy;
   }
@@ -72,8 +104,11 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.id = id;
   }
 
-  private async loadImage(dataURL: string) {
+  private async loadImage(id: string, dataURL: string | null | undefined) {
     try {
+      if (!dataURL) {
+        dataURL = this.getImageDataURL(id);
+      }
       const canvas = await imageLoadInCanvas(dataURL);
       do {
         if (canvas) {
@@ -111,8 +146,8 @@ export class CanvasShape extends CanvasDrawableObject {
       this.data.text = undefined;
     }
 
-    if (this.data.type === DRAWING_MODES.IMAGE && data.dataURL) {
-      await this.loadImage(data.dataURL);
+    if (this.data.type === DRAWING_MODES.IMAGE) {
+      await this.loadImage(data.id, data.dataURL);
     }
 
     this.calculateWithTurningButtons(data.type);
@@ -121,6 +156,10 @@ export class CanvasShape extends CanvasDrawableObject {
 
   setDataParams(params: Area | ParamsGeneral | ParamsShape | ParamsText) {
     this.data = { ...this.data, ...params } as ShapeDefinition;
+  }
+
+  setFormat(format: string): void {
+    this.data.format = format;
   }
 
   setType(type: string): void {

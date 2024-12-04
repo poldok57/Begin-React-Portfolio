@@ -25,7 +25,6 @@ interface DrawControlShapeProps {
   drawingParams: AllParams;
   handleParamChange: (params: GroupParams) => void;
   handleModeChange: (mode: string) => void;
-  handleChangeRadius: (value: number) => void;
   setWithText: (value: boolean) => void;
   isTouch?: boolean;
 }
@@ -35,7 +34,6 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
   drawingParams,
   handleParamChange,
   handleModeChange,
-  handleChangeRadius,
   setWithText,
   isTouch = false,
 }) => {
@@ -129,7 +127,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
               min="0"
               max="50"
               step="2"
-              onChange={(value) => handleChangeRadius(value)}
+              onChange={(value) => handleShape({ radius: value })}
               isTouch={isTouch}
             />
           )}
