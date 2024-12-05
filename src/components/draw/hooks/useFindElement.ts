@@ -1,22 +1,31 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ThingsToDraw } from "@/lib/canvas/canvas-defines";
+import { DRAWING_MODES, ThingsToDraw } from "@/lib/canvas/canvas-defines";
 import { showAllDashedRectangles } from "@/lib/canvas/showDrawElement";
 import { isInsideSquare } from "@/lib/square-position";
 interface UseFindElementProps {
   canvasRef: React.RefObject<HTMLCanvasElement> | null;
   canvasTemporyRef: React.RefObject<HTMLCanvasElement> | null;
   designElements: ThingsToDraw[];
-  onElementFound: (elementId: string) => void;
+  setSelectedDesignElement: (elementId: string) => void;
+  setMode: (mode: string) => void;
 }
 
 export const useFindElement = ({
   canvasRef,
   canvasTemporyRef,
   designElements,
-  onElementFound,
+  setSelectedDesignElement,
+  setMode,
 }: UseFindElementProps) => {
   const [findMode, setFindMode] = useState(false);
   const nbFound = useRef(0);
+
+  const onElementFound = (elementId: string) => {
+    setSelectedDesignElement(elementId);
+
+    setFindMode(false);
+    setMode(DRAWING_MODES.RELOAD);
+  };
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -96,7 +105,7 @@ export const useFindElement = ({
         canvas.removeEventListener("mousemove", handleMouseMove);
         canvas.style.cursor = "default";
 
-        // Nettoyer le canvas temporaire lors de la désactivation du mode find
+        // Clear the temporary canvas when find mode is disabled
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);

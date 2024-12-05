@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useDesignStore } from "@/lib/stores/design";
-import { showDrawElement } from "../../lib/canvas/showDrawElement";
 import { X, RefreshCcw, GripVertical, Search } from "lucide-react";
 import {
   CanvasPointsData,
@@ -10,7 +9,6 @@ import {
 } from "@/lib/canvas/canvas-defines";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
-import { useFindElement } from "./hooks/useFindElement";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 
 export const DrawList = ({
@@ -34,38 +32,10 @@ export const DrawList = ({
 
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
 
-  const handleShowElement = (elementId: string) => {
-    if (!canvasTemporyRef || !canvasTemporyRef.current) return;
-    const ctxTmp = canvasTemporyRef.current.getContext("2d");
-    const element = designElements.find((element) => element.id === elementId);
-    if (!ctxTmp || !element) return;
-
-    ctxTmp.clearRect(0, 0, ctxTmp.canvas.width, ctxTmp.canvas.height);
-    showDrawElement(ctxTmp, element, true);
+  const onSelectElement = (elementId: string) => {
     setSelectedDesignElement(elementId);
 
-    refreshCanvas(ctx, false);
-    setFindMode(false);
     setMode(DRAWING_MODES.RELOAD);
-  };
-
-  const { findMode, setFindMode } = useFindElement({
-    canvasRef,
-    canvasTemporyRef,
-    designElements,
-    onElementFound: handleShowElement,
-  });
-
-  const handleFindMode = (value: boolean) => {
-    setFindMode(value);
-    if (value) {
-      setSelectedDesignElement(null);
-      refresh();
-      // Set cursor to hand when hovering over temporary canvas
-      if (canvasTemporyRef?.current) {
-        setMode(DRAWING_MODES.PAUSE);
-      }
-    }
   };
 
   const refresh = () => {
@@ -84,7 +54,6 @@ export const DrawList = ({
 
   const handleReset = () => {
     eraseDesignElement();
-    setFindMode(false);
     refresh();
   };
 
@@ -109,19 +78,13 @@ export const DrawList = ({
         <>
           <div className="flex gap-2 items-center px-2">
             <button
-              onClick={() => handleFindMode(!findMode)}
-              className={cn("btn btn-sm btn-circle", {
-                "bg-secondary": findMode,
-              })}
+              // onClick={() => handleFindMode(!findMode)}
+              onClick={() => setMode(DRAWING_MODES.FIND)}
+              className={cn("btn btn-sm btn-circle")}
               title="Find element by clicking on canvas"
             >
               <Search size={16} />
             </button>
-            {findMode && (
-              <span className="text-xs italic text-gray-600">
-                Select an item in your drawing
-              </span>
-            )}
           </div>
           <div className="flex overflow-auto flex-col gap-1 p-2 max-h-96">
             <ul className="space-y-2">
@@ -163,7 +126,7 @@ export const DrawList = ({
                       </span>
                       <span
                         className="px-2 w-full text-sm truncate bg-gray-50 border cursor-pointer"
-                        onClick={() => handleShowElement(element.id)}
+                        onClick={() => onSelectElement(element.id)}
                       >
                         {"text" in element &&
                         (("shape" in element && element?.shape?.withText) ||

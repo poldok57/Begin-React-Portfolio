@@ -24,6 +24,7 @@ import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
 import { useDesignStore } from "@/lib/stores/design";
 import { DesignElement } from "@/components/room/types";
+import { useFindElement } from "./useFindElement";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -53,8 +54,13 @@ export const useCanvas = ({
   const elementRef = useRef<drawElement | null>(null);
   const justReload = useRef(false);
 
-  const { deleteLastDesignElement, refreshCanvas, getSelectedDesignElement } =
-    useDesignStore.getState();
+  const {
+    designElements,
+    deleteLastDesignElement,
+    refreshCanvas,
+    getSelectedDesignElement,
+    setSelectedDesignElement,
+  } = useDesignStore.getState();
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -65,6 +71,17 @@ export const useCanvas = ({
     deleteLastDesignElement();
     refreshCanvas(canvas.getContext("2d"));
   };
+
+  /**
+   * Manage find element
+   */
+  const { setFindMode } = useFindElement({
+    canvasRef,
+    canvasTemporyRef,
+    designElements,
+    setSelectedDesignElement,
+    setMode,
+  });
 
   /**
    * Function to set the context of the canvas
@@ -258,7 +275,12 @@ export const useCanvas = ({
       generalInitialisation();
       return;
     }
-
+    if (newMode === DRAWING_MODES.FIND) {
+      stopExtendMouseEvent();
+      drawingRef.current = null;
+      setFindMode(true);
+      return;
+    }
     if (justReload.current) {
       justReload.current = false;
       return;
@@ -302,6 +324,10 @@ export const useCanvas = ({
     if (reload && selectedDesignElement) {
       // reload draw from history
       drawingRef.current.setDraw(selectedDesignElement);
+      drawingRef.current.refreshDrawing(currentParams.general.opacity);
+      if (canvasRef.current) {
+        refreshCanvas(canvasRef.current.getContext("2d"), false);
+      }
 
       justReload.current = true;
       return;
@@ -442,11 +468,12 @@ export const useCanvas = ({
       );
       return;
     }
+    if (!drawingRef.current) return;
+
     // color and width painting
     currentParams = getParams();
     setContext(canvasRef.current);
 
-    if (!drawingRef.current) return;
     const coord = getCoordinatesInCanvas(event, canvasRef.current);
 
     drawingRef.current.setType(currentParams.mode);
@@ -476,8 +503,8 @@ export const useCanvas = ({
     if (toReset && drawingRef.current) {
       drawingRef.current.endAction();
       // restart with basic drawing mode
-      currentParams.mode = DRAWING_MODES.PAUSE;
-      setMode(DRAWING_MODES.PAUSE);
+      // currentParams.mode = DRAWING_MODES.PAUSE;
+      setMode(DRAWING_MODES.FIND);
 
       drawingRef.current = selectDrawingHandler(DRAWING_MODES.PAUSE);
       drawingRef.current.initData(currentParams);
@@ -514,7 +541,7 @@ export const useCanvas = ({
     };
     const handleMouseMove = (event: MouseEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
-      if (!canvasTemporyRef.current) return;
+      if (!canvasTemporyRef.current || !drawingRef.current) return;
       const coord = getCoordinatesInCanvas(event, canvasTemporyRef.current);
       const pointer = drawingRef.current?.actionMouseMove(event, coord);
 
@@ -540,7 +567,11 @@ export const useCanvas = ({
         case DRAWING_MODES.ACTION:
           handleActionEvent(event);
           break;
-
+        case DRAWING_MODES.FIND:
+          stopExtendMouseEvent();
+          drawingRef.current = null;
+          setFindMode(true);
+          break;
         default:
           if (!isDrawingMode(newMode)) {
             console.error("Mode not found : ", newMode);

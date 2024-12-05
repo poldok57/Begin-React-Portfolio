@@ -45,6 +45,7 @@ export const DRAWING_MODES = {
   END_PATH: "endPath",
   ERASE: "erase",
   RELOAD: "reload",
+  FIND: "find",
 
   CONTROL_PANEL: {
     IN: "in",
