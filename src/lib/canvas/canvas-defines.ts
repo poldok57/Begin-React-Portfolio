@@ -78,6 +78,7 @@ const SHAPE_MODES = [
   DRAWING_MODES.ONE_RADIUS_B,
   DRAWING_MODES.TWO_RADIUS,
 ];
+const PAUSE_MODES = [DRAWING_MODES.PAUSE, DRAWING_MODES.FIND];
 const SELECT_MODES = [DRAWING_MODES.SELECT, DRAWING_MODES.IMAGE];
 
 const ALL_DRAWING_MODES = [
@@ -85,6 +86,7 @@ const ALL_DRAWING_MODES = [
   ...FREEHAND_MODES,
   ...SHAPE_MODES,
   ...SELECT_MODES,
+  ...PAUSE_MODES,
   DRAWING_MODES.TEXT,
   DRAWING_MODES.PAUSE,
 ];
@@ -98,7 +100,7 @@ export const isDrawingFreehand = (mode: string) =>
 export const isDrawingAllLines = (mode: string) =>
   isDrawingLine(mode) || isDrawingFreehand(mode);
 export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
-
+export const isDrawingPause = (mode: string) => PAUSE_MODES.includes(mode);
 const DEFAULT = {
   COLOR: "#ff0000",
   SIZE: 4,

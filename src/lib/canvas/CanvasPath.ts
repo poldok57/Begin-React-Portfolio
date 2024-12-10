@@ -227,8 +227,6 @@ export class CanvasPath extends CanvasPoints {
       this.fillPath(ctx, minWidth);
     }
 
-    this.setMaxWidthLine(maxWidth);
-
     if (
       !withDashedRectangle ||
       this.data.items.length <= 1 ||

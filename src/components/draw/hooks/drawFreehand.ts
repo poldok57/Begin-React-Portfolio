@@ -15,10 +15,10 @@ import {
   ParamsGeneral,
   CanvasPointsData,
 } from "../../../lib/canvas/canvas-defines";
-import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 
 import { throttle } from "@/lib/utils/throttle";
+import { BORDER } from "@/lib/mouse-position";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -68,20 +68,6 @@ export class drawFreehand extends drawingHandler {
     return this.drawing;
   }
 
-  setCanvas(canvas: HTMLCanvasElement | null) {
-    if (!canvas) return;
-    this.mCanvas = canvas;
-    this.context = canvas.getContext("2d");
-  }
-
-  setMouseCanvas(canvas: HTMLCanvasElement | null) {
-    if (canvas === null) {
-      console.error("setMouseCanvas canvas is null");
-      return;
-    }
-    this.ctxTempory = canvas.getContext("2d");
-  }
-
   setDraw(draw: CanvasPointsData) {
     this.freeCurve.setData(draw);
     this.freeCurve.setFinished(true);
@@ -114,7 +100,8 @@ export class drawFreehand extends drawingHandler {
       return "move";
     }
 
-    clearCanvasByCtx(ctxTempory);
+    this.clearTemporyCanvas();
+
     ctxTempory.globalAlpha = 0.4;
 
     const coord = this.getCoordinates() as Coordinate;
@@ -163,9 +150,6 @@ export class drawFreehand extends drawingHandler {
     event: MouseEvent | TouchEvent,
     coord: Coordinate
   ): string | null {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return null;
-    }
     const start: Coordinate | null = this.coordinates;
     this.setCoordinates(coord);
 
@@ -202,29 +186,39 @@ export class drawFreehand extends drawingHandler {
     event: MouseEvent | TouchEvent,
     coord: Coordinate
   ): returnMouseDown {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return { toExtend: false } as returnMouseDown;
-    }
     // color and width painting
     this.setCoordinates(coord);
 
     if (this.finishedDrawing && this.freeCurve) {
-      if (
-        this.freeCurve.mouseDown(
-          this.ctxTempory,
-          this.getCoordinates() as Coordinate
-        )
-      ) {
-        // path has been validated
-        this.freeCurve.draw(this.context as CanvasRenderingContext2D, false);
-        this.clearTemporyCanvas();
-        this.finishedDrawing = false;
-        this.setDrawing(false);
-        this.saveCanvasPicture(null);
-        this.freeCurve.clearPoints();
-        return {
-          pointer: "none",
-        };
+      const mouseOnRectangle = this.freeCurve.mouseDown(
+        this.ctxTempory,
+        this.getCoordinates() as Coordinate
+      );
+      switch (mouseOnRectangle) {
+        case BORDER.ON_BUTTON:
+          // path has been validated
+          this.freeCurve.draw(this.context as CanvasRenderingContext2D, false);
+          this.clearTemporyCanvas();
+          this.finishedDrawing = false;
+          this.setDrawing(false);
+          this.saveCanvasPicture(null);
+          this.freeCurve.clearPoints();
+
+          event.stopPropagation();
+          return {
+            changeMode: DRAWING_MODES.FIND,
+          };
+        case BORDER.ON_BUTTON_DELETE: {
+          const deleteId = this.freeCurve.getDataId();
+          if (!deleteId) {
+            this.actionAbort();
+          } else {
+            return {
+              toReset: true,
+              deleteId,
+            };
+          }
+        }
       }
       return {
         pointer: "grabbing",
@@ -259,9 +253,6 @@ export class drawFreehand extends drawingHandler {
    * Function to stop drawing on the canvas
    */
   actionMouseUp() {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return;
-    }
     this.coordinates = null;
 
     if (this.isDrawing()) {
@@ -276,9 +267,6 @@ export class drawFreehand extends drawingHandler {
   }
 
   actionMouseLeave() {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return;
-    }
     if (this.finishedDrawing) {
       return;
     }
@@ -299,10 +287,7 @@ export class drawFreehand extends drawingHandler {
   }
 
   endAction() {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return;
-    }
     this.setDrawing(false);
-    clearCanvasByCtx(this.ctxTempory);
+    this.clearTemporyCanvas();
   }
 }

@@ -1,4 +1,4 @@
-import { mouseIsInsideComponent } from "@/lib/mouse-position";
+import { BORDER, mouseIsInsideComponent } from "@/lib/mouse-position";
 import { Coordinate, LinePath, LineType } from "@/lib/canvas/types";
 import {
   drawingCircle,
@@ -29,6 +29,7 @@ export class drawLine extends drawingHandler {
   private withPath: boolean = false;
   private finishedDrawing: boolean = false;
   private finishedDrawingStep1: boolean = false;
+  private toDelete: boolean = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -97,18 +98,8 @@ export class drawLine extends drawingHandler {
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
-    if (!canvas) return;
-    this.mCanvas = canvas;
-    this.context = canvas.getContext("2d");
+    super.setCanvas(canvas);
     if (this.line) this.line.setCanvas(canvas);
-  }
-
-  setTemporyCanvas(canvas: HTMLCanvasElement) {
-    if (canvas === null) {
-      console.error("setTemporyCanvas canvas is null");
-      return;
-    }
-    this.ctxTempory = canvas.getContext("2d");
   }
 
   setStartCoordinates(coord: Coordinate | null = null) {
@@ -123,6 +114,8 @@ export class drawLine extends drawingHandler {
     this.path = new CanvasPath(this.line as LinePath);
     this.withPath = withPath;
     this.finishedDrawing = false;
+    this.toDelete = false;
+    this.line.eraseStartCoordinates();
   };
 
   setDraw(draw: CanvasPointsData) {
@@ -342,20 +335,27 @@ export class drawLine extends drawingHandler {
       // mouse down on path
       if (this.finishedDrawing && this.path) {
         // mouse down on finised path we can move or validate it
-        if (
-          this.path.mouseDown(
-            this.ctxTempory,
-            this.line.getCoordinates() as Coordinate
-          )
-        ) {
-          // path has been validated
-          this.validatePath();
-          return {
-            toExtend: true,
-            toReset: false,
-            pointer: "move",
-            changeMode: DRAWING_MODES.END_PATH,
-          };
+        const mouseOnButton = this.path.mouseDown(
+          this.ctxTempory,
+          this.line.getCoordinates() as Coordinate
+        );
+        switch (mouseOnButton) {
+          case BORDER.ON_BUTTON:
+            // path has been validated
+            this.validatePath();
+            return {
+              toExtend: false,
+              toReset: false,
+              pointer: "move",
+              changeMode: DRAWING_MODES.END_PATH,
+            };
+          case BORDER.ON_BUTTON_DELETE:
+            this.toDelete = true;
+            return {
+              toExtend: false,
+              toReset: true,
+              deleteId: this.path.getDataId(),
+            };
         }
       } else {
         toExtend = this.showLineAndArc(true);
@@ -408,19 +408,25 @@ export class drawLine extends drawingHandler {
 
     // touch a finished path
     if (this.withPath && this.finishedDrawing && this.path) {
-      if (
-        this.path.mouseDown(
-          this.ctxTempory,
-          this.line.getCoordinates() as Coordinate
-        )
-      ) {
-        // path has been validated
-        this.validatePath();
-        this.hasBeenTouched = true;
-        return {
-          toReset: false,
-          changeMode: DRAWING_MODES.END_PATH,
-        };
+      const mouseOnButton = this.path.mouseDown(
+        this.ctxTempory,
+        this.line.getCoordinates() as Coordinate
+      );
+      switch (mouseOnButton) {
+        case BORDER.ON_BUTTON:
+          // path has been validated
+          this.validatePath();
+          this.hasBeenTouched = true;
+          return {
+            toReset: false,
+            changeMode: DRAWING_MODES.END_PATH,
+          };
+        case BORDER.ON_BUTTON_DELETE:
+          this.hasBeenTouched = true;
+          return {
+            toReset: true,
+            deleteId: this.path.getDataId(),
+          };
       }
       return {};
     }
@@ -543,6 +549,12 @@ export class drawLine extends drawingHandler {
   }
 
   endAction(nextMode: string = DRAWING_MODES.DRAW) {
+    if (this.toDelete) {
+      this.toDelete = false;
+      this.initPath(false);
+      this.clearTemporyCanvas();
+      return;
+    }
     if (!isDrawingLine(nextMode)) {
       // if (this.withPath && this.path) {
       if (this.path) {

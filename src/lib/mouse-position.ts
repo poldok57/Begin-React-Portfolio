@@ -1,4 +1,12 @@
-import { Area, Rectangle, Coordinate, RectPosition } from "./canvas/types";
+import {
+  Area,
+  Rectangle,
+  Coordinate,
+  RectPosition,
+  RectangleArgs,
+  ButtonArgs,
+  MiddleButton,
+} from "./canvas/types";
 import { isTouchDevice } from "./utils/device";
 
 export const BORDER = {
@@ -12,10 +20,11 @@ export const BORDER = {
     BOTTOM_LEFT: "crn-bottom-left",
     BOTTOM_RIGHT: "crn-bottom-right",
   },
-  ON_BUTTON: "on-btn",
-  ON_MIDDLE_BUTTON: "on-btn-middle",
-  ON_BUTTON_LEFT: "on-turn-btn-Left", // avoid confusion with border left
-  ON_BUTTON_RIGHT: "on-turn-btn-Right", // avoid confusion with border right
+  ON_BUTTON: "btn",
+  ON_BUTTON_DELETE: "btn-del",
+  ON_MIDDLE_BUTTON: "btn-mid",
+  ON_BUTTON_LEFT: "btn-turn-Left", // avoid confusion with border left
+  ON_BUTTON_RIGHT: "btn-turn-Right", // avoid confusion with border right
   INSIDE: "inside",
 } as const;
 
@@ -63,11 +72,14 @@ export const isCorner = (border: string): boolean => {
 };
 
 export const isOnButton = (border: string): boolean => {
-  return border ? border.startsWith("on-") : false;
+  return border ? border.startsWith("btn") : false;
+};
+export const isOnButtonDelete = (border: string): boolean => {
+  return border ? border.startsWith("btn-del") : false;
 };
 
 export const isOnTurnButton = (border: string): boolean => {
-  return border ? border.startsWith("on-turn-btn") : false;
+  return border ? border.startsWith("btn-turn") : false;
 };
 
 export const isInside = (border: string): boolean => {
@@ -160,6 +172,9 @@ export const mouseDistanceFromBorder = (
   return Math.max(distanceLeft, distanceRight, distanceTop, distanceBottom);
 };
 export const mousePointer = (mouseOnBorder: string): string => {
+  if (mouseOnBorder.startsWith("btn")) {
+    return "pointer";
+  }
   switch (mouseOnBorder) {
     case BORDER.RIGHT:
     case BORDER.LEFT:
@@ -175,42 +190,29 @@ export const mousePointer = (mouseOnBorder: string): string => {
       return "nesw-resize";
     case BORDER.INSIDE:
       return "move";
-    case BORDER.ON_BUTTON:
-    case BORDER.ON_MIDDLE_BUTTON:
-    case BORDER.ON_BUTTON_LEFT:
-    case BORDER.ON_BUTTON_RIGHT:
-      return "pointer";
     default:
       return "default";
   }
 };
 
 export const topRightPosition = (
-  rect: {
-    x?: number;
-    y?: number;
-    left?: number;
-    top?: number;
-    width?: number;
-    right?: number;
-    height?: number;
-    bottom?: number;
-  },
+  rect: RectangleArgs,
   maxWidth: number = 0,
-  rotation: number = 0
-) => {
+  rotation: number = 0,
+  lockAtTop: boolean = true
+): ButtonArgs => {
   const x = rect.x ?? rect.left!;
-  const y = Math.max(rect.y ?? rect.top!, 0);
+  const y = rect.y ?? rect.top!;
   const w = rect.width ?? rect.right! - rect.left!;
   const h = rect.height ?? rect.bottom! - rect.top!;
   const badgeRadius = isTouchDevice() ? BADGE_RADIUS_TOUCH : BADGE_RADIUS;
 
   // Position de base du badge
-  const badge = {
+  const badge: ButtonArgs = {
     width: badgeRadius * 2,
     height: badgeRadius * 2,
     left: Math.max(x + w - badgeRadius * 2, x + 55),
-    top: y,
+    top: lockAtTop ? Math.max(y, 0) : y,
     bottom: y + badgeRadius * 2,
     radius: badgeRadius,
     right: 0,
@@ -250,7 +252,9 @@ export const topRightPosition = (
     if (maxWidth) {
       badge.centerX = Math.min(badge.centerX, maxWidth - badge.width / 2);
     }
-    badge.centerY = Math.max(badge.centerY, badge.height / 2);
+    if (lockAtTop) {
+      badge.centerY = Math.max(badge.centerY, badge.height / 2);
+    }
     badge.left = badge.centerX - badge.width / 2;
     badge.right = badge.left + badge.width;
     badge.top = badge.centerY - badge.height / 2;
@@ -260,24 +264,26 @@ export const topRightPosition = (
   return badge;
 };
 
-type MiddleButton = Rectangle & {
-  middle: number;
-  axeX1: number;
-  axeX2: number;
-  axeY: number;
-  radius: number;
-  bottom: number;
+export const topRightPositionOver = (
+  rect: RectangleArgs,
+  maxWidth: number = 0,
+  rotation: number = 0
+): ButtonArgs => {
+  const newRect = { ...rect };
+  let overhang = BADGE_RADIUS * 2 + 4;
+  if (isTouchDevice()) {
+    overhang = BADGE_RADIUS_TOUCH * 2 + 8;
+  }
+  if (newRect.top !== undefined) {
+    newRect.top -= overhang;
+  }
+  if (newRect.y !== undefined) {
+    newRect.y -= overhang;
+  }
+  return topRightPosition(newRect, maxWidth, rotation, false);
 };
-export const middleButtonPosition = (rect: {
-  x?: number;
-  y?: number;
-  left?: number;
-  top?: number;
-  width?: number;
-  right?: number;
-  height?: number;
-  bottom?: number;
-}) => {
+
+export const middleButtonPosition = (rect: RectangleArgs) => {
   const x = rect.x ?? rect.left!;
   const y = rect.y ?? rect.top!;
   const w = rect.width ?? rect.right! - rect.left!;

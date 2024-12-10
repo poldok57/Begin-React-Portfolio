@@ -253,8 +253,12 @@ export class drawElement extends drawingHandler {
     event: MouseEvent | TouchEvent,
     coord: Coordinate
   ): returnMouseDown {
-    let toReset = false;
-    let pointer: string | null = null;
+    const retunData: returnMouseDown = {
+      toReset: false,
+      toExtend: false,
+      pointer: null,
+    };
+
     this.setCoordinates(coord);
 
     const mouseOnShape = this.shape.handleMouseOnShape(
@@ -264,26 +268,36 @@ export class drawElement extends drawingHandler {
 
     if (mouseOnShape) {
       // Clic on the shape --------
-      if (mouseOnShape === BORDER.INSIDE) {
-        this.calculOffset();
-        pointer = "pointer";
-        this.setFixed(false);
-      } else if (mouseOnShape === BORDER.ON_BUTTON) {
-        pointer = "pointer";
-        this.validDrawedElement(true);
-        toReset = true;
-      } else if (mouseOnShape === BORDER.ON_BUTTON_LEFT) {
-        this.shape.changeRotation(-MIN_ROTATION);
-        this.refreshDrawing(0, mouseOnShape);
-      } else if (mouseOnShape === BORDER.ON_BUTTON_RIGHT) {
-        this.shape.changeRotation(MIN_ROTATION);
-        this.refreshDrawing(0, mouseOnShape);
-      } else {
-        alertMessage("resizing: " + mouseOnShape);
-        this.setResizing(mouseOnShape);
+      switch (mouseOnShape) {
+        case BORDER.INSIDE:
+          this.calculOffset();
+          retunData.pointer = "pointer";
+          this.setFixed(false);
+          break;
+        case BORDER.ON_BUTTON:
+          retunData.pointer = "pointer";
+          this.validDrawedElement(true);
+          retunData.toReset = true;
+          break;
+        case BORDER.ON_BUTTON_DELETE:
+          retunData.deleteId = this.shape.getDataId();
+          retunData.toReset = true;
+          break;
+        case BORDER.ON_BUTTON_LEFT:
+          this.shape.changeRotation(-MIN_ROTATION);
+          this.refreshDrawing(0, mouseOnShape);
+          break;
+        case BORDER.ON_BUTTON_RIGHT:
+          this.shape.changeRotation(MIN_ROTATION);
+          this.refreshDrawing(0, mouseOnShape);
+          break;
+        default:
+          alertMessage("resizing: " + mouseOnShape);
+          this.setResizing(mouseOnShape);
+          break;
       }
     }
-    return { toReset, toExtend: false, pointer } as returnMouseDown;
+    return retunData;
   }
 
   memorizeSelectedArea(_area: Area | null = null) {}

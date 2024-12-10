@@ -36,4 +36,11 @@ export abstract class CanvasDrawableObject {
   setDataType(name: string) {
     this.data.type = name;
   }
+
+  setDataId(id: string) {
+    this.data.id = id;
+  }
+  getDataId() {
+    return this.data.id;
+  }
 }

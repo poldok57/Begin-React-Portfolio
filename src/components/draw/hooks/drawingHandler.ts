@@ -15,6 +15,7 @@ import { useDesignStore } from "@/lib/stores/design";
 export type returnMouseDown = {
   toExtend?: boolean;
   toReset?: boolean;
+  deleteId?: string;
   changeMode?: string;
   pointer?: string | null;
 };

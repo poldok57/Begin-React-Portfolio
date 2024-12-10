@@ -35,6 +35,8 @@ import { MutableRefObject } from "react";
 import { useDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
+import { Search } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
 
 interface DrawControlProps {
   setParams: (params: GroupParams) => void;
@@ -290,6 +292,20 @@ export const DrawControl: React.FC<DrawControlProps> = ({
               />
             </label>
           )}
+          <div className="flex items-center justify-end w-full">
+            <button
+              onClick={() => handleModeChange(DRAWING_MODES.FIND)}
+              className={cn(
+                "btn btn-sm btn-circle transition hover:bg-accent",
+                {
+                  "bg-accent": mode == DRAWING_MODES.FIND,
+                }
+              )}
+              title="Find element by clicking on canvas"
+            >
+              <Search size={16} />
+            </button>
+          </div>
         </div>
         <DrawControlSelect
           mode={mode}

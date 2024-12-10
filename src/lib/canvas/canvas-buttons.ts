@@ -44,7 +44,7 @@ const drawDisk = (
   ctx: CanvasRenderingContext2D,
   coordinate: Coordinate,
   diameter: number,
-  color: string,
+  fillStyle: string,
   opacity: number = 1
 ) => {
   // cercle parameters
@@ -52,7 +52,7 @@ const drawDisk = (
   ctx.beginPath();
   basicCircle(ctx, coordinate, diameter);
   // ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = color;
+  ctx.fillStyle = fillStyle;
   ctx.globalAlpha = opacity;
   ctx.fill();
   ctx.closePath();
@@ -77,6 +77,29 @@ export const drawCornerButton = (
   // draw the check mark
   drawCheckMark(ctx, x - 1 - radius / 2, y, radius + 1, opacity);
 };
+
+export const drawCornerButtonDelete = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  opacity: number
+) => {
+  // Draw the red circle
+  drawDisk(ctx, { x, y }, radius * 2, "red", opacity);
+  const scale = 3;
+  // Draw the black X
+  ctx.beginPath();
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 2;
+  ctx.moveTo(x - radius / scale, y - radius / scale);
+  ctx.lineTo(x + radius / scale, y + radius / scale);
+  ctx.moveTo(x + radius / scale, y - radius / scale);
+  ctx.lineTo(x - radius / scale, y + radius / scale);
+  ctx.stroke();
+  ctx.closePath();
+};
+
 /**
  * Function to draw an arrow on the canvas
  * @param {CanvasRenderingContext2D} ctx

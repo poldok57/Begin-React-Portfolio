@@ -7,12 +7,15 @@
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import { Coordinate, Area, LinePath, ArgsMouseOnShape } from "./types";
 import { ParamsGeneral, CanvasPointsData } from "./canvas-defines";
-import { topRightPosition, BORDER } from "../mouse-position";
-import { drawCornerButton } from "./canvas-buttons";
+import {
+  topRightPosition,
+  BORDER,
+  topRightPositionOver,
+} from "../mouse-position";
+import { drawCornerButton, drawCornerButtonDelete } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
-import { OVERAGE } from "./canvas-dashed-rect";
 
 export const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
@@ -25,7 +28,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
   protected isFinished: boolean = false;
-  protected maxWidthLine: number = 0;
 
   constructor() {
     super();
@@ -59,11 +61,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   setParamsGeneral(params: ParamsGeneral) {
     this.data.general = { ...this.data.general, ...params };
-    this.maxWidthLine = Math.max(this.maxWidthLine, params.lineWidth);
-  }
-
-  setMaxWidthLine(width: number) {
-    this.maxWidthLine = Math.max(this.maxWidthLine, width);
   }
 
   startArea(firstPoint: Coordinate) {
@@ -181,20 +178,33 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     };
   }
 
-  drawCornerButton(ctx: CanvasRenderingContext2D | null, opacity: number) {
+  drawCornerButtons(
+    ctx: CanvasRenderingContext2D | null,
+    mouseOnRectangle: string | null
+  ) {
     if (!ctx || !this.data.size) {
       return;
     }
     const badge = topRightPosition(this.data.size, ctx.canvas.width);
     if (badge) {
-      drawCornerButton(
+      const opacity =
+        mouseOnRectangle === BORDER.ON_BUTTON ? 1 : DEFAULT_OPACITY;
+      const radius = opacity === 1 ? badge.radius * 1.6 : badge.radius;
+      drawCornerButton(ctx, badge.centerX, badge.centerY, radius, opacity);
+      this.lastButtonOpacity = opacity;
+    }
+    const btnDel = topRightPositionOver(this.data.size, ctx.canvas.width);
+    if (btnDel) {
+      const opacity =
+        mouseOnRectangle === BORDER.ON_BUTTON_DELETE ? 1 : DEFAULT_OPACITY;
+      const radius = opacity === 1 ? btnDel.radius * 1.6 : btnDel.radius;
+      drawCornerButtonDelete(
         ctx,
-        badge.centerX,
-        badge.centerY,
-        opacity === 1 ? badge.radius * 1.6 : badge.radius,
+        btnDel.centerX,
+        btnDel.centerY,
+        radius,
         opacity
       );
-      this.lastButtonOpacity = opacity;
     }
   }
 
@@ -208,23 +218,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     drawDashedRectangle(ctx, this.data.size, 0.3);
 
     if (this.isFinished) {
-      this.drawCornerButton(
-        ctx,
-        mouseOnRectangle === BORDER.ON_BUTTON ? 1 : DEFAULT_OPACITY
-      );
+      this.drawCornerButtons(ctx, mouseOnRectangle);
     }
   }
 
   clearAreaOnCanvas(ctx: CanvasRenderingContext2D | null) {
-    if (this.data.size) {
-      const width = Math.max(this.maxWidthLine, OVERAGE + 1);
-      ctx?.clearRect(
-        this.data.size.x - width,
-        this.data.size.y - width,
-        this.data.size.width + width * 2,
-        this.data.size.height + width * 2
-      );
-    }
+    ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   }
 
   isInArea(coord: Coordinate): boolean {
@@ -350,16 +349,19 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.coordFound = -1;
   }
 
-  mouseDown(ctx: CanvasRenderingContext2D | null, mousePosition: Coordinate) {
+  mouseDown(
+    ctx: CanvasRenderingContext2D | null,
+    mousePosition: Coordinate
+  ): string | null {
     this.lastMousePosition = mousePosition;
     if (this.data.size) {
       const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
 
-      if (mouseOnRectangle === BORDER.ON_BUTTON) {
-        return true;
+      if (mouseOnRectangle?.startsWith("btn")) {
+        return mouseOnRectangle;
       }
     }
-    return false;
+    return null;
   }
 
   throttleMovePath = throttle(
@@ -463,8 +465,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       cursorType = "grabbing";
     } else {
       const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
-      if (mouseOnRectangle === BORDER.ON_BUTTON) {
-        this.drawCornerButton(ctx, 1);
+      if (
+        mouseOnRectangle === BORDER.ON_BUTTON ||
+        mouseOnRectangle === BORDER.ON_BUTTON_DELETE
+      ) {
+        this.drawCornerButtons(ctx, mouseOnRectangle);
         cursorType = "pointer";
       } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
         this.clearAreaOnCanvas(ctx);
@@ -481,15 +486,14 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!this.data.size || !ctx || !mousePosition) {
       return null;
     }
-    const argsMouseOnArea: ArgsMouseOnShape = {
+
+    return isOnSquareBorder({
       coordinate: mousePosition,
       area: this.data.size,
       withResize: false,
       withCornerButton: true,
       withTurningButtons: false,
       maxWidth: ctx.canvas.width,
-    };
-
-    return isOnSquareBorder(argsMouseOnArea);
+    } as ArgsMouseOnShape);
   }
 }

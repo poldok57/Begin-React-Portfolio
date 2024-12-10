@@ -5,7 +5,7 @@ import { CanvasPoints } from "./CanvasPoints";
 import { DRAW_TYPE, ParamsGeneral } from "./canvas-defines";
 
 const MARGIN = 5;
-const DELAY = 50;
+const DELAY = 100;
 
 export class CanvasFreeCurve extends CanvasPoints {
   constructor() {
@@ -24,12 +24,13 @@ export class CanvasFreeCurve extends CanvasPoints {
     firstPoint: Coordinate;
     general: ParamsGeneral;
   }) {
+    this.data.id = "";
     this.data.items = [];
     this.data.items.push(firstPoint as Coordinate & LinePath);
 
     this.setParamsGeneral({
       opacity: general.opacity || 0,
-      color: general.color || "#fff",
+      color: general.color || "#f0f0f0",
       lineWidth: general.lineWidth || 1,
     });
     this.startArea(firstPoint);

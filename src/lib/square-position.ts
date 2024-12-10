@@ -7,6 +7,7 @@ import {
   mouseIsOnBorderRect,
   getRectOffset,
   resizeRect,
+  topRightPositionOver,
 } from "./mouse-position";
 
 export const rotateMouseCoord = (
@@ -122,6 +123,10 @@ export const isOnSquareBorder = ({
 
     if (coordinateIsInsideRect(coordinate, badgePos)) {
       return BORDER.ON_BUTTON;
+    }
+    const btnDel = topRightPositionOver(rect, maxWidth, rotation);
+    if (coordinateIsInsideRect(coordinate, btnDel)) {
+      return BORDER.ON_BUTTON_DELETE;
     }
   }
   if (withTurningButtons) {

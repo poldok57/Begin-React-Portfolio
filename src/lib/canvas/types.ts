@@ -22,6 +22,32 @@ export interface Rectangle extends RectPosition, Size {
   bottom?: number;
 }
 
+export interface ButtonArgs extends RectPosition, Size {
+  radius: number;
+  right: number;
+  bottom: number;
+  centerX: number;
+  centerY: number;
+}
+export interface RectangleArgs {
+  x?: number;
+  y?: number;
+  left?: number;
+  top?: number;
+  width?: number;
+  right?: number;
+  height?: number;
+  bottom?: number;
+}
+export interface MiddleButton extends Rectangle {
+  middle: number;
+  axeX1: number;
+  axeX2: number;
+  axeY: number;
+  radius: number;
+  bottom: number;
+}
+
 export interface ArgsMouseOnShape {
   coordinate: Coordinate;
   area: Area;

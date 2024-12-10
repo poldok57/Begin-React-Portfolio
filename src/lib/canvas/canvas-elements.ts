@@ -1,4 +1,9 @@
-import { BORDER, topRightPosition, isBorder } from "../mouse-position";
+import {
+  BORDER,
+  topRightPosition,
+  isBorder,
+  topRightPositionOver,
+} from "../mouse-position";
 import { Area } from "./types";
 import {
   SHAPE_TYPE,
@@ -6,7 +11,11 @@ import {
   ShapeDefinition,
   ParamsGeneral,
 } from "./canvas-defines";
-import { drawCornerButton, drawTurningButtons } from "./canvas-buttons";
+import {
+  drawCornerButton,
+  drawCornerButtonDelete,
+  drawTurningButtons,
+} from "./canvas-buttons";
 import { drawDashedRectangle } from "./canvas-dashed-rect";
 
 const TEXT_PADDING = 20;
@@ -379,13 +388,27 @@ const drawButtonsAndLines = (
   const sSize: Area = square.size;
 
   if (square?.withCornerButton) {
-    const opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
+    let opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
     const bPos = topRightPosition(
       square.size,
       ctx.canvas.width,
       square.rotation
     );
     drawCornerButton(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
+
+    const bPosDel = topRightPositionOver(
+      square.size,
+      ctx.canvas.width,
+      square.rotation
+    );
+    opacity = border === BORDER.ON_BUTTON_DELETE ? 1 : 0.5;
+    drawCornerButtonDelete(
+      ctx,
+      bPosDel.centerX,
+      bPosDel.centerY,
+      bPosDel.radius,
+      opacity
+    );
   }
   /**
    * draw the middle button used to rotate the shape

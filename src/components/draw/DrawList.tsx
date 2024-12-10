@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useDesignStore } from "@/lib/stores/design";
-import { X, RefreshCcw, GripVertical, Search } from "lucide-react";
+import { X, RefreshCcw, GripVertical } from "lucide-react";
 import {
   CanvasPointsData,
   DRAWING_MODES,
@@ -49,6 +49,7 @@ export const DrawList = ({
 
   const handleDeleteElement = (elementId: string) => {
     deleteDesignElement(elementId);
+    setMode(DRAWING_MODES.FIND);
     refresh();
   };
 
@@ -60,7 +61,10 @@ export const DrawList = ({
   const { draggedItem, dragItemRef } = useDragAndDrop({
     designElements,
     orderDesignElement,
-    onDragEnd: refresh,
+    onDragEnd: () => {
+      refresh();
+      setMode(DRAWING_MODES.FIND);
+    },
   });
 
   useEffect(() => {
@@ -76,16 +80,6 @@ export const DrawList = ({
         <p className="italic text-center text-gray-500">Empty list</p>
       ) : (
         <>
-          <div className="flex gap-2 items-center px-2">
-            <button
-              // onClick={() => handleFindMode(!findMode)}
-              onClick={() => setMode(DRAWING_MODES.FIND)}
-              className={cn("btn btn-sm btn-circle")}
-              title="Find element by clicking on canvas"
-            >
-              <Search size={16} />
-            </button>
-          </div>
           <div className="flex overflow-auto flex-col gap-1 p-2 max-h-96">
             <ul className="space-y-2">
               {designElements.map(
@@ -148,10 +142,12 @@ export const DrawList = ({
               )}
             </ul>
           </div>
-
           <div className="flex justify-between items-center px-2 mt-auto">
             <button
-              onClick={refresh}
+              onClick={() => {
+                refresh();
+                setMode(DRAWING_MODES.FIND);
+              }}
               className="btn btn-sm btn-circle hover:bg-gray-50"
             >
               <RefreshCcw size={16} />

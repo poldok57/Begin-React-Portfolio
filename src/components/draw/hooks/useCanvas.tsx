@@ -11,6 +11,7 @@ import {
   AllParams,
   EventDetail,
   ThingsToDraw,
+  isDrawingPause,
 } from "../../../lib/canvas/canvas-defines";
 
 import { alertMessage } from "../../alert-messages/alertMessage";
@@ -19,12 +20,12 @@ import { drawLine } from "./drawLine";
 import { drawElement } from "./drawElement";
 import { drawSelection } from "./drawSelection";
 import { drawFreehand } from "./drawFreehand";
-import { drawingHandler } from "./drawingHandler";
+import { drawFindElement } from "./drawFindElement";
+import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
 import { useDesignStore } from "@/lib/stores/design";
 import { DesignElement } from "@/components/room/types";
-import { useFindElement } from "./useFindElement";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -50,16 +51,17 @@ export const useCanvas = ({
   // drawing handler
   const drawingRef = useRef<drawingHandler | null>(null);
   const lineRef = useRef<drawLine | null>(null);
+  const findRef = useRef<drawFindElement | null>(null);
   const selectionRef = useRef<drawSelection | null>(null);
   const elementRef = useRef<drawElement | null>(null);
   const justReload = useRef(false);
 
   const {
-    designElements,
+    // designElements,
     deleteLastDesignElement,
     refreshCanvas,
     getSelectedDesignElement,
-    setSelectedDesignElement,
+    // setSelectedDesignElement,
   } = useDesignStore.getState();
   /**
    * Function to get the last picture in the history for undo action
@@ -71,17 +73,6 @@ export const useCanvas = ({
     deleteLastDesignElement();
     refreshCanvas(canvas.getContext("2d"));
   };
-
-  /**
-   * Manage find element
-   */
-  const { setFindMode } = useFindElement({
-    canvasRef,
-    canvasTemporyRef,
-    designElements,
-    setSelectedDesignElement,
-    setMode,
-  });
 
   /**
    * Function to set the context of the canvas
@@ -154,6 +145,15 @@ export const useCanvas = ({
         newHandler = true;
       }
       drawingHdl = selectionRef.current;
+    } else if (isDrawingPause(mode)) {
+      if (findRef.current === null) {
+        findRef.current = new drawFindElement(
+          canvasRef.current,
+          canvasTemporyRef.current,
+          setMode
+        );
+      }
+      drawingHdl = findRef.current;
     } else {
       throw new Error("Drawing mode not found : " + mode);
     }
@@ -275,12 +275,7 @@ export const useCanvas = ({
       generalInitialisation();
       return;
     }
-    if (newMode === DRAWING_MODES.FIND) {
-      stopExtendMouseEvent();
-      drawingRef.current = null;
-      setFindMode(true);
-      return;
-    }
+
     if (justReload.current) {
       justReload.current = false;
       return;
@@ -323,12 +318,13 @@ export const useCanvas = ({
 
     if (reload && selectedDesignElement) {
       // reload draw from history
+      // console.log("reload draw from history", selectedDesignElement);
       drawingRef.current.setDraw(selectedDesignElement);
       drawingRef.current.refreshDrawing(currentParams.general.opacity);
       if (canvasRef.current) {
         refreshCanvas(canvasRef.current.getContext("2d"), false);
       }
-
+      mouseOnCtrlPanel.current = false;
       justReload.current = true;
       return;
     }
@@ -477,43 +473,37 @@ export const useCanvas = ({
     const coord = getCoordinatesInCanvas(event, canvasRef.current);
 
     drawingRef.current.setType(currentParams.mode);
-    let toExtend = false;
-    let toReset = false;
-    let pointer = null;
-    let changeMode = null;
-
+    let mouseResult: returnMouseDown | null = null;
     if (event instanceof MouseEvent) {
-      const mouseResult = drawingRef.current.actionMouseDown(event, coord);
-      toExtend = mouseResult.toExtend ?? false;
-      toReset = mouseResult.toReset ?? false;
-      pointer = mouseResult.pointer ?? null;
-      changeMode = mouseResult.changeMode ?? null;
+      mouseResult = drawingRef.current.actionMouseDown(event, coord);
     } else {
-      const touchResult = drawingRef.current.actionTouchDown(event, coord);
-      toReset = touchResult.toReset ?? false;
-      changeMode = touchResult.changeMode ?? null;
+      mouseResult = drawingRef.current.actionTouchDown(event, coord);
     }
 
-    if (toExtend) {
+    if (mouseResult?.toExtend) {
       extendMouseEvent();
     } else {
       stopExtendMouseEvent();
     }
 
-    if (toReset && drawingRef.current) {
+    if (mouseResult?.deleteId) {
+      const deleteDesignElement = useDesignStore.getState().deleteDesignElement;
+      deleteDesignElement(mouseResult.deleteId);
+    }
+
+    if (mouseResult?.toReset && drawingRef.current) {
       drawingRef.current.endAction();
       // restart with basic drawing mode
-      // currentParams.mode = DRAWING_MODES.PAUSE;
       setMode(DRAWING_MODES.FIND);
 
-      drawingRef.current = selectDrawingHandler(DRAWING_MODES.PAUSE);
-      drawingRef.current.initData(currentParams);
+      drawingRef.current = selectDrawingHandler(DRAWING_MODES.FIND);
+      drawingRef.current.setType(DRAWING_MODES.FIND);
     }
-    if (changeMode) {
-      setMode(changeMode);
+    if (mouseResult?.changeMode) {
+      setMode(mouseResult.changeMode);
     }
-    if (pointer && canvasTemporyRef.current) {
-      canvasTemporyRef.current.style.cursor = pointer;
+    if (mouseResult?.pointer && canvasTemporyRef.current) {
+      canvasTemporyRef.current.style.cursor = mouseResult.pointer;
     }
   };
 
@@ -566,11 +556,6 @@ export const useCanvas = ({
           break;
         case DRAWING_MODES.ACTION:
           handleActionEvent(event);
-          break;
-        case DRAWING_MODES.FIND:
-          stopExtendMouseEvent();
-          drawingRef.current = null;
-          setFindMode(true);
           break;
         default:
           if (!isDrawingMode(newMode)) {

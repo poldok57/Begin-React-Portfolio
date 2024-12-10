@@ -100,10 +100,6 @@ export class CanvasShape extends CanvasDrawableObject {
     return cpy;
   }
 
-  setDataId(id: string) {
-    this.data.id = id;
-  }
-
   private async loadImage(id: string, dataURL: string | null | undefined) {
     try {
       if (!dataURL) {
