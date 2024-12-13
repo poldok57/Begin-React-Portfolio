@@ -13,6 +13,7 @@ import {
 } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
+import { drawArrow } from "./canvas-arrow";
 import { MARGIN } from "./CanvasPoints";
 
 const roundCoordinates = (
@@ -214,6 +215,18 @@ export class CanvasPath extends CanvasPoints {
               line.end.x,
               line.end.y
             );
+          }
+          break;
+        case LineType.ARROW:
+          if (start && line.end) {
+            drawArrow({
+              ctx,
+              from: start,
+              to: line.end,
+              lineWidth: lineWidth ?? ctx.lineWidth,
+              opacity: globalAlpha ?? ctx.globalAlpha,
+              color: strokeStyle ?? ctx.strokeStyle,
+            });
           }
           break;
       }

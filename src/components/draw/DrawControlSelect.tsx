@@ -66,6 +66,12 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
       });
 
       handleChangeRatio(true);
+      handleParamChange({
+        general: {
+          ...drawingParams.general,
+          opacity: 1,
+        },
+      });
       setMode(DRAWING_MODES.IMAGE);
       // close the dialog box after the file is uploaded
       if (dialogRef.current) {
@@ -113,6 +119,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
         >
           <div className="flex flex-row">Select a file to upload :</div>
           <input
+            value=""
             formMethod="dialog"
             className={clsx(
               "py-0 pr-2 w-72 text-sm bg-white rounded-md border-2 border-blue-300 h-fit",

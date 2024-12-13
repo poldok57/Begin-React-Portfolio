@@ -320,12 +320,18 @@ export const useCanvas = ({
       // reload draw from history
       // console.log("reload draw from history", selectedDesignElement);
       drawingRef.current.setDraw(selectedDesignElement);
-      drawingRef.current.refreshDrawing(currentParams.general.opacity);
+      setTimeout(
+        () => {
+          drawingRef.current?.refreshDrawing(currentParams.general.opacity);
+        },
+        newMode === DRAWING_MODES.IMAGE ? 5 : 0
+      );
       if (canvasRef.current) {
         refreshCanvas(canvasRef.current.getContext("2d"), false);
       }
       mouseOnCtrlPanel.current = false;
       justReload.current = true;
+      setMode(newMode);
       return;
     }
 

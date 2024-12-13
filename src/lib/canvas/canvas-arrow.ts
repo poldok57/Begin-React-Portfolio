@@ -1,13 +1,10 @@
-interface Point {
-  x: number;
-  y: number;
-}
+import { Coordinate } from "./types";
 
 function drawCurvedLine(
   ctx: CanvasRenderingContext2D,
-  from: Point,
-  to: Point,
-  controlPoint: Point
+  from: Coordinate,
+  to: Coordinate,
+  controlPoint: Coordinate
 ) {
   ctx.beginPath();
 
@@ -28,9 +25,9 @@ export function drawArrow({
   headSize = 30,
 }: {
   ctx: CanvasRenderingContext2D;
-  from: Point;
-  to: Point;
-  color?: string | null;
+  from: Coordinate;
+  to: Coordinate;
+  color?: string | CanvasGradient | CanvasPattern | null;
   curvature?: number;
   lineWidth?: number;
   opacity?: number;

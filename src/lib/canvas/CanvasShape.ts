@@ -18,7 +18,11 @@ import { showElement } from "./canvas-elements";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { imageLoadInCanvas } from "./image-load";
-import { makeWhiteTransparent } from "./image-transparency";
+import {
+  makeWhiteTransparent,
+  makeCornerTransparent,
+  CornerColors,
+} from "./image-transparency";
 import { useDesignStore } from "@/lib/stores/design";
 
 const compressImage = (canvasImage: HTMLCanvasElement) => {
@@ -100,6 +104,70 @@ export class CanvasShape extends CanvasDrawableObject {
     return cpy;
   }
 
+  private getTopCornerColors(canvas: HTMLCanvasElement) {
+    // get canvas context
+    const ctx = canvas.getContext("2d");
+    // Get the color of the top-left and top-right corners
+    let topLeftColor = ctx?.getImageData(0, 0, 1, 1).data ?? null;
+    let topRightColor =
+      ctx?.getImageData(canvas.width - 1, 0, 1, 1).data ?? null;
+
+    // Function to find the first non-transparent pixel diagonally
+    const findFirstNonTransparentPixel = (
+      startX: number,
+      startY: number,
+      direction: 1 | -1
+    ) => {
+      const middleX = canvas.width / 2;
+      for (let i = 0; i < middleX; i++) {
+        const color = ctx?.getImageData(
+          startX + i * direction,
+          startY + i,
+          1,
+          1
+        ).data;
+        if (color && color[3] !== 0) {
+          // Check if the alpha channel is not transparent
+          return color;
+        }
+      }
+      return null;
+    };
+
+    if (topLeftColor && topLeftColor[3] === 0) {
+      topLeftColor = findFirstNonTransparentPixel(0, 0, 1);
+    }
+
+    if (topRightColor && topRightColor[3] === 0) {
+      topRightColor = findFirstNonTransparentPixel(canvas.width - 1, 0, -1);
+    }
+
+    // Function to check if the color is close to white or light gray
+    const isLightColor = (color: Uint8ClampedArray | null) => {
+      if (!color) return false;
+      const r = color[0];
+      const g = color[1];
+      const b = color[2];
+
+      if (r > 200 && g > 200 && b > 200) {
+        return true;
+      }
+      if (r > 120 && g > 120 && b > 120) {
+        const isGray =
+          Math.abs(r - g) < 10 && Math.abs(r - b) < 10 && Math.abs(g - b) < 10;
+        if (isGray) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    if (isLightColor(topLeftColor) && isLightColor(topRightColor)) {
+      return null;
+    }
+    return { topLeft: topLeftColor, topRight: topRightColor } as CornerColors;
+  }
+
   private async loadImage(id: string, dataURL: string | null | undefined) {
     try {
       if (!dataURL) {
@@ -110,11 +178,22 @@ export class CanvasShape extends CanvasDrawableObject {
         if (canvas) {
           this.data.canvasImage = canvas;
           if (this.data.shape?.transparency) {
-            const newCanvas = makeWhiteTransparent(
-              canvas,
-              this.data.shape.transparency
-            );
-            this.data.canvasImageTransparent = newCanvas;
+            // Get the color of the top-left and top-right corners
+
+            const topCornerColors = this.getTopCornerColors(canvas);
+
+            if (topCornerColors === null) {
+              this.data.canvasImageTransparent = makeWhiteTransparent(
+                canvas,
+                this.data.shape.transparency
+              );
+            } else {
+              this.data.canvasImageTransparent = makeCornerTransparent(
+                canvas,
+                this.data.shape.transparency,
+                topCornerColors
+              );
+            }
             this.previousTransparency = this.data.shape.transparency;
           }
         } else {
@@ -234,8 +313,17 @@ export class CanvasShape extends CanvasDrawableObject {
     }
     const canvas = this.data.canvasImage;
     if (canvas) {
-      const newCanvas = makeWhiteTransparent(canvas, delta);
-      this.data.canvasImageTransparent = newCanvas;
+      const topCornerColors = this.getTopCornerColors(canvas);
+
+      if (topCornerColors === null) {
+        this.data.canvasImageTransparent = makeWhiteTransparent(canvas, delta);
+      } else {
+        this.data.canvasImageTransparent = makeCornerTransparent(
+          canvas,
+          delta,
+          topCornerColors
+        );
+      }
       if (this.data.shape) {
         this.data.shape.transparency = delta;
       } else {
@@ -368,11 +456,10 @@ export class CanvasShape extends CanvasDrawableObject {
   drawToTrottle(
     ctx: CanvasRenderingContext2D | null,
     data: ShapeDefinition,
-    withBorder: boolean,
     borderInfo?: string | null
   ) {
     ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    showElement(ctx, data, withBorder, borderInfo);
+    showElement(ctx, data, true, borderInfo);
   }
 
   showElementThrottled = throttle(this.drawToTrottle, 20);
@@ -384,9 +471,8 @@ export class CanvasShape extends CanvasDrawableObject {
     temporyDraw?: boolean,
     borderInfo?: string | null
   ) {
-    // console.log("draw", this.data);
     if (temporyDraw) {
-      this.showElementThrottled(ctx, this.data, temporyDraw, borderInfo);
+      this.showElementThrottled(ctx, this.data, borderInfo);
     } else {
       if (ctx) ctx.globalAlpha = this.data.general.opacity;
       showElement(ctx, this.data, false, null);

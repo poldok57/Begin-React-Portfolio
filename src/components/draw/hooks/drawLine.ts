@@ -46,6 +46,8 @@ export class drawLine extends drawingHandler {
     super.setType(type);
     if (type === DRAWING_MODES.ARC) {
       this.line.setType(LineType.CURVE);
+    } else if (type === DRAWING_MODES.ARROW) {
+      this.line.setType(LineType.ARROW);
     } else {
       this.line.setType(LineType.LINE);
     }

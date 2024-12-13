@@ -34,7 +34,7 @@ export const showDrawElement = (
   canvasObject.setData(element);
   setTimeout(() => {
     canvasObject.draw(ctx, withDetails);
-  }, 50);
+  }, 5);
 };
 
 export const showAllDashedRectangles = (

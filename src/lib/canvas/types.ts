@@ -69,6 +69,7 @@ export enum LineType {
   START = "s",
   LINE = "l",
   CURVE = "c",
+  ARROW = "a",
 }
 export interface LinePath {
   type: LineType;
@@ -77,4 +78,7 @@ export interface LinePath {
   lineWidth?: number;
   globalAlpha?: number | null;
   strokeStyle?: string | null;
+  headSize?: number;
+  padding?: number;
+  curvature?: number;
 }
