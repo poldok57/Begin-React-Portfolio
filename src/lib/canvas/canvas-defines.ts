@@ -21,20 +21,21 @@ const IMAGE_ACTIONS = {
 };
 
 export const SHAPE_TYPE = {
-  SQUARE: "square",
-  CIRCLE: "circle",
-  ONE_RADIUS_T: "radiusTop",
-  ONE_RADIUS_B: "radiusBottom",
-  TWO_RADIUS: "radiusHalf",
+  SQUARE: "Square",
+  CIRCLE: "Circle",
+  ONE_RADIUS_T: "Radius Top",
+  ONE_RADIUS_B: "Radius Bottom",
+  TWO_RADIUS: "Radius Half",
   SELECT: "select-auto",
-  IMAGE: "image",
-  TEXT: "text",
+  IMAGE: "Image",
+  TEXT: "Text",
 };
 
 export const DRAW_TYPE = {
-  BACKGROUND: "background",
-  DRAW: "draw",
+  BACKGROUND: "Background",
+  DRAW: "Draw",
   LINES_PATH: "Lines & Path",
+  ARROW: "Arrow",
   ...SHAPE_TYPE,
 };
 
@@ -42,7 +43,6 @@ export const DRAWING_MODES = {
   PAUSE: "pause",
   LINE: "line",
   ARC: "arc",
-  ARROW: "arrow",
   END_PATH: "endPath",
   ERASE: "erase",
   RELOAD: "reload",
@@ -164,6 +164,11 @@ export type ParamsPath = {
   color: string;
   opacity: number;
 };
+export type ParamsArrow = {
+  headSize?: number;
+  padding?: number;
+  curvature?: number;
+};
 export type AllParams = {
   mode: string;
   fixed: boolean;
@@ -173,6 +178,7 @@ export type AllParams = {
   text: ParamsText;
   border: ParamsGeneral;
   path: ParamsPath;
+  arrow: ParamsArrow;
 };
 export type GroupParams = {
   [key: string]:
@@ -182,6 +188,7 @@ export type GroupParams = {
     | ParamsShape
     | ParamsText
     | ParamsPath
+    | ParamsArrow
     | null;
 };
 
@@ -244,5 +251,10 @@ export const DEFAULT_PARAMS: AllParams = {
     filled: false,
     color: DEFAULT.PATH_COLOR,
     opacity: 0.5,
+  },
+  arrow: {
+    headSize: 15,
+    padding: 0,
+    curvature: 0.1,
   },
 };

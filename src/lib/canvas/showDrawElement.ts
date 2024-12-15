@@ -24,6 +24,7 @@ export const showDrawElement = (
       canvasObject = new CanvasFreeCurve();
       break;
     case DRAW_TYPE.LINES_PATH:
+    case DRAW_TYPE.ARROW:
       canvasObject = new CanvasPath(null);
       break;
     default:

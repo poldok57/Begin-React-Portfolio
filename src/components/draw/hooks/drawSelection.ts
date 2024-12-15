@@ -1,9 +1,5 @@
 import { Area, Size } from "@/lib/canvas/types";
-import {
-  DRAWING_MODES,
-  // AllParams,
-  ShapeDefinition,
-} from "@/lib/canvas/canvas-defines";
+import { DRAWING_MODES, ShapeDefinition } from "@/lib/canvas/canvas-defines";
 import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
@@ -18,6 +14,8 @@ import {
 } from "@/lib/canvas/canvas-save";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
+const MAX_SIZE = 640;
+const MAX_PC = 0.9;
 
 export class drawSelection extends drawElement {
   protected data: ShapeDefinition = {
@@ -35,6 +33,33 @@ export class drawSelection extends drawElement {
     } else {
       this.shape.setWithAllButtons(true);
     }
+  }
+
+  /**
+   * Function to get the original size of the selection or loaded image
+   * @returns {object} originalSize - {x, y, width, height} of the original size
+   */
+  getOriginalSize(): Size | null {
+    const originalImage = this.shape.getCanvasImage();
+    if (originalImage) {
+      this.originalSize = calculateSize(
+        originalImage as Size,
+        this.getMaxSize()
+      );
+    }
+    return this.originalSize;
+  }
+
+  /**
+   * Function to set the draw data
+   * @param {object} data - data to set
+   */
+  async setDraw(data: ShapeDefinition) {
+    await this.shape.setData(data);
+
+    setTimeout(() => {
+      this.getOriginalSize();
+    }, 100);
   }
 
   /**
@@ -180,6 +205,13 @@ export class drawSelection extends drawElement {
     }
   }
 
+  getMaxSize(): Size {
+    return {
+      width: MAX_PC * (this.mCanvas?.width || SQUARE_WIDTH),
+      height: MAX_PC * (this.mCanvas?.height || SQUARE_HEIGHT),
+    };
+  }
+
   /**
    * Function to load an image in the canvas
    * @param {string} filename - name of the file to load
@@ -191,12 +223,7 @@ export class drawSelection extends drawElement {
     const img = new Image();
     img.src = filename;
     img.onload = () => {
-      const MAX_PC = 0.9;
-      const maxSize: Size = {
-        width: MAX_PC * (this.mCanvas?.width || SQUARE_WIDTH),
-        height: MAX_PC * (this.mCanvas?.height || SQUARE_HEIGHT),
-      };
-      const MAX_SIZE = 640;
+      const maxSize: Size = this.getMaxSize();
       // Get image format from file extension or default to png
       const fileExtension = name.split(".").pop()?.toLowerCase();
       const imageFormat =
@@ -206,7 +233,7 @@ export class drawSelection extends drawElement {
           ? "jpg"
           : "png";
 
-      console.log(img.width, "x", img.height, imageFormat);
+      // console.log(img.width, "x", img.height, imageFormat);
 
       let width = img.width;
       let height = img.height;
@@ -254,11 +281,17 @@ export class drawSelection extends drawElement {
       this.mCanvas,
       this.coordinates
     );
+
     if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
+      // on turn button we can double click to rotate faster
       return;
     }
+
     if (!this.originalSize) {
-      return;
+      this.getOriginalSize();
+      if (!this.originalSize) {
+        return;
+      }
     }
     const size = this.shape.getDataSize();
     const originalRatio = this.originalSize.width / this.originalSize.height;
@@ -297,6 +330,6 @@ export class drawSelection extends drawElement {
       width: newWidth,
       height: newHeight,
     } as Area);
-    this.refreshDrawing(1, BORDER.INSIDE);
+    this.refreshDrawing(0, BORDER.INSIDE);
   };
 }

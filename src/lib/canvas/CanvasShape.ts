@@ -469,11 +469,16 @@ export class CanvasShape extends CanvasDrawableObject {
   draw(
     ctx: CanvasRenderingContext2D | null,
     temporyDraw?: boolean,
-    borderInfo?: string | null
+    borderInfo?: string | null,
+    mustDraw = false
   ) {
-    if (temporyDraw) {
+    if (temporyDraw && !mustDraw) {
       this.showElementThrottled(ctx, this.data, borderInfo);
     } else {
+      if (mustDraw) {
+        // Clear the canvas before drawing the shape
+        ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       if (ctx) ctx.globalAlpha = this.data.general.opacity;
       showElement(ctx, this.data, false, null);
     }

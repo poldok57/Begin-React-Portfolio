@@ -5,7 +5,6 @@ import {
   DRAWING_MODES,
   ThingsToDraw,
   AllParams,
-  ParamsGeneral,
   CanvasPointsData,
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
@@ -67,7 +66,7 @@ export abstract class drawingHandler {
     clearCanvasByCtx(this.ctxTempory);
   }
 
-  abstract setDataGeneral(data: ParamsGeneral): void;
+  // abstract setDataGeneral(data: ParamsGeneral): void;
 
   isExtendedMouseArea(): boolean {
     return this.extendedMouseArea;

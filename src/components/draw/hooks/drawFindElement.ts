@@ -48,7 +48,7 @@ export class drawFindElement extends drawingHandler {
     }
   }
 
-  setDataGeneral(_dataGeneral: unknown) {}
+  // setDataGeneral(_dataGeneral: unknown) {}
 
   changeData(_data: AllParams): void {}
 

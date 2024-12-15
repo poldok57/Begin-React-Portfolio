@@ -10,6 +10,7 @@ import {
   ParamsPath,
   ParamsGeneral,
   CanvasPointsData,
+  ParamsArrow,
 } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
@@ -29,6 +30,7 @@ const roundCoordinates = (
 };
 
 export class CanvasPath extends CanvasPoints {
+  protected arrowHasChanged: boolean = false;
   constructor(line: LinePath | null) {
     super();
     this.setDataType(DRAW_TYPE.LINES_PATH);
@@ -53,12 +55,22 @@ export class CanvasPath extends CanvasPoints {
   }
 
   getData(): CanvasPointsData {
+    let firstItem: LinePath | null = null;
+
+    if (this.data.items.length > 1) {
+      firstItem = this.data.items[1] as LinePath;
+      this.data.general.color = firstItem.strokeStyle ?? "gray";
+      // change type to arrow if first item is an arrow
+      if (firstItem.type === LineType.ARROW) {
+        this.data.type = DRAW_TYPE.ARROW;
+        this.data.path = undefined;
+      }
+    }
     // select main color for illustration in draw list
     if (this.data.path?.filled) {
       this.data.general.color = this.data.path?.color;
-    } else if (this.data.items.length > 1) {
-      this.data.general.color =
-        (this.data.items[1] as LinePath).strokeStyle ?? "gray";
+    } else if (firstItem) {
+      this.data.general.color = firstItem.strokeStyle ?? "gray";
     }
     return { ...this.data };
   }
@@ -219,14 +231,23 @@ export class CanvasPath extends CanvasPoints {
           break;
         case LineType.ARROW:
           if (start && line.end) {
-            drawArrow({
+            const coord: Coordinate = drawArrow({
               ctx,
               from: start,
               to: line.end,
-              lineWidth: lineWidth ?? ctx.lineWidth,
-              opacity: globalAlpha ?? ctx.globalAlpha,
-              color: strokeStyle ?? ctx.strokeStyle,
+              lineWidth: line.lineWidth ?? ctx.lineWidth,
+              opacity: line.globalAlpha ?? ctx.globalAlpha,
+              color: line.strokeStyle ?? ctx.strokeStyle,
+              headSize: line.headSize ?? 0,
+              padding: line.padding ?? 2,
+              curvature: line.curvature ?? 0.2,
             });
+
+            line.coordinates = roundCoordinates(coord);
+            if (this.arrowHasChanged && line.coordinates) {
+              this.addPointInArea(line.coordinates);
+              this.arrowHasChanged = false;
+            }
           }
           break;
       }
@@ -259,7 +280,7 @@ export class CanvasPath extends CanvasPoints {
           ctx.strokeStyle = "blue";
           crossLine(ctx, line.end, 10); // Utilisation d'une largeur de 10 pour la croix
         }
-        if (line.coordinates) {
+        if (line.coordinates && line.type === LineType.CURVE) {
           ctx.strokeStyle = "red";
           crossLine(ctx, line.coordinates, 10);
         }
@@ -269,14 +290,12 @@ export class CanvasPath extends CanvasPoints {
     return true;
   }
 
-  setParams(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
-    const { filled, color, opacity } = params;
-    this.data.path = { ...params };
+  setParamsPath(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
     const hasChanged =
       this.data.path &&
-      (this.data.path.filled !== filled ||
-        this.data.path.color !== color ||
-        this.data.path.opacity !== opacity);
+      (this.data.path.filled !== params.filled ||
+        this.data.path.color !== params.color ||
+        this.data.path.opacity !== params.opacity);
     if (hasChanged) {
       this.data.path = { ...params };
 
@@ -285,17 +304,22 @@ export class CanvasPath extends CanvasPoints {
     return hasChanged;
   }
 
-  changeParamsGeneral(params: ParamsGeneral) {
+  changeParams(params: ParamsGeneral, paramsArrow: ParamsArrow) {
     // Apply color, line width and opacity to the first path item
     if (this.data.items.length > 1) {
       // first item is start point
       const secondItem = this.data.items[1] as LinePath;
+
       secondItem.strokeStyle = params.color;
       secondItem.lineWidth = params.lineWidth;
       secondItem.globalAlpha = params.opacity;
+      if (secondItem.type === LineType.ARROW) {
+        secondItem.headSize = paramsArrow.headSize;
+        secondItem.padding = paramsArrow.padding;
+        secondItem.curvature = paramsArrow.curvature;
+        this.arrowHasChanged = true;
+      }
     }
-
-    //  this.setParamsGeneral(params);
   }
 
   addLine(line: LinePath) {
@@ -305,8 +329,16 @@ export class CanvasPath extends CanvasPoints {
       type: line.type,
       end: roundCoordinates(line.end),
     };
-    if (line.type === LineType.CURVE && line.coordinates) {
+    if (
+      (line.type === LineType.CURVE || line.type === LineType.ARROW) &&
+      line.coordinates
+    ) {
       newLine.coordinates = roundCoordinates(line.coordinates);
+    }
+    if (line.type === LineType.ARROW) {
+      newLine.headSize = line.headSize;
+      newLine.padding = line.padding;
+      newLine.curvature = line.curvature;
     }
     if (line.strokeStyle && line.strokeStyle !== strokeStyle) {
       newLine.strokeStyle = line.strokeStyle;

@@ -549,6 +549,7 @@ export const useCanvas = ({
     const handleMouseDblClick = (event: MouseEvent) => {
       if (event.detail === 2) {
         drawingRef.current?.actionMouseDblClick();
+        // Assurez-vous que cette fonction modifie l'état ou redessine le canvas
       }
     };
 
@@ -599,9 +600,9 @@ export const useCanvas = ({
       }
       stopExtendMouseEvent();
     };
-    const handleDoubleTap = () => {
+    const handleDoubleTap = (() => {
       let lastTap = 0;
-      const delay = 300; // délai en millisecondes pour détecter un double tap
+      const delay = 300;
 
       return (event: TouchEvent) => {
         const currentTime = new Date().getTime();
@@ -614,7 +615,7 @@ export const useCanvas = ({
 
         lastTap = currentTime;
       };
-    };
+    })();
 
     canvasMouse.style.pointerEvents = "auto";
 

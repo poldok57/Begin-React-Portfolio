@@ -206,7 +206,7 @@ export class drawElement extends drawingHandler {
    */
   refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
     if (opacity > 0 && this.ctxTempory) this.ctxTempory.globalAlpha = opacity;
-    this.shape.draw(this.ctxTempory, true, null);
+    this.shape.draw(this.ctxTempory, true, mouseOnShape, true);
     this.lastMouseOnShape = mouseOnShape;
   }
 
@@ -412,6 +412,6 @@ export class drawElement extends drawingHandler {
       this.shape.calculateWithTurningButtons();
     }
 
-    this.shape.draw(this.ctxTempory, true, null);
+    this.refreshDrawing(0, mouseOnShape);
   }
 }

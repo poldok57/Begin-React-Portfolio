@@ -15,6 +15,7 @@ import {
   AllParams,
   isDrawingLine,
   CanvasPointsData,
+  ParamsArrow,
 } from "@/lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
@@ -62,19 +63,16 @@ export class drawLine extends drawingHandler {
     return this.line.getCoordinates() as Coordinate;
   }
 
-  setDataGeneral(dataGeneral: ParamsGeneral) {
-    if (
-      this.path &&
-      this.finishedDrawing &&
-      this.getType() === DRAWING_MODES.LINES_PATH
-    ) {
+  setDataParam(dataGeneral: ParamsGeneral, dataArrow: ParamsArrow) {
+    // console.log("setDataParam", this.getType(), dataGeneral, dataArrow);
+    if (this.path && this.withPath && this.finishedDrawing) {
       if (this.finishedDrawingStep1) {
         this.finishedDrawingStep1 = false;
         return;
       }
       // console.log("changeParamsGeneral", dataGeneral);
       // after finised path we can change the color of the path, by the beginning of the path
-      this.path.changeParamsGeneral(dataGeneral);
+      this.path.changeParams(dataGeneral, dataArrow);
       return;
     }
     this.line.setLineWidth(dataGeneral.lineWidth);
@@ -89,13 +87,24 @@ export class drawLine extends drawingHandler {
 
   initData(initData: AllParams) {
     this.setType(initData.mode);
-    this.setDataGeneral(initData.general);
+    this.setDataParam(initData.general, initData.arrow);
   }
 
   changeData(data: AllParams) {
-    this.setDataGeneral(data.general);
+    this.setDataParam(data.general, data.arrow);
     if (data.path) {
-      this.path?.setParams(this.ctxTempory, data.path);
+      this.path?.setParamsPath(this.ctxTempory, data.path);
+    }
+    if (data.arrow) {
+      if (data.arrow.curvature) {
+        this.line.curvature = data.arrow.curvature;
+      }
+      if (data.arrow.headSize) {
+        this.line.headSize = data.arrow.headSize;
+      }
+      if (data.arrow.padding) {
+        this.line.padding = data.arrow.padding;
+      }
     }
   }
 
@@ -162,14 +171,18 @@ export class drawLine extends drawingHandler {
     }
 
     this.drawTmpPath();
-    switch (mode) {
-      case DRAWING_MODES.LINE:
-        this.line.showLine(this.ctxTempory);
-        break;
-      case DRAWING_MODES.ARC:
-        this.line.showArc(this.ctxTempory, true);
-        break;
-    }
+
+    // switch (mode) {
+    //   case DRAWING_MODES.LINE:
+    //     this.line.showLine(this.ctxTempory);
+    //     break;
+    //   case DRAWING_MODES.ARC:
+    //     this.line.showArc(this.ctxTempory, true);
+    //     break;
+    // case DRAWING_MODES.ARROW:
+    //   this.line.showArrow(this.ctxTempory, true);
+    //   break;
+    // }
     this.ctxTempory.globalAlpha = oldOpacity;
   }
 
@@ -243,6 +256,7 @@ export class drawLine extends drawingHandler {
     switch (this.getType()) {
       case DRAWING_MODES.LINE:
       case DRAWING_MODES.ARC:
+      case DRAWING_MODES.ARROW:
         if (!this.path) {
           this.initPath(withPath);
         } else if (this.line.setPositions()) {
@@ -270,7 +284,7 @@ export class drawLine extends drawingHandler {
   // search if the mouse click on the end of the arc
   clicOnArcEnd(coord: Coordinate) {
     if (this.getType() !== DRAWING_MODES.ARC) {
-      return;
+      return false;
     }
     const MARGIN_POINT = 10;
     const endCoord = this.line.getEndCoordinates() as Coordinate;
@@ -372,9 +386,18 @@ export class drawLine extends drawingHandler {
         }
         toExtend = this.showLineAndArc(false);
 
-        if (this.path && this.path.getItemsLength() > 2) {
-          // path has been created if we have at least 2 lines
-          this.withPath = true;
+        if (this.path) {
+          const itemsLen = this.path.getItemsLength();
+          if (itemsLen > 2) {
+            // path has been created if we have at least 2 lines
+            this.withPath = true;
+          }
+          if (itemsLen === 2 && this.getType() === DRAWING_MODES.ARROW) {
+            this.path.setFinished(true);
+            this.withPath = true;
+            this.finishedDrawing = true;
+            toExtend = false;
+          }
         }
       }
     }

@@ -12,6 +12,9 @@ export class CanvasLine implements LinePath {
   strokeStyle: string | null = null;
   lineWidth: number = 0;
   globalAlpha: number | null = null;
+  headSize: number = 0;
+  padding: number = 2;
+  curvature: number = 0.2;
 
   constructor(canvas: HTMLCanvasElement | null = null) {
     this.setCanvas(canvas);
@@ -155,6 +158,26 @@ export class CanvasLine implements LinePath {
     return true;
   }
 
+  showCross(context: CanvasRenderingContext2D | null = null) {
+    if (context === null) {
+      context = this.context;
+    }
+    if (!context) return false;
+
+    const memo = {
+      lineWidth: context.lineWidth,
+      strokeStyle: context.strokeStyle,
+    };
+    if (this.start) {
+      crossLine(context, this.start, this.lineWidth * 1.8);
+    }
+    if (this.end) {
+      crossLine(context, this.end, this.lineWidth * 1.8);
+    }
+    context.lineWidth = memo.lineWidth;
+    context.strokeStyle = memo.strokeStyle;
+  }
+
   showArc(
     context: CanvasRenderingContext2D | null = null,
     withCross: boolean = false
@@ -198,17 +221,37 @@ export class CanvasLine implements LinePath {
     }
 
     if (withCross) {
-      const lineWidth = context.lineWidth;
-      const strokeStyle = context.strokeStyle;
-
-      crossLine(context, start, lineWidth * 1.8);
-      crossLine(context, end, lineWidth * 1.8);
-      // crossLine(context, current, SIZE_CROSS);
-      context.lineWidth = lineWidth;
-      context.strokeStyle = strokeStyle;
+      this.showCross(context);
     }
 
     return true;
+  }
+
+  showArrow(
+    context: CanvasRenderingContext2D | null = null,
+    withCross: boolean = false
+  ) {
+    if (context === null) {
+      context = this.context;
+    }
+    if (!context) return false;
+
+    if (this.start && this.coordinates) {
+      drawArrow({
+        ctx: context,
+        from: this.start,
+        to: this.end ?? this.coordinates,
+        color: this.strokeStyle || "rgba(128, 128, 128, 0.7)",
+        lineWidth: this.lineWidth,
+        curvature: this.curvature || 0,
+        opacity: this.globalAlpha || 1,
+        padding: this.padding || 0,
+        headSize: this.headSize || 15,
+      });
+    }
+    if (withCross) {
+      this.showCross(context);
+    }
   }
 
   setPositions() {
@@ -222,10 +265,15 @@ export class CanvasLine implements LinePath {
     context: CanvasRenderingContext2D | null = null,
     withCross: boolean = false
   ) {
-    if (this.type === LineType.CURVE) {
-      this.showArc(context, withCross);
-    } else {
-      this.showLine(context);
+    switch (this.type) {
+      case LineType.CURVE:
+        this.showArc(context, withCross);
+        break;
+      case LineType.ARROW:
+        this.showArrow(context, withCross);
+        break;
+      default:
+        this.showLine(context);
     }
   }
 

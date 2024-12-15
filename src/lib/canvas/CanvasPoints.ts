@@ -83,6 +83,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     size.x = Math.min(size.x, coord.x);
     size.y = Math.min(size.y, coord.y);
 
+    // If the top right corner is equal to coord, increase size.x by 15
+    if (size.x + size.width === coord.x && size.y === coord.y) {
+      size.y -= 2 * MARGIN;
+    }
+
     size.width = right - size.x;
     size.height = bottom - size.y;
   }
@@ -153,7 +158,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     let right = 0;
     let bottom = 0;
 
-    this.data.items.forEach((line) => {
+    let borderRight = 0;
+
+    this.data.items.forEach((line, index) => {
       const coord: Coordinate | null =
         "end" in line ? (line.end as Coordinate) : (line as Coordinate);
 
@@ -162,19 +169,32 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         top = Math.min(top, coord.y);
         right = Math.max(right, coord.x);
         bottom = Math.max(bottom, coord.y);
+        if (right === coord.x) {
+          borderRight = index;
+        }
         if ("coordinates" in line && line.coordinates) {
-          left = Math.min(left, line.coordinates.x - 2);
-          top = Math.min(top, line.coordinates.y - 2);
-          right = Math.max(right, line.coordinates.x + 2);
-          bottom = Math.max(bottom, line.coordinates.y + 2);
+          left = Math.min(left, line.coordinates.x);
+          top = Math.min(top, line.coordinates.y);
+          right = Math.max(right, line.coordinates.x);
+          bottom = Math.max(bottom, line.coordinates.y);
         }
       }
     });
+
+    const line = this.data.items[borderRight];
+    if (line && "end" in line && line.end) {
+      // if the top right corner is equal to coord, increase size.x by 15
+      // to
+      if (line.end.x === right && line.end.y - 2 * MARGIN < top) {
+        top = line.end.y - 2 * MARGIN;
+      }
+    }
+
     return {
-      x: left,
-      y: top,
-      width: right - left,
-      height: bottom - top,
+      x: left - 2,
+      y: top - 2,
+      width: right - left + 4,
+      height: bottom - top + 4,
     };
   }
 

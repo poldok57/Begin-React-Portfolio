@@ -1,4 +1,4 @@
-import { LinePath } from "./types";
+import { LinePath, LineType } from "./types";
 import {
   DRAW_TYPE,
   CanvasPointsData,
@@ -6,6 +6,7 @@ import {
   GroupParams,
   ParamsGeneral,
   ThingsToDraw,
+  ParamsArrow,
 } from "./canvas-defines";
 
 export const updateParamFromElement = (
@@ -26,6 +27,7 @@ export const updateParamFromElement = (
       copyGeneral = true;
       break;
     case DRAW_TYPE.LINES_PATH:
+    case DRAW_TYPE.ARROW:
       if (selectedElement.path) {
         setParams({ path: selectedElement.path });
       }
@@ -42,7 +44,16 @@ export const updateParamFromElement = (
         const line: LinePath = selectedElement.items[1] as LinePath;
         general.color = line.strokeStyle || "";
         general.lineWidth = line.lineWidth || 0;
-        general.opacity = line.globalAlpha || 0;
+        general.opacity = line.globalAlpha || 1;
+        if (line.type === LineType.ARROW) {
+          const arrow = {
+            headSize: line.headSize,
+            padding: line.padding,
+            curvature: line.curvature,
+          } as ParamsArrow;
+          setParams({ arrow: arrow });
+          general.color = "red";
+        }
       }
       setParams({ general: general });
       break;
@@ -51,7 +62,7 @@ export const updateParamFromElement = (
         setParams({ text: selectedElement.text });
       }
       break;
-    default:
+    default: // Shape & Image
       copyGeneral = true;
       if (selectedElement.shape) {
         setParams({ shape: selectedElement.shape });

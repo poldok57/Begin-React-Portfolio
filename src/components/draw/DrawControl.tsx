@@ -35,7 +35,7 @@ import { MutableRefObject } from "react";
 import { useDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
-import { Search } from "lucide-react";
+import { Search, MoveUpRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface DrawControlProps {
@@ -235,29 +235,37 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       >
         <div className="flex flex-row gap-4">
           <Button
-            className="px-5"
+            className="px-4"
             selected={mode == DRAWING_MODES.DRAW}
             onClick={() => handleModeChange(DRAWING_MODES.DRAW)}
           >
             Draw
           </Button>
           <Button
-            className="px-5 py-1"
-            selected={isDrawingLine(mode)}
+            className="px-4 py-1"
+            selected={isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW}
             onClick={() => handleModeChange(DRAWING_MODES.LINE)}
             title="Draw lines"
           >
             Lines
           </Button>
           <Button
-            className="px-5"
+            className="px-4 py-1"
+            selected={mode == DRAWING_MODES.ARROW}
+            onClick={() => handleModeChange(DRAWING_MODES.ARROW)}
+            title="Arrow"
+          >
+            <MoveUpRight size={28} />
+          </Button>
+          <Button
+            className="px-4"
             selected={mode == DRAWING_MODES.TEXT}
             onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
           >
             Text
           </Button>
           <Button
-            className="px-5 bg-teal-400 hover:bg-teal-500"
+            className="px-4 bg-teal-400 hover:bg-teal-500"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => {
               handleModeChange(DRAWING_MODES.ERASE);
@@ -268,7 +276,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             <CiEraser size="20px" />
           </Button>
           <Button
-            className="px-5 bg-blue-500 hover:bg-blue-600"
+            className="px-4 bg-blue-500 hover:bg-blue-600"
             selected={isDrawingSelect(mode)}
             onClick={() => {
               handleSelectZone();
@@ -292,7 +300,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
               />
             </label>
           )}
-          <div className="flex items-center justify-end w-full">
+          <div className="flex justify-end items-center w-full">
             <button
               onClick={() => handleModeChange(DRAWING_MODES.FIND)}
               className={cn(
@@ -340,6 +348,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             handleModeChange={handleModeChange}
             addEventAction={addEventAction}
             paramsPath={drawingParams.path}
+            paramsArrow={drawingParams.arrow}
             isTouch={isTouch}
           />
         )}
