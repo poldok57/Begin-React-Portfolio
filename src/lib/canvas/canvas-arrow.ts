@@ -100,7 +100,7 @@ export function drawArrow({
   ctx.beginPath();
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
-  ctx.globalAlpha = opacity > 0.5 ? opacity - 0.2 : opacity;
+  // ctx.globalAlpha = opacity > 0.5 ? opacity - 0.2 : opacity;
 
   ctx.moveTo(adjustedTo.x, adjustedTo.y);
   ctx.moveTo(adjustedTo.x, adjustedTo.y);

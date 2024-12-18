@@ -43,7 +43,7 @@ export const updateParamFromElement = (
       ) {
         const line: LinePath = selectedElement.items[1] as LinePath;
         general.color = line.strokeStyle || "";
-        general.lineWidth = line.lineWidth || 0;
+        general.lineWidth = line.lineWidth || 1;
         general.opacity = line.globalAlpha || 1;
         if (line.type === LineType.ARROW) {
           const arrow = {

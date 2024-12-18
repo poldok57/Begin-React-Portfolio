@@ -29,7 +29,7 @@ export abstract class CanvasDrawableObject {
     borderInfo?: string | null
   ): void;
 
-  abstract getData(): ThingsToDraw;
+  abstract getData(): ThingsToDraw | null;
 
   abstract setData(data: ThingsToDraw): void;
 

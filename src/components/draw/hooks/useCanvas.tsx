@@ -32,6 +32,7 @@ const TEMPORTY_OPACITY = 0.6;
 interface DrawCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
+  canvasMouseRef: React.RefObject<HTMLCanvasElement>;
   mode: string;
   setMode: (mode: string) => void;
   getParams: () => AllParams;
@@ -40,6 +41,7 @@ interface DrawCanvasProps {
 export const useCanvas = ({
   canvasRef,
   canvasTemporyRef,
+  canvasMouseRef,
   mode,
   setMode,
   getParams,
@@ -160,6 +162,7 @@ export const useCanvas = ({
 
     if (newHandler && drawingHdl) {
       drawingHdl.initData(currentParams);
+      drawingHdl.setMouseCanvas(canvasMouseRef.current);
     }
     drawingHdl.setType(mode);
 
@@ -196,7 +199,12 @@ export const useCanvas = ({
     drawingRef.current?.actionMouseUp();
   };
 
-  const handleMouseDownExtend = (event: MouseEvent | TouchEvent) => {
+  /**
+   * Handle mouse down event (no touch event)
+   * @param event - MouseEvent
+   * @returns void
+   */
+  const handleMouseDownExtend = (event: MouseEvent) => {
     if (!drawingRef.current || !canvasTemporyRef.current) return;
     // the event is inside the canvas, let event on the canvas to be handled
     if (canvasTemporyRef.current.contains(event.target as Node)) {
@@ -210,15 +218,8 @@ export const useCanvas = ({
 
     const coord = getCoordinatesInCanvas(event, canvasTemporyRef.current);
 
-    let toExtend: boolean | undefined = false;
-    if (event instanceof TouchEvent) {
-      const ret = drawingRef.current.actionTouchDown(event, coord);
-      toExtend = ret.toExtend;
-    } else {
-      const ret = drawingRef.current.actionMouseDown(event, coord);
-      toExtend = ret.toExtend;
-    }
-    if (!toExtend) {
+    const ret = drawingRef.current.actionMouseDown(event, coord);
+    if (!ret.toExtend) {
       stopExtendMouseEvent();
     }
   };
@@ -462,7 +463,12 @@ export const useCanvas = ({
    * Function to start drawing on the canvas
    * @param {Event} event
    */
-  const actionMouseDown = (event: MouseEvent | TouchEvent) => {
+  const actionMouseDown = (
+    event: MouseEvent | TouchEvent,
+    touchDevice: boolean = false
+  ) => {
+    if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
+
     if (!canvasRef.current) {
       console.error(
         canvasRef.current == null ? "canvas" : "drawingParams",
@@ -470,7 +476,6 @@ export const useCanvas = ({
       );
       return;
     }
-    if (!drawingRef.current) return;
 
     // color and width painting
     currentParams = getParams();
@@ -478,12 +483,15 @@ export const useCanvas = ({
 
     const coord = getCoordinatesInCanvas(event, canvasRef.current);
 
-    drawingRef.current.setType(currentParams.mode);
-    let mouseResult: returnMouseDown | null = null;
-    if (event instanceof MouseEvent) {
-      mouseResult = drawingRef.current.actionMouseDown(event, coord);
+    drawingRef.current?.setType(currentParams.mode);
+    let mouseResult: returnMouseDown | null | undefined = undefined;
+    if (touchDevice) {
+      mouseResult = drawingRef.current?.actionTouchDown(
+        event as TouchEvent,
+        coord
+      );
     } else {
-      mouseResult = drawingRef.current.actionTouchDown(event, coord);
+      mouseResult = drawingRef.current?.actionMouseDown(event, coord);
     }
 
     if (mouseResult?.toExtend) {
@@ -497,13 +505,13 @@ export const useCanvas = ({
       deleteDesignElement(mouseResult.deleteId);
     }
 
-    if (mouseResult?.toReset && drawingRef.current) {
-      drawingRef.current.endAction();
+    if (mouseResult?.toReset) {
+      drawingRef.current?.endAction();
       // restart with basic drawing mode
       setMode(DRAWING_MODES.FIND);
 
       drawingRef.current = selectDrawingHandler(DRAWING_MODES.FIND);
-      drawingRef.current.setType(DRAWING_MODES.FIND);
+      drawingRef.current?.setType(DRAWING_MODES.FIND);
     }
     if (mouseResult?.changeMode) {
       setMode(mouseResult.changeMode);
@@ -531,8 +539,6 @@ export const useCanvas = ({
       drawingRef.current?.actionMouseUp();
     };
     const handleMouseDown = (event: MouseEvent) => {
-      if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
-
       actionMouseDown(event);
     };
     const handleMouseMove = (event: MouseEvent) => {
@@ -577,7 +583,7 @@ export const useCanvas = ({
         event.preventDefault();
       }
 
-      actionMouseDown(event);
+      actionMouseDown(event, true);
     };
 
     const handleTouchMove = (event: TouchEvent) => {

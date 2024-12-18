@@ -5,7 +5,7 @@ import { CanvasPoints } from "./CanvasPoints";
 import { DRAW_TYPE, ParamsGeneral } from "./canvas-defines";
 
 const MARGIN = 5;
-const DELAY = 100;
+const DELAY = 20;
 
 export class CanvasFreeCurve extends CanvasPoints {
   constructor() {
@@ -35,7 +35,6 @@ export class CanvasFreeCurve extends CanvasPoints {
     });
     this.startArea(firstPoint);
   }
-
   delayAddPoint(point: Coordinate) {
     // Utilisation de throttle pour limiter la fréquence d'ajout de points
     const throttledAddPoint = throttle((point: Coordinate) => {
@@ -43,6 +42,12 @@ export class CanvasFreeCurve extends CanvasPoints {
     }, DELAY); // 50ms de délai
 
     throttledAddPoint(point);
+
+    if (this.pointAdded) {
+      this.pointAdded = false;
+      return true;
+    }
+    return false;
   }
 
   draw(ctx: CanvasRenderingContext2D, withDashedRectangle: boolean = false) {

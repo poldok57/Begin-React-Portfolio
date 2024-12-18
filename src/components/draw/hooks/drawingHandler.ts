@@ -24,6 +24,7 @@ export abstract class drawingHandler {
 
   protected context: CanvasRenderingContext2D | null = null;
   protected ctxTempory: CanvasRenderingContext2D | null = null;
+  protected ctxMouse: CanvasRenderingContext2D | null = null;
   protected lastMouseOnShape: string | null = null;
   protected setMode: (mode: string) => void;
   protected lockRatio: boolean = false;
@@ -61,9 +62,18 @@ export abstract class drawingHandler {
     ) as CanvasRenderingContext2D | null;
   }
 
+  setMouseCanvas(canvas: HTMLCanvasElement | null) {
+    if (!canvas) return;
+    this.ctxMouse = canvas.getContext("2d") as CanvasRenderingContext2D | null;
+  }
+
   clearTemporyCanvas(): void {
     if (!this.ctxTempory) return;
     clearCanvasByCtx(this.ctxTempory);
+  }
+  clearMouseCanvas(): void {
+    if (!this.ctxMouse) return;
+    clearCanvasByCtx(this.ctxMouse);
   }
 
   // abstract setDataGeneral(data: ParamsGeneral): void;

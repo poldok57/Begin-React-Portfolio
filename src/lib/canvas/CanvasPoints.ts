@@ -28,6 +28,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
   protected isFinished: boolean = false;
+  protected pointAdded: boolean = false;
 
   constructor() {
     super();
@@ -50,7 +51,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     };
   }
 
-  getData(): CanvasPointsData {
+  getData(): CanvasPointsData | null {
+    if (!this.data.items || this.data.items.length <= 1) {
+      return null;
+    }
     return { ...this.data };
   }
 
@@ -123,6 +127,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.addPointInArea(item as Coordinate);
     }
     this.angleFound = -1;
+
+    this.pointAdded = true;
   }
 
   cancelLastItem() {
@@ -159,10 +165,15 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     let bottom = 0;
 
     let borderRight = 0;
+    let maxLineWidth = this.data.general.lineWidth;
 
     this.data.items.forEach((line, index) => {
       const coord: Coordinate | null =
         "end" in line ? (line.end as Coordinate) : (line as Coordinate);
+
+      if ("lineWidth" in line && line.lineWidth) {
+        maxLineWidth = Math.max(maxLineWidth, line.lineWidth);
+      }
 
       if (coord) {
         left = Math.min(left, coord.x);
@@ -189,12 +200,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         top = line.end.y - 2 * MARGIN;
       }
     }
+    maxLineWidth = maxLineWidth / 2 + 1;
 
     return {
-      x: left - 2,
-      y: top - 2,
-      width: right - left + 4,
-      height: bottom - top + 4,
+      x: left - maxLineWidth,
+      y: top - maxLineWidth,
+      width: right - left + 2 * maxLineWidth,
+      height: bottom - top + 2 * maxLineWidth,
     };
   }
 
@@ -230,14 +242,15 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   drawDashedRectangle(
     ctx: CanvasRenderingContext2D | null,
-    mouseOnRectangle: string | null = null
+    mouseOnRectangle: string | null = null,
+    withCornerButton: boolean = true
   ) {
     if (!ctx || !this.data.size) {
       return;
     }
     drawDashedRectangle(ctx, this.data.size, 0.3);
 
-    if (this.isFinished) {
+    if (this.isFinished && withCornerButton) {
       this.drawCornerButtons(ctx, mouseOnRectangle);
     }
   }
@@ -384,6 +397,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return null;
   }
 
+  /**
+   * Throttle move path
+   */
   throttleMovePath = throttle(
     (ctx: CanvasRenderingContext2D | null, newMousePosition: Coordinate) => {
       if (this.lastMousePosition) {

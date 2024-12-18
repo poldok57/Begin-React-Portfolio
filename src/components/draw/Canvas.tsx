@@ -5,6 +5,7 @@ interface CanvasProps {
   height: number;
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
+  canvasMouseRef: React.RefObject<HTMLCanvasElement>;
   background: string;
 }
 
@@ -13,6 +14,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   height,
   canvasRef,
   canvasTemporyRef,
+  canvasMouseRef,
   background,
 }) => {
   return (
@@ -35,6 +37,18 @@ export const Canvas: React.FC<CanvasProps> = ({
           top: 0,
         }}
         className="m-auto rounded-md shadow-md border-spacing-3"
+      />
+      <canvas
+        width={width}
+        height={height}
+        ref={canvasMouseRef as React.RefObject<HTMLCanvasElement>}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          zIndex: 1,
+        }}
+        className="m-auto transparent"
       />
       <canvas
         width={width}

@@ -23,6 +23,7 @@ const DEFAULT_HEIGHT = 432;
 export const Draw = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTemporyRef = useRef<HTMLCanvasElement>(null);
+  const canvasMouseRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [canvasPosition, setCanvasPosition] = useState({ x: 0, y: 0 });
 
@@ -48,6 +49,7 @@ export const Draw = () => {
   useCanvas({
     canvasRef,
     canvasTemporyRef,
+    canvasMouseRef,
     mode,
     setMode,
     getParams: getDrawingParams,
@@ -107,6 +109,7 @@ export const Draw = () => {
             height={canvasHeight}
             canvasRef={canvasRef}
             canvasTemporyRef={canvasTemporyRef}
+            canvasMouseRef={canvasMouseRef}
             background={background}
           />
 

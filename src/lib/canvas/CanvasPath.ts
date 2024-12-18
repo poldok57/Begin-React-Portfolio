@@ -54,17 +54,19 @@ export class CanvasPath extends CanvasPoints {
     this.addItem(item);
   }
 
-  getData(): CanvasPointsData {
+  getData(): CanvasPointsData | null {
     let firstItem: LinePath | null = null;
 
-    if (this.data.items.length > 1) {
-      firstItem = this.data.items[1] as LinePath;
-      this.data.general.color = firstItem.strokeStyle ?? "gray";
-      // change type to arrow if first item is an arrow
-      if (firstItem.type === LineType.ARROW) {
-        this.data.type = DRAW_TYPE.ARROW;
-        this.data.path = undefined;
-      }
+    if (!this.data.items || this.data.items.length <= 1) {
+      return null;
+    }
+
+    firstItem = this.data.items[1] as LinePath;
+    this.data.general.color = firstItem.strokeStyle ?? "gray";
+    // change type to arrow if first item is an arrow
+    if (firstItem.type === LineType.ARROW) {
+      this.data.type = DRAW_TYPE.ARROW;
+      this.data.path = undefined;
     }
     // select main color for illustration in draw list
     if (this.data.path?.filled) {
@@ -149,8 +151,6 @@ export class CanvasPath extends CanvasPoints {
     if (this.data.items.length <= 1) {
       return true;
     }
-
-    // console.error("draw path", this.data.items);
 
     ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
@@ -268,7 +268,6 @@ export class CanvasPath extends CanvasPoints {
     ) {
       return false;
     }
-    this.drawDashedRectangle(ctx);
 
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.5;
@@ -286,6 +285,7 @@ export class CanvasPath extends CanvasPoints {
         }
       }
     });
+    this.drawDashedRectangle(ctx);
 
     return true;
   }
@@ -298,8 +298,6 @@ export class CanvasPath extends CanvasPoints {
         this.data.path.opacity !== params.opacity);
     if (hasChanged) {
       this.data.path = { ...params };
-
-      this.draw(ctx);
     }
     return hasChanged;
   }

@@ -42,7 +42,7 @@ export class CanvasLine implements LinePath {
   getCoordinates() {
     return this.coordinates;
   }
-  eraseCoordinate() {
+  eraseCoordinates() {
     this.coordinates = null;
   }
 

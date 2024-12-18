@@ -90,43 +90,49 @@ export class drawFreehand extends drawingHandler {
    * @param {DRAWING_MODES} mode
    */
   followCursor() {
-    const ctxTempory = this.ctxTempory;
-    if (ctxTempory === null) {
-      console.error("ctxTempory is null");
-      return;
-    }
-
     if (this.finishedDrawing) {
       return "move";
     }
 
-    this.clearTemporyCanvas();
+    const ctxTempory = this.ctxTempory;
+    const ctxMouse = this.ctxMouse ?? ctxTempory;
 
-    ctxTempory.globalAlpha = 0.4;
+    if (ctxMouse === null || ctxTempory === null) {
+      console.error("ctxTempory is null");
+      return;
+    }
+
+    if (this.ctxMouse === null) {
+      this.clearTemporyCanvas();
+      // this.path?.draw(this.ctxTempory, this.withPath);
+    } else {
+      this.clearMouseCanvas();
+    }
+
+    ctxMouse.globalAlpha = 0.4;
+    ctxMouse.lineWidth = this.general.lineWidth;
+    ctxMouse.strokeStyle = this.general.color;
 
     const coord = this.getCoordinates() as Coordinate;
 
     switch (this.getType()) {
       case DRAWING_MODES.DRAW:
-        hightLightMouseCursor(ctxTempory, coord, mouseCircle);
+        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
         drawPoint({
-          context: ctxTempory,
+          context: ctxMouse,
           coordinate: coord,
         } as drawingCircle);
-        ctxTempory.strokeStyle = this.general.color;
-        ctxTempory.lineWidth = this.general.lineWidth;
-        this.freeCurve.draw(ctxTempory, false);
         break;
       case DRAWING_MODES.ERASE:
         ctxTempory.globalAlpha = 0.7;
-        hightLightMouseCursor(ctxTempory, coord, {
+        hightLightMouseCursor(ctxMouse, coord, {
           ...mouseCircle,
           color: "pink",
           width: 50,
         });
         ctxTempory.globalAlpha = 0.5;
         hatchedCircle({
-          context: ctxTempory,
+          context: ctxMouse,
           coordinate: coord,
           color: "#eee",
           borderColor: "#303030",
@@ -163,7 +169,17 @@ export class drawFreehand extends drawingHandler {
 
     if (this.isDrawing()) {
       if (this.getType() === DRAWING_MODES.DRAW) {
-        this.freeCurve.delayAddPoint(this.coordinates as Coordinate);
+        const ctxTempory = this.ctxTempory;
+        if (ctxTempory === null) {
+          console.error("ctxTempory is null");
+          return null;
+        }
+        if (this.freeCurve.delayAddPoint(this.coordinates as Coordinate)) {
+          ctxTempory.strokeStyle = this.general.color;
+          ctxTempory.lineWidth = this.general.lineWidth;
+          this.clearTemporyCanvas();
+          this.freeCurve.draw(ctxTempory, false);
+        }
       } else {
         basicLine(
           this.context as CanvasRenderingContext2D,
@@ -260,6 +276,7 @@ export class drawFreehand extends drawingHandler {
         this.finishedDrawing = true;
         this.freeCurve.setFinished(true);
         this.clearTemporyCanvas();
+        this.clearMouseCanvas();
         this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
       }
       this.setDrawing(false);
@@ -271,6 +288,7 @@ export class drawFreehand extends drawingHandler {
       return;
     }
     this.clearTemporyCanvas();
+    this.clearMouseCanvas();
 
     if (this.isDrawing()) {
       this.setDrawing(false);
@@ -282,6 +300,7 @@ export class drawFreehand extends drawingHandler {
     this.finishedDrawing = false;
     this.freeCurve.clearPoints();
     this.clearTemporyCanvas();
+    this.clearMouseCanvas();
     this.setDrawing(false);
     return null;
   }
@@ -289,5 +308,6 @@ export class drawFreehand extends drawingHandler {
   endAction() {
     this.setDrawing(false);
     this.clearTemporyCanvas();
+    this.clearMouseCanvas();
   }
 }

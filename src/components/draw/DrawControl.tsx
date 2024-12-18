@@ -24,6 +24,7 @@ import {
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
+import { DrawControlArrow } from "./DrawControlArrow";
 import { DrawControlGeneral } from "./DrawControlGeneral";
 // import { eraseHistory } from "../../lib/canvas/canvas-history";
 
@@ -55,7 +56,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
 }) => {
   const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
-  const [lockRatio, setLockRatio] = useState(false);
+  const [lockRatio, setLockRatio] = useState(drawingParams.lockRatio);
 
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
@@ -285,7 +286,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           >
             <PiSelectionPlusLight size="20px" />
           </Button>
-          {(isDrawingShape(mode) || isDrawingSelect(mode)) && (
+          {(isDrawingShape(mode) || isDrawingLine(mode)) && (
             <label
               htmlFor="toggle-ratio"
               className="flex flex-col justify-center items-center text-sm text-nowrap"
@@ -341,15 +342,19 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           paramsGeneral={drawingParams.general}
           isTouch={isTouch}
         />
-        {isDrawingLine(mode) && (
+        {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
           <DrawControlLine
             mode={mode}
-            handleParamChange={handleParamChange}
-            handleModeChange={handleModeChange}
-            addEventAction={addEventAction}
+            handleModeChange={setMode}
             paramsPath={drawingParams.path}
+            addEventAction={addEventAction}
+            handleParamChange={handleParamChange}
+          />
+        )}
+        {mode === DRAWING_MODES.ARROW && (
+          <DrawControlArrow
             paramsArrow={drawingParams.arrow}
-            isTouch={isTouch}
+            handleParamChange={handleParamChange}
           />
         )}
         <DrawControlShape
