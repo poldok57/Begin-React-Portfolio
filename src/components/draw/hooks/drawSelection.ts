@@ -6,7 +6,7 @@ import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
 import { drawElement } from "./drawElement";
 import { alertMessage } from "../../alert-messages/alertMessage";
-import { imageSize, cutOutArea } from "@/lib/canvas/canvas-size";
+import { cutOutArea, getUsedArea } from "@/lib/canvas/canvas-size";
 import {
   downloadCanvasToPNG,
   downloadCanvasToSVG,
@@ -102,10 +102,12 @@ export class drawSelection extends drawElement {
   startAction(): void {
     const mode = this.shape.getType();
     switch (mode) {
+      case DRAWING_MODES.SELECT_AREA:
       case DRAWING_MODES.SELECT:
         // Zone selection
-        const rect = imageSize(this.mCanvas);
-        this.memorizeSelectedArea(rect);
+        const usedArea = getUsedArea(this.mCanvas);
+
+        this.memorizeSelectedArea(usedArea);
         this.shape.setWithAllButtons(false);
         this.shape.setTransparency(0);
         this.shape.setCanvasImageTransparent(null);
@@ -115,6 +117,18 @@ export class drawSelection extends drawElement {
         this.shape.setWithAllButtons(true);
         this.shape.setTransparency(0);
         this.shape.setCanvasImageTransparent(null);
+    }
+  }
+
+  /**
+   * Function to end the action on the canvas, after changing the mode
+   */
+  endAction() {
+    super.endAction();
+    const mode = this.shape.getType();
+    if (mode === DRAWING_MODES.SELECT || mode === DRAWING_MODES.SELECT_AREA) {
+      // erase the selected area, in case of reccording the draw later
+      this.eraseSelectedArea();
     }
   }
   /**
@@ -182,7 +196,7 @@ export class drawSelection extends drawElement {
 
     if (area === null) {
       // find empty space
-      area = imageSize(this.mCanvas);
+      area = getUsedArea(this.mCanvas);
       if (area === null) {
         return;
       }

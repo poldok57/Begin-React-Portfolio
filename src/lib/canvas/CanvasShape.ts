@@ -65,8 +65,15 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data = { ...this.data, ...data };
   }
 
-  getData(): ShapeDefinition {
+  getData(): ShapeDefinition | null {
     const d = this.data;
+
+    if (
+      d.type === DRAWING_MODES.SELECT_AREA ||
+      d.type === DRAWING_MODES.SELECT
+    ) {
+      return null;
+    }
 
     const cpy: ShapeDefinition = {
       id: d.id,

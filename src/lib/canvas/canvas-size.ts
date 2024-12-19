@@ -1,76 +1,54 @@
 "use client";
 import { Area } from "./types";
 
-const getAlphaLines = (canvas: HTMLCanvasElement): Uint8ClampedArray[] => {
-  const ctx = canvas.getContext("2d")!;
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-  const lines: Uint8ClampedArray[] = [];
-
-  for (let y = 0; y < canvas.height; y++) {
-    const lineData = new Uint8ClampedArray(canvas.width);
-    for (let x = 0; x < canvas.width; x++) {
-      const index = (y * canvas.width + x) * 4;
-      lineData[x] = data[index + 3];
-    }
-    lines.push(lineData);
-  }
-
-  return lines;
-};
-
-export const imageSize = (canvas: HTMLCanvasElement | null): Area | null => {
+export function getUsedArea(
+  canvas: HTMLCanvasElement | null
+): { x: number; y: number; width: number; height: number } | null {
   if (canvas === null) return null;
-  const { width, height } = canvas.getBoundingClientRect();
-  const lines = getAlphaLines(canvas);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
 
-  let top: number | null = null;
-  let bottom: number | null = height - 1;
-  let left: number | null = null;
-  let right: number | null = width - 1;
+  const { width, height } = canvas;
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
 
-  for (let y = 0; y < lines.length; y++) {
-    if (lines[y]?.some((alpha) => alpha > 0)) {
-      top = y;
-      break;
-    }
-  }
+  let top = null;
+  let bottom = null;
+  let left = null;
+  let right = null;
 
-  for (let y = lines.length - 1; y >= top!; y--) {
-    if (lines[y]?.some((alpha) => alpha > 0)) {
-      bottom = y;
-      break;
-    }
-  }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const index = (y * width + x) * 4;
+      const alpha = data[index + 3];
 
-  for (let x = 0; x < width; x++) {
-    if (lines?.some((line) => line[x] > 0)) {
-      left = x;
-      break;
-    }
-  }
-
-  for (let x = Math.round(width) - 1; x >= left!; x--) {
-    if (lines.some((line) => line[x] > 0)) {
-      right = x;
-      break;
+      if (alpha > 0) {
+        if (top === null) top = y;
+        bottom = y;
+        if (left === null || x < left) left = x;
+        if (right === null || x > right) right = x;
+      }
     }
   }
 
   if (top !== null && bottom !== null && left !== null && right !== null) {
-    const usedWidth = right - left + 1;
-    const usedHeight = bottom - top + 1;
     return {
-      width: usedWidth,
-      height: usedHeight,
       x: left,
       y: top,
+      width: right - left + 1,
+      height: bottom - top + 1,
     };
-  } else {
-    return null;
   }
-};
 
+  return null;
+}
+
+/**
+ * Function to cut out an area from a canvas
+ * @param canvas HTMLCanvasElement
+ * @param area Area
+ * @returns HTMLCanvasElement
+ */
 export const cutOutArea = (
   canvas: HTMLCanvasElement,
   area: Area

@@ -336,8 +336,10 @@ export const useCanvas = ({
       return;
     }
 
-    drawingRef.current.startAction();
-    drawingRef.current.refreshDrawing();
+    setTimeout(() => {
+      drawingRef.current?.startAction();
+      drawingRef.current?.refreshDrawing();
+    }, 25);
   };
 
   const handleActionEvent = (event: EventDetail) => {
@@ -381,7 +383,9 @@ export const useCanvas = ({
         if (selectionRef.current === null) {
           selectDrawingHandler(DRAWING_MODES.SELECT);
         }
-        selectionRef.current?.saveCanvas(filename, event.detail?.format);
+        setTimeout(() => {
+          selectionRef.current?.saveCanvas(filename, event.detail?.format);
+        }, 25);
         break;
       case DRAWING_MODES.LOAD:
         {

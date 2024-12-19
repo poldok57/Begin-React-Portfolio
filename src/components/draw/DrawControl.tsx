@@ -1,10 +1,4 @@
-import React, {
-  useRef,
-  useMemo,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
 import { isTouchDevice } from "@/lib/utils/device";
 import { SlActionUndo } from "react-icons/sl";
 import { CiEraser } from "react-icons/ci";
@@ -139,13 +133,13 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   };
 
   const handleChangeRatio = (ratio: boolean) => {
-    alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
+    // alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
     setParams({ lockRatio: ratio });
     setLockRatio(ratio);
     addEventMode(DRAWING_MODES.CHANGE);
   };
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+  const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
       case "Escape":
         addEventAction(DRAWING_MODES.ABORT);
@@ -189,7 +183,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       default:
         break;
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (selectedDesignElement) {
