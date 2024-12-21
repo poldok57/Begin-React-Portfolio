@@ -16,9 +16,12 @@ import { drawCornerButton, drawCornerButtonDelete } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
+import { showCanvasImage } from "./canvas-elements";
 
 export const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
+const MIN_DISTANCE = 3;
+const MIN_DISTANCE2 = MIN_DISTANCE ** 2;
 
 export abstract class CanvasPoints extends CanvasDrawableObject {
   protected data: CanvasPointsData;
@@ -28,7 +31,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
   protected isFinished: boolean = false;
-  protected pointAdded: boolean = false;
+  protected maxLineWidth: number = 0;
+  protected canvasImage: HTMLCanvasElement | null = null;
+  protected hasChanged = {
+    position: false,
+    draw: false,
+  };
 
   constructor() {
     super();
@@ -60,20 +68,35 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   setData(data: CanvasPointsData) {
     this.data = { ...data };
+    this.hasChanged = { position: false, draw: false };
+    this.canvasImage = null;
     // console.log("setData points", data);
   }
 
   setParamsGeneral(params: ParamsGeneral) {
+    const previousParams = this.data.general;
     this.data.general = { ...this.data.general, ...params };
+    this.maxLineWidth = this.data.general.lineWidth;
+    // Check if any property of data.general has changed
+    if (
+      previousParams.color !== this.data.general.color ||
+      previousParams.lineWidth !== this.data.general.lineWidth ||
+      previousParams.opacity !== this.data.general.opacity
+    ) {
+      this.hasChanged.draw = true;
+    }
   }
 
   startArea(firstPoint: Coordinate) {
+    const widthLine = this.maxLineWidth / 2 + 1;
+
     this.data.size = {
-      x: firstPoint.x - 1,
-      y: firstPoint.y - 1,
-      width: 2,
-      height: 2,
+      x: firstPoint.x - widthLine - 1,
+      y: firstPoint.y - widthLine - 1,
+      width: 2 * widthLine + 2,
+      height: 2 * widthLine + 2,
     };
+    console.log("startArea", this.data.size);
   }
 
   addPointInArea(coord: Coordinate) {
@@ -81,44 +104,76 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       return;
     }
 
-    const size = this.data.size;
-    const right = Math.max(size.x + size.width, coord.x);
-    const bottom = Math.max(size.y + size.height, coord.y);
-    size.x = Math.min(size.x, coord.x);
-    size.y = Math.min(size.y, coord.y);
+    // const coordAbsolute = { ...coord };
+    coord.x = coord.x - this.data.size.x;
+    coord.y = coord.y - this.data.size.y;
 
-    // If the top right corner is equal to coord, increase size.x by 15
-    if (size.x + size.width === coord.x && size.y === coord.y) {
-      size.y -= 2 * MARGIN;
-    }
+    const lineWidth = this.maxLineWidth / 2 + 1;
+    const previousSize = { ...this.data.size };
+    const size = this.data.size;
+    const right = Math.max(size.x + size.width, coord.x + lineWidth);
+    const bottom = Math.max(size.y + size.height, coord.y + lineWidth);
+
+    size.x = Math.min(size.x, size.x + coord.x - lineWidth);
+    size.y = Math.min(size.y, size.y + coord.y - lineWidth);
 
     size.width = right - size.x;
     size.height = bottom - size.y;
+
+    if (previousSize.x !== size.x || previousSize.y !== size.y) {
+      this.hasChanged.position = true;
+      this.calculateRelativePositions({
+        x: size.x - previousSize.x,
+        y: size.y - previousSize.y,
+      });
+      console.log("addPointInArea newSize:", size);
+    }
   }
 
+  /**
+   * Add an item to the data
+   * @param item - The item to add
+   */
   addItem(item: LinePath | Coordinate) {
+    // Check if the item is the same as the previous item
     const prevItem = this.data.items[this.data.items.length - 1];
+    let prevPoint: Coordinate | null = null;
+    let newPoint: Coordinate | null = null;
+
     if (prevItem && "end" in prevItem && prevItem.end) {
-      const prevEnd = prevItem.end as Coordinate;
-      const currentEnd = (item as LinePath).end as Coordinate;
-      if (prevEnd.x === currentEnd.x && prevEnd.y === currentEnd.y) {
-        return; // Ignore adding the current item if it's the same as the previous item
-      }
+      prevPoint = (prevItem as LinePath).end as Coordinate;
     }
     // Verify if the current item is of type Coordinate
-    if ("x" in item && "y" in item) {
-      const currentPoint = item as Coordinate;
-      if (prevItem && "x" in prevItem && "y" in prevItem) {
-        const prevPoint = prevItem as Coordinate;
-        if (prevPoint.x === currentPoint.x && prevPoint.y === currentPoint.y) {
-          return; // Ignore adding the current item if it's the same as the previous item
-        }
+    else if (prevItem && "x" in prevItem && "y" in prevItem) {
+      prevPoint = prevItem as Coordinate;
+    }
+
+    if ("end" in item && item.end) {
+      newPoint = (item as LinePath).end as Coordinate;
+    } else if ("x" in item && "y" in item) {
+      newPoint = item as Coordinate;
+    }
+
+    if (prevPoint && newPoint) {
+      // distance^2 < MIN_DISTANCE^2
+      const distance2 =
+        (prevPoint.x - newPoint.x) ** 2 + (prevPoint.y - newPoint.y) ** 2;
+      if (distance2 < MIN_DISTANCE2) {
+        return false; // Ignore adding the current item if it's the same as the previous item
       }
     }
 
+    // Add the item to the data
     this.data.items.push(item as LinePath & Coordinate);
     if ("end" in item && (item as LinePath).end) {
       const end = (item as LinePath).end as Coordinate;
+      if (
+        "lineWidth" in item &&
+        item.lineWidth &&
+        this.maxLineWidth < item.lineWidth
+      ) {
+        this.maxLineWidth = item.lineWidth;
+      }
       this.addPointInArea(end);
       if ("coordinates" in item && item.coordinates) {
         this.addPointInArea(item.coordinates);
@@ -128,7 +183,27 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
     this.angleFound = -1;
 
-    this.pointAdded = true;
+    this.hasChanged.draw = true;
+    return true;
+  }
+
+  getStartCoordinates() {
+    const firstItem = this.data.items[0];
+    if ("end" in firstItem && firstItem.end) {
+      return firstItem.end as Coordinate;
+    }
+    return firstItem as Coordinate;
+  }
+
+  isCloseFromStart(coord: Coordinate) {
+    const firstItem = this.data.items[0];
+    if ("end" in firstItem && firstItem.end) {
+      const prevPoint = firstItem.end as Coordinate;
+      const distance2 =
+        (coord.x - prevPoint.x) ** 2 + (coord.y - prevPoint.y) ** 2;
+      return distance2 < MARGIN ** 2;
+    }
+    return false;
   }
 
   cancelLastItem() {
@@ -138,6 +213,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.data.size = this.getArea(null);
       this.angleFound = -1;
       this.coordFound = -1;
+      this.hasChanged.draw = true;
       return true;
     }
     return false;
@@ -158,6 +234,28 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return this.data.items.length;
   }
 
+  protected calculateRelativePositions(offset: Coordinate) {
+    this.data.items.forEach((line) => {
+      if ("end" in line && line.end) {
+        line.end.x -= offset.x;
+        line.end.y -= offset.y;
+      }
+      if ("coordinates" in line && line.coordinates) {
+        line.coordinates.x -= offset.x;
+        line.coordinates.y -= offset.y;
+      }
+      if ("x" in line && "y" in line) {
+        line.x -= offset.x;
+        line.y -= offset.y;
+      }
+    });
+    this.hasChanged.position = false;
+  }
+  /**
+   * Get the area of the points
+   * @param insidePoint - The point inside the area
+   * @returns The area of the points
+   */
   protected getArea(insidePoint: Coordinate | null): Area {
     let left = insidePoint ? insidePoint.x : Infinity;
     let top = insidePoint ? insidePoint.y : Infinity;
@@ -165,7 +263,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     let bottom = 0;
 
     let borderRight = 0;
+    let borderTop = 0;
     let maxLineWidth = this.data.general.lineWidth;
+    const previousSize = { ...this.data.size };
 
     this.data.items.forEach((line, index) => {
       const coord: Coordinate | null =
@@ -183,6 +283,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         if (right === coord.x) {
           borderRight = index;
         }
+        if (top === coord.y) {
+          borderTop = index;
+        }
         if ("coordinates" in line && line.coordinates) {
           left = Math.min(left, line.coordinates.x);
           top = Math.min(top, line.coordinates.y);
@@ -192,22 +295,42 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     });
 
-    const line = this.data.items[borderRight];
-    if (line && "end" in line && line.end) {
+    // upper right corner let place between the line and corner button
+    const pRight = this.data.items[borderRight];
+    if (pRight && "end" in pRight && pRight.end) {
       // if the top right corner is equal to coord, increase size.x by 15
-      // to
-      if (line.end.x === right && line.end.y - 2 * MARGIN < top) {
-        top = line.end.y - 2 * MARGIN;
+      if (pRight.end.y < top + 2 * MARGIN) {
+        top = pRight.end.y - 2 * MARGIN;
       }
     }
+    const pTop = this.data.items[borderTop];
+    if (pTop && "end" in pTop && pTop.end) {
+      if (pTop.end.x >= right - 2 * MARGIN) {
+        top = Math.min(top, pTop.end.y - 2 * MARGIN);
+      }
+    }
+    // new size
     maxLineWidth = maxLineWidth / 2 + 1;
+    const x = left - maxLineWidth;
+    const y = top - maxLineWidth;
+    const width = right - left + 2 * maxLineWidth;
+    const height = bottom - top + 2 * maxLineWidth;
 
-    return {
-      x: left - maxLineWidth,
-      y: top - maxLineWidth,
-      width: right - left + 2 * maxLineWidth,
-      height: bottom - top + 2 * maxLineWidth,
-    };
+    // check if the position has changed
+    if (previousSize.x !== x || previousSize.y !== y) {
+      this.hasChanged.position = true;
+      this.calculateRelativePositions({
+        x: x - previousSize.x,
+        y: y - previousSize.y,
+      });
+    }
+    // check if the draw has changed
+    if (previousSize.width !== width || previousSize.height !== height) {
+      this.hasChanged.draw = true;
+    }
+
+    console.log("getArea", { x, y, width, height });
+    return { x, y, width, height };
   }
 
   drawCornerButtons(
@@ -306,9 +429,14 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return false;
   }
 
-  findAngle(coord: Coordinate): boolean {
+  findAngle(coordonate: Coordinate): boolean {
     // Vérifier le point de départ
     // Cash controle
+
+    const coord = {
+      x: coordonate.x - this.data.size.x,
+      y: coordonate.y - this.data.size.y,
+    };
 
     if (this.angleFound >= 0 && this.findSameAnge(coord)) {
       return true;
@@ -350,7 +478,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.coordFound = -1;
   }
 
-  move(offset: Coordinate) {
+  // deprecated
+  moveAllPoint(offset: Coordinate) {
     const item = this.data.items[0];
     if (typeof item === "object" && item !== null && "end" in item) {
       const lines = this.data.items as LinePath[];
@@ -374,6 +503,15 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       });
     }
 
+    if (this.data.size) {
+      this.data.size.x += offset.x;
+      this.data.size.y += offset.y;
+    }
+    this.angleFound = -1;
+    this.coordFound = -1;
+  }
+
+  move(offset: Coordinate) {
     if (this.data.size) {
       this.data.size.x += offset.x;
       this.data.size.y += offset.y;
@@ -412,7 +550,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         this.lastMousePosition = newMousePosition;
       }
     },
-    30
+    25
   );
 
   moveAngle(newCoord: Coordinate) {
@@ -436,6 +574,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         firstItem.end = { ...newCoord };
 
         this.data.size = this.getArea(newCoord);
+        this.hasChanged.draw = true;
         return true;
       }
     }
@@ -449,6 +588,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         (line as Coordinate).y = newCoord.y;
       }
       this.data.size = this.getArea(newCoord);
+      this.hasChanged.draw = true;
       return true;
     }
     if (this.coordFound > 0 && this.coordFound <= this.data.items.length) {
@@ -531,5 +671,48 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       withTurningButtons: false,
       maxWidth: ctx.canvas.width,
     } as ArgsMouseOnShape);
+  }
+
+  abstract drawLines(_ctx: CanvasRenderingContext2D | null): boolean;
+  // for implement add infos on the canvas
+  drawAddingInfos(_ctx: CanvasRenderingContext2D | null): void {}
+
+  draw(
+    ctx: CanvasRenderingContext2D | null,
+    withDashedRectangle: boolean = true
+  ): boolean {
+    if (!ctx) {
+      return false;
+    }
+    // draw the path in a temporyCanvas
+    if (this.hasChanged.draw || this.canvasImage === null) {
+      const canvas = document.createElement("canvas");
+      canvas.width = this.data.size.width;
+      canvas.height = this.data.size.height;
+      const ctxTemp = canvas.getContext("2d");
+      if (ctxTemp) {
+        this.canvasImage = canvas;
+        this.drawLines(ctxTemp);
+      }
+      if (!this.drawLines(ctxTemp)) {
+        return false;
+      }
+    }
+    if (this.canvasImage) {
+      showCanvasImage(ctx, this.data.size, this.canvasImage);
+    }
+
+    if (
+      !withDashedRectangle ||
+      this.data.items.length <= 1 ||
+      !this.data.size
+    ) {
+      return false;
+    }
+
+    this.drawAddingInfos(ctx);
+    this.drawDashedRectangle(ctx);
+
+    return true;
   }
 }

@@ -99,8 +99,6 @@ export const isDrawingSquare = (mode: string) =>
 export const isDrawingLine = (mode: string) => LINE_MODES.includes(mode);
 export const isDrawingFreehand = (mode: string) =>
   FREEHAND_MODES.includes(mode);
-export const isDrawingAllLines = (mode: string) =>
-  isDrawingLine(mode) || isDrawingFreehand(mode);
 export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
 export const isDrawingPause = (mode: string) => PAUSE_MODES.includes(mode);
 const DEFAULT = {

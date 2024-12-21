@@ -17,7 +17,7 @@ import {
 } from "../../../lib/canvas/canvas-defines";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 
-import { throttle } from "@/lib/utils/throttle";
+// import { throttle } from "@/lib/utils/throttle";
 import { BORDER } from "@/lib/mouse-position";
 
 /**
@@ -143,7 +143,7 @@ export class drawFreehand extends drawingHandler {
     return "none"; //  cursorType;
   }
 
-  thorttleBasicLine = throttle(basicLine, 50);
+  // thorttleBasicLine = throttle(basicLine, 50);
 
   memoPoints(freeCurve: CanvasFreeCurve, coord: Coordinate) {
     freeCurve.addItem(coord);
@@ -222,7 +222,7 @@ export class drawFreehand extends drawingHandler {
 
           event.stopPropagation();
           return {
-            changeMode: DRAWING_MODES.FIND,
+            changeMode: DRAWING_MODES.DRAW,
           };
         case BORDER.ON_BUTTON_DELETE: {
           const deleteId = this.freeCurve.getDataId();
@@ -260,6 +260,7 @@ export class drawFreehand extends drawingHandler {
 
   validCurve() {
     if (this.getType() === DRAWING_MODES.DRAW) {
+      this.freeCurve.setFinished(true);
       this.freeCurve.draw(this.context as CanvasRenderingContext2D);
       this.freeCurve.clearPoints();
       this.saveCanvasPicture();

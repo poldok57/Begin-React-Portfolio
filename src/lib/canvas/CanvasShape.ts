@@ -214,7 +214,7 @@ export class CanvasShape extends CanvasDrawableObject {
 
   async setData(data: ShapeDefinition) {
     this.data = { ...data };
-
+    console.log("setData", data);
     if (!data.shape?.withBorder && data.border) {
       console.log(data.type, "withBorder error", data.border);
       this.data.border = undefined;
@@ -251,13 +251,7 @@ export class CanvasShape extends CanvasDrawableObject {
   getType() {
     return this.data.type;
   }
-  setDataSize(data: Area | Coordinate): void {
-    if ("width" in data && "height" in data) {
-      this.data.size = { ...data };
-    } else {
-      this.data.size = { ...this.data.size, ...data };
-    }
-  }
+
   getDataSize(): Area {
     return { ...this.data.size };
   }

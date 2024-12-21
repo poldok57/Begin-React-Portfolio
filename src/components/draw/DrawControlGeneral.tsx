@@ -7,7 +7,8 @@ import {
   ParamsGeneral,
   DRAWING_MODES,
   GroupParams,
-  isDrawingAllLines,
+  isDrawingLine,
+  isDrawingFreehand,
   isDrawingSelect,
   Params,
 } from "@/lib/canvas/canvas-defines";
@@ -34,7 +35,10 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
     <>
       <div
         className={clsx("flex flex-row gap-4 border border-secondary p-2", {
-          "bg-paper": isDrawingAllLines(mode) || mode === DRAWING_MODES.IMAGE,
+          "bg-paper":
+            isDrawingLine(mode) ||
+            isDrawingFreehand(mode) ||
+            mode === DRAWING_MODES.IMAGE,
           "gap-8": isTouch,
           hidden: mode === DRAWING_MODES.TEXT,
         })}

@@ -15,7 +15,6 @@ import {
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
 import { drawArrow } from "./canvas-arrow";
-import { MARGIN } from "./CanvasPoints";
 
 const roundCoordinates = (
   coord: Coordinate | null | undefined
@@ -140,10 +139,12 @@ export class CanvasPath extends CanvasPoints {
     return true;
   }
 
-  draw(
-    ctx: CanvasRenderingContext2D | null,
-    withDashedRectangle: boolean = true
-  ): boolean {
+  /**
+   * Draw the path on the canvas
+   * @param ctx - canvas context
+   * @returns true if the path is drawn, false otherwise
+   */
+  drawLines(ctx: CanvasRenderingContext2D | null): boolean {
     if (!ctx) {
       return false;
     }
@@ -260,12 +261,11 @@ export class CanvasPath extends CanvasPoints {
     if (this.data.path && this.data.path.filled) {
       this.fillPath(ctx, minWidth);
     }
+    return true;
+  }
 
-    if (
-      !withDashedRectangle ||
-      this.data.items.length <= 1 ||
-      !this.data.size
-    ) {
+  drawAddingInfos(ctx: CanvasRenderingContext2D | null) {
+    if (!ctx) {
       return false;
     }
 
@@ -277,17 +277,22 @@ export class CanvasPath extends CanvasPoints {
         const line = item as LinePath;
         if (line.end) {
           ctx.strokeStyle = "blue";
-          crossLine(ctx, line.end, 10); // Utilisation d'une largeur de 10 pour la croix
+          const coord = {
+            x: line.end.x + this.data.size.x,
+            y: line.end.y + this.data.size.y,
+          };
+          crossLine(ctx, coord, 10); // Utilisation d'une largeur de 10 pour la croix
         }
         if (line.coordinates && line.type === LineType.CURVE) {
           ctx.strokeStyle = "red";
-          crossLine(ctx, line.coordinates, 10);
+          const coord = {
+            x: line.coordinates.x + this.data.size.x,
+            y: line.coordinates.y + this.data.size.y,
+          };
+          crossLine(ctx, coord, 10);
         }
       }
     });
-    this.drawDashedRectangle(ctx);
-
-    return true;
   }
 
   setParamsPath(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
@@ -379,70 +384,61 @@ export class CanvasPath extends CanvasPoints {
     };
   }
 
+  /**
+   * Close the path by adding a line to the start point,
+   * if the last item is close to the start point, we can close the path
+   */
   close() {
-    if (this.data.items.length <= 0) {
+    if (this.data.items.length <= 1) {
       return;
     }
 
     const lastItem: LinePath | null = this.getLastItem() as LinePath;
-
     if (!lastItem || !lastItem.end) {
       return;
     }
-    const firstItem: LinePath | null = this.data.items[0] as LinePath;
-    const start: Coordinate = firstItem?.end as Coordinate;
 
-    // for curve we can move last point to start point
-    if (lastItem && lastItem.type === LineType.CURVE && lastItem.end) {
-      const dx = start.x - lastItem.end.x;
-      const dy = start.y - lastItem.end.y;
-
-      if (Math.abs(dx) < MARGIN && Math.abs(dy) < MARGIN) {
-        lastItem.end = {
-          x: start.x,
-          y: start.y,
-        };
-        if (lastItem.coordinates) {
-          lastItem.coordinates = {
-            x: lastItem.coordinates.x + dx / 2,
-            y: lastItem.coordinates.y + dy / 2,
-          };
-        }
-        // console.log("close curve", lastItem.end);
-        return;
-      }
-    }
-    if (lastItem.end.x !== start.x && lastItem.end.y !== start.y) {
-      // Verify if the end point is close to the start point
-      const dx = start.x - lastItem.end.x;
-      const dy = start.y - lastItem.end.y;
-
-      if (Math.abs(dx) < MARGIN && Math.abs(dy) < MARGIN) {
-        // Calculate the middle point
-        const midX = (start.x + lastItem.end.x) / 2;
-        const midY = (start.y + lastItem.end.y) / 2;
-
-        // Move the start point and the end point to the middle point
-        start.x = midX;
-        start.y = midY;
-        lastItem.end.x = midX;
-        lastItem.end.y = midY;
-
-        // Update the first element of the path
-        if (firstItem && firstItem.end) {
-          firstItem.end.x = midX;
-          firstItem.end.y = midY;
-        }
-
-        return;
-      }
-
-      // add a line to the start point
+    // if the last item is not close to the start point, we add a line to the start point to close the path
+    if (!this.isCloseFromStart(lastItem.end)) {
       const newLine: LinePath = {
         type: LineType.LINE,
-        end: { ...start },
+        end: { ...this.getStartCoordinates() },
       };
       this.addItem(newLine);
+      return;
     }
+
+    // if the last item is close to the start point, we can close the path
+
+    const start = (this.data.items[0] as LinePath).end as Coordinate;
+    const midX = (start.x - lastItem.end.x) / 2;
+    const midY = (start.y - lastItem.end.y) / 2;
+
+    if (midX === 0 && midY === 0) {
+      // exact same point
+      return;
+    }
+
+    // for curve we can move last point to start point
+    if (lastItem && lastItem.type === LineType.CURVE) {
+      lastItem.end = {
+        x: start.x,
+        y: start.y,
+      };
+      if (lastItem.coordinates) {
+        lastItem.coordinates = {
+          x: lastItem.coordinates.x + midX,
+          y: lastItem.coordinates.y + midY,
+        };
+      }
+      // console.log("close curve", lastItem.end);
+      return;
+    }
+    // if the last item is a line, we can close the path
+    // Move the start point and the end point to the middle point
+    start.x = start.x + midX;
+    start.y = start.y + midY;
+    lastItem.end.x = start.x;
+    lastItem.end.y = start.y;
   }
 }

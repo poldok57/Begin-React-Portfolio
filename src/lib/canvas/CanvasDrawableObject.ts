@@ -5,6 +5,7 @@
  */
 
 import { ThingsToDraw } from "./canvas-defines";
+import { Area, Coordinate } from "./types";
 
 export abstract class CanvasDrawableObject {
   protected data: ThingsToDraw;
@@ -42,5 +43,17 @@ export abstract class CanvasDrawableObject {
   }
   getDataId() {
     return this.data.id;
+  }
+
+  setDataSize(data: Area | Coordinate): void {
+    if ("width" in data && "height" in data) {
+      this.data.size = { ...data };
+    } else {
+      this.data.size = { ...this.data.size, ...data };
+    }
+  }
+
+  getDataSize(): Area {
+    return { ...this.data.size };
   }
 }

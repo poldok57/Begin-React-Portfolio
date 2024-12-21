@@ -311,6 +311,13 @@ export const useCanvas = ({
         canvasTemporyRef.current as HTMLCanvasElement,
         TEMPORTY_OPACITY
       );
+      // set the mouse canvas
+      if (canvasMouseRef.current) {
+        setContext(
+          canvasMouseRef.current as HTMLCanvasElement,
+          TEMPORTY_OPACITY
+        );
+      }
     }
     // console.log("newMode", newMode, reload ? "reload" : "no reload");
 

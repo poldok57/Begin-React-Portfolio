@@ -5,9 +5,10 @@ import { CanvasPoints } from "./CanvasPoints";
 import { DRAW_TYPE, ParamsGeneral } from "./canvas-defines";
 
 const MARGIN = 5;
-const DELAY = 20;
+const DELAY = 5;
 
 export class CanvasFreeCurve extends CanvasPoints {
+  protected pointAdded: boolean = false;
   constructor() {
     super();
     this.setDataType(DRAW_TYPE.DRAW);
@@ -26,7 +27,6 @@ export class CanvasFreeCurve extends CanvasPoints {
   }) {
     this.data.id = "";
     this.data.items = [];
-    this.data.items.push(firstPoint as Coordinate & LinePath);
 
     this.setParamsGeneral({
       opacity: general.opacity || 0,
@@ -34,11 +34,14 @@ export class CanvasFreeCurve extends CanvasPoints {
       lineWidth: general.lineWidth || 1,
     });
     this.startArea(firstPoint);
+    this.addItem(firstPoint);
   }
   delayAddPoint(point: Coordinate) {
     // Utilisation de throttle pour limiter la fréquence d'ajout de points
     const throttledAddPoint = throttle((point: Coordinate) => {
-      this.addItem(point);
+      if (this.addItem(point)) {
+        this.pointAdded = true;
+      }
     }, DELAY); // 50ms de délai
 
     throttledAddPoint(point);
@@ -50,10 +53,13 @@ export class CanvasFreeCurve extends CanvasPoints {
     return false;
   }
 
-  draw(ctx: CanvasRenderingContext2D, withDashedRectangle: boolean = false) {
+  drawLines(ctx: CanvasRenderingContext2D | null): boolean {
+    if (!ctx) {
+      return false;
+    }
     const items = this.data.items;
 
-    if (items.length < 2) return;
+    if (items.length < 2) return false;
 
     ctx.globalAlpha = this.data.general.opacity;
     ctx.strokeStyle = this.data.general.color;
@@ -61,7 +67,7 @@ export class CanvasFreeCurve extends CanvasPoints {
 
     if (items.length === 2) {
       basicLine(ctx, items[0] as Coordinate, items[1] as Coordinate);
-      return;
+      return true;
     }
 
     // calculate list of curves
@@ -140,11 +146,7 @@ export class CanvasFreeCurve extends CanvasPoints {
         (items[items.length - 1] as Coordinate).y
       );
     }
-
     ctx.stroke();
-
-    if (withDashedRectangle && items.length > 1 && this.data.size) {
-      this.drawDashedRectangle(ctx);
-    }
+    return true;
   }
 }

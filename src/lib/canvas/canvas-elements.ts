@@ -476,7 +476,7 @@ const drawButtonsAndLines = (
 /**
  * function to shapDraw a shape on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} square - {x, y, width, height, color, type, rotation}
+ * @param {ShapeDefinition} data - data to show
  * @param {boolean} withButton - show button to resize the square
  */
 const shapeDrawing = (
@@ -589,5 +589,31 @@ export const showElement = (
 
   if (withButton) {
     drawButtonsAndLines(ctx, square, mouseOnShape);
+  }
+};
+
+/**
+ * Function to show a canvas image on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Area} size - size of the image
+ * @param {HTMLCanvasElement} canvasImage - canvas image to show
+ * @param {number} rotation - rotation of the image
+ */
+export const showCanvasImage = (
+  ctx: CanvasRenderingContext2D,
+  size: Area,
+  canvasImage: HTMLCanvasElement,
+  rotation?: number
+) => {
+  if (!ctx || !canvasImage) return;
+
+  if (rotation) {
+    rotateElement(ctx, size, rotation);
+  }
+
+  drawImage({ ctx, squareSize: size, virtualCanvas: canvasImage });
+
+  if (rotation) {
+    ctx.restore();
   }
 };

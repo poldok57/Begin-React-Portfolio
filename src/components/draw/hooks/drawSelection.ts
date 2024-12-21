@@ -59,7 +59,7 @@ export class drawSelection extends drawElement {
 
     setTimeout(() => {
       this.getOriginalSize();
-    }, 100);
+    }, 25);
   }
 
   /**
@@ -106,6 +106,9 @@ export class drawSelection extends drawElement {
       case DRAWING_MODES.SELECT:
         // Zone selection
         const usedArea = getUsedArea(this.mCanvas);
+        if (usedArea === null) {
+          console.log("startAction usedArea null");
+        }
 
         this.memorizeSelectedArea(usedArea);
         this.shape.setWithAllButtons(false);
