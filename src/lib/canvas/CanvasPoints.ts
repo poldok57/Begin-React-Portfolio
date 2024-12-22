@@ -96,7 +96,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       width: 2 * widthLine + 2,
       height: 2 * widthLine + 2,
     };
-    console.log("startArea", this.data.size);
   }
 
   addPointInArea(coord: Coordinate) {
@@ -105,28 +104,34 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
 
     // const coordAbsolute = { ...coord };
-    coord.x = coord.x - this.data.size.x;
-    coord.y = coord.y - this.data.size.y;
+    // coord.x = coord.x - this.data.size.x;
+    // coord.y = coord.y - this.data.size.y;
 
     const lineWidth = this.maxLineWidth / 2 + 1;
     const previousSize = { ...this.data.size };
     const size = this.data.size;
-    const right = Math.max(size.x + size.width, coord.x + lineWidth);
-    const bottom = Math.max(size.y + size.height, coord.y + lineWidth);
+    const width = Math.max(size.width, coord.x + lineWidth);
+    const height = Math.max(size.height, coord.y + lineWidth);
 
     size.x = Math.min(size.x, size.x + coord.x - lineWidth);
     size.y = Math.min(size.y, size.y + coord.y - lineWidth);
 
-    size.width = right - size.x;
-    size.height = bottom - size.y;
+    // if elarge at right or bottom
+    size.width = width;
+    size.height = height;
 
+    // if elarge
     if (previousSize.x !== size.x || previousSize.y !== size.y) {
       this.hasChanged.position = true;
-      this.calculateRelativePositions({
-        x: size.x - previousSize.x,
-        y: size.y - previousSize.y,
-      });
-      console.log("addPointInArea newSize:", size);
+      const offset = {
+        x: previousSize.x - size.x,
+        y: previousSize.y - size.y,
+      };
+      size.width += offset.x;
+      size.height += offset.y;
+      this.calculateRelativePositions(offset);
+
+      // console.log("addPointInArea newSize:", size, "offset:", offset);
     }
   }
 
@@ -149,10 +154,16 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
 
     if ("end" in item && item.end) {
-      newPoint = (item as LinePath).end as Coordinate;
+      newPoint = { ...((item as LinePath).end as Coordinate) };
     } else if ("x" in item && "y" in item) {
-      newPoint = item as Coordinate;
+      newPoint = { ...(item as Coordinate) };
     }
+    if (!newPoint) {
+      return false;
+    }
+    // relative to the area
+    newPoint.x -= this.data.size.x;
+    newPoint.y -= this.data.size.y;
 
     if (prevPoint && newPoint) {
       // distance^2 < MIN_DISTANCE^2
@@ -163,10 +174,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     }
 
-    // Add the item to the data
-    this.data.items.push(item as LinePath & Coordinate);
     if ("end" in item && (item as LinePath).end) {
-      const end = (item as LinePath).end as Coordinate;
+      (item as LinePath).end = newPoint;
+      // Add the item to the data
+      this.data.items.push(item as LinePath & Coordinate);
+
+      // if lineWidth is defined => update maxLineWidth
       if (
         "lineWidth" in item &&
         item.lineWidth &&
@@ -174,12 +187,17 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       ) {
         this.maxLineWidth = item.lineWidth;
       }
-      this.addPointInArea(end);
+      this.addPointInArea(newPoint);
       if ("coordinates" in item && item.coordinates) {
+        item.coordinates.x -= this.data.size.x;
+        item.coordinates.y -= this.data.size.y;
         this.addPointInArea(item.coordinates);
       }
     } else {
-      this.addPointInArea(item as Coordinate);
+      // Add the item to the data
+      this.data.items.push(newPoint as LinePath & Coordinate);
+
+      this.addPointInArea(newPoint);
     }
     this.angleFound = -1;
 
@@ -187,7 +205,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return true;
   }
 
-  getStartCoordinates() {
+  getFirstItem() {
     const firstItem = this.data.items[0];
     if ("end" in firstItem && firstItem.end) {
       return firstItem.end as Coordinate;
@@ -195,15 +213,15 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return firstItem as Coordinate;
   }
 
-  isCloseFromStart(coord: Coordinate) {
+  isThePathClosed() {
     const firstItem = this.data.items[0];
-    if ("end" in firstItem && firstItem.end) {
-      const prevPoint = firstItem.end as Coordinate;
-      const distance2 =
-        (coord.x - prevPoint.x) ** 2 + (coord.y - prevPoint.y) ** 2;
-      return distance2 < MARGIN ** 2;
-    }
-    return false;
+    const lastItem = this.data.items[this.data.items.length - 1];
+
+    const firstCoord = (firstItem as LinePath).end as Coordinate;
+    const lastCoord = (lastItem as LinePath).end as Coordinate;
+    const distance2 =
+      (firstCoord.x - lastCoord.x) ** 2 + (firstCoord.y - lastCoord.y) ** 2;
+    return distance2 < MARGIN ** 2;
   }
 
   cancelLastItem() {
@@ -237,16 +255,16 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected calculateRelativePositions(offset: Coordinate) {
     this.data.items.forEach((line) => {
       if ("end" in line && line.end) {
-        line.end.x -= offset.x;
-        line.end.y -= offset.y;
+        line.end.x += offset.x;
+        line.end.y += offset.y;
       }
       if ("coordinates" in line && line.coordinates) {
-        line.coordinates.x -= offset.x;
-        line.coordinates.y -= offset.y;
+        line.coordinates.x += offset.x;
+        line.coordinates.y += offset.y;
       }
       if ("x" in line && "y" in line) {
-        line.x -= offset.x;
-        line.y -= offset.y;
+        line.x += offset.x;
+        line.y += offset.y;
       }
     });
     this.hasChanged.position = false;
@@ -320,16 +338,17 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (previousSize.x !== x || previousSize.y !== y) {
       this.hasChanged.position = true;
       this.calculateRelativePositions({
-        x: x - previousSize.x,
-        y: y - previousSize.y,
+        x: previousSize.x - x,
+        y: previousSize.y - y,
       });
+      this.hasChanged.draw = true;
     }
     // check if the draw has changed
     if (previousSize.width !== width || previousSize.height !== height) {
       this.hasChanged.draw = true;
     }
 
-    console.log("getArea", { x, y, width, height });
+    // console.log("getArea", { x, y, width, height });
     return { x, y, width, height };
   }
 
@@ -478,39 +497,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.coordFound = -1;
   }
 
-  // deprecated
-  moveAllPoint(offset: Coordinate) {
-    const item = this.data.items[0];
-    if (typeof item === "object" && item !== null && "end" in item) {
-      const lines = this.data.items as LinePath[];
-
-      lines.forEach((line) => {
-        if (line.end) {
-          line.end.x += offset.x;
-          line.end.y += offset.y;
-        }
-
-        if ("coordinates" in line && line.coordinates) {
-          line.coordinates.x += offset.x;
-          line.coordinates.y += offset.y;
-        }
-      });
-    } else {
-      const points = this.data.items as Coordinate[];
-      points.forEach((point) => {
-        point.x += offset.x;
-        point.y += offset.y;
-      });
-    }
-
-    if (this.data.size) {
-      this.data.size.x += offset.x;
-      this.data.size.y += offset.y;
-    }
-    this.angleFound = -1;
-    this.coordFound = -1;
-  }
-
   move(offset: Coordinate) {
     if (this.data.size) {
       this.data.size.x += offset.x;
@@ -553,9 +539,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     25
   );
 
-  moveAngle(newCoord: Coordinate) {
-    newCoord.x = Math.round(newCoord.x);
-    newCoord.y = Math.round(newCoord.y);
+  moveAngle(coord: Coordinate) {
+    const newCoord = {
+      x: Math.round(coord.x - this.data.size.x),
+      y: Math.round(coord.y - this.data.size.y),
+    };
     if (this.angleFound === 0) {
       // first angle on a closed path
 
@@ -686,16 +674,18 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
     // draw the path in a temporyCanvas
     if (this.hasChanged.draw || this.canvasImage === null) {
-      const canvas = document.createElement("canvas");
-      canvas.width = this.data.size.width;
-      canvas.height = this.data.size.height;
-      const ctxTemp = canvas.getContext("2d");
-      if (ctxTemp) {
-        this.canvasImage = canvas;
-        this.drawLines(ctxTemp);
+      if (!this.canvasImage) {
+        this.canvasImage = document.createElement("canvas");
       }
-      if (!this.drawLines(ctxTemp)) {
-        return false;
+      this.canvasImage.width = this.data.size.width;
+      this.canvasImage.height = this.data.size.height;
+
+      const ctxTemp = this.canvasImage.getContext("2d");
+      if (ctxTemp) {
+        ctxTemp.clearRect(0, 0, this.data.size.width, this.data.size.height);
+        if (!this.drawLines(ctxTemp)) {
+          return false;
+        }
       }
     }
     if (this.canvasImage) {

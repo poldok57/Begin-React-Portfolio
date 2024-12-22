@@ -258,11 +258,7 @@ export class drawLine extends drawingHandler {
           this.path.addLine(this.line as LinePath);
           // if the last item is close to the start point,
           // we can close the path
-          if (
-            this.path.isCloseFromStart(
-              this.line.getEndCoordinates() as Coordinate
-            )
-          ) {
+          if (this.path.isThePathClosed()) {
             this.actionEndPath(DRAWING_MODES.CLOSE_PATH);
             this.clearMouseCanvas();
             toExtend = false;

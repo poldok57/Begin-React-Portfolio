@@ -145,12 +145,8 @@ export class CanvasPath extends CanvasPoints {
    * @returns true if the path is drawn, false otherwise
    */
   drawLines(ctx: CanvasRenderingContext2D | null): boolean {
-    if (!ctx) {
+    if (!ctx || this.data.items.length <= 1) {
       return false;
-    }
-
-    if (this.data.items.length <= 1) {
-      return true;
     }
 
     ctx.globalAlpha = 1;
@@ -399,10 +395,12 @@ export class CanvasPath extends CanvasPoints {
     }
 
     // if the last item is not close to the start point, we add a line to the start point to close the path
-    if (!this.isCloseFromStart(lastItem.end)) {
+    if (!this.isThePathClosed()) {
+      // console.log("point not close from first item");
+      const first = this.getFirstItem();
       const newLine: LinePath = {
         type: LineType.LINE,
-        end: { ...this.getStartCoordinates() },
+        end: { x: first.x + this.data.size.x, y: first.y + this.data.size.y },
       };
       this.addItem(newLine);
       return;

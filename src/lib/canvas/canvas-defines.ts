@@ -101,7 +101,7 @@ export const isDrawingFreehand = (mode: string) =>
   FREEHAND_MODES.includes(mode);
 export const isDrawingSelect = (mode: string) => SELECT_MODES.includes(mode);
 export const isDrawingPause = (mode: string) => PAUSE_MODES.includes(mode);
-const DEFAULT = {
+export const DEFAULT = {
   COLOR: "#ff0000",
   SIZE: 4,
   OPACITY: 1,

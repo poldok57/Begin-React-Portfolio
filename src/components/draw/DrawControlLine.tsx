@@ -9,6 +9,7 @@ import {
   GroupParams,
   Params,
   ParamsPath,
+  DEFAULT,
 } from "@/lib/canvas/canvas-defines";
 import { MdTimeline } from "react-icons/md";
 import { Spline } from "lucide-react";
@@ -32,10 +33,21 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   paramsPath,
   isTouch = false,
 }) => {
-  const [withPathFilled, setWithPathFilled] = useState(paramsPath.filled);
+  const [withPathFilled, setWithPathFilledState] = useState(paramsPath.filled);
   const handlePath = (param: Params) => {
     paramsPath = { ...paramsPath, ...param };
     handleParamChange({ path: paramsPath });
+  };
+  const setWithPathFilled = (value: boolean) => {
+    if (value) {
+      if (!paramsPath.opacity) {
+        handlePath({ opacity: 1 });
+      }
+      if (!paramsPath.color) {
+        handlePath({ color: DEFAULT.PATH_COLOR });
+      }
+    }
+    setWithPathFilledState(value);
   };
   useEffect(() => {
     if (mode === DRAWING_MODES.END_PATH) {

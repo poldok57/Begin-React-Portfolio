@@ -1,4 +1,4 @@
-import { Coordinate, LinePath } from "./types";
+import { Coordinate } from "./types";
 import { basicLine } from "./canvas-basic";
 import { throttle } from "@/lib/utils/throttle";
 import { CanvasPoints } from "./CanvasPoints";
