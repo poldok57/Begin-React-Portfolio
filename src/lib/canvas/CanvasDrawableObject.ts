@@ -5,6 +5,7 @@
  */
 
 import { ThingsToDraw } from "./canvas-defines";
+import { resizingElement } from "./canvas-resize";
 import { Area, Coordinate } from "./types";
 
 export abstract class CanvasDrawableObject {
@@ -55,5 +56,27 @@ export abstract class CanvasDrawableObject {
 
   getDataSize(): Area {
     return { ...this.data.size };
+  }
+
+  resizingArea(
+    ctx: CanvasRenderingContext2D,
+    coordinates: Coordinate,
+    lockRatio: boolean,
+    witchBorder: string
+  ) {
+    const newCoord = resizingElement(
+      ctx,
+      this.data.size,
+      coordinates,
+      lockRatio,
+      witchBorder,
+      this.data.rotation
+    );
+
+    if (newCoord) {
+      this.draw(ctx, lockRatio, witchBorder);
+      this.setDataSize(newCoord);
+    }
+    return newCoord;
   }
 }

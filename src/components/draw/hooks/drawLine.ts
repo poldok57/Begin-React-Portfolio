@@ -3,7 +3,12 @@
  * author: Guy Rump
  */
 
-import { BORDER, mouseIsInsideComponent } from "@/lib/mouse-position";
+import {
+  BORDER,
+  isBorder,
+  mouseIsInsideComponent,
+  mousePointer,
+} from "@/lib/mouse-position";
 import { Coordinate, LinePath, LineType } from "@/lib/canvas/types";
 import {
   drawingCircle,
@@ -228,6 +233,21 @@ export class drawLine extends drawingHandler {
    */
   followCursorOnFinisedPath(event: MouseEvent | TouchEvent | null) {
     if (this.path) {
+      // mouse is over a border, we can resize the path
+      if (this.resizingBorder && this.ctxTempory) {
+        const newArea = this.path.resizingArea(
+          this.ctxTempory,
+          this.line.getCoordinates() as Coordinate,
+          false,
+          this.resizingBorder
+        );
+        if (newArea) {
+          this.path.setDataSize(newArea);
+          this.clearTemporyCanvas();
+          this.path.draw(this.ctxTempory, true);
+        }
+        return mousePointer(this.resizingBorder);
+      }
       return this.path.mouseOverPath(
         this.ctxTempory,
         event,
@@ -392,6 +412,15 @@ export class drawLine extends drawingHandler {
             toReset: true,
             deleteId: this.path.getDataId(),
           };
+        default:
+          if (mouseOnButton && isBorder(mouseOnButton)) {
+            //  if we are on a border, we can resize the area
+            this.setResizingBorder(mouseOnButton);
+          }
+          return {
+            toReset: false,
+            pointer: mousePointer(mouseOnButton ?? ""),
+          } as returnMouseDown;
       }
       return {
         toReset: false,
@@ -474,6 +503,11 @@ export class drawLine extends drawingHandler {
             toReset: true,
             deleteId: this.path.getDataId(),
           };
+        default:
+          if (mouseOnButton && isBorder(mouseOnButton)) {
+            //  if we are on a border, we can resize the area
+            this.setResizingBorder(mouseOnButton);
+          }
       }
       return {};
     }
@@ -503,6 +537,7 @@ export class drawLine extends drawingHandler {
    */
   actionTouchEnd() {
     if (this.finishedDrawing) {
+      this.setResizingBorder(null);
       return;
     }
     if (this.hasBeenTouched) {
@@ -523,6 +558,7 @@ export class drawLine extends drawingHandler {
    * Function to stop drawing on the canvas
    */
   actionMouseUp() {
+    this.setResizingBorder(null);
     this.line.eraseCoordinates();
     this.path?.eraseAngleCoordFound();
 

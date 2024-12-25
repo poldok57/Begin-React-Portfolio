@@ -23,7 +23,7 @@ const MIN_ROTATION = 7.5;
 
 export class drawElement extends drawingHandler {
   protected fixed: boolean = false;
-  protected resizingBorder: string | null = null;
+
   protected offset: Coordinate | null = null;
   protected shape: CanvasShape;
 
@@ -35,7 +35,7 @@ export class drawElement extends drawingHandler {
     super(canvas, temporyCanvas, setMode);
 
     this.fixed = false;
-    this.resizingBorder = null;
+
     this.offset = null;
     this.shape = new CanvasShape();
 
@@ -87,10 +87,6 @@ export class drawElement extends drawingHandler {
     return this.coordinates;
   }
 
-  setResizing(value: string | null) {
-    this.resizingBorder = value;
-  }
-
   setFixed(value: boolean) {
     this.fixed = value;
   }
@@ -127,7 +123,7 @@ export class drawElement extends drawingHandler {
 
     if (!this.coordinates || !this.ctxTempory) return;
 
-    this.shape.resizingElement(
+    this.shape.resizingArea(
       this.ctxTempory,
       this.coordinates,
       this.lockRatio,
@@ -293,7 +289,7 @@ export class drawElement extends drawingHandler {
           break;
         default:
           alertMessage("resizing: " + mouseOnShape);
-          this.setResizing(mouseOnShape);
+          this.setResizingBorder(mouseOnShape);
           break;
       }
     }
@@ -337,7 +333,7 @@ export class drawElement extends drawingHandler {
 
   actionMouseUp() {
     this.setFixed(true);
-    this.setResizing(null);
+    this.setResizingBorder(null);
 
     if (this.ctxTempory === null) return;
 
@@ -369,7 +365,7 @@ export class drawElement extends drawingHandler {
    */
   endAction() {
     this.setFixed(true);
-    this.setResizing(null);
+    this.setResizingBorder(null);
     this.clearTemporyCanvas();
     this.eraseOffset();
   }

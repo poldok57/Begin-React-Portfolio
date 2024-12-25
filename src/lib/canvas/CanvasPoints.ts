@@ -11,6 +11,9 @@ import {
   topRightPosition,
   BORDER,
   topRightPositionOver,
+  isOnButton,
+  isBorder,
+  mousePointer,
 } from "../mouse-position";
 import { drawCornerButton, drawCornerButtonDelete } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
@@ -38,6 +41,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     position: false,
     draw: false,
   };
+  protected realSize: Area = { x: 0, y: 0, width: 0, height: 0 };
 
   constructor() {
     super();
@@ -74,6 +78,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (this.isPathClosed()) {
       this.isClosed = true;
     }
+    this.realSize = this.getArea();
     // console.log("setData points", data);
   }
 
@@ -413,8 +418,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.hasChanged.draw = true;
     }
 
+    this.realSize = { x, y, width, height };
     // console.log("get-Area", { x, y, width, height });
-    return { x, y, width, height };
+    return this.realSize;
   }
 
   drawCornerButtons(
@@ -577,8 +583,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.lastMousePosition = mousePosition;
     if (this.data.size) {
       const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
-
-      if (mouseOnRectangle?.startsWith("btn")) {
+      if (!mouseOnRectangle) {
+        return null;
+      }
+      if (isOnButton(mouseOnRectangle) || isBorder(mouseOnRectangle)) {
         return mouseOnRectangle;
       }
     }
@@ -653,6 +661,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     event: MouseEvent | TouchEvent | null,
     mousePosition: Coordinate
   ) {
+    if (!ctx) {
+      return "none";
+    }
     let cursorType = "default";
     let inArea = false;
     if (this.isInArea(mousePosition)) {
@@ -696,6 +707,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
         this.clearAreaOnCanvas(ctx);
         this.draw(ctx, true);
+      } else if (mouseOnRectangle && isBorder(mouseOnRectangle)) {
+        cursorType = mousePointer(mouseOnRectangle);
       }
     }
     return cursorType;
@@ -712,7 +725,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return isOnSquareBorder({
       coordinate: mousePosition,
       area: this.data.size,
-      withResize: false,
+      withResize: true,
       withCornerButton: true,
       withTurningButtons: false,
       maxWidth: ctx.canvas.width,
@@ -738,13 +751,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       if (!this.canvasImage) {
         this.canvasImage = document.createElement("canvas");
       }
-      this.canvasImage.width = this.data.size.width;
-      this.canvasImage.height = this.data.size.height;
+      this.canvasImage.width = this.realSize.width;
+      this.canvasImage.height = this.realSize.height;
       // console.log("draw", this.data.size);
 
       const ctxTemp = this.canvasImage.getContext("2d");
       if (ctxTemp) {
-        ctxTemp.clearRect(0, 0, this.data.size.width, this.data.size.height);
+        ctxTemp.clearRect(0, 0, this.realSize.width, this.realSize.height);
         ctxTemp.lineCap = ctx.lineCap;
         ctxTemp.lineJoin = ctx.lineJoin;
         if (!this.drawLines(ctxTemp)) {
@@ -754,6 +767,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     }
     if (this.canvasImage) {
+      // draw the canvasImage with the reduced size
       showCanvasImage(ctx, this.data.size, this.canvasImage);
     }
 
@@ -765,7 +779,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       return false;
     }
 
-    this.drawAddingInfos(ctx);
+    if (
+      this.data.size.width === this.realSize.width &&
+      this.data.size.height === this.realSize.height
+    ) {
+      // adding infos on the canvas, if there is no resize
+      this.drawAddingInfos(ctx);
+    }
     this.drawDashedRectangle(ctx);
 
     return true;

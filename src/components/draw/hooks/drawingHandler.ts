@@ -34,6 +34,8 @@ export abstract class drawingHandler {
 
   protected extendedMouseArea: boolean = false;
 
+  protected resizingBorder: string | null = null;
+
   protected addDesignElement: (draw: ThingsToDraw) => void;
 
   constructor(
@@ -45,6 +47,8 @@ export abstract class drawingHandler {
     this.extendedMouseArea = false;
     this.setTemporyCanvas(temporyCanvas);
     this.setMode = setMode;
+
+    this.resizingBorder = null;
 
     const { addOrUpdateDesignElement } = useDesignStore.getState();
     this.addDesignElement = addOrUpdateDesignElement;
@@ -76,8 +80,6 @@ export abstract class drawingHandler {
     clearCanvasByCtx(this.ctxMouse);
   }
 
-  // abstract setDataGeneral(data: ParamsGeneral): void;
-
   isExtendedMouseArea(): boolean {
     return this.extendedMouseArea;
   }
@@ -99,6 +101,10 @@ export abstract class drawingHandler {
   }
   getType() {
     return this.type;
+  }
+
+  setResizingBorder(value: string | null) {
+    this.resizingBorder = value;
   }
 
   /**

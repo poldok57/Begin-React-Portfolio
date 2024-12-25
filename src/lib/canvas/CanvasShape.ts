@@ -12,7 +12,7 @@ import {
   ShapeDefinition,
   DRAWING_MODES,
 } from "./canvas-defines";
-import { resizingElement } from "./canvas-resize";
+// import { resizingElement } from "./canvas-resize";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { showElement } from "./canvas-elements";
 import { isOnSquareBorder } from "@/lib/square-position";
@@ -214,7 +214,7 @@ export class CanvasShape extends CanvasDrawableObject {
 
   async setData(data: ShapeDefinition) {
     this.data = { ...data };
-    console.log("setData", data);
+    // console.log("setData", data);
     if (!data.shape?.withBorder && data.border) {
       console.log(data.type, "withBorder error", data.border);
       this.data.border = undefined;
@@ -405,24 +405,20 @@ export class CanvasShape extends CanvasDrawableObject {
     return this.data.dataURL;
   }
 
-  resizingElement(
+  resizingArea(
     ctx: CanvasRenderingContext2D,
     coordinates: Coordinate,
     lockRatio: boolean,
     witchBorder: string
   ) {
-    const newCoord = resizingElement(
+    const newCoord = super.resizingArea(
       ctx,
-      this.data.size,
       coordinates,
       lockRatio,
-      witchBorder,
-      this.data.rotation
+      witchBorder
     );
 
     if (newCoord) {
-      this.draw(ctx, lockRatio, witchBorder);
-      this.setDataSize(newCoord);
       this.calculateWithTurningButtons();
     }
     return newCoord;
@@ -463,7 +459,7 @@ export class CanvasShape extends CanvasDrawableObject {
     showElement(ctx, data, true, borderInfo);
   }
 
-  showElementThrottled = throttle(this.drawToTrottle, 20);
+  showElementThrottled = throttle(this.drawToTrottle, 25);
   /**
    * Function to draw the shape on the canvas
    */
