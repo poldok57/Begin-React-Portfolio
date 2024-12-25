@@ -1,3 +1,8 @@
+/**
+ * DrawLine class , manager all actions to draw a line, a curve or an arrow on the canvas
+ * author: Guy Rump
+ */
+
 import { BORDER, mouseIsInsideComponent } from "@/lib/mouse-position";
 import { Coordinate, LinePath, LineType } from "@/lib/canvas/types";
 import {
@@ -258,7 +263,7 @@ export class drawLine extends drawingHandler {
           this.path.addLine(this.line as LinePath);
           // if the last item is close to the start point,
           // we can close the path
-          if (this.path.isThePathClosed()) {
+          if (this.path.isPathClosed()) {
             this.actionEndPath(DRAWING_MODES.CLOSE_PATH);
             this.clearMouseCanvas();
             toExtend = false;
@@ -277,6 +282,7 @@ export class drawLine extends drawingHandler {
     // if we are drawing an arrow and we have 2 points, we can finish the path
     if (type === DRAWING_MODES.ARROW && this.path?.getItemsLength() === 2) {
       this.path?.setFinished(true);
+      this.clearMouseCanvas();
       this.withPath = true;
       this.finishedDrawing = true;
       toExtend = false;
@@ -333,8 +339,8 @@ export class drawLine extends drawingHandler {
       const lastLine: LinePath | null = this.path?.getLastLine() as LinePath;
 
       if (lastLine) {
-        const lastCoord = lastLine.end as Coordinate;
-        this.line.setStartCoordinates(lastCoord);
+        // const lastCoord = lastLine.end as Coordinate;
+        // this.line.setStartCoordinates(lastCoord);
 
         // console.log("clic on last line", lastCoord);
         return true;
@@ -528,6 +534,7 @@ export class drawLine extends drawingHandler {
       this.path?.eraseAngleCoordFound();
       return this.followCursorOnFinisedPath(null) as string;
     }
+    this.clearMouseCanvas();
   }
 
   /**
@@ -560,9 +567,9 @@ export class drawLine extends drawingHandler {
       if (this.path.cancelLastLine()) {
         this.debouncedDraw();
         this.path?.eraseAngleCoordFound();
-        const lastLine = this.path.getLastLine();
-        if (lastLine && (lastLine as LinePath).end) {
-          this.line.setStartCoordinates((lastLine as LinePath).end);
+        const lastPosition = this.path?.getLastPosition();
+        if (lastPosition) {
+          this.line.setStartCoordinates(lastPosition);
           this.line.eraseCoordinates();
         }
         return null;

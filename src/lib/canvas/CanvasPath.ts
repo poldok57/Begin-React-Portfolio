@@ -11,6 +11,7 @@ import {
   ParamsGeneral,
   CanvasPointsData,
   ParamsArrow,
+  DEFAULT,
 } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
@@ -40,15 +41,17 @@ export class CanvasPath extends CanvasPoints {
       throw new Error("Line coordinates are required");
     }
     const end: Coordinate = roundCoordinates(line.coordinates) as Coordinate;
-    this.startArea(end);
+
     const item: LinePath = {
       type: LineType.START,
+      lineWidth: line.lineWidth,
       end: end,
     };
+    this.startArea(item);
     this.data.path = {
       filled: false,
-      color: "gray",
-      opacity: 0,
+      color: DEFAULT.PATH_COLOR,
+      opacity: DEFAULT.OPACITY,
     };
     this.addItem(item);
   }
@@ -299,6 +302,7 @@ export class CanvasPath extends CanvasPoints {
         this.data.path.opacity !== params.opacity);
     if (hasChanged) {
       this.data.path = { ...params };
+      this.setHasChanged("draw", true);
     }
     return hasChanged;
   }
@@ -308,15 +312,32 @@ export class CanvasPath extends CanvasPoints {
     if (this.data.items.length > 1) {
       // first item is start point
       const secondItem = this.data.items[1] as LinePath;
-
-      secondItem.strokeStyle = params.color;
-      secondItem.lineWidth = params.lineWidth;
-      secondItem.globalAlpha = params.opacity;
+      if (secondItem.strokeStyle !== params.color) {
+        this.setHasChanged("draw", true);
+        secondItem.strokeStyle = params.color;
+      }
+      if (secondItem.lineWidth !== params.lineWidth) {
+        this.setHasChanged("draw", true);
+        this.setHasChanged("position", true);
+        secondItem.lineWidth = params.lineWidth;
+      }
+      if (secondItem.globalAlpha !== params.opacity) {
+        this.setHasChanged("draw", true);
+        secondItem.globalAlpha = params.opacity;
+      }
       if (secondItem.type === LineType.ARROW) {
-        secondItem.headSize = paramsArrow.headSize;
+        if (secondItem.headSize !== paramsArrow.headSize) {
+          this.setHasChanged("position", true);
+          secondItem.headSize = paramsArrow.headSize;
+        }
+        if (secondItem.curvature !== paramsArrow.curvature) {
+          this.setHasChanged("position", true);
+          secondItem.curvature = paramsArrow.curvature;
+        }
+
         secondItem.padding = paramsArrow.padding;
-        secondItem.curvature = paramsArrow.curvature;
         this.arrowHasChanged = true;
+        this.setHasChanged("draw", true);
       }
     }
   }
@@ -395,7 +416,7 @@ export class CanvasPath extends CanvasPoints {
     }
 
     // if the last item is not close to the start point, we add a line to the start point to close the path
-    if (!this.isThePathClosed()) {
+    if (!this.isPathClosed()) {
       // console.log("point not close from first item");
       const first = this.getFirstItem();
       const newLine: LinePath = {
@@ -403,11 +424,12 @@ export class CanvasPath extends CanvasPoints {
         end: { x: first.x + this.data.size.x, y: first.y + this.data.size.y },
       };
       this.addItem(newLine);
+      this.isClosed = false;
       return;
     }
+    this.isClosed = true;
 
     // if the last item is close to the start point, we can close the path
-
     const start = (this.data.items[0] as LinePath).end as Coordinate;
     const midX = (start.x - lastItem.end.x) / 2;
     const midY = (start.y - lastItem.end.y) / 2;

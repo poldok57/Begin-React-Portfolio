@@ -271,7 +271,7 @@ export class drawElement extends drawingHandler {
       switch (mouseOnShape) {
         case BORDER.INSIDE:
           this.calculOffset();
-          retunData.pointer = "pointer";
+          retunData.pointer = "grabbing";
           this.setFixed(false);
           break;
         case BORDER.ON_BUTTON:
@@ -329,7 +329,7 @@ export class drawElement extends drawingHandler {
       if (type === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
       }
-      return "pointer";
+      return "grabbing";
     }
 
     return this.followCursorOnElement(this.shape.getOpacity());

@@ -21,7 +21,7 @@ interface ScaleContextProps {
   getElementRect: (id: string) => Rectangle | null;
   selectedRect: Rectangle | null;
   setSelectedRect: (rect: Rectangle | null) => void;
-  getSelectedRect: () => Rectangle | null;
+  getSelectedRect: (scaleSize?: boolean) => Rectangle | null;
   mode: Mode | null;
   setMode: (mode: Mode) => void;
   getMode: () => Mode | null;
@@ -105,11 +105,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     selectedRectRef.current = rect;
     setStateSelectedRect(rect);
   }, []);
-  const getSelectedRect = useCallback(() => {
+  const getSelectedRect = useCallback((scaleSize: boolean = false) => {
     const rect = selectedRectRef.current;
     const scale = getScale();
     if (rect) {
-      if (scale === 1) {
+      if (scale === 1 || scaleSize) {
         return rect;
       }
       return {

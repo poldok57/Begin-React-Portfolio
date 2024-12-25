@@ -217,6 +217,7 @@ export const getPerimeter = (
       height + MARGIN * 2
     );
     ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   return { left, top, right, bottom, width, height };

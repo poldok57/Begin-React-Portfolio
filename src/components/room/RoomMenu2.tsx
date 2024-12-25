@@ -97,7 +97,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
       }
       // Delete table with Delete key
       if (event.key === "Delete") {
-        const containerSelect = getSelectedRect();
+        const containerSelect = getSelectedRect(true);
         if (!containerSelect) {
           return;
         }

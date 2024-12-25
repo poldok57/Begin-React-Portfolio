@@ -25,7 +25,6 @@ export const updateParamFromElement = (
   switch (selectedElement.type) {
     case DRAW_TYPE.DRAW:
       copyGeneral = true;
-      break;
     case DRAW_TYPE.LINES_PATH:
     case DRAW_TYPE.ARROW:
       if (selectedElement.path) {
@@ -51,8 +50,8 @@ export const updateParamFromElement = (
             padding: line.padding,
             curvature: line.curvature,
           } as ParamsArrow;
+          // console.log("arrow setParams", arrow);
           setParams({ arrow: arrow });
-          general.color = "red";
         }
       }
       setParams({ general: general });

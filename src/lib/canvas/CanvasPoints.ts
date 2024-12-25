@@ -31,6 +31,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
   protected isFinished: boolean = false;
+  protected isClosed: boolean = false;
   protected maxLineWidth: number = 0;
   protected canvasImage: HTMLCanvasElement | null = null;
   protected hasChanged = {
@@ -70,13 +71,20 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.data = { ...data };
     this.hasChanged = { position: false, draw: false };
     this.canvasImage = null;
+    if (this.isPathClosed()) {
+      this.isClosed = true;
+    }
     // console.log("setData points", data);
   }
 
   setParamsGeneral(params: ParamsGeneral) {
     const previousParams = this.data.general;
     this.data.general = { ...this.data.general, ...params };
-    this.maxLineWidth = this.data.general.lineWidth;
+    if (this.data.general.lineWidth !== previousParams.lineWidth) {
+      this.maxLineWidth = this.data.general.lineWidth;
+      this.hasChanged.draw = true;
+      this.hasChanged.position = true;
+    }
     // Check if any property of data.general has changed
     if (
       previousParams.color !== this.data.general.color ||
@@ -87,25 +95,46 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
   }
 
-  startArea(firstPoint: Coordinate) {
+  setHasChanged(type: "position" | "draw", hasChanged: boolean = true) {
+    this.hasChanged[type] = hasChanged;
+  }
+
+  startArea(firstElement: LinePath | Coordinate) {
+    if (this.maxLineWidth <= 1) {
+      this.maxLineWidth = this.data.general.lineWidth;
+    }
+
+    let coord: Coordinate;
+    if ("end" in firstElement && firstElement.end) {
+      coord = { ...(firstElement.end as Coordinate) };
+    } else {
+      coord = { ...(firstElement as Coordinate) };
+    }
+    if ("lineWidth" in firstElement && firstElement.lineWidth) {
+      this.maxLineWidth = Math.max(firstElement.lineWidth, this.maxLineWidth);
+    }
+
+    // console.log(
+    //   "startArea maxLineWidth:",
+    //   this.maxLineWidth,
+    //   this.data.general.lineWidth
+    // );
     const widthLine = this.maxLineWidth / 2 + 1;
 
     this.data.size = {
-      x: firstPoint.x - widthLine - 1,
-      y: firstPoint.y - widthLine - 1,
-      width: 2 * widthLine + 2,
-      height: 2 * widthLine + 2,
+      x: coord.x - widthLine,
+      y: coord.y - widthLine,
+      width: 2 * widthLine,
+      height: 2 * widthLine,
     };
+    // console.log("startArea", this.data.size);
+    this.isClosed = false;
   }
 
   addPointInArea(coord: Coordinate) {
     if (!this.data.size) {
       return;
     }
-
-    // const coordAbsolute = { ...coord };
-    // coord.x = coord.x - this.data.size.x;
-    // coord.y = coord.y - this.data.size.y;
 
     const lineWidth = this.maxLineWidth / 2 + 1;
     const previousSize = { ...this.data.size };
@@ -213,9 +242,44 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return firstItem as Coordinate;
   }
 
-  isThePathClosed() {
+  getLastItem() {
+    if (this.data.items.length > 0) {
+      return this.data.items[this.data.items.length - 1];
+    }
+    return null;
+  }
+
+  getLastPosition(): Coordinate | null {
+    const lastItem = this.getLastItem();
+    if (!lastItem) {
+      return null;
+    }
+    let lastCoord: Coordinate | null = null;
+    if ("end" in lastItem && lastItem.end) {
+      lastCoord = { ...(lastItem.end as Coordinate) };
+    } else {
+      lastCoord = { ...(lastItem as Coordinate) };
+    }
+    lastCoord.x += this.data.size.x;
+    lastCoord.y += this.data.size.y;
+    return lastCoord;
+  }
+
+  isPathClosed() {
+    if (this.data.items.length <= 1) {
+      return false;
+    }
     const firstItem = this.data.items[0];
     const lastItem = this.data.items[this.data.items.length - 1];
+
+    if (
+      !firstItem ||
+      !("end" in firstItem && firstItem.end) ||
+      !lastItem ||
+      !("end" in lastItem && lastItem.end)
+    ) {
+      return false;
+    }
 
     const firstCoord = (firstItem as LinePath).end as Coordinate;
     const lastCoord = (lastItem as LinePath).end as Coordinate;
@@ -228,24 +292,19 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (this.data.items.length > 0) {
       this.data.items.pop();
       // Recalculate the rectangle after removing the last line
-      this.data.size = this.getArea(null);
+      this.data.size = this.getArea();
       this.angleFound = -1;
       this.coordFound = -1;
       this.hasChanged.draw = true;
+      this.isClosed = false;
       return true;
     }
     return false;
   }
 
-  getLastItem() {
-    if (this.data.items.length > 0) {
-      return this.data.items[this.data.items.length - 1];
-    }
-    return null;
-  }
-
   setFinished(isFinished: boolean) {
     this.isFinished = isFinished;
+    this.data.size = this.getArea();
   }
 
   getItemsLength() {
@@ -274,9 +333,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @param insidePoint - The point inside the area
    * @returns The area of the points
    */
-  protected getArea(insidePoint: Coordinate | null): Area {
-    let left = insidePoint ? insidePoint.x : Infinity;
-    let top = insidePoint ? insidePoint.y : Infinity;
+  protected getArea(): Area {
+    let left = Infinity;
+    let top = Infinity;
     let right = 0;
     let bottom = 0;
 
@@ -289,7 +348,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       const coord: Coordinate | null =
         "end" in line ? (line.end as Coordinate) : (line as Coordinate);
 
-      if ("lineWidth" in line && line.lineWidth) {
+      if ("headSize" in line && line.headSize) {
+        maxLineWidth = Math.max(
+          maxLineWidth,
+          line.headSize + 10,
+          1.5 * (line?.lineWidth ?? 0)
+        );
+      } else if ("lineWidth" in line && line.lineWidth) {
         maxLineWidth = Math.max(maxLineWidth, line.lineWidth);
       }
 
@@ -329,8 +394,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
     // new size
     maxLineWidth = maxLineWidth / 2 + 1;
-    const x = left - maxLineWidth;
-    const y = top - maxLineWidth;
+    const x = this.data.size.x + left - maxLineWidth;
+    const y = this.data.size.y + top - maxLineWidth;
     const width = right - left + 2 * maxLineWidth;
     const height = bottom - top + 2 * maxLineWidth;
 
@@ -348,7 +413,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.hasChanged.draw = true;
     }
 
-    // console.log("getArea", { x, y, width, height });
+    // console.log("get-Area", { x, y, width, height });
     return { x, y, width, height };
   }
 
@@ -485,7 +550,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         }
       }
     }
-
     // no angle found
     this.angleFound = -1;
     this.coordFound = -1;
@@ -544,30 +608,23 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       x: Math.round(coord.x - this.data.size.x),
       y: Math.round(coord.y - this.data.size.y),
     };
+
     if (this.angleFound === 0) {
-      // first angle on a closed path
+      const firstItem = this.data.items[0] as LinePath;
+      firstItem.end = { ...newCoord };
 
-      const lastItem = this.getLastItem();
-      const firstItem = this.data.items[0];
-      if (
-        lastItem &&
-        "end" in lastItem &&
-        lastItem.end &&
-        "end" in firstItem &&
-        firstItem.end &&
-        lastItem.end.x === firstItem.end.x &&
-        lastItem.end.y === firstItem.end.y
-      ) {
+      // first angle on a closed path => move first and last points
+      if (this.isClosed) {
+        const lastItem = this.getLastItem() as LinePath;
         lastItem.end = { ...newCoord };
-        firstItem.end = { ...newCoord };
-
-        this.data.size = this.getArea(newCoord);
-        this.hasChanged.draw = true;
-        return true;
       }
+      this.hasChanged.draw = true;
     }
-
-    if (this.angleFound >= 0 && this.angleFound <= this.data.items.length) {
+    // clic on an angle
+    else if (
+      this.angleFound >= 0 &&
+      this.angleFound <= this.data.items.length
+    ) {
       const line = this.data.items[this.angleFound];
       if ("end" in line) {
         line.end = newCoord;
@@ -575,19 +632,20 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         (line as Coordinate).x = newCoord.x;
         (line as Coordinate).y = newCoord.y;
       }
-      this.data.size = this.getArea(newCoord);
       this.hasChanged.draw = true;
-      return true;
     }
-    if (this.coordFound > 0 && this.coordFound <= this.data.items.length) {
+    // clic on a coord (for arcs)
+    else if (this.coordFound > 0 && this.coordFound <= this.data.items.length) {
       const line = this.data.items[this.coordFound];
       if ("coordinates" in line) {
         line.coordinates = newCoord;
       }
-      this.data.size = this.getArea(newCoord);
-      return true;
+      this.hasChanged.draw = true;
     }
-    return false;
+    if (this.hasChanged.draw) {
+      this.data.size = this.getArea();
+    }
+    return this.hasChanged.draw;
   }
 
   mouseOverPath(
@@ -672,6 +730,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!ctx) {
       return false;
     }
+    if (this.hasChanged.position) {
+      this.data.size = this.getArea();
+    }
     // draw the path in a temporyCanvas
     if (this.hasChanged.draw || this.canvasImage === null) {
       if (!this.canvasImage) {
@@ -679,13 +740,17 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
       this.canvasImage.width = this.data.size.width;
       this.canvasImage.height = this.data.size.height;
+      // console.log("draw", this.data.size);
 
       const ctxTemp = this.canvasImage.getContext("2d");
       if (ctxTemp) {
         ctxTemp.clearRect(0, 0, this.data.size.width, this.data.size.height);
+        ctxTemp.lineCap = ctx.lineCap;
+        ctxTemp.lineJoin = ctx.lineJoin;
         if (!this.drawLines(ctxTemp)) {
           return false;
         }
+        this.hasChanged.draw = false;
       }
     }
     if (this.canvasImage) {
