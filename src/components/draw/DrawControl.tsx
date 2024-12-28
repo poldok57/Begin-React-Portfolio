@@ -239,7 +239,9 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           <Button
             className="px-4 py-1"
             selected={isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW}
-            onClick={() => handleModeChange(DRAWING_MODES.LINE)}
+            onClick={() => {
+              handleModeChange(DRAWING_MODES.LINE);
+            }}
             title="Draw lines"
           >
             Lines
@@ -343,6 +345,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             paramsPath={drawingParams.path}
             addEventAction={addEventAction}
             handleParamChange={handleParamChange}
+            defaultColor={drawingParams.general.color}
           />
         )}
         {mode === DRAWING_MODES.ARROW && (

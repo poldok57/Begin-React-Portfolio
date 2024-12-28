@@ -566,7 +566,6 @@ export const useCanvas = ({
     const handleMouseDblClick = (event: MouseEvent) => {
       if (event.detail === 2) {
         drawingRef.current?.actionMouseDblClick();
-        // Assurez-vous que cette fonction modifie l'état ou redessine le canvas
       }
     };
 

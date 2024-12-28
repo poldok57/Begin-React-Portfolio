@@ -18,7 +18,7 @@ import {
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 
 // import { throttle } from "@/lib/utils/throttle";
-import { BORDER } from "@/lib/mouse-position";
+import { BORDER, isBorder } from "@/lib/mouse-position";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -70,7 +70,6 @@ export class drawFreehand extends drawingHandler {
 
   setDraw(draw: CanvasPointsData) {
     this.freeCurve.setData(draw);
-    this.freeCurve.setFinished(true);
 
     this.setDrawing(false);
     this.finishedDrawing = true;
@@ -163,7 +162,8 @@ export class drawFreehand extends drawingHandler {
       return this.freeCurve.mouseOverPath(
         this.ctxTempory,
         event,
-        this.getCoordinates() as Coordinate
+        this.getCoordinates() as Coordinate,
+        this.resizingBorder
       );
     }
 
@@ -234,7 +234,12 @@ export class drawFreehand extends drawingHandler {
               deleteId,
             };
           }
+          break;
         }
+        default:
+          if (mouseOnRectangle && isBorder(mouseOnRectangle)) {
+            this.setResizingBorder(mouseOnRectangle);
+          }
       }
       return {
         pointer: "grabbing",
@@ -282,6 +287,7 @@ export class drawFreehand extends drawingHandler {
       }
       this.setDrawing(false);
     }
+    this.setResizingBorder(null);
   }
 
   actionMouseLeave() {
@@ -295,6 +301,7 @@ export class drawFreehand extends drawingHandler {
       this.setDrawing(false);
       this.validCurve();
     }
+    this.setResizingBorder(null);
   }
 
   actionAbort() {
@@ -303,6 +310,7 @@ export class drawFreehand extends drawingHandler {
     this.clearTemporyCanvas();
     this.clearMouseCanvas();
     this.setDrawing(false);
+    this.setResizingBorder(null);
     return null;
   }
 
@@ -310,5 +318,13 @@ export class drawFreehand extends drawingHandler {
     this.setDrawing(false);
     this.clearTemporyCanvas();
     this.clearMouseCanvas();
+    this.setResizingBorder(null);
+  }
+
+  actionMouseDblClick() {
+    if (this.freeCurve) {
+      this.freeCurve.eraseResizing();
+      this.refreshDrawing();
+    }
   }
 }

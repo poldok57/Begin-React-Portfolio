@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { Button } from "../atom/Button";
@@ -20,7 +20,7 @@ interface DrawControlLineProps {
   handleModeChange: (mode: string) => void;
   addEventAction: (action: string) => void;
   paramsPath: ParamsPath;
-
+  defaultColor: string;
   isTouch?: boolean;
 }
 
@@ -30,23 +30,45 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   handleModeChange,
   addEventAction,
   paramsPath,
+  defaultColor,
   isTouch = false,
 }) => {
-  const [withPathFilled, setWithPathFilled] = useState(paramsPath.filled);
+  const [withPathFilled, setWithPathFilledState] = useState(paramsPath.filled);
+  const [color, setColorState] = useState(paramsPath.color);
+  const defaultColorRef = useRef(defaultColor);
   const handlePath = (param: Params) => {
     paramsPath = { ...paramsPath, ...param };
     handleParamChange({ path: paramsPath });
   };
+
+  const setWithPathFilled = (value: boolean) => {
+    setWithPathFilledState(value);
+    if (value && defaultColorRef.current) {
+      setColorState(defaultColorRef.current);
+      handlePath({ color: defaultColorRef.current, opacity: 1 });
+    }
+    handlePath({ filled: value });
+  };
+
+  const setColor = (color: string) => {
+    setColorState(color);
+    handlePath({ color: color });
+  };
+
+  useEffect(() => {
+    defaultColorRef.current = defaultColor;
+  }, [defaultColor]);
+
   useEffect(() => {
     if (mode === DRAWING_MODES.END_PATH) {
       handleModeChange(DRAWING_MODES.LINE);
 
-      setWithPathFilled(false);
+      setWithPathFilledState(false);
     }
   }, [mode]);
 
   useEffect(() => {
-    setWithPathFilled(paramsPath.filled);
+    setWithPathFilledState(paramsPath.filled);
   }, [paramsPath.filled]);
 
   return (
@@ -115,10 +137,9 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             color
             <ColorPicker
               id="path-color-picker"
-              defaultValue={paramsPath.color}
+              defaultValue={color}
               onChange={(c) => {
-                handlePath({ color: c, filled: true });
-                setWithPathFilled(true);
+                setColor(c);
               }}
             />
           </label>

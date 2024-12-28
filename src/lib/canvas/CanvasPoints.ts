@@ -41,7 +41,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     position: false,
     draw: false,
   };
-  protected realSize: Area = { x: 0, y: 0, width: 0, height: 0 };
+  protected realSize: Area | null = null;
+  protected trueSize: boolean = true;
 
   constructor() {
     super();
@@ -68,18 +69,23 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!this.data.items || this.data.items.length <= 1) {
       return null;
     }
+    this.realSize = null; // ready for next drawing
     return { ...this.data };
   }
 
   setData(data: CanvasPointsData) {
     this.data = { ...data };
+    this.data.general = { ...data.general };
+    if (data.path && data.path.filled) {
+      this.data.path = { ...data.path };
+    }
     this.hasChanged = { position: false, draw: false };
     this.canvasImage = null;
     if (this.isPathClosed()) {
       this.isClosed = true;
     }
     this.realSize = this.getArea();
-    // console.log("setData points", data);
+    this.isFinished = true;
   }
 
   setParamsGeneral(params: ParamsGeneral) {
@@ -119,21 +125,20 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.maxLineWidth = Math.max(firstElement.lineWidth, this.maxLineWidth);
     }
 
-    // console.log(
-    //   "startArea maxLineWidth:",
-    //   this.maxLineWidth,
-    //   this.data.general.lineWidth
-    // );
     const widthLine = this.maxLineWidth / 2 + 1;
 
+    this.canvasImage = null;
+    this.realSize = null;
     this.data.size = {
       x: coord.x - widthLine,
       y: coord.y - widthLine,
       width: 2 * widthLine,
       height: 2 * widthLine,
     };
-    // console.log("startArea", this.data.size);
+    this.isFinished = false;
     this.isClosed = false;
+    this.trueSize = true;
+    // console.log("startArea", this.data.size);
   }
 
   addPointInArea(coord: Coordinate) {
@@ -164,8 +169,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       size.width += offset.x;
       size.height += offset.y;
       this.calculateRelativePositions(offset);
-
-      // console.log("addPointInArea newSize:", size, "offset:", offset);
     }
   }
 
@@ -391,6 +394,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         top = pRight.end.y - 2 * MARGIN;
       }
     }
+
     const pTop = this.data.items[borderTop];
     if (pTop && "end" in pTop && pTop.end) {
       if (pTop.end.x >= right - 2 * MARGIN) {
@@ -419,8 +423,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
 
     this.realSize = { x, y, width, height };
-    // console.log("get-Area", { x, y, width, height });
+    // console.log("get-Area", this.realSize);
     return this.realSize;
+  }
+
+  eraseResizing() {
+    this.trueSize = true;
+    this.data.size = this.getArea();
   }
 
   drawCornerButtons(
@@ -522,6 +531,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   findAngle(coordonate: Coordinate): boolean {
     // Vérifier le point de départ
     // Cash controle
+
+    // find angle only if the path is not resized
+    if (!this.trueSize) {
+      return false;
+    }
 
     const coord = {
       x: coordonate.x - this.data.size.x,
@@ -659,11 +673,29 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   mouseOverPath(
     ctx: CanvasRenderingContext2D | null,
     event: MouseEvent | TouchEvent | null,
-    mousePosition: Coordinate
+    mousePosition: Coordinate,
+    resizingBorder: string | null = null
   ) {
     if (!ctx) {
       return "none";
     }
+    if (resizingBorder && !this.findAngle(mousePosition)) {
+      // mouse is over a border, we can resize the path
+
+      const newArea = this.resizingArea(
+        ctx,
+        mousePosition,
+        false,
+        resizingBorder
+      );
+      if (newArea) {
+        this.setDataSize(newArea);
+        this.clearAreaOnCanvas(ctx);
+        this.draw(ctx, true);
+      }
+      return mousePointer(resizingBorder);
+    }
+
     let cursorType = "default";
     let inArea = false;
     if (this.isInArea(mousePosition)) {
@@ -740,23 +772,37 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     ctx: CanvasRenderingContext2D | null,
     withDashedRectangle: boolean = true
   ): boolean {
-    if (!ctx) {
+    if (!ctx || !this.data.items || this.data.items.length <= 1) {
       return false;
+    }
+    this.trueSize = false;
+    if (
+      this.realSize &&
+      this.realSize.width === this.data.size.width &&
+      this.realSize.height === this.data.size.height
+    ) {
+      this.trueSize = true;
     }
     if (this.hasChanged.position) {
       this.data.size = this.getArea();
     }
     // draw the path in a temporyCanvas
-    if (this.hasChanged.draw || this.canvasImage === null) {
+    if (this.hasChanged.draw || !this.canvasImage) {
       if (!this.canvasImage) {
         this.canvasImage = document.createElement("canvas");
       }
+      if (!this.realSize || !this.isFinished) {
+        this.realSize = { ...this.data.size };
+        this.trueSize = true;
+      }
+
       this.canvasImage.width = this.realSize.width;
       this.canvasImage.height = this.realSize.height;
       // console.log("draw", this.data.size);
 
       const ctxTemp = this.canvasImage.getContext("2d");
       if (ctxTemp) {
+        // console.log("draw realSize", this.realSize, "data:", this.data.size);
         ctxTemp.clearRect(0, 0, this.realSize.width, this.realSize.height);
         ctxTemp.lineCap = ctx.lineCap;
         ctxTemp.lineJoin = ctx.lineJoin;
@@ -779,10 +825,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       return false;
     }
 
-    if (
-      this.data.size.width === this.realSize.width &&
-      this.data.size.height === this.realSize.height
-    ) {
+    if (this.trueSize) {
       // adding infos on the canvas, if there is no resize
       this.drawAddingInfos(ctx);
     }

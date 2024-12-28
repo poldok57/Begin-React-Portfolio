@@ -149,8 +149,6 @@ export class drawLine extends drawingHandler {
     this.setType(DRAWING_MODES.LINES_PATH);
     this.finishedDrawing = true;
     this.finishedDrawingStep1 = true;
-
-    this.path.setFinished(true);
   }
   getDraw(): CanvasPointsData | null {
     return this.path?.getData() as CanvasPointsData | null;
@@ -233,25 +231,11 @@ export class drawLine extends drawingHandler {
    */
   followCursorOnFinisedPath(event: MouseEvent | TouchEvent | null) {
     if (this.path) {
-      // mouse is over a border, we can resize the path
-      if (this.resizingBorder && this.ctxTempory) {
-        const newArea = this.path.resizingArea(
-          this.ctxTempory,
-          this.line.getCoordinates() as Coordinate,
-          false,
-          this.resizingBorder
-        );
-        if (newArea) {
-          this.path.setDataSize(newArea);
-          this.clearTemporyCanvas();
-          this.path.draw(this.ctxTempory, true);
-        }
-        return mousePointer(this.resizingBorder);
-      }
       return this.path.mouseOverPath(
         this.ctxTempory,
         event,
-        this.line.getCoordinates() as Coordinate
+        this.line.getCoordinates() as Coordinate,
+        this.resizingBorder
       );
     }
     return "default";
@@ -642,9 +626,9 @@ export class drawLine extends drawingHandler {
     }
     if (!isDrawingLine(nextMode)) {
       // if (this.withPath && this.path) {
-      if (this.path) {
-        this.saveLastDrawing(!this.withPath);
-      }
+      // if (this.path) {
+      //   this.saveLastDrawing(!this.withPath);
+      // }
       this.line.eraseEndCoordinates();
     } else if (this.getType() === DRAWING_MODES.ARC) {
       this.line.eraseCoordinates();
@@ -662,6 +646,13 @@ export class drawLine extends drawingHandler {
       this.finishedDrawing = true;
       this.finishedDrawingStep1 = true;
       this.debouncedDraw();
+    }
+  }
+
+  actionMouseDblClick() {
+    if (this.path) {
+      this.path.eraseResizing();
+      this.refreshDrawing(1);
     }
   }
 }

@@ -20,6 +20,8 @@ export const updateParamFromElement = (
     return null;
   }
 
+  // console.log("updateParamFromElement", selectedElement);
+
   let copyGeneral: boolean = false;
 
   switch (selectedElement.type) {

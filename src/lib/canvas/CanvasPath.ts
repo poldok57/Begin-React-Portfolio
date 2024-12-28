@@ -62,6 +62,7 @@ export class CanvasPath extends CanvasPoints {
     if (!this.data.items || this.data.items.length <= 1) {
       return null;
     }
+    // console.log("getData", this.data);
 
     firstItem = this.data.items[1] as LinePath;
     this.data.general.color = firstItem.strokeStyle ?? "gray";
@@ -415,6 +416,8 @@ export class CanvasPath extends CanvasPoints {
       return;
     }
 
+    this.isClosed = true;
+
     // if the last item is not close to the start point, we add a line to the start point to close the path
     if (!this.isPathClosed()) {
       // console.log("point not close from first item");
@@ -424,10 +427,8 @@ export class CanvasPath extends CanvasPoints {
         end: { x: first.x + this.data.size.x, y: first.y + this.data.size.y },
       };
       this.addItem(newLine);
-      this.isClosed = false;
       return;
     }
-    this.isClosed = true;
 
     // if the last item is close to the start point, we can close the path
     const start = (this.data.items[0] as LinePath).end as Coordinate;
