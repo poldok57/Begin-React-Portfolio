@@ -392,6 +392,7 @@ const drawButtonsAndLines = (
     const bPos = topRightPosition(
       square.size,
       ctx.canvas.width,
+      ctx.canvas.height,
       square.rotation
     );
     drawCornerButton(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
@@ -399,6 +400,7 @@ const drawButtonsAndLines = (
     const bPosDel = topRightPositionOver(
       square.size,
       ctx.canvas.width,
+      ctx.canvas.height,
       square.rotation
     );
     opacity = border === BORDER.ON_BUTTON_DELETE ? 1 : 0.5;

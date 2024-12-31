@@ -80,10 +80,15 @@ export class drawFindElement extends drawingHandler {
 
     let cursor = "default";
 
-    const nb = showAllDashedRectangles(this.ctxTempory, this.designElements, {
-      x: coord.x,
-      y: coord.y,
-    });
+    const nb = showAllDashedRectangles(
+      this.ctxTempory,
+      this.designElements,
+      {
+        x: coord.x,
+        y: coord.y,
+      },
+      this.scale
+    );
 
     if (nb !== this.nbFound) {
       this.nbFound = nb;

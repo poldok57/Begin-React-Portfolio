@@ -107,6 +107,7 @@ export const isOnSquareBorder = ({
   withCornerButton = true,
   withTurningButtons = true,
   maxWidth = 0,
+  maxHeight = 0,
   rotation = 0,
 }: ArgsMouseOnShape) => {
   const rect = {
@@ -119,12 +120,12 @@ export const isOnSquareBorder = ({
   } as Rectangle;
 
   if (withCornerButton) {
-    const badgePos = topRightPosition(rect, maxWidth, rotation);
+    const badgePos = topRightPosition(rect, maxWidth, maxHeight, rotation);
 
     if (coordinateIsInsideRect(coordinate, badgePos)) {
       return BORDER.ON_BUTTON;
     }
-    const btnDel = topRightPositionOver(rect, maxWidth, rotation);
+    const btnDel = topRightPositionOver(rect, maxWidth, maxHeight, rotation);
     if (coordinateIsInsideRect(coordinate, btnDel)) {
       return BORDER.ON_BUTTON_DELETE;
     }

@@ -10,6 +10,7 @@ import { Area, Coordinate } from "./types";
 
 export abstract class CanvasDrawableObject {
   protected data: ThingsToDraw;
+  protected scale: number = 1;
 
   constructor() {
     this.data = {
@@ -44,6 +45,10 @@ export abstract class CanvasDrawableObject {
   }
   getDataId() {
     return this.data.id;
+  }
+
+  setScale(scale: number) {
+    this.scale = scale;
   }
 
   setDataSize(data: Area | Coordinate): void {

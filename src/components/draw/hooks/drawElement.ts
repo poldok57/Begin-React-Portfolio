@@ -46,6 +46,10 @@ export class drawElement extends drawingHandler {
     this.shape.setType(type);
   }
 
+  setScale(scale: number): void {
+    this.shape.setScale(scale);
+  }
+
   initData(initData: AllParams) {
     this.shape.initData(initData);
     if (!this.context) return;

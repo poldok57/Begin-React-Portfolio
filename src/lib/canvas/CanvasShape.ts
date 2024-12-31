@@ -441,6 +441,7 @@ export class CanvasShape extends CanvasDrawableObject {
       withCornerButton: this.data.withCornerButton || false,
       withTurningButtons: this.data.withTurningButtons || false,
       maxWidth: canvas.width,
+      maxHeight: canvas.height,
       rotation: this.data.rotation,
     };
 

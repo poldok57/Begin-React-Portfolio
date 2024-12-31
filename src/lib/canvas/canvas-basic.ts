@@ -168,7 +168,8 @@ export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
 export const crossLine = (
   ctx: CanvasRenderingContext2D,
   center: Coordinate | null,
-  width: number
+  width: number,
+  color: string | null = null
 ) => {
   if (!center) return;
 
@@ -176,8 +177,8 @@ export const crossLine = (
   ctx.setLineDash([4, 2]);
   ctx.beginPath();
   // fine and black lines
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "black";
+  ctx.lineWidth = color ? 1.5 : 1;
+  ctx.strokeStyle = color ?? "#111111";
   ctx.moveTo(center.x, center.y - width / 2);
   ctx.lineTo(center.x, center.y + width / 2);
   ctx.moveTo(center.x - width / 2, center.y);

@@ -198,20 +198,22 @@ export const mousePointer = (mouseOnBorder: string): string => {
 export const topRightPosition = (
   rect: RectangleArgs,
   maxWidth: number = 0,
+  maxHeight: number = 0,
   rotation: number = 0,
   lockAtTop: boolean = true
 ): ButtonArgs => {
+  const badgeRadius = isTouchDevice() ? BADGE_RADIUS_TOUCH : BADGE_RADIUS;
+
   const x = rect.x ?? rect.left!;
-  const y = rect.y ?? rect.top!;
+  const y = Math.min(rect.y ?? rect.top!, maxHeight - 2 * badgeRadius);
   const w = rect.width ?? rect.right! - rect.left!;
   const h = rect.height ?? rect.bottom! - rect.top!;
-  const badgeRadius = isTouchDevice() ? BADGE_RADIUS_TOUCH : BADGE_RADIUS;
 
   // Position de base du badge
   const badge: ButtonArgs = {
     width: badgeRadius * 2,
     height: badgeRadius * 2,
-    left: Math.max(x + w - badgeRadius * 2, x + 55),
+    left: Math.max(x + w - badgeRadius * 2, x + 55, 0),
     top: lockAtTop ? Math.max(y, 0) : y,
     bottom: y + badgeRadius * 2,
     radius: badgeRadius,
@@ -267,6 +269,7 @@ export const topRightPosition = (
 export const topRightPositionOver = (
   rect: RectangleArgs,
   maxWidth: number = 0,
+  maxHeight: number = 0,
   rotation: number = 0
 ): ButtonArgs => {
   const newRect = { ...rect };
@@ -280,7 +283,13 @@ export const topRightPositionOver = (
   if (newRect.y !== undefined) {
     newRect.y -= overhang;
   }
-  return topRightPosition(newRect, maxWidth, rotation, false);
+  return topRightPosition(
+    newRect,
+    maxWidth,
+    maxHeight - overhang,
+    rotation,
+    false
+  );
 };
 
 export const middleButtonPosition = (rect: RectangleArgs) => {

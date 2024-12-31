@@ -44,7 +44,6 @@ export class CanvasPath extends CanvasPoints {
 
     const item: LinePath = {
       type: LineType.START,
-      lineWidth: line.lineWidth,
       end: end,
     };
     this.startArea(item);
@@ -276,20 +275,18 @@ export class CanvasPath extends CanvasPoints {
       if ("end" in item) {
         const line = item as LinePath;
         if (line.end) {
-          ctx.strokeStyle = "blue";
           const coord = {
-            x: line.end.x + this.data.size.x,
-            y: line.end.y + this.data.size.y,
+            x: (line.end.x + this.data.size.x) * this.scale,
+            y: (line.end.y + this.data.size.y) * this.scale,
           };
-          crossLine(ctx, coord, 10); // Utilisation d'une largeur de 10 pour la croix
+          crossLine(ctx, coord, 10, "blue"); // Utilisation d'une largeur de 10 pour la croix
         }
         if (line.coordinates && line.type === LineType.CURVE) {
-          ctx.strokeStyle = "red";
           const coord = {
-            x: line.coordinates.x + this.data.size.x,
-            y: line.coordinates.y + this.data.size.y,
+            x: (line.coordinates.x + this.data.size.x) * this.scale,
+            y: (line.coordinates.y + this.data.size.y) * this.scale,
           };
-          crossLine(ctx, coord, 10);
+          crossLine(ctx, coord, 10, "red");
         }
       }
     });

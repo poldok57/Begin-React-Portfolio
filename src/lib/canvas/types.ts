@@ -55,6 +55,7 @@ export interface ArgsMouseOnShape {
   withCornerButton: boolean | null;
   withTurningButtons: boolean | null;
   maxWidth: number;
+  maxHeight: number;
   rotation?: number;
 }
 

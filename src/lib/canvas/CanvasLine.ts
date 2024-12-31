@@ -1,6 +1,7 @@
 import { basicLine, crossLine } from "./canvas-basic";
 import { Coordinate, LinePath, LineType } from "./types";
 import { drawArrow } from "./canvas-arrow";
+import { scaledCoordinate } from "../utils/scaledSize";
 
 export class CanvasLine implements LinePath {
   mCanvas: HTMLCanvasElement | null = null;
@@ -9,6 +10,8 @@ export class CanvasLine implements LinePath {
   coordinates: Coordinate | null = null;
   start: Coordinate | null = null;
   end: Coordinate | null = null;
+  scale: number = 1;
+
   strokeStyle: string | null = null;
   lineWidth: number = 0;
   globalAlpha: number | null = null;
@@ -34,8 +37,12 @@ export class CanvasLine implements LinePath {
     this.type = type;
   }
 
+  setScale(scale: number) {
+    this.scale = scale;
+  }
+
   setCoordinates(coord: Coordinate) {
-    this.coordinates = coord;
+    this.coordinates = { ...coord };
     return this.coordinates;
   }
 
@@ -47,7 +54,11 @@ export class CanvasLine implements LinePath {
   }
 
   setStartCoordinates(coord: Coordinate | null = null) {
-    this.start = coord || this.coordinates;
+    if (coord) {
+      this.start = { ...coord };
+    } else if (this.coordinates) {
+      this.start = { ...this.coordinates };
+    }
   }
 
   getStartCoordinates() {
@@ -66,8 +77,13 @@ export class CanvasLine implements LinePath {
     this.start = null;
   }
 
-  setEndCoordinates(coord = null) {
-    this.end = coord || this.coordinates;
+  setEndCoordinates(coord: Coordinate | null = null) {
+    if (coord) {
+      this.end = { ...coord };
+    } else if (this.coordinates) {
+      this.end = { ...this.coordinates };
+    }
+    return this.end;
   }
   getEndCoordinates() {
     return this.end;
@@ -130,28 +146,31 @@ export class CanvasLine implements LinePath {
     if (this.lineWidth) {
       context.lineWidth = this.lineWidth;
     }
-    basicLine(context, this.start, this.coordinates);
+    basicLine(
+      context,
+      scaledCoordinate(this.start, this.scale),
+      scaledCoordinate(this.coordinates, this.scale)
+    );
   }
 
-  setArc() {
+  setArcPositions() {
     if (this.start === null) {
       // set first coordinates
       this.setStartCoordinates();
       return false;
     }
 
-    const end = this.end;
-    if (!end) {
-      this.setEndCoordinates();
-      return false;
-    }
+    if (this.end === null) {
+      const end = this.setEndCoordinates();
 
-    // if the start and end are too close, we don't draw the arc
-    if (
-      Math.abs(this.start.x - end.x) < 2 &&
-      Math.abs(this.start.y - end.y) < 2
-    ) {
-      this.end = null;
+      // if the start and end are too close, we don't draw the arc
+      if (
+        end &&
+        Math.abs(this.start.x - end.x) < 3 &&
+        Math.abs(this.start.y - end.y) < 3
+      ) {
+        this.end = null;
+      }
       return false;
     }
     // definition of the arc is done
@@ -169,10 +188,18 @@ export class CanvasLine implements LinePath {
       strokeStyle: context.strokeStyle,
     };
     if (this.start) {
-      crossLine(context, this.start, this.lineWidth * 1.8);
+      crossLine(
+        context,
+        scaledCoordinate(this.start, this.scale),
+        this.lineWidth * 1.8
+      );
     }
     if (this.end) {
-      crossLine(context, this.end, this.lineWidth * 1.8);
+      crossLine(
+        context,
+        scaledCoordinate(this.end, this.scale),
+        this.lineWidth * 1.8
+      );
     }
     context.lineWidth = memo.lineWidth;
     context.strokeStyle = memo.strokeStyle;
@@ -187,9 +214,9 @@ export class CanvasLine implements LinePath {
     }
     if (!context) return false;
 
-    const current = this.getCoordinates();
-    const start = this.getStartCoordinates();
-    const end = this.getEndCoordinates();
+    const current = scaledCoordinate(this.coordinates, this.scale);
+    const start = scaledCoordinate(this.getStartCoordinates(), this.scale);
+    const end = scaledCoordinate(this.getEndCoordinates(), this.scale);
 
     if (current && start && !end) {
       // draw preview line
@@ -236,11 +263,15 @@ export class CanvasLine implements LinePath {
     }
     if (!context) return false;
 
-    if (this.start && this.coordinates) {
+    const start = scaledCoordinate(this.start, this.scale);
+    const end = scaledCoordinate(this.end, this.scale);
+    const coordonate = scaledCoordinate(this.coordinates, this.scale);
+
+    if (start && coordonate) {
       drawArrow({
         ctx: context,
-        from: this.start,
-        to: this.end ?? this.coordinates,
+        from: start,
+        to: end ?? coordonate,
         color: this.strokeStyle || "rgba(128, 128, 128, 0.7)",
         lineWidth: this.lineWidth,
         curvature: this.curvature || 0,
@@ -256,7 +287,7 @@ export class CanvasLine implements LinePath {
 
   setPositions() {
     if (this.type === LineType.CURVE) {
-      return this.setArc();
+      return this.setArcPositions();
     }
     return this.setLine();
   }
@@ -277,7 +308,12 @@ export class CanvasLine implements LinePath {
     }
   }
 
-  arrowForArc(ctx: CanvasRenderingContext2D, from: Coordinate, to: Coordinate) {
+  arrowForArc(
+    ctx: CanvasRenderingContext2D,
+    from: Coordinate | null,
+    to: Coordinate | null
+  ) {
+    if (!from || !to) return;
     drawArrow({
       ctx: ctx,
       from: from,
@@ -285,34 +321,35 @@ export class CanvasLine implements LinePath {
       color: "rgba(128, 128, 128, 0.7)",
       curvature: 0,
       lineWidth: 6,
-      opacity: 0.5,
+      opacity: 0.6,
       padding: 8,
     });
   }
 
-  showLineEnds(ctx: CanvasRenderingContext2D, withLine: boolean = false) {
+  showLinesHelpers(ctx: CanvasRenderingContext2D, withLine: boolean = false) {
     const crossWidth = Math.min(ctx.lineWidth * 2, 30);
 
-    if (this.start) {
-      crossLine(ctx, this.start, crossWidth);
+    const start = scaledCoordinate(this.start, this.scale);
+    const end = scaledCoordinate(this.end, this.scale);
+    if (start) {
+      crossLine(ctx, start, crossWidth);
     }
     if (this.end) {
-      crossLine(ctx, this.end, crossWidth);
+      crossLine(ctx, end, crossWidth);
     }
     if (withLine && this.start && this.end) {
       const alpha = ctx.globalAlpha;
-      ctx.globalAlpha = 0.25;
+      ctx.globalAlpha = 0.15;
       this.showLine(ctx);
-      ctx.globalAlpha = alpha;
 
       // Draw two small gray perpendicular arrows in the middle of the line
-      if (this.start && this.end) {
-        const midX = (this.start.x + this.end.x) / 2;
-        const midY = (this.start.y + this.end.y) / 2;
+      if (start && end) {
+        const midX = (start.x + end.x) / 2;
+        const midY = (start.y + end.y) / 2;
 
         // Calculate the perpendicular vector to the line
-        const dx = this.end.x - this.start.x;
-        const dy = this.end.y - this.start.y;
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
         const length = Math.sqrt(dx * dx + dy * dy);
         const perpX = -dy / length;
         const perpY = dx / length;
@@ -333,6 +370,7 @@ export class CanvasLine implements LinePath {
         this.arrowForArc(ctx, from, to1);
         this.arrowForArc(ctx, from, to2);
       }
+      ctx.globalAlpha = alpha;
     }
   }
 }

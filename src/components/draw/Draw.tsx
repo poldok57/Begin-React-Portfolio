@@ -5,11 +5,14 @@ import { ShowAlertMessagesWP } from "@/components/alert-messages/ShowAlertMessag
 import { Canvas } from "./Canvas";
 import { DEFAULT_PARAMS, GroupParams } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+
 import { useCanvas } from "./hooks/useCanvas";
 import { adjustBrightness } from "../../lib/utils/colors";
 import { DrawList } from "./DrawList";
 import { ColorResult, SliderPicker } from "react-color";
 import { X } from "lucide-react";
+import { useDesignStore } from "@/lib/stores/design";
 
 const DrawControlWP = withMousePosition(DrawControl);
 const DrawListWP = withMousePosition(DrawList);
@@ -36,6 +39,8 @@ export const Draw = () => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [intensity, setIntensity] = useState(100);
 
+  const { scale, setScale, setSelectedDesignElement, refreshCanvas } =
+    useDesignStore();
   setHistoryMaxLen(MAX_HISTORY);
 
   const getDrawingParams = () => {
@@ -44,6 +49,28 @@ export const Draw = () => {
 
   const setDrawingParams = (props: GroupParams) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
+  };
+
+  const changeScale = (scale: number) => {
+    setScale(scale);
+    if (canvasRef.current) {
+      setSelectedDesignElement(null);
+      // Clear the temporary canvas
+      if (canvasTemporyRef.current) {
+        const tempContext = canvasTemporyRef.current.getContext("2d");
+        clearCanvasByCtx(tempContext);
+      }
+
+      // Clear the mouse canvas
+      if (canvasMouseRef.current) {
+        const mouseContext = canvasMouseRef.current.getContext("2d");
+        clearCanvasByCtx(mouseContext);
+      }
+      refreshCanvas(
+        canvasRef.current.getContext("2d") as CanvasRenderingContext2D,
+        false
+      );
+    }
   };
 
   useCanvas({
@@ -99,6 +126,38 @@ export const Draw = () => {
   return (
     <div className="flex relative flex-col gap-8 justify-center items-center py-5 w-full h-full">
       <div className="flex relative flex-row justify-center items-center">
+        {/* Left Side Controls */}
+        <div
+          className="flex absolute flex-col gap-1 justify-between items-start"
+          style={{
+            right: `${canvasWidth + 30}px`,
+            top: 0,
+            height: `${Math.max(canvasHeight, 350)}px`,
+            paddingTop: "100px",
+            paddingBottom: "20px",
+          }}
+        >
+          {/* Scale Control */}
+          <div className="flex flex-col gap-1 items-center origin-left -rotate-90 translate-y-12 translate-x-36 border border-gray-400 rounded-lg p-2 shadow-md">
+            <div className="flex gap-2 items-center">
+              <label htmlFor="scale-range" className="text-sm text-gray-500">
+                Scale
+              </label>
+              <span className="text-xs text-gray-500">{scale}</span>
+            </div>
+            <input
+              id="scale-range"
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={scale}
+              onChange={(e) => changeScale(parseFloat(e.target.value))}
+              className="w-36"
+            />
+          </div>
+        </div>
+
         {/* Canvas Container */}
         <div
           ref={canvasContainerRef}

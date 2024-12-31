@@ -27,25 +27,36 @@ export const updateParamFromElement = (
   switch (selectedElement.type) {
     case DRAW_TYPE.DRAW:
       copyGeneral = true;
+      break;
     case DRAW_TYPE.LINES_PATH:
     case DRAW_TYPE.ARROW:
       if (selectedElement.path) {
         setParams({ path: selectedElement.path });
       }
-      const general: ParamsGeneral = {
+      const general: ParamsGeneral = selectedElement.general ?? {
         lineWidth: 0,
         color: "",
-        opacity: 0,
+        opacity: 1,
       };
       if (
         "items" in selectedElement &&
         Array.isArray(selectedElement.items) &&
         selectedElement.items.length > 1
       ) {
+        const line0 = selectedElement.items[0] as LinePath;
+        if (line0.lineWidth) {
+          general.lineWidth = line0.lineWidth;
+        }
         const line: LinePath = selectedElement.items[1] as LinePath;
-        general.color = line.strokeStyle || "";
-        general.lineWidth = line.lineWidth || 1;
-        general.opacity = line.globalAlpha || 1;
+        if (line.strokeStyle) {
+          general.color = line.strokeStyle;
+        }
+        if (line.lineWidth) {
+          general.lineWidth = line.lineWidth;
+        }
+        if (line.globalAlpha) {
+          general.opacity = line.globalAlpha;
+        }
         if (line.type === LineType.ARROW) {
           const arrow = {
             headSize: line.headSize,

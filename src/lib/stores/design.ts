@@ -13,6 +13,7 @@ import { showDrawElement } from "../canvas/showDrawElement";
 interface DesignState {
   designElements: ThingsToDraw[];
   selectedDesignElement: string | null;
+  scale: number;
   getAllDesignElements: () => ThingsToDraw[];
   refreshCanvas: (
     ctx: CanvasRenderingContext2D | null,
@@ -32,11 +33,14 @@ interface DesignState {
   orderDesignElement: (id: string, direction: 1 | -1) => void;
   eraseDesignElement: () => void;
   getImageDataURL: (id: string) => string | null;
+  setScale: (scale: number) => void;
+  getScale: () => number;
 }
 
 const designStore: StateCreator<DesignState> = (set, get) => ({
   designElements: [],
   selectedDesignElement: null,
+  scale: 1,
   getAllDesignElements: () => get().designElements,
   refreshCanvas: (
     ctx: CanvasRenderingContext2D | null,
@@ -53,7 +57,7 @@ const designStore: StateCreator<DesignState> = (set, get) => ({
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     designElements.forEach((element) => {
       if (element.id !== selectedElementId) {
-        showDrawElement(ctx, element, false);
+        showDrawElement(ctx, element, get().getScale(), false);
       }
     });
   },
@@ -191,6 +195,12 @@ const designStore: StateCreator<DesignState> = (set, get) => ({
     const imageKey = `img_${id}`;
     return localStorage.getItem(imageKey) ?? null;
   },
+  setScale: (scale: number) => {
+    set(() => ({
+      scale,
+    }));
+  },
+  getScale: () => get().scale,
 });
 
 const localStoragePersist: PersistOptions<DesignState>["storage"] = {

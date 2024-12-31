@@ -21,26 +21,27 @@ export const getMouseCoordinates: (
 
 export const getCoordinatesInCanvas: (
   event: MouseEvent | TouchEvent,
-  canvas: HTMLCanvasElement
-) => Coordinate = (event, canvas) => {
+  canvas: HTMLCanvasElement,
+  scale?: number
+) => Coordinate = (event, canvas, scale = 1) => {
   const rect = canvas.getBoundingClientRect();
 
   // conversion with touch event
   if (event instanceof TouchEvent) {
     if (event.touches.length > 0) {
       const touch = event.touches[0];
+      // console.log("touchEvent scale=", scale);
       return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top,
+        x: (touch.clientX - rect.left) / scale,
+        y: (touch.clientY - rect.top) / scale,
       } as Coordinate;
-    } else {
-      return { x: 0, y: 0 } as Coordinate;
     }
+    return { x: 0, y: 0 } as Coordinate;
   }
   // conversion with mouse event
   return {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top,
+    x: (event.clientX - rect.left) / scale,
+    y: (event.clientY - rect.top) / scale,
   } as Coordinate;
 };
 

@@ -19,6 +19,7 @@ import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 
 // import { throttle } from "@/lib/utils/throttle";
 import { BORDER, isBorder } from "@/lib/mouse-position";
+import { scaledCoordinate } from "@/lib/utils/scaledSize";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -47,6 +48,11 @@ export class drawFreehand extends drawingHandler {
   initData(initData: AllParams): void {
     this.setType(initData.mode);
     this.changeData(initData);
+  }
+
+  setScale(scale: number): void {
+    super.setScale(scale);
+    this.freeCurve.setScale(scale);
   }
 
   setDataGeneral(dataGeneral: ParamsGeneral) {
@@ -114,17 +120,20 @@ export class drawFreehand extends drawingHandler {
 
     const coord = this.getCoordinates() as Coordinate;
 
+    const mouseCoord = scaledCoordinate(coord, this.scale);
+    if (!mouseCoord) return "none";
+
     switch (this.getType()) {
       case DRAWING_MODES.DRAW:
-        hightLightMouseCursor(ctxMouse, coord, mouseCircle);
+        hightLightMouseCursor(ctxMouse, mouseCoord, mouseCircle);
         drawPoint({
           context: ctxMouse,
-          coordinate: coord,
+          coordinate: mouseCoord,
         } as drawingCircle);
         break;
       case DRAWING_MODES.ERASE:
         ctxTempory.globalAlpha = 0.7;
-        hightLightMouseCursor(ctxMouse, coord, {
+        hightLightMouseCursor(ctxMouse, mouseCoord, {
           ...mouseCircle,
           color: "pink",
           width: 50,
@@ -132,7 +141,7 @@ export class drawFreehand extends drawingHandler {
         ctxTempory.globalAlpha = 0.5;
         hatchedCircle({
           context: ctxMouse,
-          coordinate: coord,
+          coordinate: mouseCoord,
           color: "#eee",
           borderColor: "#303030",
         } as drawingCircle);
@@ -204,6 +213,8 @@ export class drawFreehand extends drawingHandler {
   ): returnMouseDown {
     // color and width painting
     this.setCoordinates(coord);
+
+    // console.log("actionMouseDown", this.finishedDrawing, this.freeCurve);
 
     if (this.finishedDrawing && this.freeCurve) {
       const mouseOnRectangle = this.freeCurve.mouseDown(

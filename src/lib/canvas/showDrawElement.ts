@@ -9,10 +9,12 @@ import { drawDashedRectangle } from "./canvas-dashed-rect";
 import { debounce } from "../utils/debounce";
 import { Coordinate } from "./types";
 import { isInsideSquare } from "../square-position";
+import { scaledSize } from "../utils/scaledSize";
 
 export const showDrawElement = (
   ctx: CanvasRenderingContext2D,
   element: ThingsToDraw,
+  scale: number,
   withDetails: boolean = true
 ) => {
   if (!element || !ctx) return;
@@ -34,6 +36,7 @@ export const showDrawElement = (
 
   canvasObject.setData(element);
   setTimeout(() => {
+    canvasObject.setScale(scale);
     canvasObject.draw(ctx, withDetails);
   }, 5);
 };
@@ -41,7 +44,8 @@ export const showDrawElement = (
 export const showAllDashedRectangles = (
   ctx: CanvasRenderingContext2D,
   elements: ThingsToDraw[],
-  coord: Coordinate
+  coord: Coordinate,
+  scale: number = 1
 ) => {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   let nbFound = 0;
@@ -52,7 +56,10 @@ export const showAllDashedRectangles = (
     // Check if coord is inside element size
     if (isInsideSquare(coord, element.size, element.rotation)) {
       // First found element (last in z-order) gets 50% opacity
-      drawDashedRectangle(ctx, element.size, opacity, element.rotation);
+      // scale the size of the element
+      const size = scaledSize(element.size, scale);
+
+      drawDashedRectangle(ctx, size, opacity, element.rotation);
       opacity = 0.3;
       nbFound++;
     }

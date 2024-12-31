@@ -29,6 +29,9 @@ import {
 } from "@/lib/canvas/canvas-defines";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
 import { debounce } from "@/lib/utils/debounce";
+import { scaledCoordinate } from "@/lib/utils/scaledSize";
+// import { scaledCoordinate } from "@/lib/utils/scaledSize";
+// import { unScaledCoordinate } from "@/lib/utils/scaledSize";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -61,6 +64,12 @@ export class drawLine extends drawingHandler {
     } else {
       this.line.setType(LineType.LINE);
     }
+  }
+
+  setScale(scale: number): void {
+    super.setScale(scale);
+    this.line.setScale(scale);
+    this.path?.setScale(scale);
   }
 
   setCoordinates(coord: Coordinate) {
@@ -125,14 +134,6 @@ export class drawLine extends drawingHandler {
     if (this.line) this.line.setCanvas(canvas);
   }
 
-  setStartCoordinates(coord: Coordinate | null = null) {
-    if (coord === null) {
-      this.line.eraseStartCoordinates();
-      return;
-    }
-    this.line.setStartCoordinates(coord);
-  }
-
   initPath = (withPath: boolean = true) => {
     this.path = new CanvasPath(this.line as LinePath);
     this.withPath = withPath;
@@ -143,7 +144,8 @@ export class drawLine extends drawingHandler {
 
   setDraw(draw: CanvasPointsData) {
     this.path = new CanvasPath(null);
-    this.path?.setData(draw);
+    this.path.setData(draw);
+    this.path.setScale(this.scale);
     this.withPath = true;
 
     this.setType(DRAWING_MODES.LINES_PATH);
@@ -207,20 +209,23 @@ export class drawLine extends drawingHandler {
 
     const coord = this.line.getCoordinates() as Coordinate;
 
+    const mouseCoord = scaledCoordinate(coord, this.scale);
+    if (!mouseCoord) return "none";
     ctxMouse.globalAlpha = 0.4;
-    hightLightMouseCursor(ctxMouse, coord, mouseCircle);
+
+    hightLightMouseCursor(ctxMouse, mouseCoord, mouseCircle);
 
     if (this.line.getStartCoordinates() == null) {
       // first point of line show a point
       drawPoint({
         context: ctxMouse,
-        coordinate: this.line.getCoordinates() as Coordinate,
+        coordinate: mouseCoord,
       } as drawingCircle);
     } else {
       this.line.show(ctxMouse, true);
 
       if (this.ctxTempory) {
-        this.line.showLineEnds(ctxMouse);
+        this.line.showLinesHelpers(ctxMouse);
       }
     }
     return "crosshair" as string;
@@ -245,6 +250,8 @@ export class drawLine extends drawingHandler {
    * Function who recieve the mouse move event
    */
   actionMouseMove(event: MouseEvent | TouchEvent, coord: Coordinate) {
+    // const coordScaled = scaledCoordinate(coord, this.scale);
+    // if (!coordScaled) return "none";
     this.line.setCoordinates(coord);
 
     if (this.withPath && this.finishedDrawing) {
@@ -254,15 +261,19 @@ export class drawLine extends drawingHandler {
   }
 
   showLineAndArc(withPath: boolean = true) {
+    if (!this.path) {
+      this.initPath(withPath);
+      return false;
+    }
+
     let toExtend = false;
     const type = this.getType();
+
     switch (type) {
       case DRAWING_MODES.LINE:
       case DRAWING_MODES.ARC:
       case DRAWING_MODES.ARROW:
-        if (!this.path) {
-          this.initPath(withPath);
-        } else if (this.line.setPositions()) {
+        if (this.line.setPositions()) {
           this.line.show(this.ctxTempory);
           this.path.addLine(this.line as LinePath);
           // if the last item is close to the start point,
@@ -274,23 +285,26 @@ export class drawLine extends drawingHandler {
             break;
           }
           this.line.setStartFromEnd();
+          toExtend = true;
+
+          // if we are drawing an arrow and we have 2 points, we can finish the path
+          if (type === DRAWING_MODES.ARROW && this.path.getItemsLength() >= 2) {
+            this.path.setFinished(true);
+            this.clearMouseCanvas();
+            this.withPath = true;
+            this.finishedDrawing = true;
+            toExtend = false;
+          }
         }
         this.clearTemporyCanvas();
         this.path?.draw(this.ctxTempory, this.withPath);
-
-        toExtend = true;
         break;
     }
-    this.line.show(this.ctxTempory);
 
-    // if we are drawing an arrow and we have 2 points, we can finish the path
-    if (type === DRAWING_MODES.ARROW && this.path?.getItemsLength() === 2) {
-      this.path?.setFinished(true);
-      this.clearMouseCanvas();
-      this.withPath = true;
-      this.finishedDrawing = true;
-      toExtend = false;
+    if (toExtend) {
+      this.line.show(this.ctxTempory);
     }
+
     return toExtend;
   }
 
@@ -343,10 +357,6 @@ export class drawLine extends drawingHandler {
       const lastLine: LinePath | null = this.path?.getLastLine() as LinePath;
 
       if (lastLine) {
-        // const lastCoord = lastLine.end as Coordinate;
-        // this.line.setStartCoordinates(lastCoord);
-
-        // console.log("clic on last line", lastCoord);
         return true;
       }
     }
@@ -422,7 +432,7 @@ export class drawLine extends drawingHandler {
 
     if (this.line.getStartCoordinates() == null) {
       this.initPath(false);
-      this.line.setStartCoordinates();
+      // this.line.setStartCoordinates();
     }
 
     toExtend = this.showLineAndArc(false);
@@ -534,8 +544,9 @@ export class drawLine extends drawingHandler {
     }
 
     this.showLineAndArc(this.withPath);
+
     if (this.ctxTempory) {
-      this.line.showLineEnds(this.ctxTempory, true);
+      this.line.showLinesHelpers(this.ctxTempory, true);
     }
   }
   /**

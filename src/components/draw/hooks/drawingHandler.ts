@@ -29,6 +29,7 @@ export abstract class drawingHandler {
   protected setMode: (mode: string) => void;
   protected lockRatio: boolean = false;
   protected type: string = DRAWING_MODES.PAUSE;
+  protected scale: number = 1;
 
   protected coordinates: Coordinate | null = { x: 0, y: 0 };
 
@@ -101,6 +102,10 @@ export abstract class drawingHandler {
   }
   getType() {
     return this.type;
+  }
+
+  setScale(scale: number) {
+    this.scale = scale;
   }
 
   setResizingBorder(value: string | null) {

@@ -7,7 +7,6 @@ import { ColorPicker } from "../atom/ColorPicker";
 import {
   DRAWING_MODES,
   GroupParams,
-  Params,
   ParamsPath,
 } from "@/lib/canvas/canvas-defines";
 import { MdTimeline } from "react-icons/md";
@@ -35,9 +34,10 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
 }) => {
   const [withPathFilled, setWithPathFilledState] = useState(paramsPath.filled);
   const [color, setColorState] = useState(paramsPath.color);
+  const [opacity, setOpacityState] = useState(paramsPath.opacity);
   const defaultColorRef = useRef(defaultColor);
-  const handlePath = (param: Params) => {
-    paramsPath = { ...paramsPath, ...param };
+  const handlePath = (filled: boolean, color: string, opacity: number) => {
+    paramsPath = { filled: filled, color: color, opacity: opacity };
     handleParamChange({ path: paramsPath });
   };
 
@@ -45,14 +45,20 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
     setWithPathFilledState(value);
     if (value && defaultColorRef.current) {
       setColorState(defaultColorRef.current);
-      handlePath({ color: defaultColorRef.current, opacity: 1 });
+      setOpacityState(1);
+      handlePath(value, defaultColorRef.current, 1);
     }
-    handlePath({ filled: value });
+    handlePath(value, color, opacity);
   };
 
   const setColor = (color: string) => {
     setColorState(color);
-    handlePath({ color: color });
+    handlePath(true, color, opacity);
+  };
+
+  const setOpacity = (opacity: number) => {
+    setOpacityState(opacity);
+    handlePath(true, color, opacity);
   };
 
   useEffect(() => {
@@ -88,7 +94,6 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       >
         <MdTimeline size="28px" />
       </Button>
-
       <Button
         className="px-4 py-1"
         selected={mode == DRAWING_MODES.ARC}
@@ -97,36 +102,33 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       >
         <Spline size={28} />
       </Button>
-      <>
-        <Button
-          onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
-          className="w-16 h-8"
-          title="Stop path"
-        >
-          Stop path
-        </Button>
-        <Button
-          onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
-          className="w-16 h-8"
-          title="Close path"
-        >
-          Close path
-        </Button>
-        <label
-          htmlFor="toggle-border"
-          className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
-        >
-          Filled
-          <ToggleSwitch
-            id="toggle-border"
-            defaultChecked={withPathFilled}
-            onChange={(event) => {
-              handlePath({ filled: event.target.checked });
-              setWithPathFilled(event.target.checked);
-            }}
-          />
-        </label>
-      </>
+      <Button
+        onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
+        className="w-16 h-8"
+        title="Stop path"
+      >
+        Stop path
+      </Button>
+      <Button
+        onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
+        className="w-16 h-8"
+        title="Close path"
+      >
+        Close path
+      </Button>
+      <label
+        htmlFor="toggle-border"
+        className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
+      >
+        Filled
+        <ToggleSwitch
+          id="toggle-border"
+          defaultChecked={withPathFilled}
+          onChange={(event) => {
+            setWithPathFilled(event.target.checked);
+          }}
+        />
+      </label>
 
       {withPathFilled && (
         <>
@@ -151,12 +153,12 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             })}
             id="path-opacity-picker"
             label="Opacity"
-            value={paramsPath.opacity * 100}
+            value={opacity * 100}
             min="0"
             max="100"
             step="10"
             onChange={(value: number) => {
-              handlePath({ opacity: value / 100 });
+              setOpacity(value / 100);
             }}
             style={{ width: "50px" }}
             isTouch={isTouch}
