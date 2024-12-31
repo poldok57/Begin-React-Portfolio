@@ -30,7 +30,6 @@ const roundCoordinates = (
 };
 
 export class CanvasPath extends CanvasPoints {
-  protected arrowHasChanged: boolean = false;
   constructor(line: LinePath | null) {
     super();
     this.setDataType(DRAW_TYPE.LINES_PATH);
@@ -49,12 +48,15 @@ export class CanvasPath extends CanvasPoints {
     this.startArea(item);
     this.data.path = {
       filled: false,
-      color: DEFAULT.PATH_COLOR,
       opacity: DEFAULT.OPACITY,
     };
     this.addItem(item);
   }
 
+  /**
+   * Get the data of the path
+   * @returns the data of the path
+   */
   getData(): CanvasPointsData | null {
     let firstItem: LinePath | null = null;
 
@@ -71,7 +73,7 @@ export class CanvasPath extends CanvasPoints {
       this.data.path = undefined;
     }
     // select main color for illustration in draw list
-    if (this.data.path?.filled) {
+    if (this.data.path?.filled && this.data.path.color) {
       this.data.general.color = this.data.path?.color;
     } else if (firstItem) {
       this.data.general.color = firstItem.strokeStyle ?? "gray";
@@ -79,6 +81,10 @@ export class CanvasPath extends CanvasPoints {
     return { ...this.data };
   }
 
+  /**
+   * Get the last parameters of the path
+   * @returns the last parameters of the path
+   */
   private getLastParams() {
     let strokeStyle: string = "black";
     let globalAlpha: number = this.data.general.opacity;
@@ -102,6 +108,12 @@ export class CanvasPath extends CanvasPoints {
     };
   }
 
+  /**
+   * Fill the path on the canvas
+   * @param ctx - canvas context
+   * @param minWidth - minimum line width
+   * @returns true if the path is filled, false otherwise
+   */
   fillPath(ctx: CanvasRenderingContext2D | null, minWidth: number) {
     if (!ctx || !this.data.path) {
       return false;
@@ -137,7 +149,7 @@ export class CanvasPath extends CanvasPoints {
     ctx.stroke();
 
     ctx.globalAlpha = this.data.path.opacity;
-    ctx.fillStyle = this.data.path.color;
+    ctx.fillStyle = this.data.path.color ?? this.data.general.color;
     ctx.fill();
     return true;
   }
@@ -231,7 +243,7 @@ export class CanvasPath extends CanvasPoints {
           break;
         case LineType.ARROW:
           if (start && line.end) {
-            const coord: Coordinate = drawArrow({
+            this.arrowArea = drawArrow({
               ctx,
               from: start,
               to: line.end,
@@ -242,12 +254,6 @@ export class CanvasPath extends CanvasPoints {
               padding: line.padding ?? 2,
               curvature: line.curvature ?? 0.2,
             });
-
-            line.coordinates = roundCoordinates(coord);
-            if (this.arrowHasChanged && line.coordinates) {
-              this.addPointInArea(line.coordinates);
-              this.arrowHasChanged = false;
-            }
           }
           break;
       }
@@ -263,6 +269,11 @@ export class CanvasPath extends CanvasPoints {
     return true;
   }
 
+  /**
+   * Draw the adding infos on the canvas, cross lines at end points and curve points
+   * @param ctx - canvas context
+   * @returns true if the infos are drawn, false otherwise
+   */
   drawAddingInfos(ctx: CanvasRenderingContext2D | null) {
     if (!ctx) {
       return false;
@@ -286,7 +297,7 @@ export class CanvasPath extends CanvasPoints {
             x: (line.coordinates.x + this.data.size.x) * this.scale,
             y: (line.coordinates.y + this.data.size.y) * this.scale,
           };
-          crossLine(ctx, coord, 10, "red");
+          crossLine(ctx, coord, 10, "red", "X");
         }
       }
     });
@@ -334,7 +345,6 @@ export class CanvasPath extends CanvasPoints {
         }
 
         secondItem.padding = paramsArrow.padding;
-        this.arrowHasChanged = true;
         this.setHasChanged("draw", true);
       }
     }

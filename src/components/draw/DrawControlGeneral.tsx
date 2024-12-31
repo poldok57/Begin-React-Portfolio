@@ -1,8 +1,8 @@
 import React from "react";
 import clsx from "clsx";
-import { inputRangeVariants } from "../../styles/input-variants";
-import { RangeInput } from "../atom/RangeInput";
-import { ColorPicker } from "../atom/ColorPicker";
+import { inputRangeVariants } from "@/styles/input-variants";
+import { RangeInput } from "@/components/atom/RangeInput";
+import { ColorPicker } from "@/components/atom/ColorPicker";
 import {
   ParamsGeneral,
   DRAWING_MODES,
@@ -17,6 +17,7 @@ interface DrawControlGeneralProps {
   mode: string;
   handleParamChange: (params: GroupParams) => void;
   paramsGeneral: ParamsGeneral;
+  setGeneralColor: (color: string) => void;
   isTouch?: boolean;
 }
 
@@ -24,6 +25,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   mode,
   handleParamChange,
   paramsGeneral,
+  setGeneralColor,
   isTouch = false,
 }) => {
   const handleGeneral = (param: Params) => {
@@ -56,7 +58,10 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             height={isTouch ? 50 : 40}
             width={isTouch ? 50 : 40}
             defaultValue={paramsGeneral.color}
-            onChange={(color) => handleGeneral({ color: color })}
+            onChange={(color) => {
+              handleGeneral({ color: color });
+              setGeneralColor(color);
+            }}
           />
         </label>
         <RangeInput

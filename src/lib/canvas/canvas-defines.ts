@@ -159,7 +159,7 @@ export type ParamsText = {
 };
 export type ParamsPath = {
   filled: boolean;
-  color: string;
+  color?: string;
   opacity: number;
 };
 export type ParamsArrow = {
@@ -194,6 +194,7 @@ export interface ThingsToDraw {
   id: string;
   type: string;
   rotation: number;
+
   size: Area;
   general: ParamsGeneral;
   path?: ParamsPath;
@@ -247,7 +248,6 @@ export const DEFAULT_PARAMS: AllParams = {
   },
   path: {
     filled: false,
-    color: DEFAULT.PATH_COLOR,
     opacity: 0.5,
   },
   arrow: {

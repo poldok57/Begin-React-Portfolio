@@ -7,10 +7,10 @@ export const scaledSize = (area: Area, scale: number) => {
 
   return {
     ...area,
-    x: parseFloat((area.x * scale).toFixed(2)),
-    y: parseFloat((area.y * scale).toFixed(2)),
-    width: parseFloat((area.width * scale).toFixed(2)),
-    height: parseFloat((area.height * scale).toFixed(2)),
+    x: Number((area.x * scale).toFixed(2)),
+    y: Number((area.y * scale).toFixed(2)),
+    width: Number((area.width * scale).toFixed(2)),
+    height: Number((area.height * scale).toFixed(2)),
   };
 };
 
@@ -19,8 +19,8 @@ export const scaledCoordinate = (coord: Coordinate | null, scale: number) => {
     return coord;
   }
   return {
-    x: parseFloat((coord.x * scale).toFixed(2)),
-    y: parseFloat((coord.y * scale).toFixed(2)),
+    x: Number((coord.x * scale).toFixed(2)),
+    y: Number((coord.y * scale).toFixed(2)),
   };
 };
 
@@ -29,7 +29,7 @@ export const unScaledCoordinate = (coord: Coordinate, scale: number) => {
     return coord;
   }
   return {
-    x: parseFloat((coord.x / scale).toFixed(2)),
-    y: parseFloat((coord.y / scale).toFixed(2)),
+    x: Number((coord.x / scale).toFixed(2)),
+    y: Number((coord.y / scale).toFixed(2)),
   };
 };

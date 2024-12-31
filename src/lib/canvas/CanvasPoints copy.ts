@@ -25,8 +25,6 @@ import { throttle } from "@/lib/utils/throttle";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { showCanvasImage } from "./canvas-elements";
 import { scaledSize } from "../utils/scaledSize";
-import { drawArrow } from "./canvas-arrow";
-import { isTouchDevice } from "../utils/device";
 
 export const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
@@ -50,7 +48,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   };
   protected realSize: Area | null = null;
   protected trueSize: boolean = true;
-  protected arrowArea: Area | null = null;
+  protected arrowLimits: Coordinate[] = [];
 
   constructor() {
     super();
@@ -94,8 +92,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
     this.realSize = this.getArea();
     this.isFinished = true;
-
-    this.arrowArea = null;
   }
 
   setParamsGeneral(params: ParamsGeneral) {
@@ -153,10 +149,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   addPointInArea(coord: Coordinate, control: Coordinate | null = null) {
     if (!this.data.size) {
-      return;
-    }
-
-    if (this.data.type === DRAWING_MODES.ARROW) {
       return;
     }
 
@@ -369,44 +361,88 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @returns The border of the arrow
    */
   protected getArrowBorder() {
+    let left = 0;
+    let top = 0;
+    let right = 0;
+    let bottom = 0;
+    let borderRight = 0;
+    let borderTop = 0;
+
+    let maxLineWidth = this.data.general.lineWidth;
     const coord0 = (this.data.items[0] as LinePath).end;
     const line: LinePath = this.data.items[1] as LinePath;
+    const headSize = line.headSize
+      ? line.headSize / 2
+      : line?.lineWidth ?? maxLineWidth;
     const coord1 = line.end;
 
     if (coord0 && coord1) {
-      if (this.arrowArea === null) {
-        this.arrowArea = drawArrow({
-          ctx: null,
-          from: coord0,
-          to: coord1,
-          lineWidth: line.lineWidth ?? this.data.general.lineWidth,
-          padding: line.padding ?? 0,
-          headSize: line.headSize ?? 10,
-          curvature: line.curvature ?? 0.2,
-        });
+      const dx = Math.abs(coord1.x - coord0.x);
+      const dy = Math.abs(coord1.y - coord0.y);
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const veticalFactor =
+        len > headSize * 4 ? 2.5 : len > headSize * 2 ? 2 : 1.5;
+      const isVertical = dy > dx * veticalFactor;
+      const isHorizontal = dx > dy * veticalFactor;
+
+      console.log(
+        "len",
+        Math.round(len),
+        "headSize",
+        headSize,
+        "Prop",
+        Number((len / headSize).toFixed(2)),
+        "Factor",
+        veticalFactor,
+        isVertical ? "isVertical" : "",
+        isHorizontal ? "isHorizontal" : ""
+      );
+
+      let largeHead = headSize + 16;
+      maxLineWidth = Math.max(maxLineWidth, line?.lineWidth ?? 0);
+      if (line.curvature && line.curvature > 0.1) {
+        largeHead += maxLineWidth * Math.abs(line.curvature) * 2;
       }
-
-      const borderRight = coord0.x > coord1.x ? 0 : 1;
-      const borderTop = coord0.y < coord1.y ? 0 : 1;
-
-      return {
-        left: this.arrowArea.x,
-        top: this.arrowArea.y,
-        right: this.arrowArea.x + this.arrowArea.width,
-        bottom: this.arrowArea.y + this.arrowArea.height,
-        borderRight,
-        borderTop,
-      };
+      maxLineWidth = maxLineWidth / 2;
+      if (isVertical) {
+        left = Math.min(coord0.x - headSize, coord1.x - largeHead);
+        right = Math.max(coord0.x + headSize, coord1.x + largeHead);
+        top = Math.min(coord0.y - maxLineWidth, coord1.y - maxLineWidth);
+        bottom = Math.max(coord0.y + maxLineWidth, coord1.y + maxLineWidth);
+      } else if (isHorizontal) {
+        top = Math.min(coord0.y - headSize, coord1.y - largeHead);
+        bottom = Math.max(coord0.y + headSize, coord1.y + largeHead);
+        left = Math.min(coord0.x - maxLineWidth, coord1.x - maxLineWidth);
+        right = Math.max(coord0.x + maxLineWidth, coord1.x + maxLineWidth);
+      } else {
+        left = Math.min(
+          coord0.x - maxLineWidth,
+          coord1.x - (coord0.x < coord1.x ? largeHead : maxLineWidth)
+        );
+        right = Math.max(
+          coord0.x + maxLineWidth,
+          coord1.x + (coord0.x > coord1.x ? largeHead : maxLineWidth)
+        );
+        top = Math.min(
+          coord0.y - maxLineWidth,
+          coord1.y - (coord0.y < coord1.y ? largeHead : maxLineWidth)
+        );
+        bottom = Math.max(
+          coord0.y + maxLineWidth,
+          coord1.y + (coord0.y > coord1.y ? largeHead : maxLineWidth)
+        );
+      }
+      borderRight = coord0.x > coord1.x ? 0 : 1;
+      borderTop = coord0.y < coord1.y ? 0 : 1;
     }
 
-    return {
-      left: 0,
-      top: 0,
-      right: 0,
-      bottom: 0,
-      borderRight: 0,
-      borderTop: 0,
-    };
+    if ("coordinates" in line && line.coordinates) {
+      left = Math.min(left, line.coordinates.x);
+      top = Math.min(top, line.coordinates.y);
+      right = Math.max(right, line.coordinates.x);
+      bottom = Math.max(bottom, line.coordinates.y);
+    }
+    return { left, top, right, bottom, borderRight, borderTop };
   }
   /**
    * Get the area of the points
@@ -463,20 +499,19 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       });
     }
 
-    const expectedMargin = isTouchDevice() ? 4 * MARGIN : 3 * MARGIN;
     // upper right corner let place between the line and corner button
     const pRight = this.data.items[borderRight];
     if (pRight && "end" in pRight && pRight.end) {
       // if the top right corner is equal to coord, increase size.x by 15
-      if (pRight.end.y < top + expectedMargin) {
-        top = pRight.end.y - expectedMargin;
+      if (pRight.end.y < top + 2 * MARGIN) {
+        top = pRight.end.y - 2 * MARGIN;
       }
     }
 
     const pTop = this.data.items[borderTop];
     if (pTop && "end" in pTop && pTop.end) {
-      if (pTop.end.x >= right - expectedMargin) {
-        top = Math.min(top, pTop.end.y - expectedMargin);
+      if (pTop.end.x >= right - 2 * MARGIN) {
+        top = Math.min(top, pTop.end.y - 2 * MARGIN);
       }
     }
     // new size

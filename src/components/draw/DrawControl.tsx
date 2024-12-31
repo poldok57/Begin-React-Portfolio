@@ -51,6 +51,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
   const [lockRatio, setLockRatio] = useState(drawingParams.lockRatio);
+  const [generalColor, setGeneralColor] = useState(drawingParams.general.color);
 
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
@@ -336,6 +337,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           mode={mode}
           handleParamChange={handleParamChange}
           paramsGeneral={drawingParams.general}
+          setGeneralColor={setGeneralColor}
           isTouch={isTouch}
         />
         {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
@@ -345,7 +347,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             paramsPath={drawingParams.path}
             addEventAction={addEventAction}
             handleParamChange={handleParamChange}
-            defaultColor={drawingParams.general.color}
+            getGeneralColor={() => generalColor}
           />
         )}
         {mode === DRAWING_MODES.ARROW && (
@@ -418,5 +420,5 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, lockRatio]);
+  }, [mode, withText, drawingParams, lockRatio, generalColor]);
 };

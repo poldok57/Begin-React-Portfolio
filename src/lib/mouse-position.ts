@@ -215,13 +215,12 @@ export const topRightPosition = (
     height: badgeRadius * 2,
     left: Math.max(x + w - badgeRadius * 2, x + 55, 0),
     top: lockAtTop ? Math.max(y, 0) : y,
-    bottom: y + badgeRadius * 2,
     radius: badgeRadius,
-    right: 0,
     centerX: 0,
     centerY: 0,
   };
 
+  badge.bottom = badge.top + badge.height;
   badge.right = badge.left + badge.width;
   if (maxWidth && badge.right > maxWidth) {
     badge.left = maxWidth - badge.width;
@@ -309,7 +308,6 @@ export const middleButtonPosition = (rect: RectangleArgs) => {
     axeX2: x + w / 2 + 1 + btnRadius,
     radius: btnRadius,
     axeY: 0,
-    bottom: 0,
   } as MiddleButton;
   middleButton.axeY = middleButton.top + btnRadius;
   middleButton.bottom = middleButton.top + btnRadius * 2;

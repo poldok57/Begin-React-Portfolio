@@ -64,6 +64,11 @@ export class drawLine extends drawingHandler {
     } else {
       this.line.setType(LineType.LINE);
     }
+    if (type === DRAWING_MODES.ARROW) {
+      this.path?.setDataType(DRAWING_MODES.ARROW);
+    } else {
+      this.path?.setDataType(DRAWING_MODES.LINES_PATH);
+    }
   }
 
   setScale(scale: number): void {
@@ -105,6 +110,11 @@ export class drawLine extends drawingHandler {
 
   initData(initData: AllParams) {
     this.setType(initData.mode);
+    if (initData.mode === DRAWING_MODES.ARROW) {
+      this.path?.setDataType(DRAWING_MODES.ARROW);
+    } else {
+      this.path?.setDataType(DRAWING_MODES.LINES_PATH);
+    }
     this.setDataParam(initData.general, initData.arrow);
   }
 
@@ -136,6 +146,9 @@ export class drawLine extends drawingHandler {
 
   initPath = (withPath: boolean = true) => {
     this.path = new CanvasPath(this.line as LinePath);
+    if (this.type === DRAWING_MODES.ARROW) {
+      this.path.setDataType(DRAWING_MODES.ARROW);
+    }
     this.withPath = withPath;
     this.finishedDrawing = false;
     this.toDelete = false;

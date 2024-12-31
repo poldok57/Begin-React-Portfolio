@@ -1,4 +1,4 @@
-import { Coordinate } from "./types";
+import { Area, Coordinate } from "./types";
 
 function drawCurvedLine(
   ctx: CanvasRenderingContext2D,
@@ -27,7 +27,7 @@ export function drawArrow({
   padding = 5,
   headSize = 30,
 }: {
-  ctx: CanvasRenderingContext2D;
+  ctx: CanvasRenderingContext2D | null;
   from: Coordinate;
   to: Coordinate;
   color?: string | CanvasGradient | CanvasPattern | null;
@@ -36,12 +36,13 @@ export function drawArrow({
   opacity?: number;
   padding?: number;
   headSize?: number;
-}) {
+}): Area {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
   const unitX = dx / distance;
   const unitY = dy / distance;
+  const arrowLimits = [];
 
   const adjustedDistance = distance - padding * 2;
   const headLength = Math.max(
@@ -82,24 +83,6 @@ export function drawArrow({
     y: to.y - unitY * padding - (headLength / 5) * 3 * Math.sin(angle),
   };
 
-  // Set the lineCap to 'butt' for a straight edge
-  ctx.lineCap = "butt";
-
-  ctx.globalAlpha = opacity;
-  if (color) {
-    ctx.strokeStyle = color;
-  }
-  // ctx.lineWidth = lineWidth;
-
-  drawCurvedLine(ctx, adjustedFrom, backHead, control, lineWidth);
-
-  // Draw the arrowhead
-  const headLine = 5;
-  ctx.beginPath();
-  ctx.lineWidth = headLine;
-  ctx.lineCap = "round";
-  ctx.globalAlpha = opacity;
-
   const corner1 = {
     x: adjustedTo.x - headLength * Math.cos(angle - Math.PI / 6),
     y: adjustedTo.y - headLength * Math.sin(angle - Math.PI / 6),
@@ -108,44 +91,82 @@ export function drawArrow({
     x: adjustedTo.x - headLength * Math.cos(angle + Math.PI / 6),
     y: adjustedTo.y - headLength * Math.sin(angle + Math.PI / 6),
   };
-  ctx.moveTo(corner1.x, corner1.y);
-  ctx.lineTo(adjustedTo.x, adjustedTo.y);
+  const headLine = 5;
 
-  ctx.lineTo(corner2.x, corner2.y);
-  ctx.lineTo(backHead.x, backHead.y);
-  ctx.stroke();
-  ctx.closePath();
+  if (ctx) {
+    // Set the lineCap to 'butt' for a straight edge
+    ctx.lineCap = "butt";
 
-  ctx.globalAlpha = opacity;
-  ctx.fillStyle = color || ctx.strokeStyle;
-  ctx.fill();
-  let x = control.x;
-  let y = control.y;
-  if (Math.abs(curvature) >= 0.08) {
-    if (x > adjustedFrom.x && control.x > adjustedTo.x) {
-      x = Math.max(x, corner1.x + headLine, corner2.x + headLine);
-    } else if (x < adjustedFrom.x && control.x < adjustedTo.x) {
-      x = Math.min(x, corner1.x - headLine, corner2.x - headLine);
+    ctx.globalAlpha = opacity;
+    if (color) {
+      ctx.strokeStyle = color;
     }
-    if (y > adjustedFrom.y && control.y > adjustedTo.y) {
-      y = Math.max(y, corner1.y + headLine, corner2.y + headLine);
-    } else if (y < adjustedFrom.y && control.y < adjustedTo.y) {
-      y = Math.min(y, corner1.y - headLine, corner2.y - headLine);
-    }
-    if (x !== control.x || y !== control.y) {
-      return { x, y };
-    }
+    drawCurvedLine(ctx, adjustedFrom, backHead, control, lineWidth);
+
+    // Draw the arrowhead
+    ctx.beginPath();
+    ctx.lineWidth = headLine;
+    ctx.lineCap = "round";
+    ctx.globalAlpha = opacity;
+
+    ctx.moveTo(corner1.x, corner1.y);
+    ctx.lineTo(adjustedTo.x, adjustedTo.y);
+
+    ctx.lineTo(corner2.x, corner2.y);
+    ctx.lineTo(backHead.x, backHead.y);
+    ctx.stroke();
+    ctx.closePath();
+
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = color || ctx.strokeStyle;
+    ctx.fill();
   }
-  if (adjustedFrom.x < adjustedTo.x) {
-    x = Math.max(x, corner1.x + headLine, corner2.x + headLine);
+
+  /**
+   * get position of all arrow limits to get the Area of the arrow
+   */
+  arrowLimits.push(control);
+
+  if (corner1.x > corner2.x) {
+    corner1.x += headLine;
+    corner2.x -= headLine;
   } else {
-    x = Math.min(x, corner1.x - headLine, corner2.x - headLine);
+    corner1.x -= headLine;
+    corner2.x += headLine;
+  }
+  if (corner1.y > corner2.y) {
+    corner1.y += headLine;
+    corner2.y -= headLine;
+  } else {
+    corner1.y -= headLine;
+    corner2.y += headLine;
+  }
+  arrowLimits.push(corner1);
+  arrowLimits.push(corner2);
+
+  if (adjustedFrom.x < adjustedTo.x) {
+    adjustedFrom.x -= lineWidth / 2 + 1;
+    adjustedTo.x += headLine;
+  } else {
+    adjustedFrom.x += lineWidth / 2 + 1;
+    adjustedTo.x -= headLine;
   }
   if (adjustedFrom.y < adjustedTo.y) {
-    y = Math.max(y, corner1.y + headLine, corner2.y + headLine);
+    adjustedFrom.y -= lineWidth / 2 + 1;
+    adjustedTo.y += headLine;
   } else {
-    y = Math.min(y, corner1.y - headLine, corner2.y - headLine);
+    adjustedFrom.y += lineWidth / 2 + 1;
+    adjustedTo.y -= headLine;
   }
+  arrowLimits.push(adjustedFrom);
+  arrowLimits.push(adjustedTo);
 
-  return { x, y };
+  const x = Math.min(...arrowLimits.map((limit) => limit.x));
+  const right = Math.max(...arrowLimits.map((limit) => limit.x));
+  const y = Math.min(...arrowLimits.map((limit) => limit.y));
+  const bottom = Math.max(...arrowLimits.map((limit) => limit.y));
+  const width = right - x;
+  const height = bottom - y;
+
+  return { x, y, width, height };
 }

@@ -101,51 +101,6 @@ export const drawCornerButtonDelete = (
 };
 
 /**
- * Function to draw an arrow on the canvas
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} x - x coordinate
- * @param {number} y - y coordinate
- * @param {number} size - size of the arrow
- * @param {string} direction - direction of the arrow ('right' or 'left')
- */
-
-export const drawArrow = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number,
-  direction: string
-) => {
-  ctx.beginPath();
-  // Taille de la tige de la flèche
-  const shaftLength = size * 0.6;
-  const shaftWidth = size * 0.1;
-
-  // Taille de la pointe de la flèche
-  const headLength = size * 0.4;
-  const headWidth = size * 0.3;
-
-  // Direction de la flèche ('right' ou 'left')
-  const angle = direction === "right" ? 0 : Math.PI; // 0 pour droite, π pour gauche
-
-  // Dessiner la tige de la flèche
-  ctx.moveTo(x, y - shaftWidth / 2);
-  ctx.lineTo(x + shaftLength * Math.cos(angle), y - shaftWidth / 2);
-  ctx.lineTo(x + shaftLength * Math.cos(angle), y + shaftWidth / 2);
-  ctx.lineTo(x, y + shaftWidth / 2);
-  ctx.closePath();
-
-  // Dessiner la tête de la flèche
-  ctx.moveTo(x + shaftLength * Math.cos(angle), y - headWidth / 2);
-  ctx.lineTo(x + (shaftLength + headLength) * Math.cos(angle), y);
-  ctx.lineTo(x + shaftLength * Math.cos(angle), y + headWidth / 2);
-  ctx.closePath();
-
-  // Appliquer le style et remplir la flèche
-  ctx.fillStyle = "black";
-  ctx.fill();
-};
-/**
  * Function to draw a circular arrow on the canvas
  * * Use the function like this
  *  ctx = document.getElementById('myCanvas').getContext('2d');

@@ -169,7 +169,8 @@ export const crossLine = (
   ctx: CanvasRenderingContext2D,
   center: Coordinate | null,
   width: number,
-  color: string | null = null
+  color: string | null = null,
+  shape: "X" | "x" | "+" = "+"
 ) => {
   if (!center) return;
 
@@ -179,10 +180,18 @@ export const crossLine = (
   // fine and black lines
   ctx.lineWidth = color ? 1.5 : 1;
   ctx.strokeStyle = color ?? "#111111";
-  ctx.moveTo(center.x, center.y - width / 2);
-  ctx.lineTo(center.x, center.y + width / 2);
-  ctx.moveTo(center.x - width / 2, center.y);
-  ctx.lineTo(center.x + width / 2, center.y);
+  if (shape === "+") {
+    ctx.moveTo(center.x, center.y - width / 2);
+    ctx.lineTo(center.x, center.y + width / 2);
+    ctx.moveTo(center.x - width / 2, center.y);
+    ctx.lineTo(center.x + width / 2, center.y);
+  } else {
+    width = Math.round(width / 1.4);
+    ctx.moveTo(center.x - width / 2, center.y - width / 2);
+    ctx.lineTo(center.x + width / 2, center.y + width / 2);
+    ctx.moveTo(center.x - width / 2, center.y + width / 2);
+    ctx.lineTo(center.x + width / 2, center.y - width / 2);
+  }
 
   ctx.stroke();
   ctx.closePath();

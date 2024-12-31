@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { Button } from "../atom/Button";
@@ -19,7 +19,7 @@ interface DrawControlLineProps {
   handleModeChange: (mode: string) => void;
   addEventAction: (action: string) => void;
   paramsPath: ParamsPath;
-  defaultColor: string;
+  getGeneralColor: () => string;
   isTouch?: boolean;
 }
 
@@ -29,26 +29,32 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   handleModeChange,
   addEventAction,
   paramsPath,
-  defaultColor,
+  getGeneralColor,
   isTouch = false,
 }) => {
   const [withPathFilled, setWithPathFilledState] = useState(paramsPath.filled);
   const [color, setColorState] = useState(paramsPath.color);
   const [opacity, setOpacityState] = useState(paramsPath.opacity);
-  const defaultColorRef = useRef(defaultColor);
-  const handlePath = (filled: boolean, color: string, opacity: number) => {
+  const handlePath = (
+    filled: boolean,
+    color: string | undefined,
+    opacity: number
+  ) => {
     paramsPath = { filled: filled, color: color, opacity: opacity };
     handleParamChange({ path: paramsPath });
   };
 
   const setWithPathFilled = (value: boolean) => {
-    setWithPathFilledState(value);
-    if (value && defaultColorRef.current) {
-      setColorState(defaultColorRef.current);
+    if (value) {
+      const color = getGeneralColor();
+      handlePath(value, color, 1);
+
+      setColorState(color);
       setOpacityState(1);
-      handlePath(value, defaultColorRef.current, 1);
+    } else {
+      handlePath(value, undefined, 1);
     }
-    handlePath(value, color, opacity);
+    setWithPathFilledState(value);
   };
 
   const setColor = (color: string) => {
@@ -60,10 +66,6 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
     setOpacityState(opacity);
     handlePath(true, color, opacity);
   };
-
-  useEffect(() => {
-    defaultColorRef.current = defaultColor;
-  }, [defaultColor]);
 
   useEffect(() => {
     if (mode === DRAWING_MODES.END_PATH) {

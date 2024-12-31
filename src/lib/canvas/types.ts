@@ -22,10 +22,8 @@ export interface Rectangle extends RectPosition, Size {
   bottom?: number;
 }
 
-export interface ButtonArgs extends RectPosition, Size {
+export interface ButtonArgs extends Rectangle {
   radius: number;
-  right: number;
-  bottom: number;
   centerX: number;
   centerY: number;
 }

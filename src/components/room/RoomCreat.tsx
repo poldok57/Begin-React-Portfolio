@@ -78,7 +78,7 @@ export const RoomCreatTools = () => {
 
   const selectedArea = useRef<boolean>(false);
 
-  const roundToTwoDigits = (value: number) => parseFloat(value.toFixed(2));
+  const roundToTwoDigits = (value: number) => Number(value.toFixed(2));
 
   const [typeListMode, setTypeListMode] = useState<TypeList>("plan");
 
