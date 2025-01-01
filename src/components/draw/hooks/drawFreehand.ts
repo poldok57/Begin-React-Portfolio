@@ -151,8 +151,6 @@ export class drawFreehand extends drawingHandler {
     return "none"; //  cursorType;
   }
 
-  // thorttleBasicLine = throttle(basicLine, 50);
-
   memoPoints(freeCurve: CanvasFreeCurve, coord: Coordinate) {
     freeCurve.addItem(coord);
   }

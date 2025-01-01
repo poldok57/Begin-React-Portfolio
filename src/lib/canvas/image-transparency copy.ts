@@ -121,12 +121,8 @@ export const makeCornerTransparent = (
   ) => {
     if (!color) return;
 
-    const memoDelta = delta;
-    const reduceDelta = delta * 0.9;
-
     for (let y = startY; y >= 0 && y < height; y += directionY) {
-      let found = false;
-      delta = memoDelta;
+      // let found = false;
       for (let x = startX; x >= 0 && x < width; x += directionX) {
         const index = (y * width + x) * 4;
         const pixelColor = data.slice(index, index + 4);
@@ -135,13 +131,16 @@ export const makeCornerTransparent = (
         if (pixelColor[3] === 0) continue;
 
         if (isColorSimilar(pixelColor, color)) {
+          // found = true;
           data[index + 3] = 0; // Make transparent
-          found = true;
+          break;
         } else {
-          delta = reduceDelta;
+          // Stop if the color is not similar
+          break;
         }
       }
-      if (!found) break;
+      // Stop if the color is not found
+      // if (!found) break;
     }
   };
 

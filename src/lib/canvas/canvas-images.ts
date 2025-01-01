@@ -57,3 +57,18 @@ export const calculateSize = (
   }
   return { x: 10, y: 10, width, height } as Area;
 };
+
+export const compressImage = (canvasImage: HTMLCanvasElement) => {
+  const tempCanvas = document.createElement("canvas");
+  const ctx = tempCanvas.getContext("2d");
+
+  tempCanvas.width = canvasImage.width / 2;
+  tempCanvas.height = canvasImage.height / 2;
+
+  if (ctx) {
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(canvasImage, 0, 0, tempCanvas.width, tempCanvas.height);
+    return tempCanvas.toDataURL("image/png");
+  }
+  return null;
+};

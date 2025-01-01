@@ -1,3 +1,9 @@
+/**
+ * @module canvas-line
+ * @description
+ * This module provides functions to store data to draw a line on a canvas.
+ */
+
 import { basicLine, crossLine } from "./canvas-basic";
 import { Coordinate, LinePath, LineType } from "./types";
 import { drawArrow } from "./canvas-arrow";

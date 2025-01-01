@@ -1,7 +1,7 @@
 /**
  * @module canvas-shape
  * @description
- * this interface is used to draw shapes on a canvas
+ * this interface is used to manage data of a shape or image to draw on a canvas
  */
 import { Area, Coordinate, ArgsMouseOnShape } from "./types";
 import {
@@ -14,36 +14,24 @@ import {
 } from "./canvas-defines";
 // import { resizingElement } from "./canvas-resize";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
-import { showElement } from "./canvas-elements";
+import { CanvasShapeDraw } from "./CanvasShapeDraw";
+// import { showElement } from "./canvas-elements";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { imageLoadInCanvas } from "./image-load";
+import { compressImage } from "./canvas-images";
 import {
   makeWhiteTransparent,
   makeCornerTransparent,
-  CornerColors,
+  getTopCornerColors,
 } from "./image-transparency";
 import { useDesignStore } from "@/lib/stores/design";
-
-const compressImage = (canvasImage: HTMLCanvasElement) => {
-  const tempCanvas = document.createElement("canvas");
-  const ctx = tempCanvas.getContext("2d");
-
-  tempCanvas.width = canvasImage.width / 2;
-  tempCanvas.height = canvasImage.height / 2;
-
-  if (ctx) {
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(canvasImage, 0, 0, tempCanvas.width, tempCanvas.height);
-    return tempCanvas.toDataURL("image/png");
-  }
-  return null;
-};
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
   private previousTransparency: number = 0;
   private getImageDataURL: (id: string) => string | null;
+  private drawer: CanvasShapeDraw;
 
   constructor() {
     super();
@@ -58,7 +46,14 @@ export class CanvasShape extends CanvasDrawableObject {
         opacity: 0,
       },
     };
+    this.drawer = new CanvasShapeDraw(this.data);
     this.getImageDataURL = useDesignStore.getState().getImageDataURL;
+    this.showElementThrottled = throttle(this.drawToTrottle.bind(this), 25);
+  }
+
+  setScale(scale: number) {
+    super.setScale(scale);
+    this.drawer.setScale(scale);
   }
 
   addData(data: AllParams) {
@@ -96,9 +91,10 @@ export class CanvasShape extends CanvasDrawableObject {
 
       if (d.format && d.format === "jpg") {
         cpy.dataURL = d.canvasImage.toDataURL("image/jpeg");
-        const quality = 0.9;
+        let quality = 0.9;
         while (cpy.dataURL.length > 500000 && quality > 0.1) {
           cpy.dataURL = d.canvasImage.toDataURL("image/jpeg", quality);
+          quality -= 0.1;
         }
       } else {
         cpy.dataURL = d.canvasImage.toDataURL("image/png");
@@ -111,97 +107,39 @@ export class CanvasShape extends CanvasDrawableObject {
     return cpy;
   }
 
-  private getTopCornerColors(canvas: HTMLCanvasElement) {
-    // get canvas context
-    const ctx = canvas.getContext("2d");
-    // Get the color of the top-left and top-right corners
-    let topLeftColor = ctx?.getImageData(0, 0, 1, 1).data ?? null;
-    let topRightColor =
-      ctx?.getImageData(canvas.width - 1, 0, 1, 1).data ?? null;
-
-    // Function to find the first non-transparent pixel diagonally
-    const findFirstNonTransparentPixel = (
-      startX: number,
-      startY: number,
-      direction: 1 | -1
-    ) => {
-      const middleX = canvas.width / 2;
-      for (let i = 0; i < middleX; i++) {
-        const color = ctx?.getImageData(
-          startX + i * direction,
-          startY + i,
-          1,
-          1
-        ).data;
-        if (color && color[3] !== 0) {
-          // Check if the alpha channel is not transparent
-          return color;
-        }
-      }
-      return null;
-    };
-
-    if (topLeftColor && topLeftColor[3] === 0) {
-      topLeftColor = findFirstNonTransparentPixel(0, 0, 1);
-    }
-
-    if (topRightColor && topRightColor[3] === 0) {
-      topRightColor = findFirstNonTransparentPixel(canvas.width - 1, 0, -1);
-    }
-
-    // Function to check if the color is close to white or light gray
-    const isLightColor = (color: Uint8ClampedArray | null) => {
-      if (!color) return false;
-      const r = color[0];
-      const g = color[1];
-      const b = color[2];
-
-      if (r > 200 && g > 200 && b > 200) {
-        return true;
-      }
-      if (r > 120 && g > 120 && b > 120) {
-        const isGray =
-          Math.abs(r - g) < 10 && Math.abs(r - b) < 10 && Math.abs(g - b) < 10;
-        if (isGray) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    if (isLightColor(topLeftColor) && isLightColor(topRightColor)) {
-      return null;
-    }
-    return { topLeft: topLeftColor, topRight: topRightColor } as CornerColors;
-  }
-
-  private async loadImage(id: string, dataURL: string | null | undefined) {
+  private async loadImage(id: string, dataURL: string) {
     try {
-      if (!dataURL) {
-        dataURL = this.getImageDataURL(id);
+      let canvas = this.data.canvasImage;
+      if (!canvas) {
+        canvas = await imageLoadInCanvas(dataURL);
       }
-      const canvas = await imageLoadInCanvas(dataURL);
+
       do {
         if (canvas) {
+          // load the image in the main canvas
           this.data.canvasImage = canvas;
           if (this.data.shape?.transparency) {
             // Get the color of the top-left and top-right corners
 
-            const topCornerColors = this.getTopCornerColors(canvas);
+            const topCornerColors = getTopCornerColors(canvas);
+
+            let trCanvas = null;
 
             if (topCornerColors === null) {
-              this.data.canvasImageTransparent = makeWhiteTransparent(
+              trCanvas = makeWhiteTransparent(
                 canvas,
                 this.data.shape.transparency
               );
             } else {
-              this.data.canvasImageTransparent = makeCornerTransparent(
+              trCanvas = makeCornerTransparent(
                 canvas,
                 this.data.shape.transparency,
                 topCornerColors
               );
             }
+            // save the transparency image in secondary canvas
             this.previousTransparency = this.data.shape.transparency;
+            this.data.canvasImageTransparent = trCanvas;
           }
         } else {
           setTimeout(() => {}, 10);
@@ -229,7 +167,12 @@ export class CanvasShape extends CanvasDrawableObject {
     }
 
     if (this.data.type === DRAWING_MODES.IMAGE) {
-      await this.loadImage(data.id, data.dataURL);
+      if (!data.dataURL) {
+        data.dataURL = this.getImageDataURL(data.id);
+      }
+      if (data.dataURL) {
+        await this.loadImage(data.id, data.dataURL);
+      }
     }
 
     this.calculateWithTurningButtons(data.type);
@@ -314,7 +257,7 @@ export class CanvasShape extends CanvasDrawableObject {
     }
     const canvas = this.data.canvasImage;
     if (canvas) {
-      const topCornerColors = this.getTopCornerColors(canvas);
+      const topCornerColors = getTopCornerColors(canvas);
 
       if (topCornerColors === null) {
         this.data.canvasImageTransparent = makeWhiteTransparent(canvas, delta);
@@ -456,11 +399,20 @@ export class CanvasShape extends CanvasDrawableObject {
     data: ShapeDefinition,
     borderInfo?: string | null
   ) {
+    if (!this.drawer) {
+      console.error("Drawer is not initialized");
+      return;
+    }
     ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    showElement(ctx, data, true, borderInfo);
+    this.drawer.showElement(ctx, data, true, borderInfo);
   }
 
-  showElementThrottled = throttle(this.drawToTrottle, 25);
+  showElementThrottled: (
+    ctx: CanvasRenderingContext2D | null,
+    data: ShapeDefinition,
+    borderInfo?: string | null
+  ) => void;
+
   /**
    * Function to draw the shape on the canvas
    */
@@ -478,7 +430,7 @@ export class CanvasShape extends CanvasDrawableObject {
         ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       }
       if (ctx) ctx.globalAlpha = this.data.general.opacity;
-      showElement(ctx, this.data, false, null);
+      this.drawer.showElement(ctx, this.data, false, null);
     }
   }
 }

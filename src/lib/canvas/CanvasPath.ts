@@ -1,7 +1,7 @@
 /**
  * @module canvas-path
  * @description
- * This module provides functions to draw and manipulate paths on a canvas.
+ * This module provides functions to store data to draw a path or lines on a canvas.
  */
 
 import { Coordinate, LinePath, LineType } from "./types";

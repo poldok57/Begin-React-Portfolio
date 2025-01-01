@@ -1,7 +1,7 @@
 /**
- * @module canvas-points
+ * @module canvas-points (abstract class)
  * @description
- * this interface is used to draw points on a canvas
+ * this interface is used to manage data of a points to draw free hand or lines or path on a canvas
  */
 
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";

@@ -1,3 +1,9 @@
+/**
+ * @module canvas-freecurve
+ * @description
+ * This module provides functions to store data for free hand drawing on a canvas.
+ */
+
 import { Coordinate } from "./types";
 import { basicLine } from "./canvas-basic";
 import { throttle } from "@/lib/utils/throttle";

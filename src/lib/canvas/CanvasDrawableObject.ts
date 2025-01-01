@@ -1,7 +1,7 @@
 /**
- * @module canvas-points
+ * @module canvas-drawable-object (abstract class)
  * @description
- * this interface is used to draw points on a canvas
+ * this interface is used to manage data of a drawable object on a canvas
  */
 
 import { ThingsToDraw } from "./canvas-defines";
