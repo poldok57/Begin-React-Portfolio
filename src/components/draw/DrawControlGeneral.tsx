@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import clsx from "clsx";
 import { inputRangeVariants } from "@/styles/input-variants";
 import { RangeInput } from "@/components/atom/RangeInput";
@@ -18,6 +18,7 @@ interface DrawControlGeneralProps {
   handleParamChange: (params: GroupParams) => void;
   paramsGeneral: ParamsGeneral;
   setGeneralColor: (color: string) => void;
+  generalColor: string;
   isTouch?: boolean;
 }
 
@@ -26,6 +27,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   handleParamChange,
   paramsGeneral,
   setGeneralColor,
+  generalColor,
   isTouch = false,
 }) => {
   const handleGeneral = (param: Params) => {

@@ -52,6 +52,7 @@ export class drawElement extends drawingHandler {
 
   initData(initData: AllParams) {
     this.shape.initData(initData);
+    this.setType(initData.mode);
     if (!this.context) return;
     this.shape.setDataSize({
       x: this.context.canvas.width / 2 - SQUARE_WIDTH / 2,

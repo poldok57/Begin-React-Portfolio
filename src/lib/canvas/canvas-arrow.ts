@@ -160,6 +160,8 @@ export function drawArrow({
   }
   arrowLimits.push(adjustedFrom);
   arrowLimits.push(adjustedTo);
+  arrowLimits.push(to);
+  arrowLimits.push(from);
 
   const x = Math.min(...arrowLimits.map((limit) => limit.x));
   const right = Math.max(...arrowLimits.map((limit) => limit.x));

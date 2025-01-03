@@ -86,7 +86,7 @@ export class drawLine extends drawingHandler {
     return this.line.getCoordinates() as Coordinate;
   }
 
-  setDataParam(dataGeneral: ParamsGeneral, dataArrow: ParamsArrow) {
+  setDataParams(dataGeneral: ParamsGeneral, dataArrow: ParamsArrow) {
     // console.log("setDataParam", this.getType(), dataGeneral, dataArrow);
     if (this.path && this.withPath && this.finishedDrawing) {
       if (this.finishedDrawingStep1) {
@@ -110,16 +110,17 @@ export class drawLine extends drawingHandler {
 
   initData(initData: AllParams) {
     this.setType(initData.mode);
+
     if (initData.mode === DRAWING_MODES.ARROW) {
       this.path?.setDataType(DRAWING_MODES.ARROW);
     } else {
       this.path?.setDataType(DRAWING_MODES.LINES_PATH);
     }
-    this.setDataParam(initData.general, initData.arrow);
+    this.setDataParams(initData.general, initData.arrow);
   }
 
   changeData(data: AllParams) {
-    this.setDataParam(data.general, data.arrow);
+    this.setDataParams(data.general, data.arrow);
     if (data.path) {
       this.path?.setParamsPath(this.ctxTempory, data.path);
     }
@@ -157,11 +158,10 @@ export class drawLine extends drawingHandler {
 
   setDraw(draw: CanvasPointsData) {
     this.path = new CanvasPath(null);
-    this.path.setData(draw);
+    this.path.setData(draw, true);
     this.path.setScale(this.scale);
     this.withPath = true;
 
-    this.setType(DRAWING_MODES.LINES_PATH);
     this.finishedDrawing = true;
     this.finishedDrawingStep1 = true;
   }

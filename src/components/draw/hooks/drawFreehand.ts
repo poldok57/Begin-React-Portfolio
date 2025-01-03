@@ -75,7 +75,7 @@ export class drawFreehand extends drawingHandler {
   }
 
   setDraw(draw: CanvasPointsData) {
-    this.freeCurve.setData(draw);
+    this.freeCurve.setData(draw, true);
 
     this.setDrawing(false);
     this.finishedDrawing = true;

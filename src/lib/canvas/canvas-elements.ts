@@ -131,14 +131,13 @@ export const drawImage = ({
   squareSize,
   radius = 0,
   virtualCanvas,
-  blackWhite,
 }: drawingProps) => {
   if (!virtualCanvas || !virtualCanvas.width || !virtualCanvas.height) {
     console.error("drawImage: no image to show");
     return;
   }
 
-  if (radius > 0 || blackWhite) {
+  if (radius > 0) {
     ctx.save();
   }
   if (radius > 0) {
@@ -147,9 +146,6 @@ export const drawImage = ({
     ctx.clip();
   }
 
-  if (blackWhite) {
-    ctx.filter = "grayscale(100%)";
-  }
   const { x, y, width, height } = squareSize;
   ctx.drawImage(
     virtualCanvas,
@@ -163,7 +159,7 @@ export const drawImage = ({
     height
   );
 
-  if (radius > 0 || blackWhite) {
+  if (radius > 0) {
     ctx.restore();
   }
 };

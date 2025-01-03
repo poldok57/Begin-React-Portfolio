@@ -359,36 +359,71 @@ export class CanvasShapeDraw {
   shapeDrawing = (
     ctx: CanvasRenderingContext2D,
     square: ShapeDefinition,
-    withButton: boolean,
-    drawingFunction: (props: drawingProps) => void,
-    drawingBorderFunction?: (props: drawingProps) => void
+    withButton: boolean
   ) => {
-    const sSize = scaledSize(square.size, this.scale);
+    const squareSize = scaledSize(square.size, this.scale);
     if (square.rotation !== 0) {
-      this.rotateElement(ctx, sSize, square.rotation);
+      this.rotateElement(ctx, squareSize, square.rotation);
     }
     if (!square.shape) return;
+
+    let drawingBorderFunction: (props: drawingProps) => void = this.drawSquare;
 
     const { radius = 0, filled, blackWhite = false } = square.shape;
     const color = square.general.color;
     const lineWidth = filled ? 0 : square.general.lineWidth * this.scale;
+    const type = square.type;
 
     ctx.fillStyle = color;
     if (!filled) {
       ctx.lineWidth = lineWidth;
       ctx.strokeStyle = color;
     }
-    drawingFunction({
-      ctx,
-      squareSize: sSize,
-      lineWidth,
-      radius,
-      type: square.type,
-      blackWhite,
-      virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
-    } as drawingProps);
 
-    if (isDrawingShape(square.type)) {
+    if (blackWhite) {
+      ctx.filter = "grayscale(100%)";
+    }
+
+    switch (type) {
+      case SHAPE_TYPE.IMAGE:
+        drawImage({
+          ctx,
+          squareSize,
+          radius,
+          virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
+        });
+        // ctx, square, withButton, drawImage, this.drawSquare);
+        break;
+      case SHAPE_TYPE.SQUARE:
+        this.drawSquare({
+          ctx,
+          squareSize,
+          lineWidth,
+          radius,
+        });
+        break;
+      case SHAPE_TYPE.CIRCLE:
+        this.drawEllipse({
+          ctx,
+          squareSize,
+          lineWidth,
+        });
+        drawingBorderFunction = this.drawEllipse;
+        break;
+
+      default: // all square with rounded corner
+        this.drawSquareWithRoundedCorner({
+          ctx,
+          squareSize,
+          lineWidth,
+          radius,
+          type,
+        });
+        drawingBorderFunction = this.drawSquareWithRoundedCorner;
+        break;
+    }
+
+    if (isDrawingShape(type)) {
       if (filled) {
         ctx.fill();
       } else {
@@ -401,21 +436,19 @@ export class CanvasShapeDraw {
       if (!withButton) {
         ctx.globalAlpha = square.border.opacity;
       }
-      if (!drawingBorderFunction) {
-        drawingBorderFunction = drawingFunction;
+      if (drawingBorderFunction) {
+        this.drawBorder(
+          ctx,
+          square.border,
+          squareSize,
+          radius,
+          square.type,
+          drawingBorderFunction
+        );
       }
-
-      this.drawBorder(
-        ctx,
-        square.border,
-        sSize,
-        radius,
-        square.type,
-        drawingBorderFunction
-      );
     }
 
-    if (square.rotation !== 0) {
+    if (square.rotation !== 0 || blackWhite) {
       ctx.restore();
     }
   };
@@ -442,24 +475,8 @@ export class CanvasShapeDraw {
       case SHAPE_TYPE.SELECT:
         drawDashedRectangle(ctx, square.size);
         return;
-      case SHAPE_TYPE.IMAGE:
-        this.shapeDrawing(ctx, square, withButton, drawImage, this.drawSquare);
-        break;
-      case SHAPE_TYPE.SQUARE:
-        // drawSquare(ctx, square);
-        this.shapeDrawing(ctx, square, withButton, this.drawSquare);
-        break;
-      case SHAPE_TYPE.CIRCLE:
-        this.shapeDrawing(ctx, square, withButton, this.drawEllipse);
-        break;
-
       default: // all square with rounded corner
-        this.shapeDrawing(
-          ctx,
-          square,
-          withButton,
-          this.drawSquareWithRoundedCorner
-        );
+        this.shapeDrawing(ctx, square, withButton);
         break;
     }
 

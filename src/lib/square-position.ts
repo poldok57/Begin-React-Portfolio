@@ -121,7 +121,6 @@ export const isOnSquareBorder = ({
 
   if (withCornerButton) {
     const badgePos = topRightPosition(rect, maxWidth, maxHeight, rotation);
-
     if (coordinateIsInsideRect(coordinate, badgePos)) {
       return BORDER.ON_BUTTON;
     }

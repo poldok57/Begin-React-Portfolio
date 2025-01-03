@@ -81,11 +81,17 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return { ...this.data };
   }
 
-  setData(data: CanvasPointsData) {
+  setData(data: CanvasPointsData, toEdit: boolean = false) {
     this.data = { ...data };
-    this.data.general = { ...data.general };
-    if (data.path && data.path.filled) {
-      this.data.path = { ...data.path };
+    if (toEdit) {
+      this.data.size = { ...data.size };
+      if (this.data.type !== DRAWING_MODES.DRAW) {
+        this.data.items = data.items.map((item) => ({ ...(item as LinePath) }));
+      }
+      this.data.general = { ...data.general };
+      if (data.path && data.path.filled) {
+        this.data.path = { ...data.path };
+      }
     }
     this.hasChanged = { position: false, draw: false };
     this.canvasImage = null;
@@ -431,7 +437,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     });
 
-    maxLineWidth = maxLineWidth / 2 + 1;
+    maxLineWidth = Math.round(maxLineWidth / 2) + 2;
 
     if (this.data.type === DRAWING_MODES.ARROW && this.data.items.length > 1) {
       // special case for arrow
@@ -480,10 +486,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     }
     // new size
-    const x = this.data.size.x + left;
-    const y = this.data.size.y + top;
-    const width = right - left;
-    const height = bottom - top;
+    const x = Math.round(this.data.size.x + left);
+    const y = Math.round(this.data.size.y + top);
+    const width = Math.round(right - left);
+    const height = Math.round(bottom - top);
 
     // check if the position has changed
     if (previousSize.x !== x || previousSize.y !== y) {

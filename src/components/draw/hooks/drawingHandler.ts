@@ -118,7 +118,7 @@ export abstract class drawingHandler {
   saveCanvasPicture(_coordinate: Coordinate | null = null) {
     const draw: ThingsToDraw | CanvasPointsData | ShapeDefinition | null =
       this.getDraw();
-
+    // console.log("saveCanvasPicture", draw);
     if (draw) this.addDesignElement(draw);
   }
 

@@ -11,6 +11,7 @@ import {
 
 export const updateParamFromElement = (
   setParams: (params: GroupParams) => void,
+  setGeneralColor: (color: string) => void,
   getSelectedElement: () => ThingsToDraw | null
 ): string | null => {
   const selectedElement: CanvasPointsData | ShapeDefinition | null | undefined =
@@ -23,6 +24,11 @@ export const updateParamFromElement = (
   // console.log("updateParamFromElement", selectedElement);
 
   let copyGeneral: boolean = false;
+  const general: ParamsGeneral = selectedElement.general ?? {
+    lineWidth: 0,
+    color: "",
+    opacity: 1,
+  };
 
   switch (selectedElement.type) {
     case DRAW_TYPE.DRAW:
@@ -30,23 +36,15 @@ export const updateParamFromElement = (
       break;
     case DRAW_TYPE.LINES_PATH:
     case DRAW_TYPE.ARROW:
+      copyGeneral = true;
       if (selectedElement.path) {
         setParams({ path: selectedElement.path });
       }
-      const general: ParamsGeneral = selectedElement.general ?? {
-        lineWidth: 0,
-        color: "",
-        opacity: 1,
-      };
       if (
         "items" in selectedElement &&
         Array.isArray(selectedElement.items) &&
         selectedElement.items.length > 1
       ) {
-        const line0 = selectedElement.items[0] as LinePath;
-        if (line0.lineWidth) {
-          general.lineWidth = line0.lineWidth;
-        }
         const line: LinePath = selectedElement.items[1] as LinePath;
         if (line.strokeStyle) {
           general.color = line.strokeStyle;
@@ -57,6 +55,8 @@ export const updateParamFromElement = (
         if (line.globalAlpha) {
           general.opacity = line.globalAlpha;
         }
+        setParams({ general: general });
+
         if (line.type === LineType.ARROW) {
           const arrow = {
             headSize: line.headSize,
@@ -67,7 +67,6 @@ export const updateParamFromElement = (
           setParams({ arrow: arrow });
         }
       }
-      setParams({ general: general });
       break;
     case DRAW_TYPE.TEXT:
       if (selectedElement.text) {
@@ -88,6 +87,7 @@ export const updateParamFromElement = (
   }
   if (copyGeneral) {
     setParams({ general: selectedElement.general });
+    setGeneralColor(selectedElement.general.color);
   }
   // console.log("selectedElement.type", selectedElement.type);
   setParams({ mode: selectedElement.type });

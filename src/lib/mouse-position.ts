@@ -213,7 +213,7 @@ export const topRightPosition = (
   const badge: ButtonArgs = {
     width: badgeRadius * 2,
     height: badgeRadius * 2,
-    left: Math.max(x + w - badgeRadius * 2, x + 55, 0),
+    left: Math.max(x + w - badgeRadius * 2, x + badgeRadius * 2, 0),
     top: lockAtTop ? Math.max(y, 0) : y,
     radius: badgeRadius,
     centerX: 0,

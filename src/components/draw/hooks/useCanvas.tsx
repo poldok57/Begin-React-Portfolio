@@ -26,6 +26,7 @@ import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
 import { useDesignStore } from "@/lib/stores/design";
 import { DesignElement } from "@/components/room/types";
+import { Coordinate } from "@/lib/canvas/types";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -99,6 +100,25 @@ export const useCanvas = ({
     return ctx;
   };
   /**
+   * Function to get the coordinates of the mouse in the canvas
+   * @param {MouseEvent | TouchEvent} event
+   * @param {number} scale
+   * @returns {Coordinate} the coordinates of the mouse in the canvas
+   */
+  const getScaledCoordinatesInCanvas = (
+    event: MouseEvent | TouchEvent
+  ): Coordinate => {
+    if (canvasTemporyRef.current === null) return { x: 0, y: 0 };
+    const mode = currentParams.mode;
+    // console.log("mode", mode);
+    const scale =
+      mode === DRAWING_MODES.SELECT || mode === DRAWING_MODES.SELECT_AREA
+        ? 1
+        : getScale();
+
+    return getCoordinatesInCanvas(event, canvasTemporyRef.current, scale);
+  };
+  /**
    * select the drawing handler according to the mode
    * @param {string} mode
    * @returns {DrawingHandler} the drawing handler
@@ -137,6 +157,7 @@ export const useCanvas = ({
         );
         newHandler = true;
       }
+
       drawingHdl = elementRef.current;
     } else if (isDrawingSelect(mode)) {
       if (selectionRef.current === null) {
@@ -162,10 +183,14 @@ export const useCanvas = ({
     }
 
     if (newHandler && drawingHdl) {
+      currentParams = getParams();
+      // console.log("initData ->", currentParams);
       drawingHdl.initData(currentParams);
       drawingHdl.setMouseCanvas(canvasMouseRef.current);
+    } else {
+      drawingHdl.setType(mode);
     }
-    drawingHdl.setType(mode);
+
     drawingHdl.setScale(getScale());
 
     return drawingHdl;
@@ -499,13 +524,13 @@ export const useCanvas = ({
     }
 
     // color and width painting
-    currentParams = getParams();
+    // currentParams = getParams();
     setContext(canvasRef.current);
 
     const scale = getScale();
-    const coord = getCoordinatesInCanvas(event, canvasRef.current, scale);
+    const coord = getScaledCoordinatesInCanvas(event);
 
-    drawingRef.current?.setType(currentParams.mode);
+    // drawingRef.current?.setType(currentParams.mode);
     drawingRef.current?.setScale(scale);
     let mouseResult: returnMouseDown | null | undefined = undefined;
     if (touchDevice) {
@@ -570,11 +595,7 @@ export const useCanvas = ({
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
       if (!canvasTemporyRef.current || !drawingRef.current) return;
 
-      const coord = getCoordinatesInCanvas(
-        event,
-        canvasTemporyRef.current,
-        getScale()
-      );
+      const coord = getScaledCoordinatesInCanvas(event);
       const pointer = drawingRef.current?.actionMouseMove(event, coord);
 
       if (pointer) {

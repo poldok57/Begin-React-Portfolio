@@ -34,7 +34,7 @@ export abstract class CanvasDrawableObject {
 
   abstract getData(): ThingsToDraw | null;
 
-  abstract setData(data: ThingsToDraw): void;
+  abstract setData(data: ThingsToDraw, toEdit?: boolean): void;
 
   setDataType(name: string) {
     this.data.type = name;

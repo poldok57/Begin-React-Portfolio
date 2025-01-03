@@ -1,7 +1,7 @@
 /**
  * @module canvas-path
  * @description
- * This module provides functions to store data to draw a path or lines on a canvas.
+ * This module provides functions to store data to draw a path, lines or an arrow on a canvas.
  */
 
 import { Coordinate, LinePath, LineType } from "./types";
@@ -357,16 +357,12 @@ export class CanvasPath extends CanvasPoints {
       type: line.type,
       end: roundCoordinates(line.end),
     };
-    if (
-      (line.type === LineType.CURVE || line.type === LineType.ARROW) &&
-      line.coordinates
-    ) {
+    if (line.type === LineType.CURVE && line.coordinates) {
       newLine.coordinates = roundCoordinates(line.coordinates);
     }
     if (line.type === LineType.ARROW) {
       newLine.headSize = line.headSize;
       newLine.padding = line.padding;
-      newLine.curvature = line.curvature;
     }
     if (line.strokeStyle && line.strokeStyle !== strokeStyle) {
       newLine.strokeStyle = line.strokeStyle;

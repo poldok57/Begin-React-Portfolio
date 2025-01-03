@@ -51,8 +51,15 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const modeRef = useRef(mode);
   const [withText, setWithText] = useState(false);
   const [lockRatio, setLockRatio] = useState(drawingParams.lockRatio);
-  const [generalColor, setGeneralColor] = useState(drawingParams.general.color);
+  //  const [generalColor, setGeneralColor] = useState(drawingParams.general.color);
 
+  const memoGenralColorRef = useRef(drawingParams.general.color);
+  const setGeneralColor = (color: string) => {
+    memoGenralColorRef.current = color;
+  };
+  const getGeneralColor = () => {
+    return memoGenralColorRef.current;
+  };
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
@@ -186,10 +193,12 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     }
   };
 
+  // update controle panel when an element is selected
   useEffect(() => {
     if (selectedDesignElement) {
       const newMode = updateParamFromElement(
         setParams,
+        setGeneralColor,
         getSelectedDesignElement
       );
       if (newMode) {
@@ -338,6 +347,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           handleParamChange={handleParamChange}
           paramsGeneral={drawingParams.general}
           setGeneralColor={setGeneralColor}
+          generalColor={getGeneralColor()}
           isTouch={isTouch}
         />
         {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
@@ -347,7 +357,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             paramsPath={drawingParams.path}
             addEventAction={addEventAction}
             handleParamChange={handleParamChange}
-            getGeneralColor={() => generalColor}
+            getGeneralColor={getGeneralColor}
           />
         )}
         {mode === DRAWING_MODES.ARROW && (
@@ -420,5 +430,5 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, lockRatio, generalColor]);
+  }, [mode, withText, drawingParams, lockRatio, getGeneralColor()]);
 };

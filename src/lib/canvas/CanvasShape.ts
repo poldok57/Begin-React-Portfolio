@@ -11,11 +11,10 @@ import {
   ParamsText,
   ShapeDefinition,
   DRAWING_MODES,
+  isDrawingShape,
 } from "./canvas-defines";
-// import { resizingElement } from "./canvas-resize";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { CanvasShapeDraw } from "./CanvasShapeDraw";
-// import { showElement } from "./canvas-elements";
 import { isOnSquareBorder } from "@/lib/square-position";
 import { throttle } from "@/lib/utils/throttle";
 import { imageLoadInCanvas } from "./image-load";
@@ -78,6 +77,11 @@ export class CanvasShape extends CanvasDrawableObject {
       general: { ...d.general },
       shape: { ...d.shape },
     };
+
+    if (d.shape?.withText && !isDrawingShape(d.type)) {
+      d.shape.withText = false;
+      d.text = undefined;
+    }
 
     if (d.shape?.withBorder && d.border) cpy.border = { ...d.border };
     if ((d.type === DRAWING_MODES.TEXT || d.shape?.withText) && d.text)
@@ -220,11 +224,13 @@ export class CanvasShape extends CanvasDrawableObject {
       this.transparencySelection(data.transparency);
     }
   }
-  setDataText(data: ParamsText) {
-    this.data.text = { ...data };
+  setDataText(data: ParamsText | undefined) {
+    this.data.text = data ? { ...data } : undefined;
   }
   initData(initData: AllParams) {
     // this.data = { ...this.data, ...initData };
+
+    // console.log("initData", initData);
     this.changeData(initData);
     this.data.id = "";
     this.data.rotation = 0;
@@ -236,12 +242,18 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.withTurningButtons = true;
   }
   changeData(param: AllParams) {
+    const mode = param.mode;
     this.setDataGeneral(param.general);
     this.setDataBorder(param.border);
     this.setDataShape(param.shape);
-    this.setDataText(param.text);
+    this.setDataText(
+      mode === DRAWING_MODES.TEXT ||
+        (isDrawingShape(mode) && param.shape?.withText)
+        ? param.text
+        : undefined
+    );
 
-    this.data.type = param.mode;
+    this.data.type = mode;
   }
 
   transparencySelection(delta: number) {
@@ -383,8 +395,8 @@ export class CanvasShape extends CanvasDrawableObject {
       withResize: this.data.type !== DRAWING_MODES.TEXT,
       withCornerButton: this.data.withCornerButton || false,
       withTurningButtons: this.data.withTurningButtons || false,
-      maxWidth: canvas.width,
-      maxHeight: canvas.height,
+      maxWidth: canvas.width / this.scale,
+      maxHeight: canvas.height / this.scale,
       rotation: this.data.rotation,
     };
 
@@ -430,7 +442,7 @@ export class CanvasShape extends CanvasDrawableObject {
         ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       }
       if (ctx) ctx.globalAlpha = this.data.general.opacity;
-      this.drawer.showElement(ctx, this.data, false, null);
+      this.drawer.showElement(ctx, this.data, temporyDraw, null);
     }
   }
 }
