@@ -369,8 +369,8 @@ export class CanvasShapeDraw {
 
     let drawingBorderFunction: (props: drawingProps) => void = this.drawSquare;
 
-    const { radius = 0, filled, blackWhite = false } = square.shape;
-    const color = square.general.color;
+    const { radius = 0, blackWhite = false } = square.shape;
+    const { color, filled = false } = square.general;
     const lineWidth = filled ? 0 : square.general.lineWidth * this.scale;
     const type = square.type;
 
@@ -449,6 +449,7 @@ export class CanvasShapeDraw {
       ctx.restore();
     }
   };
+
   /**
    * Function to show a element (square, ellipse or text) on the canvas
    * @param {CanvasRenderingContext2D} ctx

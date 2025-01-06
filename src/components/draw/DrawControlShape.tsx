@@ -46,6 +46,10 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
     drawingParams.border = { ...drawingParams.border, ...param };
     handleParamChange({ border: drawingParams.border });
   };
+  // const handleGeneral = (param: Params) => {
+  //   drawingParams.general = { ...drawingParams.general, ...param };
+  //   handleParamChange({ general: drawingParams.general });
+  // };
   const handleWithText = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWithText(event.target.checked);
     handleShape({ withText: event.target.checked });
@@ -100,7 +104,7 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
           </Button>
         </div>
         <div className="flex flex-row gap-5">
-          <label
+          {/* <label
             htmlFor="toggle-filled"
             className={clsx(
               "flex flex-col justify-center items-center font-bold",
@@ -112,12 +116,12 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
             Filled
             <ToggleSwitch
               id="toggle-filled"
-              defaultChecked={drawingParams.shape.filled}
+              defaultChecked={drawingParams.general.filled}
               onChange={(event) =>
-                handleShape({ filled: event.target.checked })
+                handleGeneral({ filled: event.target.checked })
               }
             />
-          </label>
+          </label> */}
           {mode !== DRAWING_MODES.CIRCLE && (
             <RangeInput
               className={inputRangeVariants({ width: "16", size: "xs" })}

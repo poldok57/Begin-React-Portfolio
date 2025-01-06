@@ -11,7 +11,6 @@ import {
   ParamsGeneral,
   CanvasPointsData,
   ParamsArrow,
-  DEFAULT,
 } from "./canvas-defines";
 import { CanvasPoints } from "./CanvasPoints";
 import { crossLine } from "./canvas-basic";
@@ -46,10 +45,6 @@ export class CanvasPath extends CanvasPoints {
       end: end,
     };
     this.startArea(item);
-    this.data.path = {
-      filled: false,
-      opacity: DEFAULT.OPACITY,
-    };
     this.addItem(item);
   }
 
@@ -73,8 +68,8 @@ export class CanvasPath extends CanvasPoints {
       this.data.path = undefined;
     }
     // select main color for illustration in draw list
-    if (this.data.path?.filled && this.data.path.color) {
-      this.data.general.color = this.data.path?.color;
+    if (this.data.general?.filled && this.data.general.color) {
+      this.data.general.color = this.data.general.color;
     } else if (firstItem) {
       this.data.general.color = firstItem.strokeStyle ?? "gray";
     }
@@ -148,8 +143,8 @@ export class CanvasPath extends CanvasPoints {
     });
     ctx.stroke();
 
-    ctx.globalAlpha = this.data.path.opacity;
-    ctx.fillStyle = this.data.path.color ?? this.data.general.color;
+    ctx.globalAlpha = this.data.path?.opacity ?? 1;
+    ctx.fillStyle = this.data.path?.color ?? this.data.general.color;
     ctx.fill();
     return true;
   }
@@ -263,7 +258,7 @@ export class CanvasPath extends CanvasPoints {
     });
     ctx.stroke();
 
-    if (this.data.path && this.data.path.filled) {
+    if (this.data.path && this.data.general.filled) {
       this.fillPath(ctx, minWidth);
     }
     return true;
@@ -304,11 +299,12 @@ export class CanvasPath extends CanvasPoints {
   }
 
   setParamsPath(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
+    if (!this.data.path) {
+      this.data.path = {};
+    }
     const hasChanged =
-      this.data.path &&
-      (this.data.path.filled !== params.filled ||
-        this.data.path.color !== params.color ||
-        this.data.path.opacity !== params.opacity);
+      this.data.path.color !== params.color ||
+      this.data.path.opacity !== params.opacity;
     if (hasChanged) {
       this.data.path = { ...params };
       this.setHasChanged("draw", true);
@@ -319,6 +315,10 @@ export class CanvasPath extends CanvasPoints {
   changeParams(params: ParamsGeneral, paramsArrow: ParamsArrow) {
     // Apply color, line width and opacity to the first path item
     if (this.data.items.length > 1) {
+      if (this.data.general.filled !== params.filled) {
+        this.setHasChanged("draw", true);
+        this.data.general.filled = params.filled;
+      }
       // first item is start point
       const secondItem = this.data.items[1] as LinePath;
       if (secondItem.strokeStyle !== params.color) {
@@ -389,21 +389,18 @@ export class CanvasPath extends CanvasPoints {
     return this.getLastItem() as LinePath;
   }
 
-  setFillStyle(fillStyle: string | null = null) {
-    if (fillStyle == null) {
-      this.data.path = {
-        filled: false,
-        color: "gray",
-        opacity: 0,
-      };
-      return;
-    }
-    this.data.path = {
-      filled: true,
-      color: fillStyle,
-      opacity: 1,
-    };
-  }
+  // setFillStyle(fillStyle: string | null = null) {
+  //   if (fillStyle == null) {
+  //     this.data.general.filled = false;
+  //     this.data.path = undefined;
+  //     return;
+  //   }
+  //   this.data.general.filled = true;
+  //   this.data.path = {
+  //     color: fillStyle,
+  //     opacity: 1,
+  //   };
+  // }
 
   /**
    * Close the path by adding a line to the start point,

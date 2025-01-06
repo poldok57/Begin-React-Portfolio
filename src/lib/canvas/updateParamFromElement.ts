@@ -12,6 +12,7 @@ import {
 export const updateParamFromElement = (
   setParams: (params: GroupParams) => void,
   setGeneralColor: (color: string) => void,
+  setFilled: (filled: boolean) => void,
   getSelectedElement: () => ThingsToDraw | null
 ): string | null => {
   const selectedElement: CanvasPointsData | ShapeDefinition | null | undefined =
@@ -23,20 +24,18 @@ export const updateParamFromElement = (
 
   // console.log("updateParamFromElement", selectedElement);
 
-  let copyGeneral: boolean = false;
   const general: ParamsGeneral = selectedElement.general ?? {
     lineWidth: 0,
     color: "",
     opacity: 1,
+    filled: false,
   };
 
   switch (selectedElement.type) {
     case DRAW_TYPE.DRAW:
-      copyGeneral = true;
       break;
     case DRAW_TYPE.LINES_PATH:
     case DRAW_TYPE.ARROW:
-      copyGeneral = true;
       if (selectedElement.path) {
         setParams({ path: selectedElement.path });
       }
@@ -74,7 +73,6 @@ export const updateParamFromElement = (
       }
       break;
     default: // Shape & Image
-      copyGeneral = true;
       if (selectedElement.shape) {
         setParams({ shape: selectedElement.shape });
       }
@@ -85,9 +83,10 @@ export const updateParamFromElement = (
         setParams({ border: selectedElement.border });
       }
   }
-  if (copyGeneral) {
+  if (selectedElement.type !== DRAW_TYPE.TEXT) {
     setParams({ general: selectedElement.general });
-    setGeneralColor(selectedElement.general.color);
+    setGeneralColor(general.color);
+    setFilled(general.filled ?? false);
   }
   // console.log("selectedElement.type", selectedElement.type);
   setParams({ mode: selectedElement.type });

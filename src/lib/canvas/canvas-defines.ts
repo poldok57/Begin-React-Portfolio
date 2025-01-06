@@ -139,9 +139,9 @@ export type ParamsGeneral = {
   lineWidth: number;
   opacity: number;
   interval?: number;
+  filled?: boolean;
 };
 export type ParamsShape = {
-  filled?: boolean;
   radius?: number;
   withText?: boolean;
   withBorder?: boolean;
@@ -158,9 +158,8 @@ export type ParamsText = {
   rotation: number;
 };
 export type ParamsPath = {
-  filled: boolean;
   color?: string;
-  opacity: number;
+  opacity?: number;
 };
 export type ParamsArrow = {
   headSize?: number;
@@ -200,6 +199,7 @@ export interface ThingsToDraw {
   path?: ParamsPath;
   withTurningButtons?: boolean;
   withCornerButton?: boolean;
+  erase?: boolean;
 }
 
 export interface CanvasPointsData extends ThingsToDraw {
@@ -227,7 +227,6 @@ export const DEFAULT_PARAMS: AllParams = {
     opacity: DEFAULT.OPACITY,
   },
   shape: {
-    filled: true,
     radius: 10,
     withText: false,
     withBorder: false,
@@ -247,10 +246,7 @@ export const DEFAULT_PARAMS: AllParams = {
     opacity: 1,
     interval: 0,
   },
-  path: {
-    filled: false,
-    opacity: 0.5,
-  },
+  path: {},
   arrow: {
     headSize: 15,
     padding: 0,

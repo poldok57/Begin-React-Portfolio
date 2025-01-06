@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { Button } from "../atom/Button";
-import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { ColorPicker } from "../atom/ColorPicker";
 import {
   DRAWING_MODES,
@@ -21,6 +20,7 @@ interface DrawControlLineProps {
   addEventAction: (action: string) => void;
   paramsPath: ParamsPath;
   getGeneralColor: () => string;
+  isFilled: () => boolean;
   isTouch?: boolean;
 }
 
@@ -31,9 +31,10 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   addEventAction,
   paramsPath,
   getGeneralColor,
+  isFilled,
   isTouch = false,
 }) => {
-  const [withPathFilled, setWithPathFilledState] = useState(paramsPath.filled);
+  const [withPathFilled, setWithPathFilledState] = useState(isFilled());
   const handlePath = (param: Params) => {
     paramsPath = { ...paramsPath, ...param };
     handleParamChange({ path: paramsPath });
@@ -46,9 +47,11 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       paramsPath.color = color;
     } else {
       paramsPath.color = undefined;
+      paramsPath.opacity = undefined;
     }
-    handlePath({ filled: value });
     setWithPathFilledState(value);
+
+    handleParamChange({ path: paramsPath });
   };
 
   useEffect(() => {
@@ -60,8 +63,9 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   }, [mode]);
 
   useEffect(() => {
-    setWithPathFilledState(paramsPath.filled);
-  }, [paramsPath.filled]);
+    const filled = isFilled();
+    setWithPathFilled(filled);
+  }, [isFilled()]);
 
   return (
     <div
@@ -106,14 +110,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
         htmlFor="toggle-border"
         className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
       >
-        Filled
-        <ToggleSwitch
-          id="toggle-border"
-          defaultChecked={withPathFilled}
-          onChange={(event) => {
-            setWithPathFilled(event.target.checked);
-          }}
-        />
+        {withPathFilled ? "Filled path: " : "Not filled"}
       </label>
 
       {withPathFilled && (
@@ -127,7 +124,6 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
               id="path-color-picker"
               defaultValue={paramsPath.color}
               onChange={(c) => {
-                paramsPath.filled = true;
                 handlePath({ color: c });
               }}
             />
@@ -140,7 +136,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             })}
             id="path-opacity-picker"
             label="Opacity"
-            value={paramsPath.opacity * 100}
+            value={paramsPath?.opacity ? paramsPath.opacity * 100 : 100}
             min="0"
             max="100"
             step="10"

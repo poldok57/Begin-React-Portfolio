@@ -90,7 +90,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         this.data.items = data.items.map((item) => ({ ...(item as LinePath) }));
       }
       this.data.general = { ...data.general };
-      if (data.path && data.path.filled) {
+      if (data.path && data.general.filled) {
         this.data.path = { ...data.path };
       }
     }
@@ -113,6 +113,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.hasChanged.draw = true;
       this.hasChanged.position = true;
     }
+    if (this.data.general.filled !== previousParams.filled) {
+      this.hasChanged.draw = true;
+    }
     // Check if any property of data.general has changed
     if (
       previousParams.color !== this.data.general.color ||
@@ -125,6 +128,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   setHasChanged(type: "position" | "draw", hasChanged: boolean = true) {
     this.hasChanged[type] = hasChanged;
+  }
+
+  setErase(erase: boolean) {
+    this.data.erase = erase;
   }
 
   startArea(firstElement: LinePath | Coordinate) {

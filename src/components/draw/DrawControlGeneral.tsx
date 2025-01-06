@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from "react";
 import clsx from "clsx";
 import { inputRangeVariants } from "@/styles/input-variants";
 import { RangeInput } from "@/components/atom/RangeInput";
+import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
 import { ColorPicker } from "@/components/atom/ColorPicker";
 import {
   ParamsGeneral,
@@ -11,6 +11,7 @@ import {
   isDrawingFreehand,
   isDrawingSelect,
   Params,
+  isDrawingShape,
 } from "@/lib/canvas/canvas-defines";
 
 interface DrawControlGeneralProps {
@@ -18,7 +19,7 @@ interface DrawControlGeneralProps {
   handleParamChange: (params: GroupParams) => void;
   paramsGeneral: ParamsGeneral;
   setGeneralColor: (color: string) => void;
-  generalColor: string;
+  setFilled: (filled: boolean) => void;
   isTouch?: boolean;
 }
 
@@ -27,7 +28,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   handleParamChange,
   paramsGeneral,
   setGeneralColor,
-  generalColor,
+  setFilled,
   isTouch = false,
 }) => {
   const handleGeneral = (param: Params) => {
@@ -88,6 +89,25 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
           onChange={(value: number) => handleGeneral({ opacity: value / 100 })}
           isTouch={isTouch}
         />
+        <label
+          htmlFor="toggle-filled"
+          className={clsx(
+            "flex flex-col justify-center items-center font-xs gap-2",
+            {
+              hidden: !(isDrawingShape(mode) || isDrawingLine(mode)),
+            }
+          )}
+        >
+          Filled
+          <ToggleSwitch
+            id="toggle-filled"
+            defaultChecked={paramsGeneral.filled}
+            onChange={(event) => {
+              handleGeneral({ filled: event.target.checked });
+              setFilled(event.target.checked);
+            }}
+          />
+        </label>
       </div>
     </>
   );

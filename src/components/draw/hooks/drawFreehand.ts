@@ -189,12 +189,15 @@ export class drawFreehand extends drawingHandler {
           // this.clearTemporyCanvas();
           this.freeCurve.debounceDraw(ctxTempory, false);
         }
-      } else {
+      } else if (this.context) {
+        this.context.globalCompositeOperation = "destination-out";
+
         basicLine(
           this.context as CanvasRenderingContext2D,
           start as Coordinate,
           this.coordinates as Coordinate
         );
+        this.context.globalCompositeOperation = "source-over";
       }
     }
     return this.followCursor() as string;

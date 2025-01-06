@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { clearCanvasByCtx } from "../../../lib/canvas/canvas-tools";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 import {
   DRAWING_MODES,
@@ -12,9 +12,9 @@ import {
   EventDetail,
   ThingsToDraw,
   isDrawingPause,
-} from "../../../lib/canvas/canvas-defines";
+} from "@/lib/canvas/canvas-defines";
 
-import { alertMessage } from "../../alert-messages/alertMessage";
+import { alertMessage } from "@/components/alert-messages/alertMessage";
 
 import { drawLine } from "./drawLine";
 import { drawElement } from "./drawElement";
@@ -345,10 +345,7 @@ export const useCanvas = ({
       drawingRef.current.endAction(newMode);
     }
     stopExtendMouseEvent();
-    if (canvasRef.current && contextRef.current) {
-      contextRef.current.globalCompositeOperation =
-        newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
-    }
+
     // set the tempory canvas
     if (canvasTemporyRef.current) {
       setContext(
