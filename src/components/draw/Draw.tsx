@@ -5,7 +5,7 @@ import { ShowAlertMessagesWP } from "@/components/alert-messages/ShowAlertMessag
 import { Canvas } from "./Canvas";
 import { DEFAULT_PARAMS, GroupParams } from "../../lib/canvas/canvas-defines";
 import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
-import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { clearCanvas } from "@/lib/canvas/canvas-tools";
 
 import { useCanvas } from "./hooks/useCanvas";
 import { adjustBrightness } from "../../lib/utils/colors";
@@ -57,19 +57,14 @@ export const Draw = () => {
       setSelectedDesignElement(null);
       // Clear the temporary canvas
       if (canvasTemporyRef.current) {
-        const tempContext = canvasTemporyRef.current.getContext("2d");
-        clearCanvasByCtx(tempContext);
+        clearCanvas(canvasTemporyRef.current);
       }
 
       // Clear the mouse canvas
       if (canvasMouseRef.current) {
-        const mouseContext = canvasMouseRef.current.getContext("2d");
-        clearCanvasByCtx(mouseContext);
+        clearCanvas(canvasMouseRef.current);
       }
-      refreshCanvas(
-        canvasRef.current.getContext("2d") as CanvasRenderingContext2D,
-        false
-      );
+      refreshCanvas(canvasRef.current, false);
     }
   };
 
@@ -138,7 +133,7 @@ export const Draw = () => {
           }}
         >
           {/* Scale Control */}
-          <div className="flex flex-col gap-1 items-center origin-left -rotate-90 translate-y-12 translate-x-36 border border-gray-400 rounded-lg p-2 shadow-md">
+          <div className="flex flex-col gap-1 items-center p-2 rounded-lg border border-gray-400 shadow-md origin-left -rotate-90 translate-x-36 translate-y-12">
             <div className="flex gap-2 items-center">
               <label htmlFor="scale-range" className="text-sm text-gray-500">
                 Scale

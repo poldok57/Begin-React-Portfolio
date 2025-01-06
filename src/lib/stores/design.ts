@@ -9,6 +9,7 @@ import {
 } from "../canvas/canvas-defines";
 import { generateUniqueId } from "../utils/unique-id";
 import { showDrawElement } from "../canvas/showDrawElement";
+import { clearCanvas } from "../canvas/canvas-tools";
 
 interface DesignState {
   designElements: ThingsToDraw[];
@@ -16,7 +17,7 @@ interface DesignState {
   scale: number;
   getAllDesignElements: () => ThingsToDraw[];
   refreshCanvas: (
-    ctx: CanvasRenderingContext2D | null,
+    canvas: HTMLCanvasElement | null,
     withSelected?: boolean
   ) => void;
   getDesignElement: (id: string) => ThingsToDraw | undefined;
@@ -43,23 +44,26 @@ const designStore: StateCreator<DesignState> = (set, get) => ({
   scale: 1,
   getAllDesignElements: () => get().designElements,
   refreshCanvas: (
-    ctx: CanvasRenderingContext2D | null,
+    canvas: HTMLCanvasElement | null | undefined,
     withSelected: boolean = true
   ) => {
-    const designElements = get().designElements;
-    if (!ctx) return;
+    if (!canvas) return;
+    clearCanvas(canvas);
 
-    const selectedElementId = !withSelected
-      ? get().getSelectedDesignElement()?.id
-      : "-";
-    // console.log("selectedElementId", selectedElementId);
-    // console.log("clear ", ctx.canvas.width, ctx.canvas.height);
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    designElements.forEach((element) => {
-      if (element.id !== selectedElementId) {
-        showDrawElement(ctx, element, get().getScale(), false);
-      }
-    });
+    const designElements = get().designElements;
+
+    const originalCtx = canvas.getContext("2d");
+
+    if (originalCtx) {
+      const selectedElementId = !withSelected
+        ? get().getSelectedDesignElement()?.id
+        : "-";
+      designElements.forEach((element) => {
+        if (element.id !== selectedElementId) {
+          showDrawElement(originalCtx, element, get().getScale(), false);
+        }
+      });
+    }
   },
   getDesignElement: (id: string) =>
     get().designElements.find(

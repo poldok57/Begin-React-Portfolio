@@ -18,16 +18,17 @@ export class drawFindElement extends drawingHandler {
   private designElements: ThingsToDraw[];
   private setSelectedDesignElement: (elementId: string) => void;
   private refreshCanvas: (
-    ctx: CanvasRenderingContext2D | null,
+    canvas: HTMLCanvasElement | null,
     withSelected?: boolean
   ) => void;
 
   constructor(
     canvas: HTMLCanvasElement,
+    canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void
   ) {
-    super(canvas, temporyCanvas, setMode);
+    super(canvas, canvasContext, temporyCanvas, setMode);
     this.extendedMouseArea = false;
 
     this.setSelectedDesignElement =
@@ -62,7 +63,7 @@ export class drawFindElement extends drawingHandler {
     // console.log("refreshDrawing free curve");
     this.clearTemporyCanvas();
 
-    this.refreshCanvas(this.context, true);
+    this.refreshCanvas(this.mCanvas, true);
   }
 
   /**

@@ -9,23 +9,30 @@ import { Area, Size } from "./types";
  * @return {object} canvas - new canvas with the selected zone
  */
 export const copyInVirtualCanvas = (
-  context: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
   area: Area
 ): HTMLCanvasElement => {
-  const imageData = context.getImageData(
-    area.x,
-    area.y,
-    area.width,
-    area.height
-  );
-  const canvas = document.createElement("canvas");
-  canvas.width = area.width;
-  canvas.height = area.height;
-  const ctx = canvas.getContext("2d");
-  if (ctx && imageData) {
-    ctx.putImageData(imageData, 0, 0);
+  // Create a new canvas with the selected dimensions
+  const newCanvas = document.createElement("canvas");
+  newCanvas.width = area.width;
+  newCanvas.height = area.height;
+
+  const ctx = newCanvas.getContext("2d", { willReadFrequently: true });
+  if (ctx) {
+    // Draw the selected area directly from the source canvas
+    ctx.drawImage(
+      canvas, // Source canvas
+      area.x,
+      area.y, // Source coordinates
+      area.width,
+      area.height, // Source dimensions
+      0,
+      0, // Destination coordinates
+      area.width,
+      area.height // Destination dimensions
+    );
   }
-  return canvas;
+  return newCanvas;
 };
 
 /**

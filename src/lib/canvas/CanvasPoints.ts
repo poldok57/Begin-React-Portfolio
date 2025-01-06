@@ -21,12 +21,13 @@ import {
 } from "../mouse-position";
 import { drawCornerButton, drawCornerButtonDelete } from "./canvas-buttons";
 import { isOnSquareBorder } from "@/lib/square-position";
-import { throttle } from "@/lib/utils/throttle";
-import { CanvasDrawableObject } from "./CanvasDrawableObject";
+import { CanvasDrawableObject, DEBOUNCE_TIME } from "./CanvasDrawableObject";
 import { showCanvasImage } from "./canvas-elements";
 import { scaledSize } from "../utils/scaledSize";
 import { drawArrow } from "./canvas-arrow";
 import { isTouchDevice } from "../utils/device";
+import { clearCanvasByCtx } from "./canvas-tools";
+import { debounceThrottle } from "../utils/debounce";
 
 export const MARGIN = 10;
 const DEFAULT_OPACITY = 0.5;
@@ -414,6 +415,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       borderTop: 0,
     };
   }
+
   /**
    * Get the area of the points
    * @param insidePoint - The point inside the area
@@ -510,11 +512,19 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return this.realSize;
   }
 
+  /**
+   * Erase the resizing
+   */
   eraseResizing() {
     this.trueSize = true;
     this.data.size = this.getArea();
   }
 
+  /**
+   * Draw the corner buttons
+   * @param ctx - The canvas context
+   * @param mouseOnRectangle - The mouse on rectangle
+   */
   drawCornerButtons(
     ctx: CanvasRenderingContext2D | null,
     mouseOnRectangle: string | null
@@ -552,10 +562,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
   }
 
-  clearAreaOnCanvas(ctx: CanvasRenderingContext2D | null) {
-    ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  }
-
+  /**
+   * Check if the coordinate is in the area
+   * @param coord - The coordinate to check
+   * @returns true if the coordinate is in the area, false otherwise
+   */
   isInArea(coord: Coordinate): boolean {
     if (!this.data.size || !coord) {
       return false;
@@ -569,46 +580,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   }
 
   /**
-   * Find the same angle in the path (used as cache search twice)
-   * @param coord - the coordinate to find
+   * Find the angle
+   * @param coordonate - The coordinate to find the angle
    * @returns true if the angle is found, false otherwise
    */
-  private lastCallTime: number = 0;
-  findSameAnge(coord: Coordinate): boolean {
-    const currentTime = Date.now();
-    if (currentTime - this.lastCallTime > 100) {
-      this.lastCallTime = currentTime;
-      return false;
-    }
-    this.lastCallTime = currentTime;
-
-    const marginPlus = MARGIN * 2;
-    // Verify found angle with marginPlus
-    if (this.angleFound >= 0) {
-      const element = (this.data.items[this.angleFound] as LinePath).end;
-      if (element) {
-        return (
-          Math.abs(element.x - coord.x) < marginPlus &&
-          Math.abs(element.y - coord.y) < marginPlus
-        );
-      }
-    }
-
-    if (this.coordFound >= 0) {
-      const element = (this.data.items[this.coordFound] as LinePath)
-        .coordinates;
-
-      if (element)
-        return (
-          Math.abs(element.x - coord.x) < marginPlus &&
-          Math.abs(element.y - coord.y) < marginPlus
-        );
-    }
-    return false;
-  }
-
   findAngle(coordonate: Coordinate): boolean {
-    // Vérifier le point de départ
     // Cash controle
 
     // find angle only if the path is not resized
@@ -621,7 +597,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       y: coordonate.y - this.data.size.y,
     };
 
-    if (this.angleFound >= 0 && this.findSameAnge(coord)) {
+    if (this.angleFound >= 0 || this.coordFound >= 0) {
       return true;
     }
 
@@ -660,15 +636,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.coordFound = -1;
   }
 
-  move(offset: Coordinate) {
-    if (this.data.size) {
-      this.data.size.x += offset.x;
-      this.data.size.y += offset.y;
-    }
-    this.angleFound = -1;
-    this.coordFound = -1;
-  }
-
   mouseDown(
     ctx: CanvasRenderingContext2D | null,
     mousePosition: Coordinate
@@ -687,24 +654,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   }
 
   /**
-   * Throttle move path
+   * Change the position of the angle
+   * @param coord - The coordinate to move the angle
+   * @returns true if the position has changed, false otherwise
    */
-  throttleMovePath = throttle(
-    (ctx: CanvasRenderingContext2D | null, newMousePosition: Coordinate) => {
-      if (this.lastMousePosition) {
-        const coord = { ...newMousePosition } as Coordinate;
-        coord.x = Math.round(coord.x - this.lastMousePosition.x);
-        coord.y = Math.round(coord.y - this.lastMousePosition.y);
-        this.clearAreaOnCanvas(ctx);
-        this.move(coord);
-        this.draw(ctx, true);
-        this.lastMousePosition = newMousePosition;
-      }
-    },
-    25
-  );
-
-  moveAngle(coord: Coordinate) {
+  changeAnglePosition(coord: Coordinate) {
     const newCoord = {
       x: Math.round(coord.x - this.data.size.x),
       y: Math.round(coord.y - this.data.size.y),
@@ -743,10 +697,57 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
       this.hasChanged.draw = true;
     }
-    if (this.hasChanged.draw) {
-      this.data.size = this.getArea();
-    }
     return this.hasChanged.draw;
+  }
+
+  deboucedMoveAngle = debounceThrottle(
+    (ctx: CanvasRenderingContext2D | null) => {
+      this.data.size = this.getArea();
+      clearCanvasByCtx(ctx);
+      this.draw(ctx, true);
+    },
+    DEBOUNCE_TIME,
+    DEBOUNCE_TIME * 2
+  );
+  /**
+   * Move the angle
+   * @param ctx - The canvas context
+   * @param coord - The coordinate to move the angle
+   */
+  moveAngle(ctx: CanvasRenderingContext2D | null, coord: Coordinate) {
+    if (this.changeAnglePosition(coord)) {
+      this.deboucedMoveAngle(ctx);
+    }
+  }
+
+  /**
+   * Change the position of the path
+   * @param offset - The offset to move the path
+   */
+  move(offset: Coordinate) {
+    if (this.data.size) {
+      this.data.size.x += offset.x;
+      this.data.size.y += offset.y;
+    }
+    this.angleFound = -1;
+    this.coordFound = -1;
+  }
+
+  /**
+   * Move the path
+   * @param ctx - The canvas context
+   * @param mousePosition - The mouse position
+   */
+  movePath(ctx: CanvasRenderingContext2D | null, mousePosition: Coordinate) {
+    if (this.lastMousePosition) {
+      const coord = {
+        x: Math.round(mousePosition.x - this.lastMousePosition.x),
+        y: Math.round(mousePosition.y - this.lastMousePosition.y),
+      } as Coordinate;
+      this.move(coord);
+      this.lastMousePosition = mousePosition;
+      this.debounceDraw(ctx);
+    }
   }
 
   mouseOverPath(
@@ -769,7 +770,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       );
       if (newArea) {
         this.setDataSize(newArea);
-        this.clearAreaOnCanvas(ctx);
+        clearCanvasByCtx(ctx);
         this.draw(ctx, true);
       }
       return mousePointer(resizingBorder);
@@ -791,12 +792,15 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         ? event.touches.length > 0
         : false;
 
-    if ((btnPressed || inArea) && this.findAngle(mousePosition)) {
+    if (!btnPressed && inArea) {
+      // mouse Up => end of the angle move
+      this.eraseAngleCoordFound();
+    }
+
+    if (this.findAngle(mousePosition)) {
       cursorType = "pointer";
       if (btnPressed) {
-        this.clearAreaOnCanvas(ctx);
-        this.moveAngle(mousePosition);
-        this.draw(ctx, true);
+        this.moveAngle(ctx, mousePosition);
         if (event) {
           event.preventDefault();
         }
@@ -805,7 +809,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       if (event) {
         event.preventDefault();
       }
-      this.throttleMovePath(ctx, mousePosition);
+      this.movePath(ctx, mousePosition);
       cursorType = "grabbing";
     } else {
       const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
@@ -816,7 +820,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         this.drawCornerButtons(ctx, mouseOnRectangle);
         cursorType = "pointer";
       } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
-        this.clearAreaOnCanvas(ctx);
+        clearCanvasByCtx(ctx);
         this.draw(ctx, true);
       } else if (mouseOnRectangle && isBorder(mouseOnRectangle)) {
         cursorType = mousePointer(mouseOnRectangle);

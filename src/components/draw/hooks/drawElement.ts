@@ -29,10 +29,11 @@ export class drawElement extends drawingHandler {
 
   constructor(
     canvas: HTMLCanvasElement,
+    canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void
   ) {
-    super(canvas, temporyCanvas, setMode);
+    super(canvas, canvasContext, temporyCanvas, setMode);
 
     this.fixed = false;
 
@@ -207,7 +208,7 @@ export class drawElement extends drawingHandler {
    */
   refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
     if (opacity > 0 && this.ctxTempory) this.ctxTempory.globalAlpha = opacity;
-    this.shape.draw(this.ctxTempory, true, mouseOnShape, true);
+    this.shape.debounceDraw(this.ctxTempory, true, mouseOnShape);
     this.lastMouseOnShape = mouseOnShape;
   }
 
@@ -237,7 +238,7 @@ export class drawElement extends drawingHandler {
       }
     }
     if (mouseOnShape !== this.lastMouseOnShape) {
-      this.shape.draw(this.ctxTempory, true, mouseOnShape);
+      this.shape.debounceDraw(this.ctxTempory, true, mouseOnShape);
 
       this.lastMouseOnShape = mouseOnShape;
     }
@@ -325,7 +326,7 @@ export class drawElement extends drawingHandler {
       return null;
     }
     if (!this.isFixed()) {
-      this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
+      this.shape.debounceDraw(this.ctxTempory, true, BORDER.INSIDE);
 
       if (type === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
@@ -350,7 +351,7 @@ export class drawElement extends drawingHandler {
       )
     ) {
       this.ctxTempory.globalAlpha = this.shape.getOpacity();
-      this.shape.draw(this.ctxTempory, true, BORDER.INSIDE);
+      this.shape.debounceDraw(this.ctxTempory, true, BORDER.INSIDE);
     }
   }
   /**

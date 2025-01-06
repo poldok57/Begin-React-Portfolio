@@ -208,6 +208,7 @@ export interface CanvasPointsData extends ThingsToDraw {
 export interface ShapeDefinition extends ThingsToDraw {
   // transparency?: number;
   canvasImage?: HTMLCanvasElement | null;
+  canvasImageContext?: CanvasRenderingContext2D | null;
   canvasImageTransparent?: HTMLCanvasElement | null;
   dataURL?: string | null;
   format?: string;

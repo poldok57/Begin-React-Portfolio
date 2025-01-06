@@ -5,7 +5,7 @@ export function getUsedArea(
   canvas: HTMLCanvasElement | null
 ): { x: number; y: number; width: number; height: number } | null {
   if (canvas === null) return null;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
 
   const { width, height } = canvas;

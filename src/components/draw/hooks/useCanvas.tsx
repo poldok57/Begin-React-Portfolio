@@ -58,7 +58,7 @@ export const useCanvas = ({
   const selectionRef = useRef<drawSelection | null>(null);
   const elementRef = useRef<drawElement | null>(null);
   const justReload = useRef(false);
-
+  const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const {
     // designElements,
     getScale,
@@ -75,7 +75,7 @@ export const useCanvas = ({
       return;
     }
     deleteLastDesignElement();
-    refreshCanvas(canvas.getContext("2d"));
+    refreshCanvas(canvas, false);
   };
 
   /**
@@ -85,14 +85,16 @@ export const useCanvas = ({
    */
   const setContext = (
     canvas: HTMLCanvasElement | null,
+    context: CanvasRenderingContext2D | null = null,
+    scale: number = 1,
     opacity: number | null = null
   ) => {
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = context ?? canvas.getContext("2d");
     if (!ctx) return;
 
     ctx.strokeStyle = currentParams.general.color;
-    ctx.lineWidth = currentParams.general.lineWidth;
+    ctx.lineWidth = currentParams.general.lineWidth * scale;
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -134,6 +136,7 @@ export const useCanvas = ({
       if (lineRef.current === null) {
         lineRef.current = new drawLine(
           canvasRef.current,
+          contextRef.current,
           canvasTemporyRef.current,
           setMode
         );
@@ -143,6 +146,7 @@ export const useCanvas = ({
     } else if (isDrawingFreehand(mode)) {
       drawingRef.current = new drawFreehand(
         canvasRef.current,
+        contextRef.current,
         canvasTemporyRef.current,
         setMode
       );
@@ -152,6 +156,7 @@ export const useCanvas = ({
       if (elementRef.current === null) {
         elementRef.current = new drawElement(
           canvasRef.current,
+          contextRef.current,
           canvasTemporyRef.current,
           setMode
         );
@@ -163,6 +168,7 @@ export const useCanvas = ({
       if (selectionRef.current === null) {
         selectionRef.current = new drawSelection(
           canvasRef.current,
+          contextRef.current,
           canvasTemporyRef.current,
           setMode
         );
@@ -173,6 +179,7 @@ export const useCanvas = ({
       if (findRef.current === null) {
         findRef.current = new drawFindElement(
           canvasRef.current,
+          contextRef.current,
           canvasTemporyRef.current,
           setMode
         );
@@ -204,14 +211,19 @@ export const useCanvas = ({
     lineRef.current = null;
     elementRef.current = null;
 
+    if (contextRef.current === null && canvasRef.current) {
+      contextRef.current = canvasRef.current.getContext("2d", {
+        willReadFrequently: true,
+      });
+    }
+
     // default drawing handler
     drawingRef.current = selectDrawingHandler(DRAWING_MODES.DRAW);
 
     if (selectionRef.current !== null) selectionRef.current.eraseSelectedArea();
 
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d");
-      if (ctx) ctx.globalCompositeOperation = "source-over";
+    if (canvasRef.current && contextRef.current) {
+      contextRef.current.globalCompositeOperation = "source-over";
     }
   };
 
@@ -333,23 +345,23 @@ export const useCanvas = ({
       drawingRef.current.endAction(newMode);
     }
     stopExtendMouseEvent();
-    if (canvasRef.current) {
-      const context = canvasRef.current.getContext("2d");
-
-      if (context)
-        context.globalCompositeOperation =
-          newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
+    if (canvasRef.current && contextRef.current) {
+      contextRef.current.globalCompositeOperation =
+        newMode === DRAWING_MODES.ERASE ? "destination-out" : "source-over";
     }
     // set the tempory canvas
     if (canvasTemporyRef.current) {
       setContext(
         canvasTemporyRef.current as HTMLCanvasElement,
+        null,
         TEMPORTY_OPACITY
       );
       // set the mouse canvas
       if (canvasMouseRef.current) {
         setContext(
           canvasMouseRef.current as HTMLCanvasElement,
+          null,
+          getScale(),
           TEMPORTY_OPACITY
         );
       }
@@ -370,7 +382,7 @@ export const useCanvas = ({
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
       if (canvasRef.current) {
-        refreshCanvas(canvasRef.current.getContext("2d"), false);
+        refreshCanvas(canvasRef.current, false);
       }
       mouseOnCtrlPanel.current = false;
       justReload.current = true;
@@ -381,7 +393,7 @@ export const useCanvas = ({
     setTimeout(() => {
       drawingRef.current?.startAction();
       drawingRef.current?.refreshDrawing();
-    }, 25);
+    }, 20);
   };
 
   const handleActionEvent = (event: EventDetail) => {
@@ -397,7 +409,7 @@ export const useCanvas = ({
       case DRAWING_MODES.INIT:
         drawingRef.current?.actionAbort();
         generalInitialisation();
-        clearCanvasByCtx(canvasRef.current.getContext("2d"));
+        clearCanvasByCtx(contextRef.current);
         clearTemporyCanvas();
         break;
       case DRAWING_MODES.CONTROL_PANEL.IN:
@@ -427,7 +439,7 @@ export const useCanvas = ({
         }
         setTimeout(() => {
           selectionRef.current?.saveCanvas(filename, event.detail?.format);
-        }, 25);
+        }, 20);
         break;
       case DRAWING_MODES.LOAD:
         {
@@ -501,8 +513,10 @@ export const useCanvas = ({
    */
   const clearTemporyCanvas = () => {
     if (!canvasTemporyRef.current) return;
-    const context = canvasTemporyRef.current.getContext("2d");
-    clearCanvasByCtx(context);
+    const ctx = canvasTemporyRef.current.getContext("2d");
+
+    if (!ctx) return;
+    clearCanvasByCtx(ctx);
   };
 
   /**
@@ -523,11 +537,12 @@ export const useCanvas = ({
       return;
     }
 
-    // color and width painting
-    // currentParams = getParams();
-    setContext(canvasRef.current);
+    // get color and width painting in currentParams
+    currentParams = getParams();
 
     const scale = getScale();
+    setContext(canvasRef.current, contextRef.current, scale);
+
     const coord = getScaledCoordinatesInCanvas(event);
 
     // drawingRef.current?.setType(currentParams.mode);
@@ -582,7 +597,7 @@ export const useCanvas = ({
     if (!canvasMouse) {
       return;
     }
-    setContext(canvasMouse);
+    setContext(canvasMouse, null, getScale());
 
     const handleMouseUp = () => {
       drawingRef.current?.actionMouseUp();
@@ -715,8 +730,11 @@ export const useCanvas = ({
   }, [mode]);
 
   useEffect(() => {
+    const scale = getScale();
     if (drawingRef.current) {
-      drawingRef.current.setScale(getScale());
+      drawingRef.current.setScale(scale);
     }
-  }, [getScale]);
+    setContext(canvasMouseRef.current, null, scale);
+    setContext(canvasTemporyRef.current, null, scale);
+  }, [getScale()]);
 };

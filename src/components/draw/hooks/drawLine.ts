@@ -28,10 +28,7 @@ import {
   ParamsArrow,
 } from "@/lib/canvas/canvas-defines";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
-import { debounce } from "@/lib/utils/debounce";
 import { scaledCoordinate } from "@/lib/utils/scaledSize";
-// import { scaledCoordinate } from "@/lib/utils/scaledSize";
-// import { unScaledCoordinate } from "@/lib/utils/scaledSize";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -46,10 +43,11 @@ export class drawLine extends drawingHandler {
 
   constructor(
     canvas: HTMLCanvasElement,
+    canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void
   ) {
-    super(canvas, temporyCanvas, setMode);
+    super(canvas, canvasContext, temporyCanvas, setMode);
     this.line = new CanvasLine(canvas);
 
     this.setType(DRAWING_MODES.LINE);
@@ -103,7 +101,7 @@ export class drawLine extends drawingHandler {
     this.line.setGlobalAlpha(dataGeneral.opacity);
 
     if (this.ctxTempory !== null) {
-      this.ctxTempory.lineWidth = dataGeneral.lineWidth;
+      this.ctxTempory.lineWidth = dataGeneral.lineWidth * this.scale;
       this.ctxTempory.strokeStyle = dataGeneral.color;
     }
   }
@@ -170,18 +168,6 @@ export class drawLine extends drawingHandler {
   }
 
   /**
-   * Debonce draw of the path
-   */
-  debouncedDrawFunction = () => {
-    if (this.path && this.ctxTempory) {
-      this.clearTemporyCanvas();
-      this.path.draw(this.ctxTempory, this.withPath);
-    }
-  };
-
-  debouncedDraw = debounce(this.debouncedDrawFunction, 40);
-
-  /**
    * Function to show the line on the tempory canvas
    * @param {DRAWING_MODES} mode - mode of the drawing
    * @param {number} opacity - opacity of the line
@@ -195,7 +181,7 @@ export class drawLine extends drawingHandler {
       this.ctxTempory.globalAlpha = opacity;
     }
 
-    this.debouncedDraw();
+    this.path?.debounceDraw(this.ctxTempory, true);
 
     this.ctxTempory.globalAlpha = oldOpacity;
   }
@@ -570,7 +556,7 @@ export class drawLine extends drawingHandler {
     this.line.eraseCoordinates();
     this.path?.eraseAngleCoordFound();
 
-    this.debouncedDraw();
+    this.path?.debounceDraw(this.ctxTempory, true);
   }
 
   actionMouseLeave() {
@@ -609,7 +595,7 @@ export class drawLine extends drawingHandler {
         return DRAWING_MODES.LINE;
       }
       if (this.path.cancelLastLine()) {
-        this.debouncedDraw();
+        this.path?.debounceDraw(this.ctxTempory, true);
         this.path?.eraseAngleCoordFound();
         const lastPosition = this.path?.getLastPosition();
         if (lastPosition) {
@@ -669,7 +655,7 @@ export class drawLine extends drawingHandler {
       this.path.setFinished(true);
       this.finishedDrawing = true;
       this.finishedDrawingStep1 = true;
-      this.debouncedDraw();
+      this.path?.debounceDraw(this.ctxTempory, true);
     }
   }
 

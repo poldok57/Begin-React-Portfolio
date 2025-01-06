@@ -59,7 +59,7 @@ export class drawSelection extends drawElement {
 
     setTimeout(() => {
       this.getOriginalSize();
-    }, 25);
+    }, 20);
   }
 
   /**
@@ -139,8 +139,8 @@ export class drawSelection extends drawElement {
    */
   copySelection(): void {
     const area = this.getSelectedArea();
-    if (area === null || this.context === null) return;
-    this.shape.setCanvasImage(copyInVirtualCanvas(this.context, area));
+    if (area === null || this.mCanvas === null) return;
+    this.shape.setCanvasImage(copyInVirtualCanvas(this.mCanvas, area));
     this.setType(DRAWING_MODES.IMAGE);
     this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
@@ -162,8 +162,8 @@ export class drawSelection extends drawElement {
    */
   cutSelection() {
     const area = this.getSelectedArea();
-    if (area === null || this.context === null) return;
-    this.shape.setCanvasImage(copyInVirtualCanvas(this.context, area));
+    if (area === null || this.mCanvas === null) return;
+    this.shape.setCanvasImage(copyInVirtualCanvas(this.mCanvas, area));
     this.context?.clearRect(area.x, area.y, area.width, area.height);
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.IMAGE);
@@ -270,7 +270,7 @@ export class drawSelection extends drawElement {
       virtualCanvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
       this.shape.setFormat(imageFormat);
-      this.shape.setCanvasImage(virtualCanvas);
+      this.shape.setCanvasImageContext(ctx);
       this.shape.setTransparency(0);
       this.shape.setCanvasImageTransparent(null);
       alertMessage(

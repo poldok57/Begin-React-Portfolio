@@ -7,6 +7,9 @@
 import { ThingsToDraw } from "./canvas-defines";
 import { resizingElement } from "./canvas-resize";
 import { Area, Coordinate } from "./types";
+import { debounceThrottle } from "@/lib/utils/debounce";
+
+export const DEBOUNCE_TIME = 30;
 
 export abstract class CanvasDrawableObject {
   protected data: ThingsToDraw;
@@ -24,6 +27,11 @@ export abstract class CanvasDrawableObject {
         opacity: 0,
       },
     };
+    this.debounceDraw = debounceThrottle(
+      this.debouncedDraw.bind(this),
+      DEBOUNCE_TIME,
+      DEBOUNCE_TIME * 2
+    );
   }
 
   abstract draw(
@@ -31,6 +39,21 @@ export abstract class CanvasDrawableObject {
     withAdditionalInfo?: boolean,
     borderInfo?: string | null
   ): void;
+
+  private debouncedDraw(
+    ctx: CanvasRenderingContext2D | null,
+    withAdditionalInfo?: boolean,
+    borderInfo?: string | null
+  ) {
+    ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    this.draw(ctx, withAdditionalInfo, borderInfo);
+  }
+
+  debounceDraw: (
+    ctx: CanvasRenderingContext2D | null,
+    withAdditionalInfo?: boolean,
+    borderInfo?: string | null
+  ) => void | null;
 
   abstract getData(): ThingsToDraw | null;
 
@@ -79,8 +102,8 @@ export abstract class CanvasDrawableObject {
     );
 
     if (newCoord) {
-      this.draw(ctx, lockRatio, witchBorder);
       this.setDataSize(newCoord);
+      this.debounceDraw(ctx, true, witchBorder);
     }
     return newCoord;
   }

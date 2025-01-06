@@ -36,10 +36,11 @@ export class drawFreehand extends drawingHandler {
 
   constructor(
     canvas: HTMLCanvasElement,
+    canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void
   ) {
-    super(canvas, temporyCanvas, setMode);
+    super(canvas, canvasContext, temporyCanvas, setMode);
     this.freeCurve = new CanvasFreeCurve();
     this.extendedMouseArea = false;
     this.setType(DRAWING_MODES.DRAW);
@@ -63,7 +64,7 @@ export class drawFreehand extends drawingHandler {
   changeData(data: AllParams): void {
     this.setDataGeneral(data.general);
     if (this.ctxTempory === null) return;
-    this.ctxTempory.lineWidth = data.general.lineWidth;
+    this.ctxTempory.lineWidth = data.general.lineWidth * this.scale;
     this.ctxTempory.strokeStyle = data.general.color;
   }
 
@@ -87,8 +88,10 @@ export class drawFreehand extends drawingHandler {
 
   refreshDrawing() {
     // console.log("refreshDrawing free curve");
-    this.clearTemporyCanvas();
-    this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
+    this.freeCurve.debounceDraw(
+      this.ctxTempory as CanvasRenderingContext2D,
+      true
+    );
   }
   /**
    * Function follow the cursor on the canvas
@@ -109,13 +112,12 @@ export class drawFreehand extends drawingHandler {
 
     if (this.ctxMouse === null) {
       this.clearTemporyCanvas();
-      // this.path?.draw(this.ctxTempory, this.withPath);
     } else {
       this.clearMouseCanvas();
     }
 
     ctxMouse.globalAlpha = 0.4;
-    ctxMouse.lineWidth = this.general.lineWidth;
+    ctxMouse.lineWidth = this.general.lineWidth * this.scale;
     ctxMouse.strokeStyle = this.general.color;
 
     const coord = this.getCoordinates() as Coordinate;
@@ -184,8 +186,8 @@ export class drawFreehand extends drawingHandler {
         if (this.freeCurve.delayAddPoint(this.coordinates as Coordinate)) {
           ctxTempory.strokeStyle = this.general.color;
           ctxTempory.lineWidth = this.general.lineWidth;
-          this.clearTemporyCanvas();
-          this.freeCurve.draw(ctxTempory, false);
+          // this.clearTemporyCanvas();
+          this.freeCurve.debounceDraw(ctxTempory, false);
         }
       } else {
         basicLine(
@@ -290,9 +292,12 @@ export class drawFreehand extends drawingHandler {
       if (this.getType() === DRAWING_MODES.DRAW) {
         this.finishedDrawing = true;
         this.freeCurve.setFinished(true);
-        this.clearTemporyCanvas();
+
         this.clearMouseCanvas();
-        this.freeCurve.draw(this.ctxTempory as CanvasRenderingContext2D, true);
+        this.freeCurve.debounceDraw(
+          this.ctxTempory as CanvasRenderingContext2D,
+          true
+        );
       }
       this.setDrawing(false);
     }
@@ -307,8 +312,7 @@ export class drawFreehand extends drawingHandler {
     this.clearMouseCanvas();
 
     if (this.isDrawing()) {
-      this.setDrawing(false);
-      this.validCurve();
+      this.actionMouseUp();
     }
     this.setResizingBorder(null);
   }

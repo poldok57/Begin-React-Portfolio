@@ -13,10 +13,10 @@ import {
   DRAWING_MODES,
   isDrawingShape,
 } from "./canvas-defines";
+
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { CanvasShapeDraw } from "./CanvasShapeDraw";
 import { isOnSquareBorder } from "@/lib/square-position";
-import { throttle } from "@/lib/utils/throttle";
 import { imageLoadInCanvas } from "./image-load";
 import { compressImage } from "./canvas-images";
 import {
@@ -47,7 +47,6 @@ export class CanvasShape extends CanvasDrawableObject {
     };
     this.drawer = new CanvasShapeDraw(this.data);
     this.getImageDataURL = useDesignStore.getState().getImageDataURL;
-    this.showElementThrottled = throttle(this.drawToTrottle.bind(this), 25);
   }
 
   setScale(scale: number) {
@@ -113,30 +112,30 @@ export class CanvasShape extends CanvasDrawableObject {
 
   private async loadImage(id: string, dataURL: string) {
     try {
-      let canvas = this.data.canvasImage;
-      if (!canvas) {
-        canvas = await imageLoadInCanvas(dataURL);
+      let context = this.data.canvasImageContext;
+      if (!context) {
+        context = await imageLoadInCanvas(dataURL);
       }
-
+      let i = 0;
       do {
-        if (canvas) {
+        if (context) {
           // load the image in the main canvas
-          this.data.canvasImage = canvas;
+          this.setCanvasImageContext(context);
           if (this.data.shape?.transparency) {
             // Get the color of the top-left and top-right corners
 
-            const topCornerColors = getTopCornerColors(canvas);
+            const topCornerColors = getTopCornerColors(context);
 
             let trCanvas = null;
 
             if (topCornerColors === null) {
               trCanvas = makeWhiteTransparent(
-                canvas,
+                context,
                 this.data.shape.transparency
               );
             } else {
               trCanvas = makeCornerTransparent(
-                canvas,
+                context,
                 this.data.shape.transparency,
                 topCornerColors
               );
@@ -148,7 +147,7 @@ export class CanvasShape extends CanvasDrawableObject {
         } else {
           setTimeout(() => {}, 10);
         }
-      } while (canvas === null);
+      } while (context === null && i++ < 100);
     } catch (error) {
       console.error("Error loading image", error);
     }
@@ -220,7 +219,10 @@ export class CanvasShape extends CanvasDrawableObject {
   setDataShape(data: ParamsShape) {
     // console.log("setDataShape", data);
     this.data.shape = { ...data };
-    if (data?.transparency && data.transparency !== this.previousTransparency) {
+    if (
+      data?.transparency !== undefined &&
+      data.transparency !== this.previousTransparency
+    ) {
       this.transparencySelection(data.transparency);
     }
   }
@@ -238,9 +240,12 @@ export class CanvasShape extends CanvasDrawableObject {
       this.data.text.rotation = 0;
     }
     this.data.size.ratio = 0;
-
     this.data.withTurningButtons = true;
   }
+  /**
+   * Function to change the data of the shape
+   * @param {AllParams} param - the new data
+   */
   changeData(param: AllParams) {
     const mode = param.mode;
     this.setDataGeneral(param.general);
@@ -267,15 +272,15 @@ export class CanvasShape extends CanvasDrawableObject {
       this.data.canvasImageTransparent = null;
       return true;
     }
-    const canvas = this.data.canvasImage;
-    if (canvas) {
-      const topCornerColors = getTopCornerColors(canvas);
+    const context = this.data.canvasImageContext;
+    if (context) {
+      const topCornerColors = getTopCornerColors(context);
 
       if (topCornerColors === null) {
-        this.data.canvasImageTransparent = makeWhiteTransparent(canvas, delta);
+        this.data.canvasImageTransparent = makeWhiteTransparent(context, delta);
       } else {
         this.data.canvasImageTransparent = makeCornerTransparent(
-          canvas,
+          context,
           delta,
           topCornerColors
         );
@@ -345,6 +350,14 @@ export class CanvasShape extends CanvasDrawableObject {
   setCanvasImage(value: HTMLCanvasElement | null) {
     this.data.canvasImage = value;
   }
+  setCanvasImageContext(value: CanvasRenderingContext2D | null) {
+    this.data.canvasImageContext = value;
+    if (value && value.canvas) {
+      this.data.canvasImage = value.canvas;
+    } else {
+      this.data.canvasImage = null;
+    }
+  }
   setCanvasImageTransparent(value: HTMLCanvasElement | null) {
     this.data.canvasImageTransparent = value;
   }
@@ -404,45 +417,14 @@ export class CanvasShape extends CanvasDrawableObject {
   }
 
   /**
-   * Function to draw the shape on tempory canvas with throttling
-   */
-  drawToTrottle(
-    ctx: CanvasRenderingContext2D | null,
-    data: ShapeDefinition,
-    borderInfo?: string | null
-  ) {
-    if (!this.drawer) {
-      console.error("Drawer is not initialized");
-      return;
-    }
-    ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    this.drawer.showElement(ctx, data, true, borderInfo);
-  }
-
-  showElementThrottled: (
-    ctx: CanvasRenderingContext2D | null,
-    data: ShapeDefinition,
-    borderInfo?: string | null
-  ) => void;
-
-  /**
    * Function to draw the shape on the canvas
    */
   draw(
     ctx: CanvasRenderingContext2D | null,
     temporyDraw?: boolean,
-    borderInfo?: string | null,
-    mustDraw = false
+    borderInfo?: string | null
   ) {
-    if (temporyDraw && !mustDraw) {
-      this.showElementThrottled(ctx, this.data, borderInfo);
-    } else {
-      if (mustDraw) {
-        // Clear the canvas before drawing the shape
-        ctx?.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      }
-      if (ctx) ctx.globalAlpha = this.data.general.opacity;
-      this.drawer.showElement(ctx, this.data, temporyDraw, null);
-    }
+    if (!temporyDraw && ctx) ctx.globalAlpha = this.data.general.opacity;
+    this.drawer.showElement(ctx, this.data, temporyDraw, borderInfo);
   }
 }

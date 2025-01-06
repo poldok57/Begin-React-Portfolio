@@ -1,9 +1,7 @@
 export const makeWhiteTransparent = (
-  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
   clarityLevel: number
 ): HTMLCanvasElement => {
-  const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-
   let imageData: ImageData;
 
   if (clarityLevel === 0 || clarityLevel > 255)
@@ -14,7 +12,7 @@ export const makeWhiteTransparent = (
 
   // new destination canvas
   const canvasDest = document.createElement("canvas");
-  const ctxDest = canvasDest.getContext("2d")!;
+  const ctxDest = canvasDest.getContext("2d", { willReadFrequently: true })!;
   canvasDest.width = ctx.canvas.width;
   canvasDest.height = ctx.canvas.height;
   ctxDest.putImageData(imageData, 0, 0);
@@ -85,18 +83,17 @@ export interface CornerColors {
 }
 
 export const makeCornerTransparent = (
-  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
   delta: number,
   colors: CornerColors
 ): HTMLCanvasElement => {
-  const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
   const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
   const data = imageData.data;
   const width = ctx.canvas.width;
   const height = ctx.canvas.height;
 
   const newCanvas = document.createElement("canvas");
-  const ctxNew = newCanvas.getContext("2d")!;
+  const ctxNew = newCanvas.getContext("2d", { willReadFrequently: true })!;
   newCanvas.width = width;
   newCanvas.height = height;
 
@@ -163,12 +160,14 @@ export const makeCornerTransparent = (
   return newCanvas;
 };
 
-export const getTopCornerColors = (canvas: HTMLCanvasElement) => {
+export const getTopCornerColors = (ctx: CanvasRenderingContext2D) => {
   // get canvas context
-  const ctx = canvas.getContext("2d");
+  const width = ctx.canvas.width;
   // Get the color of the top-left and top-right corners
-  let topLeftColor = ctx?.getImageData(0, 0, 1, 1).data ?? null;
-  let topRightColor = ctx?.getImageData(canvas.width - 1, 0, 1, 1).data ?? null;
+  let topLeftColor: Uint8ClampedArray | null =
+    ctx.getImageData(0, 0, 1, 1).data ?? null;
+  let topRightColor: Uint8ClampedArray | null =
+    ctx.getImageData(width - 1, 0, 1, 1).data ?? null;
 
   // Function to find the first non-transparent pixel diagonally
   const findFirstNonTransparentPixel = (
@@ -176,7 +175,7 @@ export const getTopCornerColors = (canvas: HTMLCanvasElement) => {
     startY: number,
     direction: 1 | -1
   ) => {
-    const middleX = canvas.width / 2;
+    const middleX = width / 2;
     for (let i = 0; i < middleX; i++) {
       const color = ctx?.getImageData(
         startX + i * direction,
@@ -197,7 +196,7 @@ export const getTopCornerColors = (canvas: HTMLCanvasElement) => {
   }
 
   if (topRightColor && topRightColor[3] === 0) {
-    topRightColor = findFirstNonTransparentPixel(canvas.width - 1, 0, -1);
+    topRightColor = findFirstNonTransparentPixel(width - 1, 0, -1);
   }
 
   // Function to check if the color is close to white or light gray
@@ -226,8 +225,17 @@ export const getTopCornerColors = (canvas: HTMLCanvasElement) => {
     return false;
   };
 
-  if (isLightColor(topLeftColor) && isLightColor(topRightColor)) {
+  const leftIsLight = isLightColor(topLeftColor);
+  const rightIsLight = isLightColor(topRightColor);
+
+  if (leftIsLight && rightIsLight) {
     return null;
+  }
+  if (leftIsLight && !rightIsLight) {
+    return { topLeft: topLeftColor } as CornerColors;
+  }
+  if (!leftIsLight && rightIsLight) {
+    return { topRight: topRightColor } as CornerColors;
   }
   return { topLeft: topLeftColor, topRight: topRightColor } as CornerColors;
 };

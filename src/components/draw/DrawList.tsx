@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useDesignStore } from "@/lib/stores/design";
 import { X, RefreshCcw, GripVertical } from "lucide-react";
 import {
@@ -30,8 +29,6 @@ export const DrawList = ({
     selectedDesignElement,
   } = useDesignStore();
 
-  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
-
   const onSelectElement = (elementId: string) => {
     setSelectedDesignElement(elementId);
 
@@ -44,7 +41,7 @@ export const DrawList = ({
       const tempCtx = tmpcan.getContext("2d");
       tempCtx?.clearRect(0, 0, tmpcan.width, tmpcan.height);
     }
-    refreshCanvas(ctx, true);
+    refreshCanvas(canvasRef?.current || null, true);
   };
 
   const handleDeleteElement = (elementId: string) => {
@@ -66,10 +63,6 @@ export const DrawList = ({
       setMode(DRAWING_MODES.FIND);
     },
   });
-
-  useEffect(() => {
-    setCtx(canvasRef?.current?.getContext("2d") ?? null);
-  }, [canvasRef?.current]);
 
   return (
     <div

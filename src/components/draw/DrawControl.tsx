@@ -292,7 +292,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           >
             <PiSelectionPlusLight size="20px" />
           </Button>
-          {(isDrawingShape(mode) || isDrawingLine(mode)) && (
+          {(isDrawingShape(mode) || isDrawingSelect(mode)) && (
             <label
               htmlFor="toggle-ratio"
               className="flex flex-col justify-center items-center text-sm text-nowrap"

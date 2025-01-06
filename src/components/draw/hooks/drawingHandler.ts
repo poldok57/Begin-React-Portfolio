@@ -41,10 +41,13 @@ export abstract class drawingHandler {
 
   constructor(
     canvas: HTMLCanvasElement,
+    canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void
   ) {
     if (canvas) this.setCanvas(canvas);
+    if (canvasContext) this.setContext(canvasContext);
+
     this.extendedMouseArea = false;
     this.setTemporyCanvas(temporyCanvas);
     this.setMode = setMode;
@@ -57,7 +60,9 @@ export abstract class drawingHandler {
 
   setCanvas(canvas: HTMLCanvasElement) {
     this.mCanvas = canvas;
-    this.context = canvas.getContext("2d") as CanvasRenderingContext2D | null;
+  }
+  setContext(context: CanvasRenderingContext2D | null) {
+    this.context = context;
   }
 
   setTemporyCanvas(canvas: HTMLCanvasElement | null) {

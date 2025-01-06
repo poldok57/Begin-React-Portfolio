@@ -380,9 +380,7 @@ export class CanvasShapeDraw {
       ctx.strokeStyle = color;
     }
 
-    if (blackWhite) {
-      ctx.filter = "grayscale(100%)";
-    }
+    ctx.filter = blackWhite ? "grayscale(100%)" : "none";
 
     switch (type) {
       case SHAPE_TYPE.IMAGE:
@@ -392,7 +390,6 @@ export class CanvasShapeDraw {
           radius,
           virtualCanvas: square.canvasImageTransparent ?? square.canvasImage,
         });
-        // ctx, square, withButton, drawImage, this.drawSquare);
         break;
       case SHAPE_TYPE.SQUARE:
         this.drawSquare({

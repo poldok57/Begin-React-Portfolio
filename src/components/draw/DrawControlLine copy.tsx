@@ -7,7 +7,6 @@ import { ColorPicker } from "../atom/ColorPicker";
 import {
   DRAWING_MODES,
   GroupParams,
-  Params,
   ParamsPath,
 } from "@/lib/canvas/canvas-defines";
 import { MdTimeline } from "react-icons/md";
@@ -34,21 +33,38 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   isTouch = false,
 }) => {
   const [withPathFilled, setWithPathFilledState] = useState(paramsPath.filled);
-  const handlePath = (param: Params) => {
-    paramsPath = { ...paramsPath, ...param };
+  const [color, setColorState] = useState(paramsPath.color);
+  const [opacity, setOpacityState] = useState(paramsPath.opacity);
+  const handlePath = (
+    filled: boolean,
+    color: string | undefined,
+    opacity: number
+  ) => {
+    paramsPath = { filled: filled, color: color, opacity: opacity };
     handleParamChange({ path: paramsPath });
   };
 
   const setWithPathFilled = (value: boolean) => {
     if (value) {
       const color = getGeneralColor();
-      paramsPath.opacity = 1;
-      paramsPath.color = color;
+      handlePath(value, color, 1);
+
+      setColorState(color);
+      setOpacityState(1);
     } else {
-      paramsPath.color = undefined;
+      handlePath(value, undefined, 1);
     }
-    handlePath({ filled: value });
     setWithPathFilledState(value);
+  };
+
+  const setColor = (color: string) => {
+    setColorState(color);
+    handlePath(true, color, opacity);
+  };
+
+  const setOpacity = (opacity: number) => {
+    setOpacityState(opacity);
+    handlePath(true, color, opacity);
   };
 
   useEffect(() => {
@@ -125,10 +141,9 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             color
             <ColorPicker
               id="path-color-picker"
-              defaultValue={paramsPath.color}
+              defaultValue={color}
               onChange={(c) => {
-                paramsPath.filled = true;
-                handlePath({ color: c });
+                setColor(c);
               }}
             />
           </label>
@@ -140,12 +155,12 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             })}
             id="path-opacity-picker"
             label="Opacity"
-            value={paramsPath.opacity * 100}
+            value={opacity * 100}
             min="0"
             max="100"
             step="10"
             onChange={(value: number) => {
-              handlePath({ opacity: value / 100 });
+              setOpacity(value / 100);
             }}
             style={{ width: "50px" }}
             isTouch={isTouch}

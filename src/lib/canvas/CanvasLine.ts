@@ -150,7 +150,7 @@ export class CanvasLine implements LinePath {
       context.strokeStyle = this.strokeStyle;
     }
     if (this.lineWidth) {
-      context.lineWidth = this.lineWidth;
+      context.lineWidth = this.lineWidth * this.scale;
     }
     basicLine(
       context,
@@ -232,7 +232,7 @@ export class CanvasLine implements LinePath {
         to: current,
         color: this.strokeStyle,
         opacity: 0.2,
-        lineWidth: this.lineWidth,
+        lineWidth: this.lineWidth * this.scale,
         headSize: 15,
         padding: 10,
       });
@@ -244,7 +244,7 @@ export class CanvasLine implements LinePath {
         context.strokeStyle = this.strokeStyle;
       }
       if (this.lineWidth) {
-        context.lineWidth = this.lineWidth;
+        context.lineWidth = this.lineWidth * this.scale;
       }
       // draw the arc between the start and end coordinates passing through current coordinate
       context.beginPath();
@@ -279,7 +279,7 @@ export class CanvasLine implements LinePath {
         from: start,
         to: end ?? coordonate,
         color: this.strokeStyle || "rgba(128, 128, 128, 0.7)",
-        lineWidth: this.lineWidth,
+        lineWidth: this.lineWidth * this.scale,
         curvature: this.curvature || 0,
         opacity: this.globalAlpha || 1,
         padding: this.padding || 0,

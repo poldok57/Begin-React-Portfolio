@@ -56,10 +56,20 @@ export const clearCanvasByCtx = (
   context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 };
 /**
- * Function to clear the canvas
+ * Function to clear the canvas by resizing the canvas
  * @param {HTMLCanvasElement} canvas
  */
-export const clearCanvas = (canvas: HTMLCanvasElement) => {
-  const context = canvas.getContext("2d");
-  clearCanvasByCtx(context);
+export const clearCanvas = (canvas: HTMLCanvasElement): void => {
+  const w = canvas.width;
+  canvas.width = w;
+  // or in one line: canvas.width = canvas.width;
 };
+
+// /**
+//  * Function to clear the canvas
+//  * @param {HTMLCanvasElement} canvas
+//  */
+// export const clearCanvas = (canvas: HTMLCanvasElement) => {
+//   const context = canvas.getContext("2d");
+//   clearCanvasByCtx(context);
+// };
