@@ -62,9 +62,10 @@ export class drawFindElement extends drawingHandler {
   refreshDrawing() {
     // console.log("refreshDrawing free curve");
     this.clearTemporyCanvas();
-
     this.refreshCanvas(this.mCanvas, true);
   }
+
+  hightLightDrawing() {}
 
   /**
    * Function who recieve the mouse move event

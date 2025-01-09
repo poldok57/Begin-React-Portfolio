@@ -2,6 +2,7 @@ import { useRef, useCallback } from "react";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { MARGIN } from "../../scripts/table-numbers";
 import { useRoomContext } from "../../RoomProvider";
+import { Mode } from "../../types";
 
 interface AxisLine {
   type: "vertical" | "horizontal";
@@ -16,11 +17,33 @@ interface AxisGroup {
 const TOLERANCE = 6;
 const LINE_OVERLAP = 30;
 
+interface AlignmentLogic {
+  alignmentGroups: React.MutableRefObject<{
+    vertical: AxisGroup[];
+    horizontal: AxisGroup[];
+  }>;
+  findElementsInContainer: (container: HTMLDivElement | null) => void;
+  findAlignments: (mode: string | null) => {
+    vertical: number;
+    horizontal: number;
+  };
+  drawAlignmentLines: (containerRect: DOMRect | null) => void;
+  clicOnLine: (mouseX: number, mouseY: number) => boolean;
+  moveLine: (mouseX: number, mouseY: number) => boolean;
+  stopMoveLine: () => void;
+  cursorStyle: (
+    mouseX: number,
+    mouseY: number,
+    isInOverlapContainer: boolean
+  ) => string | null;
+  equalizeSpaces: (type: "vertical" | "horizontal") => void;
+}
+
 export const useAlignmentLogic = (
   groundRef: React.RefObject<HTMLDivElement>,
   temporaryCanvasRef: React.RefObject<HTMLCanvasElement>,
   changeCoordinates: (params: ChangeCoordinatesParams) => void
-) => {
+): AlignmentLogic => {
   const verticalAxis = useRef<number[]>([]);
   const horizontalAxis = useRef<number[]>([]);
   const selectedAlignmentLine = useRef<AxisLine | null>(null);
@@ -83,8 +106,15 @@ export const useAlignmentLogic = (
     [lastContainerRect.current]
   );
 
-  const findAlignments = () => {
+  const findAlignments = (
+    mode: string | null = Mode.create
+  ): { vertical: number; horizontal: number } => {
     alignmentGroups.current = { vertical: [], horizontal: [] };
+    if (mode !== Mode.create && mode !== Mode.settings) {
+      verticalAxis.current = [];
+      horizontalAxis.current = [];
+      return { vertical: 0, horizontal: 0 };
+    }
     elementsInContainer.current.forEach((el) => {
       const rect = el.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -237,7 +267,11 @@ export const useAlignmentLogic = (
 
   const clicOnLine = useCallback(
     (mouseX: number, mouseY: number) => {
-      if (getRotation() !== 0) {
+      if (
+        getRotation() !== 0 ||
+        (verticalAxis.current.length === 0 &&
+          horizontalAxis.current.length === 0)
+      ) {
         return false;
       }
 
@@ -345,11 +379,14 @@ export const useAlignmentLogic = (
     mouseX: number,
     mouseY: number,
     isInOverlapContainer: boolean
-  ) => {
-    if (!temporaryCanvasRef.current || !groundRef.current) return;
+  ): string | null => {
+    if (!temporaryCanvasRef.current || !groundRef.current) return null;
     let cursorStyle = "default";
 
-    if (getRotation() === 0) {
+    if (
+      (verticalAxis.current.length > 0 || horizontalAxis.current.length > 0) &&
+      getRotation() === 0
+    ) {
       const isNearVerticalLine = verticalAxis.current.some(
         (x) => Math.abs(x - mouseX) <= 5
       );
@@ -371,6 +408,7 @@ export const useAlignmentLogic = (
     }
     return null;
   };
+
   return {
     alignmentGroups,
     // selectedAlignmentLine,

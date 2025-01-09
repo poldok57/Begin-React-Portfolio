@@ -4,7 +4,10 @@
  * this interface is used to manage data of a points to draw free hand or lines or path on a canvas
  */
 
-import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
+import {
+  drawDashedRectangle,
+  // drawDashedRedRectangle,
+} from "@/lib/canvas/canvas-dashed-rect";
 import { Coordinate, Area, LinePath, ArgsMouseOnShape } from "./types";
 import {
   ParamsGeneral,
@@ -925,10 +928,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       // adding infos on the canvas, if there is no resize
       this.drawAddingInfos(ctx);
     }
+    // console.log("draw    --------->", size);
     drawDashedRectangle(ctx, size, 0.3);
 
     if (this.isFinished) {
       this.drawCornerButtons(ctx, null);
+      // drawDashedRedRectangle(ctx, size, 0.8, 0);
     }
 
     return true;

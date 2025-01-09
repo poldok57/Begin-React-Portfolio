@@ -25,6 +25,8 @@ import {
   getTopCornerColors,
 } from "./image-transparency";
 import { useDesignStore } from "@/lib/stores/design";
+import { scaledSize } from "../utils/scaledSize";
+import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
@@ -426,5 +428,14 @@ export class CanvasShape extends CanvasDrawableObject {
   ) {
     if (!temporyDraw && ctx) ctx.globalAlpha = this.data.general.opacity;
     this.drawer.showElement(ctx, this.data, temporyDraw, borderInfo);
+  }
+
+  hightLightDrawing(ctx: CanvasRenderingContext2D | null) {
+    const size = scaledSize(this.data.size, this.scale);
+    let large = 0;
+    if (this.data.shape?.withBorder && this.data.border) {
+      large = this.data.border.lineWidth / 2 + (this.data.border.interval || 0);
+    }
+    drawDashedRedRectangle(ctx, size, 0.8, 0, large);
   }
 }

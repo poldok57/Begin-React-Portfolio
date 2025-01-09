@@ -160,6 +160,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
             setActiveMenu(Menu.addTable);
             setMode(Mode.create);
           }}
+          selected={activeMenu === Menu.addTable}
           disabled={disabled}
         >
           Add tables

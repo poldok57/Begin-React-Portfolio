@@ -166,6 +166,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
             setMode(Mode.create);
           }}
           className={className}
+          selected={activeMenu === Menu.updateTable}
         >
           Table modifications
         </Button>

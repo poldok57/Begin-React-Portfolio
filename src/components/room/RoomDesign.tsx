@@ -248,7 +248,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
 
   const handleOpen = () => {
     setActiveMenu(Menu.roomDesign);
-    setMode(Mode.create);
+    setMode(Mode.draw);
   };
 
   return (
@@ -258,6 +258,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
           onClick={() => handleOpen()}
           className={className}
           disabled={disabled}
+          selected={activeMenu === Menu.roomDesign}
         >
           Room design
         </Button>

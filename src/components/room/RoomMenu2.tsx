@@ -46,7 +46,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
 }) => {
   const isTouch = isTouchDevice();
   const ref = useRef<HTMLDivElement>(null);
-  const { scale, setScale, clearSelectedTableIds, getSelectedRect } =
+  const { mode, scale, setScale, clearSelectedTableIds, getSelectedRect } =
     useRoomContext();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
@@ -289,6 +289,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           onChange={(value: number) => setScale(value)}
         />
       </div>
+      {mode}
     </div>
   );
 };

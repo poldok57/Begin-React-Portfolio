@@ -4,6 +4,8 @@
  * this interface is used to manage data of a drawable object on a canvas
  */
 
+import { scaledSize } from "../utils/scaledSize";
+import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 import { ThingsToDraw } from "./canvas-defines";
 import { resizingElement } from "./canvas-resize";
 import { Area, Coordinate } from "./types";
@@ -106,5 +108,10 @@ export abstract class CanvasDrawableObject {
       this.debounceDraw(ctx, true, witchBorder);
     }
     return newCoord;
+  }
+
+  hightLightDrawing(ctx: CanvasRenderingContext2D | null) {
+    const size = scaledSize(this.data.size, this.scale);
+    drawDashedRedRectangle(ctx, size, 0.8, 0);
   }
 }

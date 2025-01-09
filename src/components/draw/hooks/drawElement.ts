@@ -212,6 +212,10 @@ export class drawElement extends drawingHandler {
     this.lastMouseOnShape = mouseOnShape;
   }
 
+  hightLightDrawing() {
+    this.shape.hightLightDrawing(this.ctxTempory as CanvasRenderingContext2D);
+  }
+
   /**
    * Function to follow the cursor on the canvas
    * @param {number} opacity - opacity of the element

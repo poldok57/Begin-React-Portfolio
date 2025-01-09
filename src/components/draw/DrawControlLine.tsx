@@ -43,7 +43,9 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   const setWithPathFilled = (value: boolean) => {
     if (value) {
       const color = getGeneralColor();
-      paramsPath.opacity = 1;
+      if (paramsPath.opacity === undefined) {
+        paramsPath.opacity = 1;
+      }
       paramsPath.color = color;
     } else {
       paramsPath.color = undefined;

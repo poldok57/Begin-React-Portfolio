@@ -159,7 +159,7 @@ export const Taskbar = () => {
           })}
         >
           <div
-            className={cn("flex flex-row items-end", {
+            className={cn("flex flex-row items-end pointer-events-auto", {
               "w-full": barParams.layout !== "horizontal",
               "justify-end": barParams.position === "right",
               "justify-start": barParams.position === "left",
@@ -196,6 +196,7 @@ export const Taskbar = () => {
             ...(window.bgColor ? { backgroundColor: window.bgColor } : {}),
             ...(window.color ? { color: window.color } : {}),
             height: TITLE_HEIGHT,
+            pointerEvents: "auto",
           }}
           onClick={() => window.toggleUp()}
         >

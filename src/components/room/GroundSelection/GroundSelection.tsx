@@ -51,8 +51,15 @@ export const GroundSelection = React.forwardRef<
     },
     ref
   ) => {
-    const { mode, scale, rotation, setSelectedRect, setRotation, getRotation } =
-      useRoomContext();
+    const {
+      mode,
+      getMode,
+      scale,
+      rotation,
+      setSelectedRect,
+      setRotation,
+      getRotation,
+    } = useRoomContext();
     const groundRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -75,7 +82,7 @@ export const GroundSelection = React.forwardRef<
     const alignmentLinesRef = useRef(false);
 
     const drawAxe = () => {
-      numberOfAlignmentsRef.current = findAlignments();
+      numberOfAlignmentsRef.current = findAlignments(getMode());
       if (numberOfAlignmentsRef.current && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         setShowAlignmentLines(true);
@@ -100,7 +107,7 @@ export const GroundSelection = React.forwardRef<
       }
 
       findElementsInContainer(containerRef.current);
-      numberOfAlignmentsRef.current = findAlignments();
+      numberOfAlignmentsRef.current = findAlignments(getMode());
       if (!numberOfAlignmentsRef.current) {
         setShowAlignmentLines(false);
         return;
@@ -199,7 +206,7 @@ export const GroundSelection = React.forwardRef<
         }
         groundRef.current.style.cursor = cursor;
       }
-      handleMove(clientX, clientY);
+      handleMove(clientX, clientY, getMode());
     };
 
     const handleMouseUp = () => {
@@ -268,7 +275,7 @@ export const GroundSelection = React.forwardRef<
           e.preventDefault();
           return;
         }
-        if (handleMove(touch.clientX, touch.clientY)) {
+        if (handleMove(touch.clientX, touch.clientY, getMode())) {
           e.preventDefault();
           return;
         }

@@ -186,8 +186,13 @@ export class drawLine extends drawingHandler {
     this.ctxTempory.globalAlpha = oldOpacity;
   }
 
-  refreshDrawing(opacity: number) {
+  refreshDrawing(opacity: number, _mouseOnShape?: string, _id?: string) {
+    // console.log("refreshDrawing", _id);
     this.showTemporyLine(this.getType(), opacity);
+  }
+
+  hightLightDrawing() {
+    this.path?.hightLightDrawing(this.ctxTempory as CanvasRenderingContext2D);
   }
   /**
    * Function follow the cursor on the canvas

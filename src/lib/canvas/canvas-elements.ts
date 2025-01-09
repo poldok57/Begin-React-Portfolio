@@ -37,6 +37,7 @@ export const drawRoundedRect = (
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
+  ctx.stroke();
 };
 
 /**

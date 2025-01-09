@@ -1,10 +1,12 @@
 /**
  * Part of the canvas module that contains the functions to draw a dashed rectangle on the canvas
  */
+import { drawRoundedRect } from "./canvas-elements";
 import { Area, Rectangle } from "./types";
 
 const INTERVAL = 5;
 export const OVERAGE = Math.round(INTERVAL * 1.6);
+export const OVERAGE2 = OVERAGE + 1;
 
 /**
  * Function to draw a dashed rectangle on the canvas
@@ -56,9 +58,9 @@ export const drawDashedRectangle = (
   ctx.setLineDash([INTERVAL, (INTERVAL * 2) / 3]);
 
   // Draw the semi-transparent rectangle
-  ctx.fillStyle = "rgba(70, 70, 70, 0.20)";
-  ctx.beginPath();
+  ctx.fillStyle = "rgba(40, 40, 40, 0.20)";
   ctx.rect(x, y, width, height);
+  ctx.stroke();
   ctx.fill();
   ctx.closePath();
 
@@ -89,6 +91,76 @@ export const drawDashedRectangle = (
       ctx.closePath();
     }
   }
+
+  // Restore the context (undo rotation and translation)
+  if (rotation !== 0) {
+    ctx.restore();
+  }
+  ctx.globalAlpha = alpha;
+};
+
+/**
+ * Function to draw a dashed red rectangle on the canvas
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} bounds - {left, top, right, bottom}
+ */
+export const drawDashedRedRectangle = (
+  ctx: CanvasRenderingContext2D | null,
+  bounds: Area | Rectangle | null,
+  globalAlpha: number = 1,
+  rotation: number = 0,
+  overage: number = 0
+) => {
+  if (!bounds || !ctx) return;
+  const alpha = ctx.globalAlpha;
+  ctx.globalAlpha = globalAlpha;
+
+  const { width, height } = bounds;
+  let x = 0,
+    y = 0;
+  if ("left" in bounds && "top" in bounds) {
+    x = bounds.left;
+    y = bounds.top;
+  } else {
+    x = bounds.x;
+    y = bounds.y;
+  }
+
+  // Save the context before rotation
+  if (rotation !== 0) {
+    ctx.save();
+
+    // Move the origin point to the center of the element
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+    ctx.translate(centerX, centerY);
+
+    // Apply rotation
+    ctx.rotate((rotation * Math.PI) / 180);
+    x = -width / 2;
+    y = -height / 2;
+  }
+
+  // ctx.beginPath();
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([7, 10]);
+
+  overage += OVERAGE2;
+
+  const area: Area = {
+    x: x - overage,
+    y: y - overage,
+    width: width + overage * 2,
+    height: height + overage * 2,
+  };
+
+  // Draw the semi-transparent rectangle
+  ctx.strokeStyle = "rgba(250, 60, 60, 0.80)";
+
+  drawRoundedRect(ctx, area, 4);
+
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
 
   // Restore the context (undo rotation and translation)
   if (rotation !== 0) {

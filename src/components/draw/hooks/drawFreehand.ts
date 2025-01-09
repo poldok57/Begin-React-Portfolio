@@ -93,6 +93,13 @@ export class drawFreehand extends drawingHandler {
       true
     );
   }
+
+  hightLightDrawing() {
+    this.freeCurve.hightLightDrawing(
+      this.ctxTempory as CanvasRenderingContext2D
+    );
+  }
+
   /**
    * Function follow the cursor on the canvas
    * @param {DRAWING_MODES} mode

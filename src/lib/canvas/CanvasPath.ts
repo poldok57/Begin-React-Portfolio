@@ -299,10 +299,8 @@ export class CanvasPath extends CanvasPoints {
   }
 
   setParamsPath(ctx: CanvasRenderingContext2D | null, params: ParamsPath) {
-    if (!this.data.path) {
-      this.data.path = {};
-    }
     const hasChanged =
+      !this.data.path ||
       this.data.path.color !== params.color ||
       this.data.path.opacity !== params.opacity;
     if (hasChanged) {

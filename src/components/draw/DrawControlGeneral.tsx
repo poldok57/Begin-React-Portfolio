@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { useRef } from "react";
 import { inputRangeVariants } from "@/styles/input-variants";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
@@ -13,6 +13,7 @@ import {
   Params,
   isDrawingShape,
 } from "@/lib/canvas/canvas-defines";
+import { cn } from "@/lib/utils/cn";
 
 interface DrawControlGeneralProps {
   mode: string;
@@ -31,15 +32,16 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   setFilled,
   isTouch = false,
 }) => {
+  const paramsGeneralRef = useRef(paramsGeneral);
   const handleGeneral = (param: Params) => {
-    paramsGeneral = { ...paramsGeneral, ...param };
-    handleParamChange({ general: paramsGeneral });
+    paramsGeneralRef.current = { ...paramsGeneralRef.current, ...param };
+    handleParamChange({ general: paramsGeneralRef.current });
   };
 
   return (
     <>
       <div
-        className={clsx("flex flex-row gap-4 border border-secondary p-2", {
+        className={cn("flex flex-row gap-4 border border-secondary p-2", {
           "bg-paper":
             isDrawingLine(mode) ||
             isDrawingFreehand(mode) ||
@@ -50,7 +52,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
       >
         <label
           htmlFor="draw-color-picker"
-          className={clsx("flex items-center justify-center gap-3", {
+          className={cn("flex items-center justify-center gap-3", {
             hidden: isDrawingSelect(mode) || mode === DRAWING_MODES.ERASE,
           })}
         >
@@ -91,10 +93,14 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
         />
         <label
           htmlFor="toggle-filled"
-          className={clsx(
+          className={cn(
             "flex flex-col justify-center items-center font-xs gap-2",
             {
-              hidden: !(isDrawingShape(mode) || isDrawingLine(mode)),
+              hidden: !(
+                isDrawingShape(mode) ||
+                isDrawingLine(mode) ||
+                isDrawingFreehand(mode)
+              ),
             }
           )}
         >

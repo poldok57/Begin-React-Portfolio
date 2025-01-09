@@ -12,7 +12,7 @@ const FRAME_WIDTH = "calc(100% - 2px)";
 const FRAME_HEIGHT = "calc(100% - 1px)";
 const DEFAULT_OVERFLOW = "auto";
 
-// Fonction pour déterminer si une valeur est en pourcentage ou utilise calc()
+// Function to determine if a value is in percentage or uses calc()
 const isPercentageOrCalc = (value: string): boolean => {
   return value.includes("%") || value.includes("calc");
 };
@@ -26,7 +26,7 @@ export const copyDivStyle = (
   const style = getComputedStyle(currentDiv);
   const cssStyle = currentDiv.style;
 
-  // Utiliser le style CSS si c'est un pourcentage ou calc, sinon utiliser le style calculé
+  // Use the CSS style if it's a percentage or calc, otherwise use the computed style
   const width = isPercentageOrCalc(cssStyle.width)
     ? cssStyle.width
     : style.width;

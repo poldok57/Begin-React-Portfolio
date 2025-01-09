@@ -1,11 +1,18 @@
 // import { useDesignStore } from "@/lib/stores/design";
-import { ThingsToDraw, DRAW_TYPE } from "@/lib/canvas/canvas-defines";
+import {
+  ThingsToDraw,
+  ParamsGeneral,
+  DRAW_TYPE,
+} from "@/lib/canvas/canvas-defines";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
 import { CanvasDrawableObject } from "@/lib/canvas/CanvasDrawableObject";
 
-import { drawDashedRectangle } from "./canvas-dashed-rect";
+import {
+  drawDashedRectangle,
+  drawDashedRedRectangle,
+} from "./canvas-dashed-rect";
 import { debounce } from "../utils/debounce";
 import { Coordinate } from "./types";
 import { isInsideSquare } from "../square-position";
@@ -49,7 +56,8 @@ export const showAllDashedRectangles = (
 ) => {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   let nbFound = 0;
-  let opacity = 0.8;
+  const opacity = 0.3;
+  let first = true;
   // Iterate from last to first element to find the last one containing coord
   for (let i = elements.length - 1; i >= 0; i--) {
     const element = elements[i];
@@ -59,8 +67,16 @@ export const showAllDashedRectangles = (
       // scale the size of the element
       const size = scaledSize(element.size, scale);
 
-      drawDashedRectangle(ctx, size, opacity, element.rotation);
-      opacity = 0.3;
+      drawDashedRectangle(ctx, size, first ? 0.5 : opacity, element.rotation);
+      if (first) {
+        let lg = 0;
+        if ("border" in element) {
+          const border = element.border as ParamsGeneral;
+          lg = border.lineWidth + (border.interval || 0);
+        }
+        drawDashedRedRectangle(ctx, size, 0.5, element.rotation, lg);
+      }
+      first = false;
       nbFound++;
     }
   }

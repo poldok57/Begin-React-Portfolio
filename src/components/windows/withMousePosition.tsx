@@ -107,7 +107,7 @@ export function withMousePosition<P extends object>(
     const canMoveRef = useRef(false);
     const memoDisplayRef = useRef("");
     const mouseCoordinatesRef = useRef<Coordinate>({ x: 0, y: 0 });
-
+    const typePositionHasChangedRef = useRef(false);
     const [isLocked, setLocked] = useState(!draggable);
 
     const randomKey = useRef(generateRandomKey());
@@ -156,6 +156,9 @@ export function withMousePosition<P extends object>(
       const left = component.offsetLeft,
         top = component.offsetTop,
         width = window.getComputedStyle(component).width;
+
+      // warning type position has changed , don't return to relative
+      typePositionHasChangedRef.current = true;
 
       styleRef.current.position = POSITION.ABSOLUTE;
 
@@ -482,9 +485,14 @@ export function withMousePosition<P extends object>(
     }, [isLocked, withTitleBar]);
 
     useEffect(() => {
+      if (typePositionHasChangedRef.current) return;
+
       styleRef.current = { ...style };
       if (trace) {
-        console.log(`[${WrappedComponent.name}] useEffect`, styleRef.current);
+        console.log(
+          `[${WrappedComponent.name}] useEffect =>`,
+          styleRef.current
+        );
       }
     }, [style]);
 

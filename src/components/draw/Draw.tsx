@@ -48,6 +48,7 @@ export const Draw = () => {
   };
 
   const setDrawingParams = (props: GroupParams) => {
+    // console.log("setDrawingParams", props);
     drawingParamsRef.current = { ...drawingParamsRef.current, ...props };
   };
 

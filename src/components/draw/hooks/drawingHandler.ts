@@ -155,7 +155,13 @@ export abstract class drawingHandler {
 
   abstract actionMouseLeave(): void;
 
-  abstract refreshDrawing(opacity?: number, mouseOnShape?: string | null): void;
+  abstract refreshDrawing(
+    opacity?: number,
+    mouseOnShape?: string | null,
+    id?: string
+  ): void;
+
+  abstract hightLightDrawing(): void;
 
   // default actions for touch events
   actionTouchEnd() {

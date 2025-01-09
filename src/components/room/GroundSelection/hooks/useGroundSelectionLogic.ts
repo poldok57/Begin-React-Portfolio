@@ -4,6 +4,7 @@ import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { useRoomContext } from "../../RoomProvider";
+import { Mode } from "../../types";
 
 interface Position {
   left: number;
@@ -120,11 +121,18 @@ export const useGroundSelectionLogic = (
   );
 
   const handleMove = useCallback(
-    (clientX: number, clientY: number) => {
+    (clientX: number, clientY: number, mode: string | null = Mode.create) => {
       if (!groundRef.current || !containerRef.current) return false;
 
       if (areaOffsetRef.current) {
         // move container
+        if (
+          mode !== Mode.create &&
+          mode !== Mode.draw &&
+          mode !== Mode.settings
+        ) {
+          return false;
+        }
         const newLeft = Math.round(clientX + areaOffsetRef.current.left);
         const newTop = Math.round(clientY + areaOffsetRef.current.top);
 

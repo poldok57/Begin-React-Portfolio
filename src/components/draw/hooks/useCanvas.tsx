@@ -309,7 +309,11 @@ export const useCanvas = ({
     currentParams = getParams();
     if (!drawingRef.current) return;
     drawingRef.current.changeData(currentParams);
-    drawingRef.current.refreshDrawing(currentParams.general.opacity);
+    drawingRef.current.refreshDrawing(
+      currentParams.general.opacity,
+      null,
+      "paramChange"
+    );
   };
 
   /**
@@ -374,13 +378,21 @@ export const useCanvas = ({
       drawingRef.current.setDraw(selectedDesignElement);
       setTimeout(
         () => {
-          drawingRef.current?.refreshDrawing(currentParams.general.opacity);
+          drawingRef.current?.refreshDrawing(
+            currentParams.general.opacity,
+            null,
+            "reload"
+          );
+          // hight light drawing when reload
+          // console.log("hight Light");
+          drawingRef.current?.hightLightDrawing();
         },
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
       if (canvasRef.current) {
         refreshCanvas(canvasRef.current, false);
       }
+
       mouseOnCtrlPanel.current = false;
       justReload.current = true;
       setMode(newMode);
@@ -389,7 +401,11 @@ export const useCanvas = ({
 
     setTimeout(() => {
       drawingRef.current?.startAction();
-      drawingRef.current?.refreshDrawing();
+      drawingRef.current?.refreshDrawing(
+        currentParams.general.opacity,
+        null,
+        "show"
+      );
     }, 20);
   };
 

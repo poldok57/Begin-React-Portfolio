@@ -153,6 +153,17 @@ export class CanvasFreeCurve extends CanvasPoints {
       );
     }
     ctx.stroke();
+
+    if (
+      this.isFinished &&
+      this.data.items.length > 3 &&
+      this.data.general.filled
+    ) {
+      // Fill the area with the same color as the line
+      ctx.fillStyle = this.data.general.color;
+      ctx.globalAlpha = this.data.general.opacity;
+      ctx.fill();
+    }
     return true;
   }
 }
