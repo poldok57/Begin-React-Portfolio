@@ -5,36 +5,23 @@ import { TbRotate2 } from "react-icons/tb";
 import { TbRotateClockwise2 } from "react-icons/tb";
 
 import { fontOptions } from "../../lib/canvas/font-family";
-import {
-  DRAWING_MODES,
-  Params,
-  GroupParams,
-  AllParams,
-} from "../../lib/canvas/canvas-defines";
+import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
+import { useDrawingContext } from "@/context/DrawingContext";
 import clsx from "clsx";
 import { inputRangeVariants } from "../../styles/input-variants";
 
 interface DrawControlTextProps {
-  mode: string;
   hidden: boolean;
-  drawingParams: AllParams;
-  handleTextParams: (params: GroupParams) => void;
   isTouch?: boolean;
 }
 
 export const DrawControlText: React.FC<DrawControlTextProps> = ({
-  mode,
   hidden,
-  drawingParams,
-  handleTextParams,
   isTouch = false,
 }) => {
-  const [italic, setItalic] = useState(drawingParams.text.italic);
+  const { mode, drawingParams, setTextParams } = useDrawingContext();
 
-  const handleText = (param: Params) => {
-    drawingParams.text = { ...drawingParams.text, ...param };
-    handleTextParams({ text: drawingParams.text });
-  };
+  const [italic, setItalic] = useState(drawingParams.text.italic);
 
   /**
    *  Handle the text rotation
@@ -42,7 +29,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
    */
   const handleTextRotation = (angle: number) => {
     const newAngle = (drawingParams.text.rotation + angle + 360) % 360;
-    handleText({ rotation: newAngle });
+    setTextParams({ rotation: newAngle });
   };
 
   return (
@@ -62,7 +49,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             className="p-2 w-32 rounded-md border-2 border-primary bg-paper focus:ring-blue-500"
             id="text-font-selector"
             defaultValue={drawingParams.text.font}
-            onChange={(event) => handleText({ font: event.target.value })}
+            onChange={(event) => setTextParams({ font: event.target.value })}
           >
             {fontOptions.map((font, index) => (
               <option
@@ -80,7 +67,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           className={inputRangeVariants({ width: "20", size: "sm" })}
           id="text-size-picker"
           value={drawingParams.text.fontSize}
-          onChange={(value) => handleText({ fontSize: value })}
+          onChange={(value) => setTextParams({ fontSize: value })}
           min="12"
           max="64"
           step="2"
@@ -94,7 +81,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           min="1"
           max="9"
           step="1"
-          onChange={(value) => handleText({ bold: value * 100 })}
+          onChange={(value) => setTextParams({ bold: value * 100 })}
           label="Bold"
           isTouch={isTouch}
         />
@@ -104,7 +91,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           onClick={() => {
             const i = !italic;
             setItalic(i);
-            handleText({ italic: i });
+            setTextParams({ italic: i });
           }}
         >
           Italic
@@ -121,7 +108,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             type="text"
             className="p-2 w-72 rounded-md border-2 border-primary bg-paper"
             defaultValue={drawingParams.text.text}
-            onChange={(event) => handleText({ text: event.target.value })}
+            onChange={(event) => setTextParams({ text: event.target.value })}
           />
         </label>
         <label
@@ -133,14 +120,17 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             id="text-color-picker"
             type="color"
             defaultValue={drawingParams.text.color}
-            onChange={(e) => handleText({ color: e.target.value })}
+            onChange={(e) => setTextParams({ color: e.target.value })}
           />
         </label>
         <div className="flex flex-row gap-3">
-          <Button className="px-3 py-1" onClick={() => handleTextRotation(-15)}>
+          <Button
+            className="px-3 py-1"
+            onClick={() => handleTextRotation(-7.5)}
+          >
             <TbRotate2 size="20px" />
           </Button>
-          <Button className="px-3 py-1" onClick={() => handleTextRotation(15)}>
+          <Button className="px-3 py-1" onClick={() => handleTextRotation(7.5)}>
             <TbRotateClockwise2 size="20px" />
           </Button>
         </div>

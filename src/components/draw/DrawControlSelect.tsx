@@ -6,44 +6,34 @@ import { RangeInput } from "../atom/RangeInput";
 import {
   DRAWING_MODES,
   isDrawingSelect,
-  EventModeAction,
-  GroupParams,
-  Params,
-  AllParams,
 } from "../../lib/canvas/canvas-defines";
+import { useDrawingContext } from "@/context/DrawingContext";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { MutableRefObject } from "react";
 
 // import clsx from "clsx";
 interface DrawControlSelectProps {
-  mode: string;
-  setMode: (mode: string) => void;
-  drawingParams: AllParams;
-  handleChangeRatio: (value: boolean) => void;
-  handleParamChange: (params: GroupParams) => void;
   handleImage: (action: string) => void;
-  addEventDetail: (detail: EventModeAction) => void;
   isTouch?: boolean;
 }
 
 export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
-  mode,
-  setMode,
-  drawingParams,
-  handleChangeRatio,
-  handleParamChange,
   handleImage,
-  addEventDetail,
   isTouch = false,
 }) => {
+  const {
+    mode,
+    setMode,
+    drawingParams,
+    addEventDetail,
+    setShapeParams,
+    setGeneralParams,
+    setLockRatio,
+  } = useDrawingContext();
+
   const [modeImage, setModeImage] = useState(false);
   const [isBlackWhite, setBlackWhite] = useState(false);
   const dialogRef: MutableRefObject<HTMLDialogElement | null> = useRef(null);
-
-  const handleShape = (param: Params) => {
-    drawingParams.shape = { ...drawingParams.shape, ...param };
-    handleParamChange({ shape: drawingParams.shape });
-  };
 
   useEffect(() => {
     setModeImage(mode === DRAWING_MODES.IMAGE);
@@ -65,12 +55,9 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
         name: file.name,
       });
 
-      handleChangeRatio(true);
-      handleParamChange({
-        general: {
-          ...drawingParams.general,
-          opacity: 1,
-        },
+      setLockRatio(true);
+      setGeneralParams({
+        opacity: 1,
       });
       setMode(DRAWING_MODES.IMAGE);
       // close the dialog box after the file is uploaded
@@ -139,7 +126,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
             max="200"
             step="3"
             onChange={(value) => {
-              handleShape({ transparency: value });
+              setShapeParams({ transparency: value });
             }}
             isTouch={isTouch}
           />
@@ -153,7 +140,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           })}
           onClick={() => {
             setBlackWhite(!isBlackWhite);
-            handleShape({ blackWhite: !isBlackWhite });
+            setShapeParams({ blackWhite: !isBlackWhite });
           }}
         >
           <BsCircleHalf />
@@ -166,7 +153,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           min="0"
           max="150"
           step="1"
-          onChange={(value) => handleShape({ radius: value })}
+          onChange={(value) => setShapeParams({ radius: value })}
           isTouch={isTouch}
         />
       </div>

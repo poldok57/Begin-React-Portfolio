@@ -3,42 +3,31 @@ import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { Button } from "../atom/Button";
 import { ColorPicker } from "../atom/ColorPicker";
-import {
-  DRAWING_MODES,
-  GroupParams,
-  Params,
-  ParamsPath,
-} from "@/lib/canvas/canvas-defines";
+import { DRAWING_MODES, ParamsPath } from "@/lib/canvas/canvas-defines";
+import { useDrawingContext } from "@/context/DrawingContext";
 import { MdTimeline } from "react-icons/md";
 import { Spline } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface DrawControlLineProps {
-  mode: string;
-  handleParamChange: (params: GroupParams) => void;
-  handleModeChange: (mode: string) => void;
-  addEventAction: (action: string) => void;
-  paramsPath: ParamsPath;
-  getGeneralColor: () => string;
-  isFilled: () => boolean;
   isTouch?: boolean;
 }
 
 export const DrawControlLine: React.FC<DrawControlLineProps> = ({
-  mode,
-  handleParamChange,
-  handleModeChange,
-  addEventAction,
-  paramsPath,
-  getGeneralColor,
-  isFilled,
   isTouch = false,
 }) => {
+  const {
+    mode,
+    addEventAction,
+    handleChangeParams,
+    handleChangeMode,
+    setPathParams,
+    drawingParams,
+    isFilled,
+    getGeneralColor,
+  } = useDrawingContext();
+  const paramsPath: ParamsPath = drawingParams.path;
   const [withPathFilled, setWithPathFilledState] = useState(isFilled());
-  const handlePath = (param: Params) => {
-    paramsPath = { ...paramsPath, ...param };
-    handleParamChange({ path: paramsPath });
-  };
 
   const setWithPathFilled = (value: boolean) => {
     if (value) {
@@ -53,12 +42,12 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
     }
     setWithPathFilledState(value);
 
-    handleParamChange({ path: paramsPath });
+    handleChangeParams({ path: paramsPath });
   };
 
   useEffect(() => {
     if (mode === DRAWING_MODES.END_PATH) {
-      handleModeChange(DRAWING_MODES.LINE);
+      handleChangeMode(DRAWING_MODES.LINE);
 
       setWithPathFilledState(false);
     }
@@ -80,7 +69,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
         className="px-4 py-1"
         selected={mode == DRAWING_MODES.LINE}
         onClick={() => {
-          handleModeChange(DRAWING_MODES.LINE);
+          handleChangeMode(DRAWING_MODES.LINE);
         }}
         title="Draw lines"
       >
@@ -89,7 +78,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
       <Button
         className="px-4 py-1"
         selected={mode == DRAWING_MODES.ARC}
-        onClick={() => handleModeChange(DRAWING_MODES.ARC)}
+        onClick={() => handleChangeMode(DRAWING_MODES.ARC)}
         title="Draw arcs"
       >
         <Spline size={28} />
@@ -126,7 +115,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
               id="path-color-picker"
               defaultValue={paramsPath.color}
               onChange={(c) => {
-                handlePath({ color: c });
+                setPathParams({ color: c });
               }}
             />
           </label>
@@ -143,7 +132,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             max="100"
             step="10"
             onChange={(value: number) => {
-              handlePath({ opacity: value / 100 });
+              setPathParams({ opacity: value / 100 });
             }}
             style={{ width: "50px" }}
             isTouch={isTouch}

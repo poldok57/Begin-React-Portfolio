@@ -70,12 +70,12 @@ export const useCanvas = ({
   /**
    * Function to get the last picture in the history for undo action
    */
-  const previousPicture = (canvas: HTMLCanvasElement) => {
-    if (canvasRef.current === null) {
+  const previousPicture = (ctx: CanvasRenderingContext2D | null) => {
+    if (ctx === null) {
       return;
     }
     deleteLastDesignElement();
-    refreshCanvas(canvas, false);
+    refreshCanvas(ctx, false);
   };
 
   /**
@@ -390,7 +390,7 @@ export const useCanvas = ({
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
       if (canvasRef.current) {
-        refreshCanvas(canvasRef.current, false);
+        refreshCanvas(contextRef.current, false);
       }
 
       mouseOnCtrlPanel.current = false;
@@ -435,7 +435,7 @@ export const useCanvas = ({
         break;
       case DRAWING_MODES.UNDO:
         clearTemporyCanvas();
-        previousPicture(canvasRef.current);
+        previousPicture(contextRef.current);
         break;
       case DRAWING_MODES.ABORT:
         const mode = drawingRef.current.actionAbort();

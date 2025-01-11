@@ -1,42 +1,29 @@
-import { useRef } from "react";
 import { inputRangeVariants } from "@/styles/input-variants";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
 import { ColorPicker } from "@/components/atom/ColorPicker";
+import { useDrawingContext } from "@/context/DrawingContext";
 import {
-  ParamsGeneral,
   DRAWING_MODES,
-  GroupParams,
   isDrawingLine,
   isDrawingFreehand,
   isDrawingSelect,
-  Params,
   isDrawingShape,
 } from "@/lib/canvas/canvas-defines";
 import { cn } from "@/lib/utils/cn";
 
 interface DrawControlGeneralProps {
-  mode: string;
-  handleParamChange: (params: GroupParams) => void;
-  paramsGeneral: ParamsGeneral;
-  setGeneralColor: (color: string) => void;
   setFilled: (filled: boolean) => void;
   isTouch?: boolean;
 }
 
 export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
-  mode,
-  handleParamChange,
-  paramsGeneral,
-  setGeneralColor,
   setFilled,
   isTouch = false,
 }) => {
-  const paramsGeneralRef = useRef(paramsGeneral);
-  const handleGeneral = (param: Params) => {
-    paramsGeneralRef.current = { ...paramsGeneralRef.current, ...param };
-    handleParamChange({ general: paramsGeneralRef.current });
-  };
+  const { mode, drawingParams, setGeneralParams } = useDrawingContext();
+
+  const paramsGeneral = drawingParams.general;
 
   return (
     <>
@@ -64,8 +51,8 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             width={isTouch ? 50 : 40}
             defaultValue={paramsGeneral.color}
             onChange={(color) => {
-              handleGeneral({ color: color });
-              setGeneralColor(color);
+              setGeneralParams({ color: color });
+              // setGeneralColor(color);
             }}
           />
         </label>
@@ -74,7 +61,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
           label="Line width"
           className={inputRangeVariants({ width: "24", size: "sm" })}
           value={paramsGeneral.lineWidth}
-          onChange={(value: number) => handleGeneral({ lineWidth: value })}
+          onChange={(value: number) => setGeneralParams({ lineWidth: value })}
           min="2"
           max="32"
           step="2"
@@ -88,7 +75,9 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
           min="5"
           max="100"
           step="5"
-          onChange={(value: number) => handleGeneral({ opacity: value / 100 })}
+          onChange={(value: number) =>
+            setGeneralParams({ opacity: value / 100 })
+          }
           isTouch={isTouch}
         />
         <label
@@ -109,7 +98,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             id="toggle-filled"
             defaultChecked={paramsGeneral.filled}
             onChange={(event) => {
-              handleGeneral({ filled: event.target.checked });
+              setGeneralParams({ filled: event.target.checked });
               setFilled(event.target.checked);
             }}
           />

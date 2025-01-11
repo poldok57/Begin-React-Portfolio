@@ -9,10 +9,6 @@ import {
   DRAWING_MODES,
   isDrawingSelect,
   isDrawingShape,
-  AllParams,
-  GroupParams,
-  EventDetail,
-  EventModeAction,
   isDrawingLine,
 } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
@@ -20,7 +16,6 @@ import { DrawControlShape } from "./DrawControlShape";
 import { DrawControlLine } from "./DrawControlLine";
 import { DrawControlArrow } from "./DrawControlArrow";
 import { DrawControlGeneral } from "./DrawControlGeneral";
-// import { eraseHistory } from "../../lib/canvas/canvas-history";
 
 import { alertMessage } from "../alert-messages/alertMessage";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
@@ -32,63 +27,35 @@ import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { Search, MoveUpRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { useDrawingContext } from "@/context/DrawingContext";
+interface DrawControlProps {}
 
-interface DrawControlProps {
-  setParams: (params: GroupParams) => void;
-  mode: string;
-  setMode: (mode: string) => void;
-  // changeMode: (mode: string) => void;
-  drawingParams: AllParams;
-}
+export const DrawControl: React.FC<DrawControlProps> = ({}) => {
+  const {
+    drawingParams,
+    setDrawingParams,
+    setMode,
+    mode,
+    addEventDetail,
+    addEventAction,
+    handleChangeMode,
+    handleOpacity,
+    setFilled,
+    isFilled,
+    withText,
+    lockRatio,
+    setLockRatio,
+    setGeneralColor,
+    getGeneralColor,
+  } = useDrawingContext();
 
-export const DrawControl: React.FC<DrawControlProps> = ({
-  setParams,
-  mode,
-  setMode,
-  // changeMode,
-  drawingParams,
-}) => {
   const modeRef = useRef(mode);
-  const [withText, setWithText] = useState(false);
-  const [lockRatio, setLockRatio] = useState(drawingParams.lockRatio);
-  //  const [generalColor, setGeneralColor] = useState(drawingParams.general.color);
 
-  const memoGenralColorRef = useRef(drawingParams.general.color);
-  const setGeneralColor = (color: string) => {
-    memoGenralColorRef.current = color;
-  };
-  const getGeneralColor = () => {
-    return memoGenralColorRef.current;
-  };
-  const [filled, setFilled] = useState(drawingParams.general.filled ?? false);
-  const isFilled = () => {
-    return filled;
-  };
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
   const saveFormatRef = useRef("png");
   const [isTouch, setIsTouch] = useState(false);
 
-  const {
-    eraseDesignElement,
-    selectedDesignElement,
-    getSelectedDesignElement,
-  } = useDesignStore.getState();
-
-  const addEvent = (detail: EventDetail) => {
-    const event = new CustomEvent("modeChanged", detail);
-    document.dispatchEvent(event);
-  };
-  const addEventDetail = (detail: EventModeAction) => {
-    addEvent({ detail } as EventDetail);
-  };
-
-  const addEventAction = (action: string) => {
-    addEventDetail({ mode: DRAWING_MODES.ACTION, action });
-  };
-  const addEventMode = (mode: string) => {
-    addEventDetail({ mode });
-  };
   const addEventSaveFile = (
     action: string,
     filename: string,
@@ -103,6 +70,11 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       ...(name ? { name } : {}),
     });
   };
+  const {
+    eraseDesignElement,
+    selectedDesignElement,
+    getSelectedDesignElement,
+  } = useDesignStore.getState();
 
   const handleConfirmReset = () => {
     alertMessage("Reset confirmed");
@@ -114,20 +86,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     eraseDesignElement();
   };
 
-  const handleParamChange = (newParams: GroupParams) => {
-    setParams(newParams);
-    addEventDetail({ mode: DRAWING_MODES.CHANGE });
-  };
-  const handleOpacity = (value: number) => {
-    drawingParams.general.opacity = value / 100;
-    handleParamChange({ general: drawingParams.general });
-  };
-
-  const handleModeChange = (newMode: string) => {
-    setMode(newMode);
-    addEventMode(newMode);
-  };
-
   const handleImage = (mode: string) => {
     setMode(DRAWING_MODES.IMAGE);
     addEventAction(mode);
@@ -136,19 +94,12 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const handleSelectZone = () => {
     if (mode !== DRAWING_MODES.SELECT) {
       // active selection mode
-      handleModeChange(DRAWING_MODES.SELECT);
-      handleChangeRatio(false);
+      handleChangeMode(DRAWING_MODES.SELECT);
+      setLockRatio(false);
       return;
     }
     // reselect zone
     addEventAction(DRAWING_MODES.SELECT_AREA);
-  };
-
-  const handleChangeRatio = (ratio: boolean) => {
-    // alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
-    setParams({ lockRatio: ratio });
-    setLockRatio(ratio);
-    addEventMode(DRAWING_MODES.CHANGE);
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -201,7 +152,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   useEffect(() => {
     if (selectedDesignElement) {
       const newMode = updateParamFromElement(
-        setParams,
+        setDrawingParams,
         setGeneralColor,
         setFilled,
         getSelectedDesignElement
@@ -230,6 +181,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     };
   }, [mode]);
 
+  // console.log("render controle mode", mode);
+
   return useMemo(() => {
     return (
       <div
@@ -247,7 +200,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           <Button
             className="px-4"
             selected={mode == DRAWING_MODES.DRAW}
-            onClick={() => handleModeChange(DRAWING_MODES.DRAW)}
+            onClick={() => handleChangeMode(DRAWING_MODES.DRAW)}
           >
             Draw
           </Button>
@@ -255,7 +208,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             className="px-4 py-1"
             selected={isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW}
             onClick={() => {
-              handleModeChange(DRAWING_MODES.LINE);
+              handleChangeMode(DRAWING_MODES.LINE);
             }}
             title="Draw lines"
           >
@@ -264,7 +217,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           <Button
             className="px-4 py-1"
             selected={mode == DRAWING_MODES.ARROW}
-            onClick={() => handleModeChange(DRAWING_MODES.ARROW)}
+            onClick={() => handleChangeMode(DRAWING_MODES.ARROW)}
             title="Arrow"
           >
             <MoveUpRight size={28} />
@@ -272,7 +225,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           <Button
             className="px-4"
             selected={mode == DRAWING_MODES.TEXT}
-            onClick={() => handleModeChange(DRAWING_MODES.TEXT)}
+            onClick={() => handleChangeMode(DRAWING_MODES.TEXT)}
           >
             Text
           </Button>
@@ -280,7 +233,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             className="px-4 bg-teal-400 hover:bg-teal-500"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => {
-              handleModeChange(DRAWING_MODES.ERASE);
+              handleChangeMode(DRAWING_MODES.ERASE);
               handleOpacity(100);
             }}
             title="Erase"
@@ -307,14 +260,14 @@ export const DrawControl: React.FC<DrawControlProps> = ({
                 id="toggle-ratio"
                 defaultChecked={drawingParams.lockRatio}
                 onChange={(event) => {
-                  handleChangeRatio(event.target.checked);
+                  setLockRatio(event.target.checked);
                 }}
               />
             </label>
           )}
           <div className="flex justify-end items-center w-full">
             <button
-              onClick={() => handleModeChange(DRAWING_MODES.FIND)}
+              onClick={() => handleChangeMode(DRAWING_MODES.FIND)}
               className={cn(
                 "btn btn-sm btn-circle transition hover:bg-accent",
                 {
@@ -327,59 +280,20 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             </button>
           </div>
         </div>
-        <DrawControlSelect
-          mode={mode}
-          setMode={setMode}
-          handleImage={handleImage}
-          handleChangeRatio={handleChangeRatio}
-          handleParamChange={handleParamChange}
-          drawingParams={drawingParams}
-          addEventDetail={addEventDetail}
-          isTouch={isTouch}
-        />
+        <DrawControlSelect handleImage={handleImage} isTouch={isTouch} />
         <DrawControlText
-          mode={mode}
           hidden={
             mode != DRAWING_MODES.TEXT &&
             (withText === false || !isDrawingShape(mode))
           }
-          drawingParams={drawingParams}
-          handleTextParams={handleParamChange}
           isTouch={isTouch}
         />
-        <DrawControlGeneral
-          mode={mode}
-          handleParamChange={handleParamChange}
-          paramsGeneral={drawingParams.general}
-          setGeneralColor={setGeneralColor}
-          setFilled={setFilled}
-          isTouch={isTouch}
-        />
+        <DrawControlGeneral setFilled={setFilled} isTouch={isTouch} />
         {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
-          <DrawControlLine
-            mode={mode}
-            handleModeChange={setMode}
-            paramsPath={drawingParams.path}
-            addEventAction={addEventAction}
-            handleParamChange={handleParamChange}
-            getGeneralColor={getGeneralColor}
-            isFilled={isFilled}
-          />
+          <DrawControlLine />
         )}
-        {mode === DRAWING_MODES.ARROW && (
-          <DrawControlArrow
-            paramsArrow={drawingParams.arrow}
-            handleParamChange={handleParamChange}
-          />
-        )}
-        <DrawControlShape
-          mode={mode}
-          drawingParams={drawingParams}
-          handleParamChange={handleParamChange}
-          handleModeChange={handleModeChange}
-          setWithText={setWithText}
-          isTouch={isTouch}
-        />
+        {mode === DRAWING_MODES.ARROW && <DrawControlArrow isTouch={isTouch} />}
+        <DrawControlShape isTouch={isTouch} />
 
         <div className="flex relative gap-4 m-auto">
           <Button
@@ -436,5 +350,5 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, lockRatio, getGeneralColor(), filled]);
+  }, [mode, withText, drawingParams, lockRatio, getGeneralColor(), isFilled()]);
 };

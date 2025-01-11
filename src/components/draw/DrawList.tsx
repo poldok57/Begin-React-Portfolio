@@ -9,15 +9,15 @@ import {
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
+import { useDrawingContext } from "@/context/DrawingContext";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 export const DrawList = ({
   canvasRef,
-  canvasTemporyRef,
-  setMode,
+  temporyCanvasRef,
 }: {
-  canvasRef: React.RefObject<HTMLCanvasElement> | null;
-  canvasTemporyRef: React.RefObject<HTMLCanvasElement> | null;
-  setMode: (mode: string) => void;
+  canvasRef: React.RefObject<HTMLCanvasElement | null | undefined>;
+  temporyCanvasRef: React.RefObject<HTMLCanvasElement | null | undefined>;
 }) => {
   const {
     designElements,
@@ -29,19 +29,25 @@ export const DrawList = ({
     selectedDesignElement,
   } = useDesignStore();
 
+  const { setMode } = useDrawingContext();
+
   const onSelectElement = (elementId: string) => {
     setSelectedDesignElement(elementId);
 
     setMode(DRAWING_MODES.RELOAD);
   };
 
+  const context = canvasRef.current?.getContext("2d", {
+    willReadFrequently: true,
+  });
+
   const refresh = () => {
-    if (canvasTemporyRef?.current) {
-      const tmpcan = canvasTemporyRef.current;
-      const tempCtx = tmpcan.getContext("2d");
-      tempCtx?.clearRect(0, 0, tmpcan.width, tmpcan.height);
+    const temporyCtx = temporyCanvasRef.current?.getContext("2d");
+    if (temporyCtx) {
+      clearCanvasByCtx(temporyCtx);
     }
-    refreshCanvas(canvasRef?.current || null, true);
+
+    refreshCanvas(context, true);
   };
 
   const handleDeleteElement = (elementId: string) => {
