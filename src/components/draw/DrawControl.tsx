@@ -40,13 +40,10 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
     addEventAction,
     handleChangeMode,
     handleOpacity,
-    setFilled,
-    isFilled,
     withText,
-    lockRatio,
     setLockRatio,
-    setGeneralColor,
-    getGeneralColor,
+    reloadControl,
+    setReloadControl,
   } = useDrawingContext();
 
   const modeRef = useRef(mode);
@@ -75,6 +72,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
     selectedDesignElement,
     getSelectedDesignElement,
   } = useDesignStore.getState();
+
+  const selectedElementRef = useRef(selectedDesignElement);
 
   const handleConfirmReset = () => {
     alertMessage("Reset confirmed");
@@ -150,16 +149,17 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
 
   // update controle panel when an element is selected
   useEffect(() => {
-    if (selectedDesignElement) {
+    if (selectedDesignElement !== selectedElementRef.current) {
       const newMode = updateParamFromElement(
         setDrawingParams,
-        setGeneralColor,
-        setFilled,
         getSelectedDesignElement
       );
       if (newMode) {
         setMode(newMode);
       }
+      setReloadControl();
+      alertMessage("selected element changed: " + newMode);
+      selectedElementRef.current = selectedDesignElement;
     }
   }, [selectedDesignElement]);
 
@@ -180,8 +180,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [mode]);
-
-  // console.log("render controle mode", mode);
 
   return useMemo(() => {
     return (
@@ -255,11 +253,12 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
               htmlFor="toggle-ratio"
               className="flex flex-col justify-center items-center text-sm text-nowrap"
             >
-              {lockRatio ? "Ratio locked" : "Lock ratio"}
+              {drawingParams.lockRatio ? "Ratio locked" : "Lock ratio"}
               <ToggleSwitch
                 id="toggle-ratio"
                 defaultChecked={drawingParams.lockRatio}
                 onChange={(event) => {
+                  // setDrawingParams({ lockRatio: event.target.checked });
                   setLockRatio(event.target.checked);
                 }}
               />
@@ -288,7 +287,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
           }
           isTouch={isTouch}
         />
-        <DrawControlGeneral setFilled={setFilled} isTouch={isTouch} />
+        <DrawControlGeneral isTouch={isTouch} />
         {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
           <DrawControlLine />
         )}
@@ -350,5 +349,5 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, lockRatio, getGeneralColor(), isFilled()]);
+  }, [mode, withText, drawingParams, reloadControl, drawingParams.lockRatio]);
 };

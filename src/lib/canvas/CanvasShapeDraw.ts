@@ -430,6 +430,7 @@ export class CanvasShapeDraw {
 
     // Draw the border if needed
     if (square.shape?.withBorder && square.border) {
+      console.log(type, "draw border", square.border);
       if (!withButton) {
         ctx.globalAlpha = square.border.opacity;
       }

@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import { inputRangeVariants } from "../../styles/input-variants";
 import { RangeInput } from "../atom/RangeInput";
 import { Button } from "../atom/Button";
@@ -19,44 +18,22 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   const {
     mode,
     addEventAction,
-    handleChangeParams,
     handleChangeMode,
     setPathParams,
     drawingParams,
-    isFilled,
-    getGeneralColor,
   } = useDrawingContext();
   const paramsPath: ParamsPath = drawingParams.path;
-  const [withPathFilled, setWithPathFilledState] = useState(isFilled());
 
-  const setWithPathFilled = (value: boolean) => {
-    if (value) {
-      const color = getGeneralColor();
-      if (paramsPath.opacity === undefined) {
-        paramsPath.opacity = 1;
-      }
-      paramsPath.color = color;
-    } else {
-      paramsPath.color = undefined;
-      paramsPath.opacity = undefined;
-    }
-    setWithPathFilledState(value);
-
-    handleChangeParams({ path: paramsPath });
-  };
-
-  useEffect(() => {
-    if (mode === DRAWING_MODES.END_PATH) {
-      handleChangeMode(DRAWING_MODES.LINE);
-
-      setWithPathFilledState(false);
-    }
-  }, [mode]);
-
-  useEffect(() => {
-    const filled = isFilled();
-    setWithPathFilled(filled);
-  }, [isFilled()]);
+  if (drawingParams.general.filled && paramsPath.color === undefined) {
+    paramsPath.color = drawingParams.general.color;
+    paramsPath.opacity = 1;
+    setPathParams(paramsPath);
+  }
+  if (!drawingParams.general.filled && paramsPath.color !== undefined) {
+    paramsPath.color = undefined;
+    paramsPath.opacity = undefined;
+    setPathParams(paramsPath);
+  }
 
   return (
     <div
@@ -101,10 +78,10 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
         htmlFor="toggle-border"
         className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
       >
-        {withPathFilled ? "Filled path: " : "Not filled"}
+        {drawingParams.general.filled ? "Filled path: " : "Not filled"}
       </label>
 
-      {withPathFilled && (
+      {drawingParams.general.filled && (
         <>
           <label
             htmlFor="path-color-picker"

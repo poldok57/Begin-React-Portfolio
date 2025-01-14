@@ -1,4 +1,9 @@
-import React, { ReactNode, ChangeEventHandler } from "react";
+import React, {
+  ReactNode,
+  ChangeEventHandler,
+  useEffect,
+  useState,
+} from "react";
 import clsx from "clsx";
 
 interface ToggleSwitchProps {
@@ -21,6 +26,16 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   className,
   ...props
 }) => {
+  const [checked, setChecked] = useState(defaultChecked);
+  useEffect(() => {
+    setChecked(defaultChecked);
+  }, [defaultChecked]);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChecked(event.target.checked);
+    onChange?.(event);
+  };
+
   return (
     <div {...props} className={className}>
       <label className="inline-flex relative items-center ml-1 cursor-pointer">
@@ -29,8 +44,8 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           alt="toggle switch input"
           type="checkbox"
           className="sr-only peer"
-          onChange={onChange}
-          defaultChecked={defaultChecked}
+          onChange={handleChange}
+          checked={checked}
         />
         <div
           className={clsx(

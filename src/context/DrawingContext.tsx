@@ -24,16 +24,13 @@ interface DrawingContextProps {
   setArrowParams: (param: Params) => void;
   setShapeParams: (param: Params) => void;
   setBorderParams: (param: Params) => void;
-  setLockRatio: (ratio: boolean) => void;
   setMode: (mode: string) => void;
   mode: string;
-  isFilled: () => boolean;
-  setFilled: (filled: boolean) => void;
   withText: boolean;
   setWithText: (withText: boolean) => void;
-  lockRatio: boolean;
-  setGeneralColor: (color: string) => void;
-  getGeneralColor: () => string;
+  setLockRatio: (ratio: boolean) => void;
+  reloadControl: number;
+  setReloadControl: () => void;
 }
 
 const DrawingContext = createContext<DrawingContextProps | undefined>(
@@ -47,28 +44,7 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const drawingParamsRef = useRef<AllParams>(DEFAULT_PARAMS);
 
-  const [filled, setFilled] = useState(
-    drawingParamsRef.current.general.filled ?? false
-  );
-  const isFilled = () => {
-    return filled;
-  };
-
   const [withText, setWithText] = useState(false);
-
-  const [lockRatio, setLockRatioState] = useState(
-    drawingParamsRef.current.lockRatio
-  );
-
-  // const memoGenralColorRef = useRef(drawingParamsRef.current.general.color);
-  const setGeneralColor = (color: string) => {
-    drawingParamsRef.current.general.color = color;
-    // memoGenralColorRef.current = color;
-  };
-  const getGeneralColor = () => {
-    return drawingParamsRef.current.general.color;
-    // return memoGenralColorRef.current;
-  };
 
   const setDrawingParams = (params: Partial<AllParams>) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...params };
@@ -141,10 +117,14 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const setLockRatio = (ratio: boolean) => {
-    // alertMessage("Locked ratio : " + (ratio ? "ON" : "off"));
     setDrawingParams({ lockRatio: ratio });
-    setLockRatioState(ratio);
     addEventMode(DRAWING_MODES.CHANGE);
+  };
+
+  const [reloadControl, setReloadControlState] = useState(0);
+
+  const setReloadControl = () => {
+    setReloadControlState(reloadControl + 1);
   };
 
   return (
@@ -167,14 +147,11 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
         setTextParams,
         setMode,
         mode,
-        isFilled,
-        setFilled,
         withText,
         setWithText,
-        lockRatio,
         setLockRatio,
-        setGeneralColor,
-        getGeneralColor,
+        reloadControl,
+        setReloadControl,
       }}
     >
       {children}

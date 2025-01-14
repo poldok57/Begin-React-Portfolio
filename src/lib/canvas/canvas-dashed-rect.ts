@@ -158,6 +158,7 @@ export const drawDashedRedRectangle = (
   ctx.strokeStyle = "rgba(250, 60, 60, 0.80)";
 
   drawRoundedRect(ctx, area, 4);
+  ctx.stroke();
 
   ctx.globalAlpha = 1;
   ctx.setLineDash([]);

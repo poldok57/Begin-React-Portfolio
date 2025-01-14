@@ -18,7 +18,7 @@ export class drawFindElement extends drawingHandler {
   private designElements: ThingsToDraw[];
   private setSelectedDesignElement: (elementId: string) => void;
   private refreshCanvas: (
-    canvas: HTMLCanvasElement | null,
+    ctx: CanvasRenderingContext2D | null | undefined,
     withSelected?: boolean
   ) => void;
 
@@ -62,7 +62,7 @@ export class drawFindElement extends drawingHandler {
   refreshDrawing() {
     // console.log("refreshDrawing free curve");
     this.clearTemporyCanvas();
-    this.refreshCanvas(this.mCanvas, true);
+    this.refreshCanvas(this.context, true);
   }
 
   hightLightDrawing() {}
@@ -126,6 +126,7 @@ export class drawFindElement extends drawingHandler {
           element.rotation
         )
       ) {
+        // console.log("Find Element actionMouseDown", element.type, element.id);
         this.setSelectedDesignElement(element.id);
 
         return {

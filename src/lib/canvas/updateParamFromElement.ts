@@ -11,18 +11,17 @@ import {
 
 export const updateParamFromElement = (
   setParams: (params: GroupParams) => void,
-  setGeneralColor: (color: string) => void,
-  setFilled: (filled: boolean) => void,
   getSelectedElement: () => ThingsToDraw | null
 ): string | null => {
   const selectedElement: CanvasPointsData | ShapeDefinition | null | undefined =
     getSelectedElement();
 
   if (!selectedElement) {
+    console.log("update ParamFromElement", "NO selectedElement");
     return null;
   }
 
-  // console.log("updateParamFromElement", selectedElement);
+  // console.log("update ParamFromElement", selectedElement);
 
   const general: ParamsGeneral = selectedElement.general ?? {
     lineWidth: 0,
@@ -85,10 +84,11 @@ export const updateParamFromElement = (
   }
   if (selectedElement.type !== DRAW_TYPE.TEXT) {
     setParams({ general: selectedElement.general });
-    setGeneralColor(general.color);
-    setFilled(general.filled ?? false);
   }
   // console.log("selectedElement.type", selectedElement.type);
   setParams({ mode: selectedElement.type });
+  setParams({
+    lockRatio: selectedElement.type === DRAW_TYPE.IMAGE ? true : false,
+  });
   return selectedElement.type;
 };

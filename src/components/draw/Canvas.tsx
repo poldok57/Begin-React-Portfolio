@@ -25,14 +25,10 @@ export const Canvas: React.FC<CanvasProps> = ({
   canvasMouseRef,
   background,
 }) => {
-  const { drawingParams, setDrawingParams, getDrawingParams } =
-    useDrawingContext();
+  const { drawingParams, setMode, getDrawingParams } = useDrawingContext();
   const { scale, setScale, setSelectedDesignElement, refreshCanvas } =
     useDesignStore();
 
-  const setMode = (mode: string) => {
-    setDrawingParams({ mode });
-  };
   const changeScale = (scale: number) => {
     setScale(scale);
     if (canvasRef.current) {

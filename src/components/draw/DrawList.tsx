@@ -72,7 +72,7 @@ export const DrawList = ({
 
   return (
     <div
-      onMouseDown={() => setMode(DRAWING_MODES.PAUSE)}
+      // onMouseDown={() => setMode(DRAWING_MODES.PAUSE)}
       className="flex flex-col gap-3 py-2 w-44 rounded-md border-2 bg-background border-accent"
     >
       {designElements.length === 0 ? (

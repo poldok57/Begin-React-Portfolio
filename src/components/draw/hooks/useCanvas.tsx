@@ -591,6 +591,7 @@ export const useCanvas = ({
       drawingRef.current?.setScale(scale);
     }
     if (mouseResult?.changeMode) {
+      // console.log("changeMode", mouseResult.changeMode);
       setMode(mouseResult.changeMode);
     }
     if (mouseResult?.pointer && canvasTemporyRef.current) {

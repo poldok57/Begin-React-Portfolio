@@ -13,15 +13,14 @@ import {
 import { cn } from "@/lib/utils/cn";
 
 interface DrawControlGeneralProps {
-  setFilled: (filled: boolean) => void;
   isTouch?: boolean;
 }
 
 export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
-  setFilled,
   isTouch = false,
 }) => {
-  const { mode, drawingParams, setGeneralParams } = useDrawingContext();
+  const { mode, drawingParams, setGeneralParams, setReloadControl } =
+    useDrawingContext();
 
   const paramsGeneral = drawingParams.general;
 
@@ -52,7 +51,6 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             defaultValue={paramsGeneral.color}
             onChange={(color) => {
               setGeneralParams({ color: color });
-              // setGeneralColor(color);
             }}
           />
         </label>
@@ -99,7 +97,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             defaultChecked={paramsGeneral.filled}
             onChange={(event) => {
               setGeneralParams({ filled: event.target.checked });
-              setFilled(event.target.checked);
+              setReloadControl();
             }}
           />
         </label>
