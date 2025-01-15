@@ -43,7 +43,6 @@ export const DRAWING_MODES = {
   PAUSE: "pause",
   LINE: "line",
   ARC: "arc",
-  END_PATH: "endPath",
   ERASE: "erase",
   RELOAD: "reload",
   FIND: "find",
@@ -66,7 +65,6 @@ const LINE_MODES = [
   DRAWING_MODES.ARC,
   DRAWING_MODES.ARROW,
   DRAWING_MODES.LINES_PATH,
-  DRAWING_MODES.END_PATH,
 ];
 const FREEHAND_MODES = [
   DRAWING_MODES.DRAW,

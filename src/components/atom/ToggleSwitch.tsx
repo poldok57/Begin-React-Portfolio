@@ -19,16 +19,19 @@ interface ToggleSwitchProps {
 export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   children = null,
   onChange,
-  defaultChecked,
+  defaultChecked = false,
   color = "blue",
   id,
   initialColor = "gray",
   className,
   ...props
 }) => {
-  const [checked, setChecked] = useState(defaultChecked);
+  const [checked, setChecked] = useState<boolean>(defaultChecked);
+
   useEffect(() => {
-    setChecked(defaultChecked);
+    if (defaultChecked !== undefined) {
+      setChecked(defaultChecked);
+    }
   }, [defaultChecked]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -40,6 +40,7 @@ export class drawLine extends drawingHandler {
   private finishedDrawing: boolean = false;
   private finishedDrawingStep1: boolean = false;
   private toDelete: boolean = false;
+  private modificationMode: boolean = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -152,6 +153,7 @@ export class drawLine extends drawingHandler {
     this.finishedDrawing = false;
     this.toDelete = false;
     this.line.eraseStartCoordinates();
+    this.modificationMode = false;
   };
 
   setDraw(draw: CanvasPointsData) {
@@ -162,6 +164,7 @@ export class drawLine extends drawingHandler {
 
     this.finishedDrawing = true;
     this.finishedDrawingStep1 = true;
+    this.modificationMode = true;
   }
   getDraw(): CanvasPointsData | null {
     return this.path?.getData() as CanvasPointsData | null;
@@ -402,7 +405,9 @@ export class drawLine extends drawingHandler {
           this.validatePath();
           return {
             pointer: "move",
-            changeMode: DRAWING_MODES.END_PATH,
+            changeMode: this.modificationMode
+              ? DRAWING_MODES.FIND
+              : DRAWING_MODES.LINE,
           };
         case BORDER.ON_BUTTON_DELETE:
           this.toDelete = true;
@@ -492,7 +497,9 @@ export class drawLine extends drawingHandler {
           this.hasBeenTouched = true;
           return {
             toReset: false,
-            changeMode: DRAWING_MODES.END_PATH,
+            changeMode: this.modificationMode
+              ? DRAWING_MODES.FIND
+              : DRAWING_MODES.LINE,
           };
         case BORDER.ON_BUTTON_DELETE:
           this.toDelete = true;
@@ -628,7 +635,9 @@ export class drawLine extends drawingHandler {
       this.saveLastDrawing(false);
 
       // console.log("actionValid", this.getType());
-      this.setMode(DRAWING_MODES.END_PATH);
+      this.setMode(
+        this.modificationMode ? DRAWING_MODES.FIND : DRAWING_MODES.LINE
+      );
     }
   }
 

@@ -33,6 +33,7 @@ export class drawFreehand extends drawingHandler {
     lineWidth: 1,
     opacity: 1,
   };
+  private modificationMode: boolean = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -80,6 +81,7 @@ export class drawFreehand extends drawingHandler {
 
     this.setDrawing(false);
     this.finishedDrawing = true;
+    this.modificationMode = true;
   }
 
   getDraw(): CanvasPointsData | null {
@@ -243,7 +245,9 @@ export class drawFreehand extends drawingHandler {
 
           event.stopPropagation();
           return {
-            changeMode: DRAWING_MODES.DRAW,
+            changeMode: this.modificationMode
+              ? DRAWING_MODES.FIND
+              : DRAWING_MODES.DRAW,
           };
         case BORDER.ON_BUTTON_DELETE: {
           const deleteId = this.freeCurve.getDataId();

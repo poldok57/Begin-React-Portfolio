@@ -436,6 +436,6 @@ export class CanvasShape extends CanvasDrawableObject {
     if (this.data.shape?.withBorder && this.data.border) {
       large = this.data.border.lineWidth / 2 + (this.data.border.interval || 0);
     }
-    drawDashedRedRectangle(ctx, size, 0.8, 0, large);
+    drawDashedRedRectangle(ctx, size, 0.8, this.data.rotation, large);
   }
 }
