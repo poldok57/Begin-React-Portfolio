@@ -24,14 +24,14 @@ import {
   makeCornerTransparent,
   getTopCornerColors,
 } from "./image-transparency";
-import { useDesignStore } from "@/lib/stores/design";
+import { getImageDataURL } from "@/lib/stores/design";
 import { scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
+import { changeBlack } from "./canvas-change-black";
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
   private previousTransparency: number = 0;
-  private getImageDataURL: (id: string) => string | null;
   private drawer: CanvasShapeDraw;
 
   constructor() {
@@ -48,7 +48,6 @@ export class CanvasShape extends CanvasDrawableObject {
       },
     };
     this.drawer = new CanvasShapeDraw(this.data);
-    this.getImageDataURL = useDesignStore.getState().getImageDataURL;
   }
 
   setScale(scale: number) {
@@ -123,12 +122,12 @@ export class CanvasShape extends CanvasDrawableObject {
         if (context) {
           // load the image in the main canvas
           this.setCanvasImageContext(context);
+          let trCanvas = null;
+
           if (this.data.shape?.transparency) {
             // Get the color of the top-left and top-right corners
 
             const topCornerColors = getTopCornerColors(context);
-
-            let trCanvas = null;
 
             if (topCornerColors === null) {
               trCanvas = makeWhiteTransparent(
@@ -144,8 +143,13 @@ export class CanvasShape extends CanvasDrawableObject {
             }
             // save the transparency image in secondary canvas
             this.previousTransparency = this.data.shape.transparency;
-            this.data.canvasImageTransparent = trCanvas;
+          } else if (this.data.shape?.blackChangeColor !== undefined) {
+            trCanvas = changeBlack(
+              context,
+              this.data.shape.blackChangeColor ?? "#ff0000"
+            );
           }
+          this.data.canvasImageTransparent = trCanvas;
         } else {
           setTimeout(() => {}, 10);
         }
@@ -173,7 +177,7 @@ export class CanvasShape extends CanvasDrawableObject {
 
     if (this.data.type === DRAWING_MODES.IMAGE) {
       if (!data.dataURL) {
-        data.dataURL = this.getImageDataURL(data.id);
+        data.dataURL = getImageDataURL(data.id);
       }
       if (data.dataURL) {
         await this.loadImage(data.id, data.dataURL);
@@ -219,13 +223,15 @@ export class CanvasShape extends CanvasDrawableObject {
     this.data.border = { ...data };
   }
   setDataShape(data: ParamsShape) {
-    // console.log("setDataShape", data);
     this.data.shape = { ...data };
     if (
       data?.transparency !== undefined &&
       data.transparency !== this.previousTransparency
     ) {
       this.transparencySelection(data.transparency);
+    }
+    if (data?.blackChangeColor !== undefined) {
+      this.changeBlackSelection(data.blackChangeColor);
     }
   }
   setDataText(data: ParamsText | undefined) {
@@ -287,15 +293,23 @@ export class CanvasShape extends CanvasDrawableObject {
           topCornerColors
         );
       }
-      if (this.data.shape) {
-        this.data.shape.transparency = delta;
-      } else {
-        this.data.shape = { transparency: delta };
-      }
+
+      this.data.shape = {
+        ...this.data.shape,
+        transparency: delta,
+      };
+
       this.previousTransparency = delta;
       return true;
     }
     return false;
+  }
+
+  changeBlackSelection(color: string) {
+    const context = this.data.canvasImageContext;
+    if (context) {
+      this.data.canvasImageTransparent = changeBlack(context, color);
+    }
   }
 
   setWithTurningButtons(value: boolean) {

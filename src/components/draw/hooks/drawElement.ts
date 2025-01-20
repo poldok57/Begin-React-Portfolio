@@ -31,9 +31,10 @@ export class drawElement extends drawingHandler {
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void
+    setMode: (mode: string) => void,
+    storeName?: string | null
   ) {
-    super(canvas, canvasContext, temporyCanvas, setMode);
+    super(canvas, canvasContext, temporyCanvas, setMode, storeName);
 
     this.fixed = false;
 

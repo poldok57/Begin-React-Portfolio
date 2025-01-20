@@ -17,6 +17,8 @@ const MAX_SIZE = 1200;
 const DEFAULT_WIDTH = 768;
 const DEFAULT_HEIGHT = 432;
 
+const STORE_NAME = "design-data-storage";
+
 export const Draw = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTemporyRef = useRef<HTMLCanvasElement>(null);
@@ -103,6 +105,7 @@ export const Draw = () => {
               canvasTemporyRef={canvasTemporyRef}
               canvasMouseRef={canvasMouseRef}
               background={background}
+              storeName={STORE_NAME}
             />
 
             {/* Width Control */}
@@ -203,6 +206,7 @@ export const Draw = () => {
           draggable={false}
         /> */}
         <DrawControlWP
+          storeName={STORE_NAME}
           withMinimize={true}
           style={{
             top: "40px",

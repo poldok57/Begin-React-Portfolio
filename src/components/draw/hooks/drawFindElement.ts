@@ -7,7 +7,6 @@ import {
   ThingsToDraw,
 } from "../../../lib/canvas/canvas-defines";
 import { showAllDashedRectangles } from "@/lib/canvas/showDrawElement";
-import { useDesignStore } from "@/lib/stores/design";
 import { isInsideSquare } from "@/lib/square-position";
 
 /**
@@ -26,16 +25,17 @@ export class drawFindElement extends drawingHandler {
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void
+    setMode: (mode: string) => void,
+    localStorageName?: string | null
   ) {
-    super(canvas, canvasContext, temporyCanvas, setMode);
+    super(canvas, canvasContext, temporyCanvas, setMode, localStorageName);
     this.extendedMouseArea = false;
 
     this.setSelectedDesignElement =
-      useDesignStore.getState().setSelectedDesignElement;
-    this.refreshCanvas = useDesignStore.getState().refreshCanvas;
+      this.designStore.getState().setSelectedDesignElement;
+    this.refreshCanvas = this.designStore.getState().refreshCanvas;
 
-    this.designElements = useDesignStore.getState().designElements;
+    this.designElements = this.designStore.getState().designElements;
   }
 
   initData(initData: AllParams): void {
@@ -45,7 +45,7 @@ export class drawFindElement extends drawingHandler {
   setType(type: string) {
     this.type = type;
     if (type === DRAWING_MODES.FIND) {
-      this.designElements = useDesignStore.getState().designElements;
+      this.designElements = this.designStore.getState().designElements;
     }
   }
 

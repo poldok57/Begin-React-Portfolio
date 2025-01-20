@@ -22,15 +22,19 @@ import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { ToggleSwitch } from "../atom/ToggleSwitch";
 import { DrawControlSelect } from "./DrawControlSelect";
 import { MutableRefObject } from "react";
-import { useDesignStore } from "@/lib/stores/design";
+import { useZustandDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { Search, MoveUpRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useDrawingContext } from "@/context/DrawingContext";
-interface DrawControlProps {}
+interface DrawControlProps {
+  storeName?: string | null;
+}
 
-export const DrawControl: React.FC<DrawControlProps> = ({}) => {
+export const DrawControl: React.FC<DrawControlProps> = ({
+  storeName = null,
+}) => {
   const {
     drawingParams,
     setDrawingParams,
@@ -71,7 +75,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({}) => {
     eraseDesignElement,
     selectedDesignElement,
     getSelectedDesignElement,
-  } = useDesignStore.getState();
+  } = useZustandDesignStore(storeName).getState();
 
   const selectedElementRef = useRef(selectedDesignElement);
 

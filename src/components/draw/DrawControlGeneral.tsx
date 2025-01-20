@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { inputRangeVariants } from "@/styles/input-variants";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
@@ -19,10 +20,28 @@ interface DrawControlGeneralProps {
 export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
   isTouch = false,
 }) => {
-  const { mode, drawingParams, setGeneralParams, setReloadControl } =
-    useDrawingContext();
+  const {
+    mode,
+    drawingParams,
+    setGeneralParams,
+    setReloadControl,
+    setShapeParams,
+  } = useDrawingContext();
 
   const paramsGeneral = drawingParams.general;
+  const [changeBlack, setChangeBlack] = useState(false);
+
+  useEffect(() => {
+    const cgtBlack =
+      isDrawingSelect(mode) &&
+      drawingParams.shape?.blackChangeColor !== undefined;
+
+    setChangeBlack(cgtBlack);
+    if (cgtBlack) {
+      setGeneralParams({ color: drawingParams.shape?.blackChangeColor });
+      paramsGeneral.color = drawingParams.shape?.blackChangeColor ?? "#0044ff";
+    }
+  }, [mode, drawingParams.shape?.blackChangeColor]);
 
   return (
     <>
@@ -39,7 +58,9 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
         <label
           htmlFor="draw-color-picker"
           className={cn("flex items-center justify-center gap-3", {
-            hidden: isDrawingSelect(mode) || mode === DRAWING_MODES.ERASE,
+            hidden:
+              (isDrawingSelect(mode) || mode === DRAWING_MODES.ERASE) &&
+              !changeBlack,
           })}
         >
           Color
@@ -51,6 +72,9 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             defaultValue={paramsGeneral.color}
             onChange={(color) => {
               setGeneralParams({ color: color });
+              if (changeBlack && isDrawingSelect(mode)) {
+                setShapeParams({ blackChangeColor: color });
+              }
             }}
           />
         </label>
@@ -97,6 +121,30 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             defaultChecked={paramsGeneral.filled}
             onChange={(event) => {
               setGeneralParams({ filled: event.target.checked });
+              setReloadControl();
+            }}
+          />
+        </label>
+        <label
+          htmlFor="toggle-black"
+          className={cn(
+            "flex flex-col gap-2 justify-center items-center font-xs",
+            {
+              hidden: !isDrawingSelect(mode),
+            }
+          )}
+        >
+          Black to color
+          <ToggleSwitch
+            id="toggle-black"
+            defaultChecked={changeBlack}
+            onChange={(event) => {
+              setChangeBlack(event.target.checked);
+              if (event.target.checked) {
+                setShapeParams({ blackChangeColor: paramsGeneral.color });
+              } else {
+                setShapeParams({ blackChangeColor: undefined });
+              }
               setReloadControl();
             }}
           />

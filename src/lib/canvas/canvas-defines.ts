@@ -115,7 +115,7 @@ export const mouseCircle: MouseCircle = {
   lineWidth: 25,
 };
 export type Params = {
-  [key: string]: string | number | boolean | null; // Exemple avec une union de types
+  [key: string]: string | number | boolean | null | undefined; // Exemple avec une union de types
 };
 
 export type EventModeAction = {
@@ -145,6 +145,7 @@ export type ParamsShape = {
   withBorder?: boolean;
   transparency?: number;
   blackWhite?: boolean;
+  blackChangeColor?: string;
 };
 export type ParamsText = {
   text: string;

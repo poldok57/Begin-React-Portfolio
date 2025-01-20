@@ -24,7 +24,7 @@ import { drawFindElement } from "./drawFindElement";
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
-import { useDesignStore } from "@/lib/stores/design";
+import { useZustandDesignStore } from "@/lib/stores/design";
 import { DesignElement } from "@/components/room/types";
 import { Coordinate } from "@/lib/canvas/types";
 
@@ -37,6 +37,7 @@ interface DrawCanvasProps {
   mode: string;
   setMode: (mode: string) => void;
   getParams: () => AllParams;
+  storeName?: string | null;
 }
 // Draw on Canvas
 export const useCanvas = ({
@@ -46,6 +47,7 @@ export const useCanvas = ({
   mode,
   setMode,
   getParams,
+  storeName = null,
 }: DrawCanvasProps) => {
   useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
@@ -65,8 +67,9 @@ export const useCanvas = ({
     deleteLastDesignElement,
     refreshCanvas,
     getSelectedDesignElement,
+    deleteDesignElement,
     // setSelectedDesignElement,
-  } = useDesignStore.getState();
+  } = useZustandDesignStore(storeName).getState();
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -138,7 +141,8 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode
+          setMode,
+          storeName
         );
       }
       newHandler = true; // new initialization for color and width
@@ -148,7 +152,8 @@ export const useCanvas = ({
         canvasRef.current,
         contextRef.current,
         canvasTemporyRef.current,
-        setMode
+        setMode,
+        storeName
       );
       newHandler = true;
       drawingHdl = drawingRef.current;
@@ -158,7 +163,8 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode
+          setMode,
+          storeName
         );
         newHandler = true;
       }
@@ -170,7 +176,8 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode
+          setMode,
+          storeName
         );
         newHandler = true;
       }
@@ -181,7 +188,8 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode
+          setMode,
+          storeName
         );
       }
       drawingHdl = findRef.current;
@@ -577,7 +585,6 @@ export const useCanvas = ({
     }
 
     if (mouseResult?.deleteId) {
-      const deleteDesignElement = useDesignStore.getState().deleteDesignElement;
       deleteDesignElement(mouseResult.deleteId);
     }
 

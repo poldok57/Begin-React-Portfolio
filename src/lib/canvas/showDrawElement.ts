@@ -1,4 +1,3 @@
-// import { useDesignStore } from "@/lib/stores/design";
 import {
   ThingsToDraw,
   ParamsGeneral,

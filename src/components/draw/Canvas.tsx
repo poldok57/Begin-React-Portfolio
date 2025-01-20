@@ -3,7 +3,7 @@ import { useCanvas } from "./hooks/useCanvas";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { withMousePosition } from "../windows/withMousePosition";
 import { DrawList } from "./DrawList";
-import { useDesignStore } from "@/lib/stores/design";
+import { useZustandDesignStore } from "@/lib/stores/design";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 interface CanvasProps {
@@ -13,6 +13,7 @@ interface CanvasProps {
   canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
   canvasMouseRef: React.RefObject<HTMLCanvasElement>;
   background: string;
+  storeName?: string | null;
 }
 
 const DrawListWP = withMousePosition(DrawList);
@@ -24,10 +25,20 @@ export const Canvas: React.FC<CanvasProps> = ({
   canvasTemporyRef,
   canvasMouseRef,
   background,
+  storeName = null,
 }) => {
   const { drawingParams, setMode, getDrawingParams } = useDrawingContext();
-  const { scale, setScale, setSelectedDesignElement, refreshCanvas } =
-    useDesignStore();
+
+  // Utiliser le hook avec le nom du store
+  const store = useZustandDesignStore(storeName);
+
+  // Souscrire aux changements d'état
+  const scale = store((state) => state.scale);
+  const setScale = store((state) => state.setScale);
+  const setSelectedDesignElement = store(
+    (state) => state.setSelectedDesignElement
+  );
+  const refreshCanvas = store((state) => state.refreshCanvas);
 
   const changeScale = (scale: number) => {
     setScale(scale);
@@ -134,6 +145,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         </div>
       </div>
       <DrawListWP
+        storeName={storeName}
         canvasRef={canvasRef}
         temporyCanvasRef={canvasTemporyRef}
         withMinimize={true}

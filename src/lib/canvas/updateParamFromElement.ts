@@ -30,7 +30,8 @@ export const updateParamFromElement = (
     filled: false,
   };
 
-  switch (selectedElement.type) {
+  const type = selectedElement.type;
+  switch (type) {
     case DRAW_TYPE.DRAW:
       break;
     case DRAW_TYPE.LINES_PATH:
@@ -81,14 +82,21 @@ export const updateParamFromElement = (
       if (selectedElement.shape?.withBorder && selectedElement.border) {
         setParams({ border: selectedElement.border });
       }
+      if (
+        type === DRAW_TYPE.IMAGE &&
+        selectedElement.shape?.blackChangeColor !== undefined
+      ) {
+        setParams({ blackWhiteColor: selectedElement.shape?.blackChangeColor });
+        general.color = selectedElement.shape?.blackChangeColor;
+      }
   }
-  if (selectedElement.type !== DRAW_TYPE.TEXT) {
+  if (type !== DRAW_TYPE.TEXT) {
     setParams({ general: selectedElement.general });
   }
   // console.log("selectedElement.type", selectedElement.type);
-  setParams({ mode: selectedElement.type });
+  setParams({ mode: type });
   setParams({
-    lockRatio: selectedElement.type === DRAW_TYPE.IMAGE ? true : false,
+    lockRatio: type === DRAW_TYPE.IMAGE ? true : false,
   });
   return selectedElement.type;
 };

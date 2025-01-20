@@ -9,7 +9,8 @@ import {
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 
-import { useDesignStore } from "@/lib/stores/design";
+// import { useDesignStore, zustandDesignStore } from "@/lib/stores/design";
+import { zustandDesignStore } from "@/lib/stores/design";
 
 export type returnMouseDown = {
   toExtend?: boolean;
@@ -38,12 +39,15 @@ export abstract class drawingHandler {
   protected resizingBorder: string | null = null;
 
   protected addDesignElement: (draw: ThingsToDraw) => void;
+  protected localStorageName: string | null = null;
+  protected designStore: ReturnType<typeof zustandDesignStore>;
 
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporyCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void
+    setMode: (mode: string) => void,
+    localStorageName: string | null = null
   ) {
     if (canvas) this.setCanvas(canvas);
     if (canvasContext) this.setContext(canvasContext);
@@ -53,8 +57,11 @@ export abstract class drawingHandler {
     this.setMode = setMode;
 
     this.resizingBorder = null;
+    this.localStorageName = localStorageName;
 
-    const { addOrUpdateDesignElement } = useDesignStore.getState();
+    this.designStore = zustandDesignStore(this.localStorageName);
+
+    const { addOrUpdateDesignElement } = this.designStore.getState();
     this.addDesignElement = addOrUpdateDesignElement;
   }
 
@@ -123,7 +130,6 @@ export abstract class drawingHandler {
   saveCanvasPicture(_coordinate: Coordinate | null = null) {
     const draw: ThingsToDraw | CanvasPointsData | ShapeDefinition | null =
       this.getDraw();
-    // console.log("saveCanvasPicture", draw);
     if (draw) this.addDesignElement(draw);
   }
 

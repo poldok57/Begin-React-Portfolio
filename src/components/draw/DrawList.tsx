@@ -1,5 +1,5 @@
 "use client";
-import { useDesignStore } from "@/lib/stores/design";
+import { useZustandDesignStore } from "@/lib/stores/design";
 import { X, RefreshCcw, GripVertical } from "lucide-react";
 import {
   CanvasPointsData,
@@ -15,9 +15,11 @@ import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 export const DrawList = ({
   canvasRef,
   temporyCanvasRef,
+  storeName,
 }: {
   canvasRef: React.RefObject<HTMLCanvasElement | null | undefined>;
   temporyCanvasRef: React.RefObject<HTMLCanvasElement | null | undefined>;
+  storeName?: string | null;
 }) => {
   const {
     designElements,
@@ -27,7 +29,7 @@ export const DrawList = ({
     refreshCanvas,
     setSelectedDesignElement,
     selectedDesignElement,
-  } = useDesignStore();
+  } = useZustandDesignStore(storeName ?? null).getState();
 
   const { setMode } = useDrawingContext();
 
