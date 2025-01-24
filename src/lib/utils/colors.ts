@@ -21,7 +21,7 @@ export const adjustBrightness = (color: string, intensity: number): string => {
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);
 
-  const factor = intensity / 100;
+  const factor = 1 + intensity / 100;
 
   const newR = Math.min(255, Math.round(r * factor));
   const newG = Math.min(255, Math.round(g * factor));

@@ -1,10 +1,11 @@
 import {
   isDrawingShape,
   ParamsGeneral,
+  ParamsText,
   SHAPE_TYPE,
   ShapeDefinition,
 } from "./canvas-defines";
-import { Area } from "./types";
+import { Area, Size } from "./types";
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import {
   drawRoundedRect,
@@ -202,6 +203,27 @@ export class CanvasShapeDraw {
     } as drawingProps);
 
     ctx.stroke();
+  };
+
+  /**
+   * calculate the size of a text
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {ParamsText} paramsText
+   * @returns {Size} - {width, height}
+   */
+  textSize = (ctx: CanvasRenderingContext2D, paramsText: ParamsText) => {
+    const fontSize = paramsText.fontSize;
+    const text = paramsText.text ?? "";
+    ctx.font = `${paramsText.bold} ${
+      paramsText.italic ? "italic" : ""
+    } ${fontSize}px ${paramsText.font}`;
+
+    const h = ctx.measureText(text).actualBoundingBoxAscent;
+    const padding = Math.min(TEXT_PADDING, h);
+
+    const width = ctx.measureText(text).width + 2 * padding;
+    const height = h + 2 * padding;
+    return { width, height } as Size;
   };
 
   /**
@@ -470,6 +492,10 @@ export class CanvasShapeDraw {
       case SHAPE_TYPE.TEXT:
         if (!square.text || !square.text.text) return;
         this.drawText(ctx, square);
+        {
+          const size = this.textSize(ctx, square.text);
+          square.size = { ...square.size, ...size };
+        }
         break;
       case SHAPE_TYPE.SELECT:
         drawDashedRectangle(ctx, square.size);

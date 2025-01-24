@@ -8,7 +8,7 @@ import { scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 import { ThingsToDraw } from "./canvas-defines";
 import { resizingElement } from "./canvas-resize";
-import { Area, Coordinate } from "./types";
+import { Area, Coordinate, Size } from "./types";
 import { debounceThrottle } from "@/lib/utils/debounce";
 
 export const DEBOUNCE_TIME = 30;
@@ -76,12 +76,8 @@ export abstract class CanvasDrawableObject {
     this.scale = scale;
   }
 
-  setDataSize(data: Area | Coordinate): void {
-    if ("width" in data && "height" in data) {
-      this.data.size = { ...data };
-    } else {
-      this.data.size = { ...this.data.size, ...data };
-    }
+  setDataSize(data: Area | Coordinate | Size): void {
+    this.data.size = { ...this.data.size, ...data };
   }
 
   getDataSize(): Area {

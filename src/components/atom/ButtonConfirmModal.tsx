@@ -17,7 +17,7 @@ import { MutableRefObject } from "react";
  * @returns The ButtonConfirmModal component
  */
 interface ButtonConfirmModalProps {
-  value: string;
+  value: string | React.ReactNode;
   className?: string;
   onConfirm?: () => void;
   onClose?: () => void;

@@ -4,16 +4,19 @@ import { Button } from "../atom/Button";
 import { ColorPicker } from "../atom/ColorPicker";
 import { DRAWING_MODES, ParamsPath } from "@/lib/canvas/canvas-defines";
 import { useDrawingContext } from "@/context/DrawingContext";
-import { MdTimeline } from "react-icons/md";
+// import { MdTimeline } from "react-icons/md";
+import { TbTimeline } from "react-icons/tb";
 import { Spline } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface DrawControlLineProps {
   isTouch?: boolean;
+  buttonIconSize?: number;
 }
 
 export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   isTouch = false,
+  buttonIconSize = 28,
 }) => {
   const {
     mode,
@@ -50,7 +53,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
         }}
         title="Draw lines"
       >
-        <MdTimeline size="28px" />
+        <TbTimeline size={buttonIconSize} />
       </Button>
       <Button
         className="px-4 py-1"
@@ -58,7 +61,7 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
         onClick={() => handleChangeMode(DRAWING_MODES.ARC)}
         title="Draw arcs"
       >
-        <Spline size={28} />
+        <Spline size={buttonIconSize} />
       </Button>
       <Button
         onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}

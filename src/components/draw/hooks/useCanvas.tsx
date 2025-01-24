@@ -38,6 +38,7 @@ interface DrawCanvasProps {
   setMode: (mode: string) => void;
   getParams: () => AllParams;
   storeName?: string | null;
+  getScale: () => number;
 }
 // Draw on Canvas
 export const useCanvas = ({
@@ -47,6 +48,7 @@ export const useCanvas = ({
   mode,
   setMode,
   getParams,
+  getScale,
   storeName = null,
 }: DrawCanvasProps) => {
   useRef(undefined);
@@ -63,7 +65,6 @@ export const useCanvas = ({
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const {
     // designElements,
-    getScale,
     deleteLastDesignElement,
     refreshCanvas,
     getSelectedDesignElement,

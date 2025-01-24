@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "../atom/Button";
 import { RangeInput } from "../atom/RangeInput";
-import { TbRotate2 } from "react-icons/tb";
-import { TbRotateClockwise2 } from "react-icons/tb";
+import { TbRotate2, TbRotateClockwise2, TbItalic } from "react-icons/tb";
 
 import { fontOptions } from "../../lib/canvas/font-family";
 import { DRAWING_MODES } from "../../lib/canvas/canvas-defines";
@@ -13,11 +12,15 @@ import { inputRangeVariants } from "../../styles/input-variants";
 interface DrawControlTextProps {
   hidden: boolean;
   isTouch?: boolean;
+  buttonShapeSize?: number;
+  buttonIconSize?: number;
 }
 
 export const DrawControlText: React.FC<DrawControlTextProps> = ({
   hidden,
   isTouch = false,
+  buttonIconSize = 28,
+  buttonShapeSize = 20,
 }) => {
   const { mode, drawingParams, setTextParams } = useDrawingContext();
 
@@ -25,10 +28,11 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
 
   /**
    *  Handle the text rotation
-   * @param {number} angle - The angle to rotate the text in grad
+   * @param {number} angle - The angle to rotate the text in degrees
    */
   const handleTextRotation = (angle: number) => {
     const newAngle = (drawingParams.text.rotation + angle + 360) % 360;
+    drawingParams.text.rotation = newAngle;
     setTextParams({ rotation: newAngle });
   };
 
@@ -94,7 +98,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             setTextParams({ italic: i });
           }}
         >
-          Italic
+          <TbItalic size={buttonIconSize} />
         </Button>
       </div>
       <div className="flex flex-row gap-4 justify-between">
@@ -128,10 +132,10 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
             className="px-3 py-1"
             onClick={() => handleTextRotation(-7.5)}
           >
-            <TbRotate2 size="20px" />
+            <TbRotate2 size={buttonShapeSize} />
           </Button>
           <Button className="px-3 py-1" onClick={() => handleTextRotation(7.5)}>
-            <TbRotateClockwise2 size="20px" />
+            <TbRotateClockwise2 size={buttonShapeSize} />
           </Button>
         </div>
       </div>

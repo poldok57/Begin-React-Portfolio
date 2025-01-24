@@ -25,15 +25,22 @@ import { MutableRefObject } from "react";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
-import { Search, MoveUpRight } from "lucide-react";
+import { Search, MoveUpRight, Pencil, CaseSensitive } from "lucide-react";
+import { TbLine } from "react-icons/tb";
+import { Save } from "lucide-react";
+
 import { cn } from "@/lib/utils/cn";
 import { useDrawingContext } from "@/context/DrawingContext";
 interface DrawControlProps {
   storeName?: string | null;
+  buttonIconSize?: number;
+  buttonShapeSize?: number;
 }
 
 export const DrawControl: React.FC<DrawControlProps> = ({
   storeName = null,
+  buttonIconSize = 28,
+  buttonShapeSize = 20,
 }) => {
   const {
     drawingParams,
@@ -203,8 +210,9 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             className="px-4"
             selected={mode == DRAWING_MODES.DRAW}
             onClick={() => handleChangeMode(DRAWING_MODES.DRAW)}
+            title="Free hand drawing"
           >
-            Draw
+            <Pencil size={buttonIconSize} />
           </Button>
           <Button
             className="px-4 py-1"
@@ -214,7 +222,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             }}
             title="Draw lines"
           >
-            Lines
+            <TbLine size={buttonIconSize} />
           </Button>
           <Button
             className="px-4 py-1"
@@ -222,14 +230,14 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             onClick={() => handleChangeMode(DRAWING_MODES.ARROW)}
             title="Arrow"
           >
-            <MoveUpRight size={28} />
+            <MoveUpRight size={buttonIconSize} />
           </Button>
           <Button
             className="px-4"
             selected={mode == DRAWING_MODES.TEXT}
             onClick={() => handleChangeMode(DRAWING_MODES.TEXT)}
           >
-            Text
+            <CaseSensitive size={buttonIconSize} />
           </Button>
           <Button
             className="px-4 bg-teal-400 hover:bg-teal-500"
@@ -240,7 +248,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             }}
             title="Erase"
           >
-            <CiEraser size="20px" />
+            <CiEraser size={buttonIconSize} />
           </Button>
           <Button
             className="px-4 bg-blue-500 hover:bg-blue-600"
@@ -250,7 +258,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             }}
             title="Select zone (Ctrl-A)"
           >
-            <PiSelectionPlusLight size="20px" />
+            <PiSelectionPlusLight size={buttonShapeSize} />
           </Button>
           {(isDrawingShape(mode) || isDrawingSelect(mode)) && (
             <label
@@ -279,7 +287,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
               )}
               title="Find element by clicking on canvas"
             >
-              <Search size={16} />
+              <Search size={buttonShapeSize} />
             </button>
           </div>
         </div>
@@ -304,7 +312,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             title="Ctrl-Z"
             onClick={() => addEventAction(DRAWING_MODES.UNDO)}
           >
-            <SlActionUndo size="20px" />
+            <SlActionUndo size={buttonIconSize} />
           </Button>
           <DeleteWithConfirm
             position="top"
@@ -318,7 +326,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           <ButtonConfirmModal
             position="modal"
             className="bg-blue-500 hover:bg-blue-600"
-            value="Save my drawing"
+            value={<Save size={buttonIconSize} />}
             onConfirm={() => {
               if (filenameRef.current != null) {
                 addEventSaveFile(DRAWING_MODES.SAVE, filenameRef.current.value);

@@ -2,7 +2,7 @@ import { Area, Coordinate } from "@/lib/canvas/types";
 
 export const scaledSize = (area: Area, scale: number) => {
   if (scale === 1) {
-    return area;
+    return { ...area };
   }
 
   return {

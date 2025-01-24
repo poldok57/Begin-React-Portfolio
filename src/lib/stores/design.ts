@@ -16,6 +16,7 @@ const defaultDesignStoreName = "design-data-storage";
 interface DesignState {
   designElements: ThingsToDraw[];
   selectedDesignElement: string | null;
+  backgroundColor: string;
   scale: number;
   getAllDesignElements: () => ThingsToDraw[];
   refreshCanvas: (
@@ -37,12 +38,14 @@ interface DesignState {
   eraseDesignElement: () => void;
   setScale: (scale: number) => void;
   getScale: () => number;
+  setBackgroundColor: (backgroundColor: string) => void;
 }
 
 const createDesignStore = (storageName: string) => {
   const designStore: StateCreator<DesignState> = (set, get) => ({
     designElements: [],
     selectedDesignElement: null,
+    backgroundColor: "#ffffff",
     scale: 1,
     getAllDesignElements: () => get().designElements,
     refreshCanvas: (
@@ -201,6 +204,11 @@ const createDesignStore = (storageName: string) => {
       }));
     },
     getScale: () => get().scale,
+    setBackgroundColor: (backgroundColor: string) => {
+      set(() => ({
+        backgroundColor,
+      }));
+    },
   });
 
   const localStoragePersist: PersistOptions<DesignState>["storage"] = {

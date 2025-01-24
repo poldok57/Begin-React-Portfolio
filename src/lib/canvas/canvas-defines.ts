@@ -32,7 +32,6 @@ export const SHAPE_TYPE = {
 };
 
 export const DRAW_TYPE = {
-  BACKGROUND: "Background",
   DRAW: "Draw",
   LINES_PATH: "Lines & Path",
   ARROW: "Arrow",

@@ -20,10 +20,12 @@ import { inputRangeVariants } from "../../styles/input-variants";
 
 interface DrawControlShapeProps {
   isTouch?: boolean;
+  buttonShapeSize?: number;
 }
 
 export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
   isTouch = false,
+  buttonShapeSize = 20,
 }) => {
   const {
     mode,
@@ -68,28 +70,28 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
             selected={mode == DRAWING_MODES.SQUARE}
             onClick={() => handleChangeMode(DRAWING_MODES.SQUARE)}
           >
-            <BiSquare size="20px" />
+            <BiSquare size={buttonShapeSize} />
           </Button>
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.ONE_RADIUS_T}
             onClick={() => handleChangeMode(DRAWING_MODES.ONE_RADIUS_T)}
           >
-            <AiOutlineRadiusUpright size="20px" />
+            <AiOutlineRadiusUpright size={buttonShapeSize} />
           </Button>
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.ONE_RADIUS_B}
             onClick={() => handleChangeMode(DRAWING_MODES.ONE_RADIUS_B)}
           >
-            <AiOutlineRadiusBottomright size="20px" />
+            <AiOutlineRadiusBottomright size={buttonShapeSize} />
           </Button>
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.TWO_RADIUS}
             onClick={() => handleChangeMode(DRAWING_MODES.TWO_RADIUS)}
           >
-            <WiMoonFirstQuarter size="20px" />
+            <WiMoonFirstQuarter size={buttonShapeSize} />
           </Button>
         </div>
         <div className="flex flex-row gap-5">

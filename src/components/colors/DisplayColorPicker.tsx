@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { GithubPicker, SliderPicker, SwatchesPicker } from "react-color";
-import { Copy, Undo2, X } from "lucide-react";
+import { X } from "lucide-react";
 import clsx from "clsx";
-import { getContrastColor } from "./colors";
+// import { getContrastColor } from "./colors";
+import { ColorInput } from "./ColorInput";
 
 type Colors = {
   hex: string;
@@ -31,10 +32,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
 }) => {
   const pickerRef = useRef<HTMLDialogElement>(null);
   const [showSwatches, setShowSwatches] = useState(false);
-  const memoColorRef = useRef(color);
-  const handleCopyColor = () => {
-    navigator.clipboard.writeText(color);
-  };
+
   const handleClose = () => {
     pickerRef.current?.close();
     closeColorPicker();
@@ -178,29 +176,10 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
               />
             </>
           )}
-          <div className="flex relative gap-2 justify-center items-center">
-            <button
-              className="btn btn-sm"
-              onClick={() => setColor(fieldName, memoColorRef.current)}
-              title="Back to initial color"
-              style={{ backgroundColor: memoColorRef.current }}
-            >
-              <Undo2 size={16} color={getContrastColor(memoColorRef.current)} />
-            </button>
-            <input
-              type="text"
-              className="p-3 m-2 w-11/12 rounded-md border border-gray-300 bg-base-100 focus:border-gray-800"
-              value={color}
-              onChange={(e) => setColor(fieldName, e.target.value)}
-            />
-            <button
-              className="absolute right-2 p-2 m-2 btn btn-sm"
-              onClick={handleCopyColor}
-              title="Copy to clipboard"
-            >
-              <Copy size={16} />
-            </button>
-          </div>
+          <ColorInput
+            color={color}
+            onChange={(value) => setColor(fieldName, value)}
+          />
         </>
       )}
     </dialog>

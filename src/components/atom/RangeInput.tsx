@@ -52,7 +52,7 @@ export const RangeInput: React.FC<{
   style?: React.CSSProperties;
   min: string;
   max: string;
-  step: string;
+  step?: string;
   onChange: (_value: number) => void;
   label: string;
   isTouch?: boolean;
@@ -63,7 +63,7 @@ export const RangeInput: React.FC<{
   style,
   min,
   max,
-  step,
+  step = "1",
   onChange,
   label,
   isTouch = false,

@@ -59,8 +59,8 @@ export class drawElement extends drawingHandler {
     this.shape.setDataSize({
       x: this.context.canvas.width / 2 - SQUARE_WIDTH / 2,
       y: this.context.canvas.height / 2 - SQUARE_HEIGHT / 2,
-      width: SQUARE_WIDTH,
-      height: SQUARE_HEIGHT,
+      width: initData.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_WIDTH,
+      height: initData.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_HEIGHT,
     });
     this.shape.setWithAllButtons(true);
   }
