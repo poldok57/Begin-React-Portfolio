@@ -10,15 +10,12 @@ import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { useDrawingContext } from "@/context/DrawingContext";
-import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 export const DrawList = ({
-  canvasRef,
-  temporyCanvasRef,
+  simpleRefreshCanvas,
   storeName,
 }: {
-  canvasRef: React.RefObject<HTMLCanvasElement | null | undefined>;
-  temporyCanvasRef: React.RefObject<HTMLCanvasElement | null | undefined>;
+  simpleRefreshCanvas: (withSelected: boolean) => void;
   storeName?: string | null;
 }) => {
   const {
@@ -26,7 +23,6 @@ export const DrawList = ({
     deleteDesignElement,
     eraseDesignElement,
     orderDesignElement,
-    refreshCanvas,
     setSelectedDesignElement,
     selectedDesignElement,
   } = useZustandDesignStore(storeName ?? null).getState();
@@ -39,17 +35,8 @@ export const DrawList = ({
     setMode(DRAWING_MODES.RELOAD);
   };
 
-  const context = canvasRef.current?.getContext("2d", {
-    willReadFrequently: true,
-  });
-
   const refresh = () => {
-    const temporyCtx = temporyCanvasRef.current?.getContext("2d");
-    if (temporyCtx) {
-      clearCanvasByCtx(temporyCtx);
-    }
-
-    refreshCanvas(context, true);
+    simpleRefreshCanvas(true);
   };
 
   const handleDeleteElement = (elementId: string) => {

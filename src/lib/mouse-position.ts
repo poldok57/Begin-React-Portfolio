@@ -209,7 +209,7 @@ export const topRightPosition = (
   const w = rect.width ?? rect.right! - rect.left!;
   const h = rect.height ?? rect.bottom! - rect.top!;
 
-  // Position de base du badge
+  // base position of the badge
   const badge: ButtonArgs = {
     width: badgeRadius * 2,
     height: badgeRadius * 2,
@@ -272,9 +272,9 @@ export const topRightPositionOver = (
   rotation: number = 0
 ): ButtonArgs => {
   const newRect = { ...rect };
-  let overhang = BADGE_RADIUS * 2 + 4;
+  let overhang = BADGE_RADIUS * 2 + 10;
   if (isTouchDevice()) {
-    overhang = BADGE_RADIUS_TOUCH * 2 + 8;
+    overhang = BADGE_RADIUS_TOUCH * 2 + 12;
   }
   if (newRect.top !== undefined) {
     newRect.top -= overhang;

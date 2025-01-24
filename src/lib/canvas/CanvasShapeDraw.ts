@@ -5,7 +5,7 @@ import {
   SHAPE_TYPE,
   ShapeDefinition,
 } from "./canvas-defines";
-import { Area, Size } from "./types";
+import { Area, ButtonArgs, MiddleButton, Size } from "./types";
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import {
   drawRoundedRect,
@@ -41,6 +41,9 @@ type drawingProps = {
 export class CanvasShapeDraw {
   data: ShapeDefinition;
   protected scale: number = 1;
+  protected btnValidPos: ButtonArgs | null = null;
+  protected btnDeletePos: ButtonArgs | null = null;
+  protected btnMiddlePos: MiddleButton | null = null;
 
   constructor(data: ShapeDefinition) {
     this.data = data;
@@ -48,6 +51,18 @@ export class CanvasShapeDraw {
 
   setScale(scale: number) {
     this.scale = scale;
+  }
+
+  getBtnValidPos() {
+    return this.btnValidPos;
+  }
+
+  getBtnDeletePos() {
+    return this.btnDeletePos;
+  }
+
+  getBtnMiddlePos() {
+    return this.btnMiddlePos;
   }
 
   /**
@@ -282,21 +297,30 @@ export class CanvasShapeDraw {
   drawButtonsAndLines = (
     ctx: CanvasRenderingContext2D,
     square: ShapeDefinition,
-    border: string | null
+    border: string | null,
+    withCornerButton: boolean = true,
+    withTurningButtons: boolean = false
   ) => {
     const sSize: Area = scaledSize(square.size, this.scale);
 
-    if (square?.withCornerButton) {
+    if (withCornerButton) {
       let opacity = border === BORDER.ON_BUTTON ? 1 : 0.5;
-      const bPos = topRightPosition(
+      this.btnValidPos = topRightPosition(
         sSize,
         ctx.canvas.width,
         ctx.canvas.height,
         square.rotation
       );
-      drawCornerButton(ctx, bPos.centerX, bPos.centerY, bPos.radius, opacity);
+      drawCornerButton(
+        ctx,
+        this.btnValidPos.centerX,
+        this.btnValidPos.centerY,
+        this.btnValidPos.radius,
+        opacity,
+        border === BORDER.ON_BUTTON
+      );
 
-      const bPosDel = topRightPositionOver(
+      this.btnDeletePos = topRightPositionOver(
         sSize,
         ctx.canvas.width,
         ctx.canvas.height,
@@ -305,17 +329,23 @@ export class CanvasShapeDraw {
       opacity = border === BORDER.ON_BUTTON_DELETE ? 1 : 0.5;
       drawCornerButtonDelete(
         ctx,
-        bPosDel.centerX,
-        bPosDel.centerY,
-        bPosDel.radius,
-        opacity
+        this.btnDeletePos.centerX,
+        this.btnDeletePos.centerY,
+        this.btnDeletePos.radius,
+        opacity,
+        border === BORDER.ON_BUTTON_DELETE
       );
+    } else {
+      this.btnValidPos = null;
+      this.btnDeletePos = null;
     }
     /**
      * draw the middle button used to rotate the shape
      */
-    if (square?.withTurningButtons) {
-      drawTurningButtons(ctx, sSize, border);
+    if (withTurningButtons) {
+      this.btnMiddlePos = drawTurningButtons(ctx, sSize, border);
+    } else {
+      this.btnMiddlePos = null;
     }
 
     const rotation =
@@ -480,13 +510,23 @@ export class CanvasShapeDraw {
    * @param {boolean} withButton - show button to resize the square
    * @param {string} mouseOnShape - border where the mouse is
    */
-  showElement = (
-    ctx: CanvasRenderingContext2D | null,
-    square: ShapeDefinition,
-    withButton: boolean = true,
-    mouseOnShape: string | null = null
-  ) => {
+  showElement = ({
+    ctx,
+    square,
+    withButton,
+    mouseOnShape,
+    withCornerButton,
+    withTurningButtons,
+  }: {
+    ctx: CanvasRenderingContext2D | null;
+    square: ShapeDefinition;
+    withButton: boolean;
+    withCornerButton: boolean;
+    withTurningButtons: boolean;
+    mouseOnShape: string | null;
+  }) => {
     if (!ctx) return;
+
     // console.log("show", square.type, square.size);
     switch (square.type) {
       case SHAPE_TYPE.TEXT:
@@ -513,7 +553,7 @@ export class CanvasShapeDraw {
     }
 
     if (withButton) {
-      this.drawButtonsAndLines(ctx, square, mouseOnShape);
+      this.drawButtonsAndLines(ctx, square, mouseOnShape, withCornerButton, withTurningButtons);
     }
   };
 }

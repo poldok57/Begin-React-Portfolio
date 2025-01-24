@@ -6,6 +6,7 @@ import { Area, Coordinate } from "./types";
 import { basicCircle } from "./canvas-basic";
 const CIRCLE_COLOR = "#e0e0e0"; // color of the circle around control buttons
 
+export const OVERSIZE_FACTOR = 1.5;
 /**
  * Function to draw a check mark
  * @param {CanvasRenderingContext2D} ctx
@@ -63,13 +64,15 @@ export const drawCornerButton = (
   x: number,
   y: number,
   radius: number,
-  opacity: number
+  opacity: number,
+  overSize: boolean = false
 ) => {
   // cercle parameters
+  const rad = overSize ? radius * OVERSIZE_FACTOR : radius;
   drawDisk(
     ctx,
     { x, y },
-    radius * 2,
+    rad * 2,
     opacity === 1 ? "white" : CIRCLE_COLOR,
     opacity
   );
@@ -83,10 +86,12 @@ export const drawCornerButtonDelete = (
   x: number,
   y: number,
   radius: number,
-  opacity: number
+  opacity: number,
+  overSize: boolean = false
 ) => {
   // Draw the red circle
-  drawDisk(ctx, { x, y }, radius * 2, "red", opacity);
+  const rad = overSize ? radius * OVERSIZE_FACTOR : radius;
+  drawDisk(ctx, { x, y }, rad * 2, "red", opacity);
   const scale = 3;
   // Draw the black X
   ctx.beginPath();
@@ -106,10 +111,6 @@ export const drawCornerButtonDelete = (
  *  ctx = document.getElementById('myCanvas').getContext('2d');
  *  centerX = 100, centerY = 100, radius = 50;
  *
- * Dessiner une flèche circulaire dans le sens horaire
- * drawCircularArrow(ctx, centerX, centerY, radius, Math.PI/2, Math.PI * 1.75, true, 'black');
- * Dessiner une flèche circulaire dans le sens anti-horaire
- * drawCircularArrow(ctx, centerX, centerY, radius, Math.PI/2, Math.PI * 1.75, false, 'red');
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} x - x coordinate
  * @param {number} y - y coordinate
@@ -143,18 +144,18 @@ export function drawCircularArrow(
   ctx.stroke();
   ctx.closePath();
 
-  // Déterminer l'angle de la tangente à la fin de l'arc
+  // Determine the angle of the tangent at the end of the arc
   const arrowAngle = clockwise ? endAngle : endAngle - 2 * Math.PI;
-  // Calculer l'angle de la tangente
+  // Calculate the angle of the tangent
   const tangentAngle = arrowAngle + (clockwise ? Math.PI / 2 : -Math.PI / 2);
 
-  // Coordonnées de la pointe de la flèche
+  // Coordinates of the arrow tip
   const arrowHeadX = x + Math.cos(arrowAngle) * radiusArrow;
   const arrowHeadY = y + Math.sin(arrowAngle) * radiusArrow;
-  const headLength = 6; // Longueur de la pointe de la flèche
-  const sideLength = headLength * Math.tan(Math.PI / 6); // Longueur des côtés de la pointe
+  const headLength = 6; // Length of the arrow tip
+  const sideLength = headLength * Math.tan(Math.PI / 6); // Length of the sides of the tip
 
-  // Dessiner la pointe de la flèche
+  // Draw the arrow tip
   ctx.beginPath();
   ctx.fillStyle = color;
   ctx.moveTo(arrowHeadX, arrowHeadY);
@@ -210,4 +211,5 @@ export const drawTurningButtons = (
     "#101010",
     border === BORDER.ON_BUTTON_LEFT ? 1 : 0.4
   );
+  return middleButton;
 };

@@ -1,13 +1,9 @@
-import { Rectangle, Coordinate, Area, ArgsMouseOnShape } from "./canvas/types";
+import { Rectangle, Coordinate, Area } from "./canvas/types";
 import {
   BORDER,
-  topRightPosition,
-  middleButtonPosition,
-  coordinateIsInsideRect,
   mouseIsOnBorderRect,
   getRectOffset,
   resizeRect,
-  topRightPositionOver,
 } from "./mouse-position";
 
 export const rotateMouseCoord = (
@@ -104,12 +100,13 @@ export const isOnSquareBorder = ({
   coordinate,
   area,
   withResize = true,
-  withCornerButton = true,
-  withTurningButtons = true,
-  maxWidth = 0,
-  maxHeight = 0,
   rotation = 0,
-}: ArgsMouseOnShape) => {
+}: {
+  coordinate: Coordinate;
+  area: Area;
+  withResize?: boolean;
+  rotation?: number;
+}) => {
   const rect = {
     left: area.x,
     top: area.y,
@@ -118,25 +115,6 @@ export const isOnSquareBorder = ({
     width: area.width,
     height: area.height,
   } as Rectangle;
-
-  if (withCornerButton) {
-    const badgePos = topRightPosition(rect, maxWidth, maxHeight, rotation);
-    if (coordinateIsInsideRect(coordinate, badgePos)) {
-      return BORDER.ON_BUTTON;
-    }
-    const btnDel = topRightPositionOver(rect, maxWidth, maxHeight, rotation);
-    if (coordinateIsInsideRect(coordinate, btnDel)) {
-      return BORDER.ON_BUTTON_DELETE;
-    }
-  }
-  if (withTurningButtons) {
-    const middleButton = middleButtonPosition(rect);
-    if (coordinateIsInsideRect(coordinate, middleButton)) {
-      if (coordinate.x < middleButton.middle) return BORDER.ON_BUTTON_LEFT;
-      if (coordinate.x > middleButton.middle) return BORDER.ON_BUTTON_RIGHT;
-      return BORDER.INSIDE;
-    }
-  }
 
   if (!isInsideSquare(coordinate, area, rotation)) return null;
 

@@ -60,9 +60,7 @@ export const clearCanvasByCtx = (
  * @param {HTMLCanvasElement} canvas
  */
 export const clearCanvas = (canvas: HTMLCanvasElement): void => {
-  const w = canvas.width;
-  canvas.width = w;
-  // or in one line: canvas.width = canvas.width;
+  clearCanvasByCtx(canvas.getContext("2d"));
 };
 
 // /**

@@ -4,11 +4,14 @@
  * this interface is used to manage data of a drawable object on a canvas
  */
 
+import { isOnSquareBorder } from "../square-position";
+import { BORDER } from "../mouse-position";
+import { coordinateIsInsideRect } from "../mouse-position";
 import { scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
-import { ThingsToDraw } from "./canvas-defines";
+import { DRAWING_MODES, ThingsToDraw } from "./canvas-defines";
 import { resizingElement } from "./canvas-resize";
-import { Area, Coordinate, Size } from "./types";
+import { Area, ButtonArgs, Coordinate, MiddleButton, Size } from "./types";
 import { debounceThrottle } from "@/lib/utils/debounce";
 
 export const DEBOUNCE_TIME = 30;
@@ -16,6 +19,11 @@ export const DEBOUNCE_TIME = 30;
 export abstract class CanvasDrawableObject {
   protected data: ThingsToDraw;
   protected scale: number = 1;
+  protected withCornerButton: boolean = true;
+  protected withTurningButtons: boolean = false;
+  protected btnValidPos: ButtonArgs | null = null;
+  protected btnDeletePos: ButtonArgs | null = null;
+  protected btnMiddlePos: MiddleButton | null = null;
 
   constructor() {
     this.data = {
@@ -89,7 +97,7 @@ export abstract class CanvasDrawableObject {
     coordinates: Coordinate,
     lockRatio: boolean,
     witchBorder: string
-  ) {
+  ): Area | null {
     const newCoord = resizingElement(
       ctx,
       this.data.size,
@@ -106,8 +114,60 @@ export abstract class CanvasDrawableObject {
     return newCoord;
   }
 
-  hightLightDrawing(ctx: CanvasRenderingContext2D | null) {
+  hightLightDrawing(ctx: CanvasRenderingContext2D | null): void {
     const size = scaledSize(this.data.size, this.scale);
     drawDashedRedRectangle(ctx, size, 0.8, 0);
+  }
+
+  /**
+   * check if the mouse is on a button
+   * @param {Coordinate} coordinate - the coordinate of the mouse
+   * @returns {string | null} - the border of the shape or null if the mouse is not on a button
+   */
+  isMouseOnButton(coordinate: Coordinate): string | null {
+    const coord = { ...coordinate };
+    if (this.scale !== 1) {
+      coord.x = coord.x * this.scale;
+      coord.y = coord.y * this.scale;
+    }
+    if (this.withCornerButton && this.btnValidPos) {
+      if (coordinateIsInsideRect(coord, this.btnValidPos)) {
+        return BORDER.ON_BUTTON;
+      }
+      if (
+        this.btnDeletePos &&
+        coordinateIsInsideRect(coord, this.btnDeletePos)
+      ) {
+        return BORDER.ON_BUTTON_DELETE;
+      }
+    }
+    if (this.withTurningButtons && this.btnMiddlePos) {
+      if (coordinateIsInsideRect(coord, this.btnMiddlePos)) {
+        if (coord.x < this.btnMiddlePos.middle) return BORDER.ON_BUTTON_LEFT;
+        if (coord.x > this.btnMiddlePos.middle) return BORDER.ON_BUTTON_RIGHT;
+        return BORDER.INSIDE;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
+   * handle special cases for the border of the square
+   */
+  handleMouseOnElement(coordinate: Coordinate | null): string | null {
+    if (!coordinate) return null;
+
+    const onButton = this.isMouseOnButton(coordinate);
+    if (onButton) {
+      return onButton;
+    }
+
+    return isOnSquareBorder({
+      coordinate: coordinate,
+      area: this.data.size,
+      withResize: this.data.type !== DRAWING_MODES.TEXT,
+      rotation: this.data.rotation ?? 0,
+    });
   }
 }

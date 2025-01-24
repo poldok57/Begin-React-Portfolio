@@ -4,7 +4,7 @@ import { useDrawingContext } from "@/context/DrawingContext";
 import { withMousePosition } from "../windows/withMousePosition";
 import { DrawList } from "./DrawList";
 import { useZustandDesignStore } from "@/lib/stores/design";
-import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { clearCanvas } from "@/lib/canvas/canvas-tools";
 import { ColorPikerBg } from "../colors/ColorPikerBg";
 
 interface CanvasProps {
@@ -33,7 +33,6 @@ export const Canvas: React.FC<CanvasProps> = ({
   const {
     scale,
     setScale,
-    getScale,
     setSelectedDesignElement,
     refreshCanvas,
     backgroundColor,
@@ -47,34 +46,36 @@ export const Canvas: React.FC<CanvasProps> = ({
     setShowColorPicker(false);
     setBackgroundColor(background);
   };
+  const simpleRefreshCanvas = (
+    withSelected: boolean = true,
+    lScale: number = scale
+  ) => {
+    // check if the canvas is ready
+    if (!canvasRef.current) return;
+
+    const ctx = canvasRef.current?.getContext("2d", {
+      willReadFrequently: true,
+    });
+    // Clear the temporary canvas
+    if (canvasTemporyRef.current) {
+      clearCanvas(canvasTemporyRef.current);
+    }
+
+    // Clear the mouse canvas
+    if (canvasMouseRef.current) {
+      clearCanvas(canvasMouseRef.current);
+    }
+    if (ctx) {
+      refreshCanvas(ctx, withSelected, lScale);
+    }
+  };
 
   const changeScale = (scale: number) => {
     setScale(scale);
     setRefresh(refresh + 1);
-    if (canvasRef.current) {
-      setSelectedDesignElement(null);
-      // Clear the temporary canvas
-      if (canvasTemporyRef.current) {
-        const temporyCtx = canvasTemporyRef.current.getContext("2d");
-        if (temporyCtx) {
-          clearCanvasByCtx(temporyCtx);
-        }
-      }
+    setSelectedDesignElement(null);
 
-      // Clear the mouse canvas
-      if (canvasMouseRef.current) {
-        const mouseCtx = canvasMouseRef.current.getContext("2d");
-        if (mouseCtx) {
-          clearCanvasByCtx(mouseCtx);
-        }
-      }
-      if (canvasRef.current) {
-        const ctx = canvasRef.current.getContext("2d");
-        if (ctx) {
-          refreshCanvas(ctx, false);
-        }
-      }
-    }
+    simpleRefreshCanvas(false, scale);
   };
 
   useCanvas({
@@ -82,10 +83,9 @@ export const Canvas: React.FC<CanvasProps> = ({
     canvasTemporyRef,
     canvasMouseRef,
     mode: drawingParams.mode,
-    getScale,
+    scale,
     setMode,
     getParams: getDrawingParams,
-    // scale,
   });
 
   return (
@@ -185,8 +185,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
       <DrawListWP
         storeName={storeName}
-        canvasRef={canvasRef}
-        temporyCanvasRef={canvasTemporyRef}
+        simpleRefreshCanvas={simpleRefreshCanvas}
         withMinimize={true}
         style={{
           top: "120px",

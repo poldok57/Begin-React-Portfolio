@@ -4,11 +4,8 @@
  * this interface is used to manage data of a points to draw free hand or lines or path on a canvas
  */
 
-import {
-  drawDashedRectangle,
-  // drawDashedRedRectangle,
-} from "@/lib/canvas/canvas-dashed-rect";
-import { Coordinate, Area, LinePath, ArgsMouseOnShape } from "./types";
+import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
+import { Coordinate, Area, LinePath } from "./types";
 import {
   ParamsGeneral,
   CanvasPointsData,
@@ -23,7 +20,6 @@ import {
   mousePointer,
 } from "../mouse-position";
 import { drawCornerButton, drawCornerButtonDelete } from "./canvas-buttons";
-import { isOnSquareBorder } from "@/lib/square-position";
 import { CanvasDrawableObject, DEBOUNCE_TIME } from "./CanvasDrawableObject";
 import { showCanvasImage } from "./canvas-elements";
 import { scaledSize } from "../utils/scaledSize";
@@ -165,7 +161,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.isFinished = false;
     this.isClosed = false;
     this.trueSize = true;
-    // console.log("startArea", this.data.size);
+
+    this.btnValidPos = null;
+    this.btnDeletePos = null;
   }
 
   addPointInArea(coord: Coordinate, control: Coordinate | null = null) {
@@ -545,29 +543,39 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     // scale the size of the path
     const size = scaledSize(this.data.size, this.scale);
 
-    const badge = topRightPosition(size, ctx.canvas.width, ctx.canvas.height);
-    if (badge) {
-      const opacity =
-        mouseOnRectangle === BORDER.ON_BUTTON ? 1 : DEFAULT_OPACITY;
-      const radius = opacity === 1 ? badge.radius * 1.6 : badge.radius;
-      drawCornerButton(ctx, badge.centerX, badge.centerY, radius, opacity);
-      this.lastButtonOpacity = opacity;
-    }
-    const btnDel = topRightPositionOver(
+    this.btnValidPos = topRightPosition(
       size,
       ctx.canvas.width,
       ctx.canvas.height
     );
-    if (btnDel) {
+    if (this.btnValidPos) {
+      const opacity =
+        mouseOnRectangle === BORDER.ON_BUTTON ? 1 : DEFAULT_OPACITY;
+      drawCornerButton(
+        ctx,
+        this.btnValidPos.centerX,
+        this.btnValidPos.centerY,
+        this.btnValidPos.radius,
+        opacity,
+        mouseOnRectangle === BORDER.ON_BUTTON
+      );
+      this.lastButtonOpacity = opacity;
+    }
+    this.btnDeletePos = topRightPositionOver(
+      size,
+      ctx.canvas.width,
+      ctx.canvas.height
+    );
+    if (this.btnDeletePos) {
       const opacity =
         mouseOnRectangle === BORDER.ON_BUTTON_DELETE ? 1 : DEFAULT_OPACITY;
-      const radius = opacity === 1 ? btnDel.radius * 1.6 : btnDel.radius;
       drawCornerButtonDelete(
         ctx,
-        btnDel.centerX,
-        btnDel.centerY,
-        radius,
-        opacity
+        this.btnDeletePos.centerX,
+        this.btnDeletePos.centerY,
+        this.btnDeletePos.radius,
+        opacity,
+        mouseOnRectangle === BORDER.ON_BUTTON_DELETE
       );
     }
   }
@@ -652,7 +660,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   ): string | null {
     this.lastMousePosition = mousePosition;
     if (this.data.size) {
-      const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
+      const mouseOnRectangle = this.handleMouseOnElement(mousePosition);
       if (!mouseOnRectangle) {
         return null;
       }
@@ -822,7 +830,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.movePath(ctx, mousePosition);
       cursorType = "grabbing";
     } else {
-      const mouseOnRectangle = this.handleMouseOnRectange(ctx, mousePosition);
+      const mouseOnRectangle = this.handleMouseOnElement(mousePosition);
       if (
         mouseOnRectangle === BORDER.ON_BUTTON ||
         mouseOnRectangle === BORDER.ON_BUTTON_DELETE
@@ -837,25 +845,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     }
     return cursorType;
-  }
-
-  handleMouseOnRectange(
-    ctx: CanvasRenderingContext2D | null,
-    mousePosition: Coordinate
-  ): string | null {
-    if (!this.data.size || !ctx || !mousePosition) {
-      return null;
-    }
-
-    return isOnSquareBorder({
-      coordinate: mousePosition,
-      area: this.data.size,
-      withResize: true,
-      withCornerButton: true,
-      withTurningButtons: false,
-      maxWidth: ctx.canvas.width / this.scale,
-      maxHeight: ctx.canvas.height / this.scale,
-    } as ArgsMouseOnShape);
   }
 
   abstract drawLines(_ctx: CanvasRenderingContext2D | null): boolean;

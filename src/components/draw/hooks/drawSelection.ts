@@ -294,10 +294,7 @@ export class drawSelection extends drawElement {
   }
 
   actionMouseDblClick = () => {
-    const mouseOnShape = this.shape.handleMouseOnShape(
-      this.mCanvas,
-      this.coordinates
-    );
+    const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
 
     if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
       // on turn button we can double click to rotate faster

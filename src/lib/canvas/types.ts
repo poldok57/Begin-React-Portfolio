@@ -46,17 +46,6 @@ export interface MiddleButton extends Rectangle {
   bottom: number;
 }
 
-export interface ArgsMouseOnShape {
-  coordinate: Coordinate;
-  area: Area;
-  withResize: boolean;
-  withCornerButton: boolean | null;
-  withTurningButtons: boolean | null;
-  maxWidth: number;
-  maxHeight: number;
-  rotation?: number;
-}
-
 export interface MouseCircle {
   color: string;
   width: number;

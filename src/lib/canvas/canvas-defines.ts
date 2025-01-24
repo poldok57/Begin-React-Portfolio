@@ -195,8 +195,6 @@ export interface ThingsToDraw {
   size: Area;
   general: ParamsGeneral;
   path?: ParamsPath;
-  withTurningButtons?: boolean;
-  withCornerButton?: boolean;
   erase?: boolean;
 }
 

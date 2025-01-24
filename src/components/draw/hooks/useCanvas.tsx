@@ -38,7 +38,7 @@ interface DrawCanvasProps {
   setMode: (mode: string) => void;
   getParams: () => AllParams;
   storeName?: string | null;
-  getScale: () => number;
+  scale: number;
 }
 // Draw on Canvas
 export const useCanvas = ({
@@ -48,8 +48,8 @@ export const useCanvas = ({
   mode,
   setMode,
   getParams,
-  getScale,
   storeName = null,
+  scale,
 }: DrawCanvasProps) => {
   useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
@@ -63,6 +63,7 @@ export const useCanvas = ({
   const elementRef = useRef<drawElement | null>(null);
   const justReload = useRef(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const scaleRef = useRef(scale);
   const {
     // designElements,
     deleteLastDesignElement,
@@ -71,6 +72,10 @@ export const useCanvas = ({
     deleteDesignElement,
     // setSelectedDesignElement,
   } = useZustandDesignStore(storeName).getState();
+
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
   /**
    * Function to get the last picture in the history for undo action
    */
@@ -79,7 +84,7 @@ export const useCanvas = ({
       return;
     }
     deleteLastDesignElement();
-    refreshCanvas(ctx, false);
+    refreshCanvas(ctx, false, scaleRef.current);
   };
 
   /**
@@ -117,12 +122,12 @@ export const useCanvas = ({
     if (canvasTemporyRef.current === null) return { x: 0, y: 0 };
     const mode = currentParams.mode;
     // console.log("mode", mode);
-    const scale =
+    const lScale =
       mode === DRAWING_MODES.SELECT || mode === DRAWING_MODES.SELECT_AREA
         ? 1
-        : getScale();
+        : scaleRef.current;
 
-    return getCoordinatesInCanvas(event, canvasTemporyRef.current, scale);
+    return getCoordinatesInCanvas(event, canvasTemporyRef.current, lScale);
   };
   /**
    * select the drawing handler according to the mode
@@ -207,7 +212,7 @@ export const useCanvas = ({
       drawingHdl.setType(mode);
     }
 
-    drawingHdl.setScale(getScale());
+    drawingHdl.setScale(scaleRef.current);
 
     return drawingHdl;
   };
@@ -267,7 +272,7 @@ export const useCanvas = ({
     const coord = getCoordinatesInCanvas(
       event,
       canvasTemporyRef.current,
-      getScale()
+      scaleRef.current
     );
 
     const ret = drawingRef.current.actionMouseDown(event, coord);
@@ -287,7 +292,7 @@ export const useCanvas = ({
     const coord = getCoordinatesInCanvas(
       event,
       canvasTemporyRef.current,
-      getScale()
+      scaleRef.current
     );
     drawingRef.current?.actionMouseMove(event, coord);
   };
@@ -371,7 +376,7 @@ export const useCanvas = ({
         setContext(
           canvasMouseRef.current as HTMLCanvasElement,
           null,
-          getScale(),
+          scaleRef.current,
           TEMPORTY_OPACITY
         );
       }
@@ -399,7 +404,7 @@ export const useCanvas = ({
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
       if (canvasRef.current) {
-        refreshCanvas(contextRef.current, false);
+        refreshCanvas(contextRef.current, false, scaleRef.current);
       }
 
       mouseOnCtrlPanel.current = false;
@@ -562,13 +567,12 @@ export const useCanvas = ({
     // get color and width painting in currentParams
     currentParams = getParams();
 
-    const scale = getScale();
     setContext(canvasRef.current, contextRef.current, scale);
 
     const coord = getScaledCoordinatesInCanvas(event);
 
     // drawingRef.current?.setType(currentParams.mode);
-    drawingRef.current?.setScale(scale);
+    drawingRef.current?.setScale(scaleRef.current);
     let mouseResult: returnMouseDown | null | undefined = undefined;
     if (touchDevice) {
       mouseResult = drawingRef.current?.actionTouchDown(
@@ -619,7 +623,7 @@ export const useCanvas = ({
     if (!canvasMouse) {
       return;
     }
-    setContext(canvasMouse, null, getScale());
+    setContext(canvasMouse, null, scaleRef.current);
 
     const handleMouseUp = () => {
       drawingRef.current?.actionMouseUp();
@@ -683,7 +687,7 @@ export const useCanvas = ({
       const coord = getCoordinatesInCanvas(
         event,
         canvasTemporyRef.current,
-        getScale()
+        scaleRef.current
       );
 
       drawingRef.current?.actionMouseMove(event, coord);
@@ -752,11 +756,11 @@ export const useCanvas = ({
   }, [mode]);
 
   useEffect(() => {
-    const scale = getScale();
+    const lScale = scaleRef.current;
     if (drawingRef.current) {
-      drawingRef.current.setScale(scale);
+      drawingRef.current.setScale(lScale);
     }
-    setContext(canvasMouseRef.current, null, scale);
-    setContext(canvasTemporyRef.current, null, scale);
-  }, [getScale()]);
+    setContext(canvasMouseRef.current, null, lScale);
+    setContext(canvasTemporyRef.current, null, lScale);
+  }, [scaleRef.current]);
 };

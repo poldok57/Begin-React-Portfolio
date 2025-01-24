@@ -3,7 +3,7 @@
  * @description
  * this interface is used to manage data of a shape or image to draw on a canvas
  */
-import { Area, Coordinate, ArgsMouseOnShape } from "./types";
+import { Area, Coordinate } from "./types";
 import {
   AllParams,
   ParamsGeneral,
@@ -16,7 +16,6 @@ import {
 
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { CanvasShapeDraw } from "./CanvasShapeDraw";
-import { isOnSquareBorder } from "@/lib/square-position";
 import { imageLoadInCanvas } from "./image-load";
 import { compressImage } from "./canvas-images";
 import {
@@ -185,7 +184,7 @@ export class CanvasShape extends CanvasDrawableObject {
     }
 
     this.calculateWithTurningButtons(data.type);
-    this.data.withCornerButton = true;
+    this.withCornerButton = true;
   }
 
   setDataParams(params: Area | ParamsGeneral | ParamsShape | ParamsText) {
@@ -248,7 +247,7 @@ export class CanvasShape extends CanvasDrawableObject {
       this.data.text.rotation = 0;
     }
     this.data.size.ratio = 0;
-    this.data.withTurningButtons = true;
+    this.withTurningButtons = true;
   }
   /**
    * Function to change the data of the shape
@@ -312,9 +311,6 @@ export class CanvasShape extends CanvasDrawableObject {
     }
   }
 
-  setWithTurningButtons(value: boolean) {
-    this.data.withTurningButtons = value;
-  }
   /**
    * Function to set if the middle button should be shown
    */
@@ -328,22 +324,22 @@ export class CanvasShape extends CanvasDrawableObject {
       sSize.width === sSize.height &&
       !this.data.shape?.withText
     ) {
-      this.data.withTurningButtons = false;
+      this.withTurningButtons = false;
       return;
     }
-    this.data.withTurningButtons = true;
+    this.withTurningButtons = true;
   }
 
   setWithCornerButton(value: boolean) {
-    this.data.withCornerButton = value;
+    this.withCornerButton = value;
   }
   setWithAllButtons(value: boolean) {
     if (value) {
       this.calculateWithTurningButtons();
     } else {
-      this.data.withTurningButtons = false;
+      this.withTurningButtons = false;
     }
-    this.data.withCornerButton = value;
+    this.withCornerButton = value;
   }
 
   setRadius(radius: number) {
@@ -409,30 +405,6 @@ export class CanvasShape extends CanvasDrawableObject {
   }
 
   /**
-   * Function to check if the mouse is on the border of the square or on a button inside or outside the square.
-   * handle special cases for the border of the square
-   */
-  handleMouseOnShape(
-    canvas: HTMLCanvasElement | null,
-    coordinate: Coordinate | null
-  ): string | null {
-    if (canvas === null || !coordinate) return null;
-
-    const argsMouseOnShape: ArgsMouseOnShape = {
-      coordinate: coordinate,
-      area: this.getDataSize(),
-      withResize: this.data.type !== DRAWING_MODES.TEXT,
-      withCornerButton: this.data.withCornerButton || false,
-      withTurningButtons: this.data.withTurningButtons || false,
-      maxWidth: canvas.width / this.scale,
-      maxHeight: canvas.height / this.scale,
-      rotation: this.data.rotation,
-    };
-
-    return isOnSquareBorder(argsMouseOnShape);
-  }
-
-  /**
    * Function to draw the shape on the canvas
    */
   draw(
@@ -441,7 +413,18 @@ export class CanvasShape extends CanvasDrawableObject {
     borderInfo?: string | null
   ) {
     if (!temporyDraw && ctx) ctx.globalAlpha = this.data.general.opacity;
-    this.drawer.showElement(ctx, this.data, temporyDraw, borderInfo);
+    this.drawer.showElement({
+      ctx,
+      square: this.data,
+      withButton: temporyDraw || false,
+      mouseOnShape: borderInfo || null,
+      withCornerButton: this.withCornerButton,
+      withTurningButtons: this.withTurningButtons,
+    });
+
+    this.btnValidPos = this.drawer.getBtnValidPos();
+    this.btnDeletePos = this.drawer.getBtnDeletePos();
+    this.btnMiddlePos = this.drawer.getBtnMiddlePos();
   }
 
   hightLightDrawing(ctx: CanvasRenderingContext2D | null) {

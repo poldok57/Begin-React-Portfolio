@@ -21,7 +21,8 @@ interface DesignState {
   getAllDesignElements: () => ThingsToDraw[];
   refreshCanvas: (
     ctx: CanvasRenderingContext2D | null | undefined,
-    withSelected?: boolean
+    withSelected?: boolean,
+    scale?: number | undefined | null
   ) => void;
   getDesignElement: (id: string) => ThingsToDraw | undefined;
   addDesignElement: (designElement: ThingsToDraw) => string;
@@ -37,7 +38,7 @@ interface DesignState {
   orderDesignElement: (id: string, direction: 1 | -1) => void;
   eraseDesignElement: () => void;
   setScale: (scale: number) => void;
-  getScale: () => number;
+  // getScale: () => number;
   setBackgroundColor: (backgroundColor: string) => void;
 }
 
@@ -50,9 +51,14 @@ const createDesignStore = (storageName: string) => {
     getAllDesignElements: () => get().designElements,
     refreshCanvas: (
       ctx: CanvasRenderingContext2D | null | undefined,
-      withSelected: boolean = true
+      withSelected: boolean = true,
+      scale?: number | null
     ) => {
       if (!ctx || !ctx.canvas) return;
+
+      if (scale === undefined || scale === null) {
+        scale = get().scale;
+      }
 
       const designElements = get().designElements;
       clearCanvasByCtx(ctx);
@@ -62,7 +68,7 @@ const createDesignStore = (storageName: string) => {
           : "-";
         designElements.forEach((element) => {
           if (element.id !== selectedElementId) {
-            showDrawElement(ctx, element, get().getScale(), false);
+            showDrawElement(ctx, element, scale, false);
           }
         });
       }
@@ -203,7 +209,7 @@ const createDesignStore = (storageName: string) => {
         scale,
       }));
     },
-    getScale: () => get().scale,
+    // getScale: () => get().scale,
     setBackgroundColor: (backgroundColor: string) => {
       set(() => ({
         backgroundColor,

@@ -226,10 +226,7 @@ export class drawElement extends drawingHandler {
 
     if (!this.ctxTempory || !this.coordinates) return cursorType;
 
-    const mouseOnShape = this.shape.handleMouseOnShape(
-      this.mCanvas,
-      this.coordinates
-    );
+    const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
 
     if (mouseOnShape) {
       cursorType = mousePointer(mouseOnShape);
@@ -268,10 +265,7 @@ export class drawElement extends drawingHandler {
 
     this.setCoordinates(coord);
 
-    const mouseOnShape = this.shape.handleMouseOnShape(
-      this.mCanvas,
-      this.coordinates
-    );
+    const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
 
     if (mouseOnShape) {
       // Clic on the shape --------
@@ -387,10 +381,7 @@ export class drawElement extends drawingHandler {
   actionMouseDblClick(): void {
     // check position of the mouse, if mouse is on a button, do nothing
     if (!this.coordinates) return;
-    const mouseOnShape = this.shape.handleMouseOnShape(
-      this.mCanvas,
-      this.coordinates
-    );
+    const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
     if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
       return;
     }
