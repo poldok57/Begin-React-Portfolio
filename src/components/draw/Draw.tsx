@@ -3,12 +3,10 @@ import { withMousePosition } from "../windows/withMousePosition";
 import { DrawControl } from "./DrawControl";
 import { ShowAlertMessagesWP } from "@/components/alert-messages/ShowAlertMessages";
 import { Canvas } from "./Canvas";
-import { setHistoryMaxLen } from "../../lib/canvas/canvas-history";
 import { DrawingProvider } from "@/context/DrawingContext";
 
 const DrawControlWP = withMousePosition(DrawControl);
 
-const MAX_HISTORY = 40;
 const MIN_SIZE = 200;
 const MAX_SIZE = 1200;
 const DEFAULT_WIDTH = 768;
@@ -19,8 +17,6 @@ const STORE_NAME = "design-data-storage";
 export const Draw = () => {
   const [canvasWidth, setCanvasWidth] = useState(DEFAULT_WIDTH);
   const [canvasHeight, setCanvasHeight] = useState(DEFAULT_HEIGHT);
-
-  setHistoryMaxLen(MAX_HISTORY);
 
   return (
     <DrawingProvider>

@@ -8,8 +8,10 @@ import { SelectionContainer } from "./SelectionContainer";
 import { AlignmentButtons } from "./AlignmentButtons";
 import { useAlignmentLogic } from "./hooks/useAlignmentLogic";
 import { useGroundSelectionLogic } from "./hooks/useGroundSelectionLogic";
-
+import { useZustandDesignStore } from "@/lib/stores/design";
 const TOUCH_MESSAGE_ID = "touch-message";
+
+const DESIGN_STORE_NAME = "room-design-storge";
 
 interface GroundSelectionProps {
   onSelectionStart: () => void;
@@ -68,6 +70,9 @@ export const GroundSelection = React.forwardRef<
     const numberOfAlignmentsRef = useRef({ vertical: 0, horizontal: 0 });
     const [showAlignmentLines, setShowAlignmentLines] = useState(false);
     const previousPosition = useRef<Position | null>(null);
+
+    const { backgroundColor } =
+      useZustandDesignStore(DESIGN_STORE_NAME).getState();
 
     React.useImperativeHandle(ref, () => groundRef.current as HTMLDivElement);
 
@@ -340,7 +345,10 @@ export const GroundSelection = React.forwardRef<
       <div
         ref={groundRef}
         id={id}
-        style={{ touchAction: "none" }}
+        style={{
+          touchAction: "none",
+          ...(backgroundColor && { background: backgroundColor }),
+        }}
         className="overflow-auto relative inset-0 w-full h-full"
       >
         {typeListMode === "plan" && (
@@ -359,6 +367,7 @@ export const GroundSelection = React.forwardRef<
               backgroundCanvasRef={backgroundCanvasRef}
               temporaryCanvasRef={temporaryCanvasRef}
               mode={mode}
+              storeName={DESIGN_STORE_NAME}
             />
 
             <SelectionContainer

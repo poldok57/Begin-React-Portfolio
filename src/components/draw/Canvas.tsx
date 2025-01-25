@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import { useCanvas } from "./hooks/useCanvas";
-import { useDrawingContext } from "@/context/DrawingContext";
 import { withMousePosition } from "../windows/withMousePosition";
 import { DrawList } from "./DrawList";
 import { useZustandDesignStore } from "@/lib/stores/design";
@@ -25,10 +24,6 @@ export const Canvas: React.FC<CanvasProps> = ({
   const canvasMouseRef = useRef<HTMLCanvasElement>(null);
 
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const { drawingParams, setMode, getDrawingParams } = useDrawingContext();
-
-  // use the hook with the store name
-  // const store = useZustandDesignStore(storeName);
 
   const {
     scale,
@@ -46,6 +41,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     setShowColorPicker(false);
     setBackgroundColor(background);
   };
+
   const simpleRefreshCanvas = (
     withSelected: boolean = true,
     lScale: number = scale
@@ -82,10 +78,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     canvasRef,
     canvasTemporyRef,
     canvasMouseRef,
-    mode: drawingParams.mode,
     scale,
-    setMode,
-    getParams: getDrawingParams,
   });
 
   return (

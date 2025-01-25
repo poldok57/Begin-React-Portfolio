@@ -8,7 +8,6 @@ import {
   isDrawingMode,
   isDrawingShape,
   isDrawingSelect,
-  AllParams,
   EventDetail,
   ThingsToDraw,
   isDrawingPause,
@@ -25,8 +24,8 @@ import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
 import { mouseIsInsideComponent } from "@/lib/mouse-position";
 import { useZustandDesignStore } from "@/lib/stores/design";
-import { DesignElement } from "@/components/room/types";
 import { Coordinate } from "@/lib/canvas/types";
+import { useDrawingContext } from "@/context/DrawingContext";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -34,9 +33,6 @@ interface DrawCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
   canvasMouseRef: React.RefObject<HTMLCanvasElement>;
-  mode: string;
-  setMode: (mode: string) => void;
-  getParams: () => AllParams;
   storeName?: string | null;
   scale: number;
 }
@@ -45,16 +41,15 @@ export const useCanvas = ({
   canvasRef,
   canvasTemporyRef,
   canvasMouseRef,
-  mode,
-  setMode,
-  getParams,
   storeName = null,
   scale,
 }: DrawCanvasProps) => {
   useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
 
-  let currentParams = getParams();
+  const { mode, setMode, getDrawingParams } = useDrawingContext();
+
+  let currentParams = getDrawingParams();
   // drawing handler
   const drawingRef = useRef<drawingHandler | null>(null);
   const lineRef = useRef<drawLine | null>(null);
@@ -65,12 +60,11 @@ export const useCanvas = ({
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const scaleRef = useRef(scale);
   const {
-    // designElements,
     deleteLastDesignElement,
     refreshCanvas,
     getSelectedDesignElement,
+    setSelectedDesignElement,
     deleteDesignElement,
-    // setSelectedDesignElement,
   } = useZustandDesignStore(storeName).getState();
 
   useEffect(() => {
@@ -204,7 +198,7 @@ export const useCanvas = ({
     }
 
     if (newHandler && drawingHdl) {
-      currentParams = getParams();
+      currentParams = getDrawingParams();
       // console.log("initData ->", currentParams);
       drawingHdl.initData(currentParams);
       drawingHdl.setMouseCanvas(canvasMouseRef.current);
@@ -219,8 +213,10 @@ export const useCanvas = ({
 
   const generalInitialisation = () => {
     // Initialize canvas
-    currentParams = getParams();
+    currentParams = getDrawingParams();
     setMode(DRAWING_MODES.DRAW);
+
+    setSelectedDesignElement(null);
 
     lineRef.current = null;
     elementRef.current = null;
@@ -320,7 +316,7 @@ export const useCanvas = ({
    * call then user change something in the drawing panel
    */
   const drawingParamChanged = () => {
-    currentParams = getParams();
+    currentParams = getDrawingParams();
     if (!drawingRef.current) return;
     drawingRef.current.changeData(currentParams);
     drawingRef.current.refreshDrawing(
@@ -335,7 +331,7 @@ export const useCanvas = ({
    * @param {string} newMode - new drawing mode
    */
   const actionChangeMode = (newMode: string) => {
-    currentParams = getParams();
+    currentParams = getDrawingParams();
 
     if (newMode === DRAWING_MODES.INIT) {
       generalInitialisation();
@@ -349,7 +345,7 @@ export const useCanvas = ({
 
     const reload = newMode === DRAWING_MODES.RELOAD;
 
-    const selectedDesignElement: ThingsToDraw | DesignElement | null = reload
+    const selectedDesignElement: ThingsToDraw | null = reload
       ? getSelectedDesignElement()
       : null;
 
@@ -565,7 +561,7 @@ export const useCanvas = ({
     }
 
     // get color and width painting in currentParams
-    currentParams = getParams();
+    currentParams = getDrawingParams();
 
     setContext(canvasRef.current, contextRef.current, scale);
 

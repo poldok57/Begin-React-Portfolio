@@ -49,18 +49,18 @@ export const calculateSize = (
     maxHeight: number = maxSize.height;
   const maxRatio = maxWidth / maxHeight;
 
-  let width = imageSize.width;
-  let height = imageSize.height;
+  let width = Math.round(imageSize.width);
+  let height = Math.round(imageSize.height);
 
   if (width < maxWidth && height < maxHeight) {
     return { x: 10, y: 10, width, height } as Area;
   }
   if (ratio > maxRatio) {
     width = maxWidth;
-    height = width / ratio;
+    height = Math.round(width / ratio);
   } else {
     height = maxHeight;
-    width = height * ratio;
+    width = Math.round(height * ratio);
   }
   return { x: 10, y: 10, width, height } as Area;
 };

@@ -84,7 +84,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     getSelectedDesignElement,
   } = useZustandDesignStore(storeName).getState();
 
-  const selectedElementRef = useRef(selectedDesignElement);
+  const selectedElementRef: MutableRefObject<string | null> = useRef(null);
 
   const handleConfirmReset = () => {
     alertMessage("Reset confirmed");
@@ -160,7 +160,10 @@ export const DrawControl: React.FC<DrawControlProps> = ({
 
   // update controle panel when an element is selected
   useEffect(() => {
-    if (selectedDesignElement !== selectedElementRef.current) {
+    if (
+      selectedDesignElement &&
+      selectedDesignElement !== selectedElementRef.current
+    ) {
       const newMode = updateParamFromElement(
         setDrawingParams,
         getSelectedDesignElement

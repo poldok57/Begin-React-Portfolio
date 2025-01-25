@@ -1,5 +1,9 @@
 import { Area, Size } from "@/lib/canvas/types";
-import { DRAWING_MODES, ShapeDefinition } from "@/lib/canvas/canvas-defines";
+import {
+  AllParams,
+  DRAWING_MODES,
+  ShapeDefinition,
+} from "@/lib/canvas/canvas-defines";
 import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
@@ -50,12 +54,22 @@ export class drawSelection extends drawElement {
     return this.originalSize;
   }
 
+  initData(initData: AllParams) {
+    if (initData.mode === DRAWING_MODES.IMAGE) {
+      this.lockRatio = true;
+    }
+    super.initData(initData);
+  }
   /**
    * Function to set the draw data
    * @param {object} data - data to set
    */
-  async setDraw(data: ShapeDefinition) {
-    await this.shape.setData(data);
+  async setDraw(draw: ShapeDefinition) {
+    await super.setDraw(draw);
+
+    if (draw.type === DRAWING_MODES.IMAGE) {
+      this.lockRatio = true;
+    }
 
     setTimeout(() => {
       this.getOriginalSize();
@@ -278,7 +292,7 @@ export class drawSelection extends drawElement {
       );
 
       const area: Area = calculateSize(img as Size, maxSize);
-      area.ratio = ratio;
+      area.ratio = Number(ratio.toFixed(3));
       this.shape.setDataSize(area);
       this.shape.setRotation(0);
       this.originalSize = { ...area };

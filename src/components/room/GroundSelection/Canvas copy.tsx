@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { Mode } from "../types";
-
+import {
+  drawAllDesignElements,
+  hightLightSelectedElement,
+} from "../scripts/design-elements";
 import { getCanvasSize } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { useTableDataStore } from "../stores/tables";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import clsx from "clsx";
-import { clearCanvas } from "@/lib/canvas/canvas-tools";
-import { useCanvas } from "@/components/draw/hooks/useCanvas";
 
 interface CanvasProps {
   backgroundCanvasRef: React.RefObject<HTMLCanvasElement>;
@@ -33,46 +34,6 @@ export const Canvas: React.FC<CanvasProps> = ({
   const { designElements, selectedDesignElement } = useTableDataStore();
   const { setCtxTemporary, scale, getScale } = useRoomContext();
 
-  /**
-   * Zustand design local storage
-   */
-  const { setSelectedDesignElement, refreshCanvas } =
-    useZustandDesignStore(storeName).getState();
-
-  const simpleRefreshCanvas = (
-    withSelected: boolean = true,
-    lScale: number = scale
-  ) => {
-    // check if the canvas is ready
-    if (!backgroundCanvasRef.current) return;
-
-    const ctx = backgroundCanvasRef.current?.getContext("2d", {
-      willReadFrequently: true,
-    });
-    // Clear the temporary canvas
-    if (temporaryCanvasRef.current) {
-      clearCanvas(temporaryCanvasRef.current);
-    }
-
-    // Clear the mouse canvas
-    if (mouseCanvasRef.current) {
-      clearCanvas(mouseCanvasRef.current);
-    }
-    if (ctx) {
-      refreshCanvas(ctx, withSelected, lScale);
-    }
-  };
-
-  useCanvas({
-    canvasRef: backgroundCanvasRef,
-    canvasTemporyRef: temporaryCanvasRef,
-    canvasMouseRef: mouseCanvasRef,
-    scale,
-  });
-
-  /**
-   * Resize canvas
-   */
   const resizeCanvas = useCallback(
     (scale: number) => {
       const ground = backgroundCanvasRef.current
@@ -105,19 +66,60 @@ export const Canvas: React.FC<CanvasProps> = ({
             canvas.height = newSize.height;
           }
         );
-        setSelectedDesignElement(null);
-        simpleRefreshCanvas(true, scale);
+        drawElementsOnCanvas(scale);
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     },
     [backgroundCanvasRef.current, temporaryCanvasRef.current, scale]
   );
 
+  const drawElementsOnCanvas = useCallback(
+    (scale: number) => {
+      const ground: HTMLDivElement | null | undefined = backgroundCanvasRef
+        .current?.parentElement as HTMLDivElement;
+
+      if (backgroundCanvasRef.current) {
+        const ctx = backgroundCanvasRef.current.getContext("2d");
+        if (ctx) {
+          drawAllDesignElements({
+            ctx,
+            elements: designElements,
+            ground,
+            scale,
+          });
+        }
+      }
+
+      const temporaryCtx = temporaryCanvasRef.current?.getContext("2d") || null;
+
+      if (selectedDesignElement && temporaryCtx && ground) {
+        const element = designElements.find(
+          (el) => el.id === selectedDesignElement
+        );
+        if (element) {
+          if (element.type === "background") {
+            ground.style.border = "3px dashed red";
+          } else {
+            ground.style.border = "none";
+            hightLightSelectedElement(temporaryCtx, element, scale);
+          }
+        }
+      }
+    },
+    [
+      backgroundCanvasRef.current,
+      temporaryCanvasRef.current,
+      scale,
+      designElements,
+      selectedDesignElement,
+    ]
+  );
+
   useEffect(() => {
     const handleResize = () => {
       const scale = getScale();
       resizeCanvas(scale);
-      simpleRefreshCanvas(true, scale);
+      drawElementsOnCanvas(scale);
     };
 
     window.addEventListener("resize", handleResize);
@@ -125,7 +127,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   }, []);
 
   useEffect(() => {
-    simpleRefreshCanvas(false, scale);
+    drawElementsOnCanvas(scale);
   }, [designElements, selectedDesignElement]);
 
   useEffect(() => {

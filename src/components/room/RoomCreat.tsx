@@ -15,6 +15,7 @@ import { ListTablesPlan } from "./ListTablesPlan";
 import { ListTablesText } from "./ListTablesText";
 import { ValidationFrame } from "./ValidationFrame";
 import { Mode } from "./types";
+import { DrawingProvider } from "@/context/DrawingContext";
 
 export const GROUND_ID = "back-ground";
 export const CONTAINER_ID = "ground-container";
@@ -306,6 +307,8 @@ export const RoomCreatTools = () => {
 // Wrap the component with ScaleProvider
 export const RoomCreat = () => (
   <RoomProvider>
-    <RoomCreatTools />
+    <DrawingProvider>
+      <RoomCreatTools />
+    </DrawingProvider>
   </RoomProvider>
 );

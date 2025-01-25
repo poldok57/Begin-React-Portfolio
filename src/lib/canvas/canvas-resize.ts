@@ -35,9 +35,7 @@ export const resizingElement = (
   rotation: number = 0
 ) => {
   if (lockRatio && !size.ratio) {
-    size.ratio = size.width / size.height;
-  } else {
-    size.ratio = 0;
+    size.ratio = Number((size.width / size.height).toFixed(3));
   }
 
   if (mouseOnShape) {

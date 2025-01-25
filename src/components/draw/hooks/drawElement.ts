@@ -52,6 +52,10 @@ export class drawElement extends drawingHandler {
     this.shape.setScale(scale);
   }
 
+  /**
+   * Function to initialize the data of the shape
+   * @param {AllParams} initData - initial data
+   */
   initData(initData: AllParams) {
     this.shape.initData(initData);
     this.setType(initData.mode);
@@ -63,24 +67,46 @@ export class drawElement extends drawingHandler {
       height: initData.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_HEIGHT,
     });
     this.shape.setWithAllButtons(true);
+    this.lockRatio = initData.lockRatio;
   }
+
+  /**
+   * Function to change the data of the shape
+   * @param {AllParams} param - data to change
+   */
   changeData(param: AllParams) {
     this.shape.changeData(param);
     this.lockRatio = param.lockRatio;
   }
 
+  /**
+   * Function to get the type of the shape
+   * @returns {string} - type of the shape
+   */
   getType() {
     return this.shape.getType();
   }
 
+  /**
+   * Function to set the data of the shape
+   * @param {ShapeDefinition} draw - data to set
+   */
   async setDraw(draw: ShapeDefinition) {
     await this.shape.setData(draw);
   }
 
+  /**
+   * Function to get the data of the shape
+   * @returns {ShapeDefinition | null} - data of the shape
+   */
   getDraw(): ShapeDefinition | null {
     return this.shape.getData() as ShapeDefinition | null;
   }
 
+  /**
+   * Function to set the coordinates of the shape
+   * @param {Coordinate} coord - coordinates to set
+   */
   setCoordinates(coord: Coordinate) {
     this.coordinates = coord;
     if (this.coordinates && this.offset && !this.fixed) {
@@ -94,16 +120,32 @@ export class drawElement extends drawingHandler {
     return this.coordinates;
   }
 
+  /**
+   * Function to set the fixed state of the shape
+   * @param {boolean} value - fixed state
+   */
   setFixed(value: boolean) {
     this.fixed = value;
   }
-  isFixed() {
+
+  /**
+   * Function to get the fixed state of the shape
+   * @returns {boolean} - fixed state
+   */
+  isFixed(): boolean {
     return this.fixed;
   }
 
+  /**
+   * Function to erase the offset of the shape
+   */
   eraseOffset() {
     this.offset = null;
   }
+
+  /**
+   * Function to calculate the offset of the shape
+   */
   calculOffset() {
     if (!this.coordinates) return;
     const size: Area = this.shape.getDataSize();
