@@ -7,7 +7,7 @@ import { adjustBrightness } from "@/lib/utils/colors";
 import { ColorResult } from "react-color";
 
 interface ColorPikerBgProps {
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
   className?: string;
   title: string;
   closeColorPicker: () => void;

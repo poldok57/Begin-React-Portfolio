@@ -7,7 +7,6 @@ import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { withMousePosition } from "@/components/windows/withMousePosition";
-// import { RoomMenu } from "./RoomMenu";
 import { RoomMenu2 } from "./RoomMenu2";
 import { GroundSelection } from "./GroundSelection/GroundSelection";
 import { RoomProvider, useRoomContext } from "./RoomProvider";
@@ -19,6 +18,8 @@ import { DrawingProvider } from "@/context/DrawingContext";
 
 export const GROUND_ID = "back-ground";
 export const CONTAINER_ID = "ground-container";
+
+const DESIGN_STORE_NAME = "room-design-storge";
 
 const MARGIN = 10;
 
@@ -67,12 +68,14 @@ export const RoomCreatTools = () => {
     setMode,
     addSelectedTableId,
     removeSelectedTableId,
+    setStoreName,
   } = useRoomContext();
 
   if (mode === null) {
     console.log("RoomCreatTools setMode Create");
     setMode(Mode.create);
   }
+  setStoreName(DESIGN_STORE_NAME);
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);

@@ -9,7 +9,7 @@ import React, {
 import { Rectangle } from "@/lib/canvas/types";
 import { Mode } from "@/components/room/types";
 
-interface ScaleContextProps {
+interface RoomContextProps {
   ctxTemporary: CanvasRenderingContext2D | null;
   setCtxTemporary: (ctx: CanvasRenderingContext2D | null) => void;
   scale: number;
@@ -29,20 +29,29 @@ interface ScaleContextProps {
   addSelectedTableId: (id: string) => void;
   removeSelectedTableId: (id: string) => void;
   clearSelectedTableIds: () => void;
+  needRefresh: () => void;
+  storeName: string | null;
+  setStoreName: (storeName: string | null) => void;
 }
 
-const RoomContext = createContext<ScaleContextProps | undefined>(undefined);
+const RoomContext = createContext<RoomContextProps | undefined>(undefined);
 
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [ctxTemporary, setCtxTemporary] =
     useState<CanvasRenderingContext2D | null>(null);
+  const [storeName, setStoreName] = useState<string | null>(null);
+  const [toRefresh, setToRefresh] = useState<number>(0);
   const [scale, setStateScale] = useState<number>(1);
   const scaleRef = useRef<number>(1);
   const setScale = useCallback((newScale: number) => {
     scaleRef.current = newScale;
     setStateScale(newScale);
+  }, []);
+
+  const needRefresh = useCallback(() => {
+    setToRefresh(toRefresh + 1);
   }, []);
 
   const getScale = useCallback(() => {
@@ -174,6 +183,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
         addSelectedTableId,
         removeSelectedTableId,
         clearSelectedTableIds,
+        needRefresh,
+        storeName,
+        setStoreName,
       }}
     >
       {children}

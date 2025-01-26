@@ -13,14 +13,12 @@ interface CanvasProps {
   backgroundCanvasRef: React.RefObject<HTMLCanvasElement>;
   temporaryCanvasRef: React.RefObject<HTMLCanvasElement>;
   mode: Mode | null;
-  storeName: string | null;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
   backgroundCanvasRef,
   temporaryCanvasRef,
   mode = Mode.create,
-  storeName = null,
 }) => {
   const mouseCanvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState<{
@@ -31,7 +29,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     height: 600,
   });
   const { designElements, selectedDesignElement } = useTableDataStore();
-  const { setCtxTemporary, scale, getScale } = useRoomContext();
+  const { setCtxTemporary, scale, getScale, storeName } = useRoomContext();
 
   /**
    * Zustand design local storage

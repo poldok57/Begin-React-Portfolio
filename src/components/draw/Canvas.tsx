@@ -4,7 +4,7 @@ import { withMousePosition } from "../windows/withMousePosition";
 import { DrawList } from "./DrawList";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { clearCanvas } from "@/lib/canvas/canvas-tools";
-import { ColorPikerBg } from "../colors/ColorPikerBg";
+import { ColorPikerBg } from "@/components/colors/ColorPikerBg";
 
 interface CanvasProps {
   width: number;

@@ -135,7 +135,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   }, [typeListMode]);
 
   return (
-    <div className="flex items-center w-full align-middle min-h-12 bg-base-100">
+    <div className="flex items-center w-full align-middle bg-gray-100 min-h-12">
       <div className="navbar-start">
         <div className="dropdown">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">

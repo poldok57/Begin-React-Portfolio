@@ -11,8 +11,6 @@ import { useGroundSelectionLogic } from "./hooks/useGroundSelectionLogic";
 import { useZustandDesignStore } from "@/lib/stores/design";
 const TOUCH_MESSAGE_ID = "touch-message";
 
-const DESIGN_STORE_NAME = "room-design-storge";
-
 interface GroundSelectionProps {
   onSelectionStart: () => void;
   onSelectionEnd: (rect: Rectangle | null) => void;
@@ -61,6 +59,7 @@ export const GroundSelection = React.forwardRef<
       setSelectedRect,
       setRotation,
       getRotation,
+      storeName,
     } = useRoomContext();
     const groundRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -71,8 +70,7 @@ export const GroundSelection = React.forwardRef<
     const [showAlignmentLines, setShowAlignmentLines] = useState(false);
     const previousPosition = useRef<Position | null>(null);
 
-    const { backgroundColor } =
-      useZustandDesignStore(DESIGN_STORE_NAME).getState();
+    const { backgroundColor } = useZustandDesignStore(storeName).getState();
 
     React.useImperativeHandle(ref, () => groundRef.current as HTMLDivElement);
 
@@ -367,7 +365,6 @@ export const GroundSelection = React.forwardRef<
               backgroundCanvasRef={backgroundCanvasRef}
               temporaryCanvasRef={temporaryCanvasRef}
               mode={mode}
-              storeName={DESIGN_STORE_NAME}
             />
 
             <SelectionContainer
