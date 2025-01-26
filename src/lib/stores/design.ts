@@ -16,6 +16,7 @@ const defaultDesignStoreName = "design-data-storage";
 interface DesignState {
   designElements: ThingsToDraw[];
   selectedDesignElement: string | null;
+  getDesignElementLength: () => number;
   backgroundColor: string;
   scale: number;
   getAllDesignElements: () => ThingsToDraw[];
@@ -35,7 +36,7 @@ interface DesignState {
   setSelectedDesignElement: (id: string | null) => void;
   getSelectedDesignElement: () => ThingsToDraw | null;
   addOrUpdateDesignElement: (designElement: ThingsToDraw) => string;
-  orderDesignElement: (id: string, direction: 1 | -1) => void;
+  orderDesignElement: (currentIndex: number, targetIndex: number) => void;
   eraseDesignElement: () => void;
   setScale: (scale: number) => void;
   // getScale: () => number;
@@ -168,21 +169,21 @@ const createDesignStore = (storageName: string) => {
       }
       return null;
     },
-    orderDesignElement: (id: string, direction: 1 | -1) => {
+    orderDesignElement: (currentIndex: number, targetIndex: number) => {
       set((state: DesignState) => {
         const elements = [...state.designElements];
-        const currentIndex = elements.findIndex((element) => element.id === id);
 
-        if (currentIndex === -1) return state;
+        if (
+          currentIndex === -1 ||
+          targetIndex < 0 ||
+          targetIndex >= elements.length
+        )
+          return state;
 
-        const newIndex = currentIndex + direction;
-        if (newIndex < 0 || newIndex >= elements.length) return state;
-
-        // Swap elements
-        [elements[currentIndex], elements[newIndex]] = [
-          elements[newIndex],
-          elements[currentIndex],
-        ];
+        // Retirer l'élément de sa position actuelle
+        const [movedElement] = elements.splice(currentIndex, 1);
+        // L'insérer à sa nouvelle position
+        elements.splice(targetIndex, 0, movedElement);
 
         return {
           designElements: elements,
@@ -215,6 +216,7 @@ const createDesignStore = (storageName: string) => {
         backgroundColor,
       }));
     },
+    getDesignElementLength: () => get().designElements.length,
   });
 
   const localStoragePersist: PersistOptions<DesignState>["storage"] = {

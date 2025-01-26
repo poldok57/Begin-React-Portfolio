@@ -4,7 +4,7 @@ import { ThingsToDraw } from "@/lib/canvas/canvas-defines";
 
 interface UseDragAndDropProps {
   designElements: ThingsToDraw[];
-  orderDesignElement: (id: string, direction: 1 | -1) => void;
+  orderDesignElement: (currentIndex: number, targetIndex: number) => void;
   onDragEnd: () => void;
 }
 
@@ -14,8 +14,42 @@ export const useDragAndDrop = ({
   onDragEnd,
 }: UseDragAndDropProps) => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
+
+  const targetIdRef = useRef<string | null>(null);
+
   const touchStartYRef = useRef<number | null>(null);
   const dragItemRef = useRef<HTMLSpanElement | null>(null);
+
+  const recordTargetId = (element: HTMLLIElement) => {
+    const targetId = element?.getAttribute("data-id");
+
+    if (!draggedItem || !targetId) return false;
+
+    targetIdRef.current = targetId;
+    return true;
+  };
+
+  const moveElement = () => {
+    if (
+      !targetIdRef.current ||
+      !draggedItem ||
+      draggedItem === targetIdRef.current
+    )
+      return false;
+
+    const draggedIndex = designElements.findIndex(
+      (el) => el.id === draggedItem
+    );
+    const targetIndex = designElements.findIndex(
+      (el) => el.id === targetIdRef.current
+    );
+
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      orderDesignElement(draggedIndex, targetIndex);
+      return true;
+    }
+    return false;
+  };
 
   useEffect(() => {
     const isTouch = isTouchDevice();
@@ -33,24 +67,15 @@ export const useDragAndDrop = ({
       const dragEvent = e as DragEvent;
       dragEvent.preventDefault();
       const element = (dragEvent.target as HTMLElement).closest("li");
-      const targetId = element?.getAttribute("data-id");
-
-      if (!draggedItem || !targetId || draggedItem === targetId) return;
-
-      const draggedIndex = designElements.findIndex(
-        (el) => el.id === draggedItem
-      );
-      const targetIndex = designElements.findIndex((el) => el.id === targetId);
-
-      if (draggedIndex < targetIndex) {
-        orderDesignElement(draggedItem, 1);
-      } else {
-        orderDesignElement(draggedItem, -1);
+      if (element) {
+        recordTargetId(element as HTMLLIElement);
       }
     };
 
     const handleDragEndMouse = (_e: Event) => {
+      moveElement();
       setDraggedItem(null);
+      targetIdRef.current = null;
       onDragEnd();
     };
 
@@ -77,29 +102,14 @@ export const useDragAndDrop = ({
 
       const touch = touchEvent.touches[0];
       const touchY = touch.clientY;
-      const deltaY = touchY - touchStartYRef.current;
 
       const elementUnderTouch = document.elementFromPoint(
         touch.clientX,
         touch.clientY
       );
       const listItem = elementUnderTouch?.closest("li");
-      const targetId = listItem?.getAttribute("data-id");
 
-      if (targetId && targetId !== draggedItem && Math.abs(deltaY) > 20) {
-        const draggedIndex = designElements.findIndex(
-          (el) => el.id === draggedItem
-        );
-        const targetIndex = designElements.findIndex(
-          (el) => el.id === targetId
-        );
-
-        if (draggedIndex < targetIndex && deltaY > 0) {
-          orderDesignElement(draggedItem, 1);
-        } else if (draggedIndex > targetIndex && deltaY < 0) {
-          orderDesignElement(draggedItem, -1);
-        }
-
+      if (recordTargetId(listItem as HTMLLIElement)) {
         touchStartYRef.current = touchY;
       }
     };
@@ -108,8 +118,10 @@ export const useDragAndDrop = ({
       if (dragItemRef.current) {
         dragItemRef.current.style.opacity = "1";
       }
+      moveElement();
       setDraggedItem(null);
       touchStartYRef.current = null;
+      targetIdRef.current = null;
       onDragEnd();
     };
 

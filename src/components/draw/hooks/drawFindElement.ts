@@ -74,7 +74,7 @@ export class drawFindElement extends drawingHandler {
     event: MouseEvent | TouchEvent,
     coord: Coordinate
   ): string | null {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
+    if (this.getType() !== DRAWING_MODES.FIND) {
       return null;
     }
 
@@ -112,7 +112,7 @@ export class drawFindElement extends drawingHandler {
     event: MouseEvent | TouchEvent,
     coord: Coordinate
   ): returnMouseDown {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
+    if (this.getType() !== DRAWING_MODES.FIND) {
       return { toExtend: false } as returnMouseDown;
     }
     const designElements = this.designElements;
@@ -143,23 +143,17 @@ export class drawFindElement extends drawingHandler {
   /**
    * Function to stop drawing on the canvas
    */
-  actionMouseUp() {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return;
-    }
-  }
+  actionMouseUp() {}
 
   actionMouseLeave() {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return;
+    if (this.getType() === DRAWING_MODES.FIND) {
+      this.clearTemporyCanvas();
     }
-    this.clearTemporyCanvas();
   }
 
   endAction() {
-    if (this.getType() === DRAWING_MODES.PAUSE) {
-      return;
+    if (this.getType() === DRAWING_MODES.FIND) {
+      this.clearTemporyCanvas();
     }
-    this.clearTemporyCanvas();
   }
 }

@@ -31,6 +31,7 @@ interface DrawingContextProps {
   setLockRatio: (ratio: boolean) => void;
   reloadControl: number;
   setReloadControl: () => void;
+  needRefresh: () => void;
 }
 
 const DrawingContext = createContext<DrawingContextProps | undefined>(
@@ -41,10 +42,15 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [mode, setModeState] = useState(DRAWING_MODES.INIT);
+  const [toRefresh, setToRefresh] = useState(0);
 
   const drawingParamsRef = useRef<AllParams>(DEFAULT_PARAMS);
 
   const [withText, setWithText] = useState(false);
+
+  const needRefresh = () => {
+    setToRefresh(toRefresh + 1);
+  };
 
   const setDrawingParams = (params: Partial<AllParams>) => {
     drawingParamsRef.current = { ...drawingParamsRef.current, ...params };
@@ -152,6 +158,7 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
         setLockRatio,
         reloadControl,
         setReloadControl,
+        needRefresh,
       }}
     >
       {children}

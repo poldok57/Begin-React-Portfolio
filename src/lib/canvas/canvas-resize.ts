@@ -37,6 +37,7 @@ export const resizingElement = (
   if (lockRatio && !size.ratio) {
     size.ratio = Number((size.width / size.height).toFixed(3));
   }
+  if (!lockRatio) size.ratio = undefined;
 
   if (mouseOnShape) {
     let { newArea } = resizeSquare(coordinate, size, mouseOnShape, rotation);

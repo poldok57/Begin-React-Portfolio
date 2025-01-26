@@ -10,7 +10,6 @@ import {
   isDrawingSelect,
   EventDetail,
   ThingsToDraw,
-  isDrawingPause,
 } from "@/lib/canvas/canvas-defines";
 
 import { alertMessage } from "@/components/alert-messages/alertMessage";
@@ -47,7 +46,7 @@ export const useCanvas = ({
   useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
 
-  const { mode, setMode, getDrawingParams } = useDrawingContext();
+  const { mode, setMode, needRefresh, getDrawingParams } = useDrawingContext();
 
   let currentParams = getDrawingParams();
   // drawing handler
@@ -182,7 +181,8 @@ export const useCanvas = ({
         newHandler = true;
       }
       drawingHdl = selectionRef.current;
-    } else if (isDrawingPause(mode)) {
+    } else {
+      // Find mode is default mode
       if (findRef.current === null) {
         findRef.current = new drawFindElement(
           canvasRef.current,
@@ -193,8 +193,6 @@ export const useCanvas = ({
         );
       }
       drawingHdl = findRef.current;
-    } else {
-      throw new Error("Drawing mode not found : " + mode);
     }
 
     if (newHandler && drawingHdl) {
@@ -601,6 +599,7 @@ export const useCanvas = ({
     if (mouseResult?.changeMode) {
       // console.log("changeMode", mouseResult.changeMode);
       setMode(mouseResult.changeMode);
+      needRefresh();
     }
     if (mouseResult?.pointer && canvasTemporyRef.current) {
       canvasTemporyRef.current.style.cursor = mouseResult.pointer;
