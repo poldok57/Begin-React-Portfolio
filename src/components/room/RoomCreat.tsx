@@ -15,6 +15,8 @@ import { ListTablesText } from "./ListTablesText";
 import { ValidationFrame } from "./ValidationFrame";
 import { Mode } from "./types";
 import { DrawingProvider } from "@/context/DrawingContext";
+import { useDrawingContext } from "@/context/DrawingContext";
+import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 
 export const GROUND_ID = "back-ground";
 export const CONTAINER_ID = "ground-container";
@@ -23,7 +25,7 @@ const DESIGN_STORE_NAME = "room-design-storge";
 
 const MARGIN = 10;
 
-export type TypeList = "plan" | "list";
+export type TypeList = "plan" | "list" | "hide";
 
 // const RoomMenuWP = withMousePosition(RoomMenu);
 const GroupCreatWP = withMousePosition(GroupCreat);
@@ -76,6 +78,8 @@ export const RoomCreatTools = () => {
     setMode(Mode.create);
   }
   setStoreName(DESIGN_STORE_NAME);
+  const { setDrawingMode } = useDrawingContext();
+  setDrawingMode(DRAWING_MODES.PAUSE);
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);

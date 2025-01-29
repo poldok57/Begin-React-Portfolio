@@ -34,8 +34,15 @@ export const Canvas: React.FC<CanvasProps> = ({
   /**
    * Zustand design local storage
    */
-  const { setSelectedDesignElement, refreshCanvas } =
-    useZustandDesignStore(storeName).getState();
+  console.log("storeName", storeName);
+
+  let setSelectedDesignElement = null;
+  let refreshCanvas = null;
+
+  const store = useZustandDesignStore(storeName);
+  if (store) {
+    ({ setSelectedDesignElement, refreshCanvas } = store.getState());
+  }
 
   const simpleRefreshCanvas = (
     withSelected: boolean = true,
@@ -56,7 +63,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     if (mouseCanvasRef.current) {
       clearCanvas(mouseCanvasRef.current);
     }
-    if (ctx) {
+    if (ctx && refreshCanvas) {
       refreshCanvas(ctx, withSelected, lScale);
     }
   };
@@ -65,6 +72,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     canvasRef: backgroundCanvasRef,
     canvasTemporyRef: temporaryCanvasRef,
     canvasMouseRef: mouseCanvasRef,
+    storeName,
     scale,
   });
 
@@ -103,7 +111,9 @@ export const Canvas: React.FC<CanvasProps> = ({
             canvas.height = newSize.height;
           }
         );
-        setSelectedDesignElement(null);
+        if (setSelectedDesignElement) {
+          setSelectedDesignElement(null);
+        }
         simpleRefreshCanvas(true, scale);
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }

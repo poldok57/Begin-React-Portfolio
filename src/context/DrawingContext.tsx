@@ -24,7 +24,7 @@ interface DrawingContextProps {
   setArrowParams: (param: Params) => void;
   setShapeParams: (param: Params) => void;
   setBorderParams: (param: Params) => void;
-  setMode: (mode: string) => void;
+  setDrawingMode: (mode: string) => void;
   mode: string;
   withText: boolean;
   setWithText: (withText: boolean) => void;
@@ -41,7 +41,7 @@ const DrawingContext = createContext<DrawingContextProps | undefined>(
 export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [mode, setModeState] = useState(DRAWING_MODES.INIT);
+  const [mode, setDrawingModeState] = useState(DRAWING_MODES.INIT);
   const [toRefresh, setToRefresh] = useState(0);
 
   const drawingParamsRef = useRef<AllParams>(DEFAULT_PARAMS);
@@ -78,7 +78,7 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const handleChangeMode = (newMode: string) => {
-    setMode(newMode);
+    setDrawingMode(newMode);
     addEventMode(newMode);
     // mode = newMode;
   };
@@ -87,9 +87,9 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
     return drawingParamsRef.current;
   };
 
-  const setMode = (mode: string) => {
+  const setDrawingMode = (mode: string) => {
     setDrawingParams({ mode });
-    setModeState(mode);
+    setDrawingModeState(mode);
   };
 
   const setGeneralParams = (param: Params) => {
@@ -151,7 +151,7 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
         setShapeParams,
         setBorderParams,
         setTextParams,
-        setMode,
+        setDrawingMode,
         mode,
         withText,
         setWithText,

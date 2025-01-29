@@ -46,7 +46,8 @@ export const useCanvas = ({
   useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
 
-  const { mode, setMode, needRefresh, getDrawingParams } = useDrawingContext();
+  const { mode, setDrawingMode, needRefresh, getDrawingParams } =
+    useDrawingContext();
 
   let currentParams = getDrawingParams();
   // drawing handler
@@ -58,13 +59,23 @@ export const useCanvas = ({
   const justReload = useRef(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const scaleRef = useRef(scale);
-  const {
-    deleteLastDesignElement,
-    refreshCanvas,
-    getSelectedDesignElement,
-    setSelectedDesignElement,
-    deleteDesignElement,
-  } = useZustandDesignStore(storeName).getState();
+
+  let deleteLastDesignElement = null;
+  let refreshCanvas = null;
+  let getSelectedDesignElement = null;
+  let setSelectedDesignElement = null;
+  let deleteDesignElement = null;
+
+  const store = useZustandDesignStore(storeName);
+  if (store) {
+    ({
+      deleteLastDesignElement,
+      refreshCanvas,
+      getSelectedDesignElement,
+      setSelectedDesignElement,
+      deleteDesignElement,
+    } = store.getState());
+  }
 
   useEffect(() => {
     scaleRef.current = scale;
@@ -76,8 +87,12 @@ export const useCanvas = ({
     if (ctx === null) {
       return;
     }
-    deleteLastDesignElement();
-    refreshCanvas(ctx, false, scaleRef.current);
+    if (deleteLastDesignElement) {
+      deleteLastDesignElement();
+    }
+    if (refreshCanvas) {
+      refreshCanvas(ctx, false, scaleRef.current);
+    }
   };
 
   /**
@@ -140,7 +155,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode,
+          setDrawingMode,
           storeName
         );
       }
@@ -151,7 +166,7 @@ export const useCanvas = ({
         canvasRef.current,
         contextRef.current,
         canvasTemporyRef.current,
-        setMode,
+        setDrawingMode,
         storeName
       );
       newHandler = true;
@@ -162,7 +177,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode,
+          setDrawingMode,
           storeName
         );
         newHandler = true;
@@ -175,7 +190,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode,
+          setDrawingMode,
           storeName
         );
         newHandler = true;
@@ -188,7 +203,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           canvasTemporyRef.current,
-          setMode,
+          setDrawingMode,
           storeName
         );
       }
@@ -212,9 +227,11 @@ export const useCanvas = ({
   const generalInitialisation = () => {
     // Initialize canvas
     currentParams = getDrawingParams();
-    setMode(DRAWING_MODES.DRAW);
+    setDrawingMode(DRAWING_MODES.DRAW);
 
-    setSelectedDesignElement(null);
+    if (setSelectedDesignElement) {
+      setSelectedDesignElement(null);
+    }
 
     lineRef.current = null;
     elementRef.current = null;
@@ -344,7 +361,9 @@ export const useCanvas = ({
     const reload = newMode === DRAWING_MODES.RELOAD;
 
     const selectedDesignElement: ThingsToDraw | null = reload
-      ? getSelectedDesignElement()
+      ? getSelectedDesignElement
+        ? getSelectedDesignElement()
+        : null
       : null;
 
     if (reload && selectedDesignElement) {
@@ -397,13 +416,13 @@ export const useCanvas = ({
         },
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
-      if (canvasRef.current) {
+      if (canvasRef.current && refreshCanvas) {
         refreshCanvas(contextRef.current, false, scaleRef.current);
       }
 
       mouseOnCtrlPanel.current = false;
       justReload.current = true;
-      setMode(newMode);
+      setDrawingMode(newMode);
       return;
     }
 
@@ -448,7 +467,7 @@ export const useCanvas = ({
       case DRAWING_MODES.ABORT:
         const mode = drawingRef.current.actionAbort();
         if (mode) {
-          setMode(mode);
+          setDrawingMode(mode);
         }
         break;
       case DRAWING_MODES.VALID:
@@ -514,7 +533,7 @@ export const useCanvas = ({
         if (lineRef.current !== null) {
           lineRef.current?.actionEndPath(eventAction);
           stopExtendMouseEvent();
-          setMode(DRAWING_MODES.LINES_PATH);
+          setDrawingMode(DRAWING_MODES.LINES_PATH);
         }
         break;
       case DRAWING_MODES.SELECT_AREA:
@@ -583,14 +602,14 @@ export const useCanvas = ({
       stopExtendMouseEvent();
     }
 
-    if (mouseResult?.deleteId) {
+    if (mouseResult?.deleteId && deleteDesignElement) {
       deleteDesignElement(mouseResult.deleteId);
     }
 
     if (mouseResult?.toReset) {
       drawingRef.current?.endAction();
       // restart with basic drawing mode
-      setMode(DRAWING_MODES.FIND);
+      setDrawingMode(DRAWING_MODES.FIND);
 
       drawingRef.current = selectDrawingHandler(DRAWING_MODES.FIND);
       drawingRef.current?.setType(DRAWING_MODES.FIND);
@@ -598,7 +617,7 @@ export const useCanvas = ({
     }
     if (mouseResult?.changeMode) {
       // console.log("changeMode", mouseResult.changeMode);
-      setMode(mouseResult.changeMode);
+      setDrawingMode(mouseResult.changeMode);
       needRefresh();
     }
     if (mouseResult?.pointer && canvasTemporyRef.current) {

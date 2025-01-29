@@ -14,19 +14,10 @@ import { menuRoomVariants } from "@/styles/menu-variants";
 
 import { ColorPikerBg } from "@/components/colors/ColorPikerBg";
 import { useZustandDesignStore } from "@/lib/stores/design";
+// import { useDrawingContext } from "@/context/DrawingContext";
 
 import clsx from "clsx";
 
-// const themeColors: string[] = [
-//   "#ffffff",
-//   "#d9d9d9",
-//   "#b3b3b3",
-//   "#8c8c8c",
-//   "#666666",
-//   "#404040",
-//   "#1a1a1a",
-//   "#000000",
-// ];
 interface RoomDesignMenuProps {
   isTouch: boolean;
   recordDesign: (
@@ -65,12 +56,16 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
 
   const store = useZustandDesignStore(storeName);
 
-  const { backgroundColor, setBackgroundColor } = store.getState();
+  const backgroundColor = store ? store.getState().backgroundColor : null;
+
+  const setBackgroundColor = store ? store.getState().setBackgroundColor : null;
   const [background, setBackground] = useState(backgroundColor ?? "#aabbff");
 
   const onCloseColorPicker = () => {
     setShowColorPicker(false);
-    setBackgroundColor(background);
+    if (setBackgroundColor) {
+      setBackgroundColor(background);
+    }
     needRefresh();
   };
 

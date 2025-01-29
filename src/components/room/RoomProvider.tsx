@@ -42,7 +42,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   const [ctxTemporary, setCtxTemporary] =
     useState<CanvasRenderingContext2D | null>(null);
   const [storeName, setStoreName] = useState<string | null>(null);
-  const [toRefresh, setToRefresh] = useState<number>(0);
+  const [, setToRefresh] = useState<number>(0);
   const [scale, setStateScale] = useState<number>(1);
   const scaleRef = useRef<number>(1);
   const setScale = useCallback((newScale: number) => {
@@ -51,7 +51,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const needRefresh = useCallback(() => {
-    setToRefresh(toRefresh + 1);
+    setToRefresh((prev) => prev + 1);
   }, []);
 
   const getScale = useCallback(() => {

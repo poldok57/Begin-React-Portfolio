@@ -268,6 +268,7 @@ const storeInstances = new Map<string, ReturnType<typeof createDesignStore>>();
 
 // For classes (non-React)
 export const zustandDesignStore = (storeName: string | null) => {
+  console.log("zustandDesignStore", storeName);
   const name = storeName ?? defaultDesignStoreName;
 
   // Get or create the store instance
@@ -280,6 +281,11 @@ export const zustandDesignStore = (storeName: string | null) => {
 
 // For React components
 export const useZustandDesignStore = (storeName: string | null) => {
+  if (storeName === null) {
+    console.log("storeName is null");
+    return null;
+  }
+
   const store = zustandDesignStore(storeName);
   return store;
 };

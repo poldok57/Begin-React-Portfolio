@@ -23,7 +23,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
 }) => {
   const {
     mode,
-    setMode,
+    setDrawingMode,
     drawingParams,
     addEventDetail,
     setShapeParams,
@@ -60,7 +60,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
         opacity: 1,
       });
       setLockRatio(true);
-      setMode(DRAWING_MODES.IMAGE);
+      setDrawingMode(DRAWING_MODES.IMAGE);
       setReloadControl();
 
       // close the dialog box after the file is uploaded

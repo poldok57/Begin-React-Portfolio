@@ -31,6 +31,7 @@ import { Save } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 import { useDrawingContext } from "@/context/DrawingContext";
+import { useControlKeyboard } from "./hooks/useControlKeyboard";
 interface DrawControlProps {
   storeName?: string | null;
   buttonIconSize?: number;
@@ -45,7 +46,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   const {
     drawingParams,
     setDrawingParams,
-    setMode,
+    setDrawingMode,
     mode,
     addEventDetail,
     addEventAction,
@@ -56,8 +57,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     reloadControl,
     setReloadControl,
   } = useDrawingContext();
-
-  const modeRef = useRef(mode);
 
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
   const defaultFilename = useRef("my-drawing");
@@ -78,11 +77,16 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       ...(name ? { name } : {}),
     });
   };
+
+  const store = useZustandDesignStore(storeName);
+  if (!store) {
+    throw new Error("Design store not found");
+  }
   const {
     eraseDesignElement,
     selectedDesignElement,
     getSelectedDesignElement,
-  } = useZustandDesignStore(storeName).getState();
+  } = store.getState();
 
   const selectedElementRef: MutableRefObject<string | null> = useRef(null);
 
@@ -91,13 +95,13 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     // changeMode(DRAWING_MODES.INIT); // mode send to DrawCanvas
     addEventAction(DRAWING_MODES.INIT);
     // Mode for the control panel
-    setMode(DRAWING_MODES.INIT);
+    setDrawingMode(DRAWING_MODES.INIT);
     // eraseHistory();
     eraseDesignElement();
   };
 
   const handleImage = (mode: string) => {
-    setMode(DRAWING_MODES.IMAGE);
+    setDrawingMode(DRAWING_MODES.IMAGE);
     addEventAction(mode);
   };
 
@@ -112,51 +116,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     addEventAction(DRAWING_MODES.SELECT_AREA);
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    switch (event.key) {
-      case "Escape":
-        addEventAction(DRAWING_MODES.ABORT);
-        break;
-      case "Enter":
-        addEventAction(DRAWING_MODES.VALID);
-        break;
-      case "z":
-      case "Z":
-        if (event.ctrlKey) {
-          addEventAction(DRAWING_MODES.UNDO);
-        }
-        break;
-      case "a":
-      case "A":
-        if (event.ctrlKey) {
-          event.preventDefault();
-          handleSelectZone();
-        }
-        break;
-
-      case "c":
-      case "C":
-        // console.log("Ctrl-c", mode);
-        if (isDrawingSelect(modeRef.current) && event.ctrlKey) {
-          handleImage(DRAWING_MODES.COPY);
-        }
-        break;
-      case "v":
-      case "V":
-        if (isDrawingSelect(modeRef.current) && event.ctrlKey) {
-          handleImage(DRAWING_MODES.PASTE);
-        }
-        break;
-      case "x":
-      case "X":
-        if (isDrawingSelect(modeRef.current) && event.ctrlKey) {
-          handleImage(DRAWING_MODES.CUT);
-        }
-        break;
-      default:
-        break;
-    }
-  };
+  useControlKeyboard(isTouch);
 
   // update controle panel when an element is selected
   useEffect(() => {
@@ -169,7 +129,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         getSelectedDesignElement
       );
       if (newMode) {
-        setMode(newMode);
+        setDrawingMode(newMode);
       }
       setReloadControl();
       alertMessage("selected element changed: " + newMode);
@@ -180,20 +140,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
   useEffect(() => {
     setIsTouch(isTouchDevice());
   }, []);
-
-  useEffect(() => {
-    modeRef.current = mode;
-
-    if (isTouch) {
-      // touch device, no keyboard events
-      return;
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [mode]);
 
   return useMemo(() => {
     return (

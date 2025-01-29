@@ -25,21 +25,34 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
-  const {
-    scale,
-    setScale,
-    setSelectedDesignElement,
-    refreshCanvas,
-    backgroundColor,
-    setBackgroundColor,
-  } = useZustandDesignStore(storeName).getState();
+  const store = useZustandDesignStore(storeName);
+
+  let scale = 1;
+  let setScale = null;
+  let setSelectedDesignElement = null;
+  let refreshCanvas = null;
+  let backgroundColor = "#eeeeee";
+  let setBackgroundColor = null;
+
+  if (store) {
+    ({
+      scale,
+      setScale,
+      setSelectedDesignElement,
+      refreshCanvas,
+      backgroundColor,
+      setBackgroundColor,
+    } = store.getState());
+  }
 
   const [background, setBackground] = useState(backgroundColor);
   const [refresh, setRefresh] = useState(0);
 
   const onCloseColorPicker = () => {
     setShowColorPicker(false);
-    setBackgroundColor(background);
+    if (setBackgroundColor) {
+      setBackgroundColor(background);
+    }
   };
 
   const simpleRefreshCanvas = (
@@ -61,15 +74,19 @@ export const Canvas: React.FC<CanvasProps> = ({
     if (canvasMouseRef.current) {
       clearCanvas(canvasMouseRef.current);
     }
-    if (ctx) {
+    if (ctx && refreshCanvas) {
       refreshCanvas(ctx, withSelected, lScale);
     }
   };
 
   const changeScale = (scale: number) => {
-    setScale(scale);
+    if (setScale) {
+      setScale(scale);
+    }
     setRefresh(refresh + 1);
-    setSelectedDesignElement(null);
+    if (setSelectedDesignElement) {
+      setSelectedDesignElement(null);
+    }
 
     simpleRefreshCanvas(false, scale);
   };
@@ -78,6 +95,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     canvasRef,
     canvasTemporyRef,
     canvasMouseRef,
+    storeName,
     scale,
   });
 

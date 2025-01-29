@@ -21,6 +21,11 @@ export const DrawList = ({
 }) => {
   const [designElementLength, setDesignElementLength] = useState(0);
 
+  const store = useZustandDesignStore(storeName ?? null);
+  if (!store) {
+    throw new Error("Design store not found");
+  }
+
   const {
     designElements,
     deleteDesignElement,
@@ -29,21 +34,21 @@ export const DrawList = ({
     setSelectedDesignElement,
     selectedDesignElement,
     getDesignElementLength,
-  } = useZustandDesignStore(storeName ?? null).getState();
+  } = store.getState();
 
-  const { setMode } = useDrawingContext();
+  const { setDrawingMode } = useDrawingContext();
 
   const onSelectElement = (elementId: string) => {
     setSelectedDesignElement(elementId);
 
-    setMode(DRAWING_MODES.RELOAD);
+    setDrawingMode(DRAWING_MODES.RELOAD);
   };
 
   const handleDeleteElement = (elementId: string) => {
     deleteDesignElement(elementId);
     setDesignElementLength(getDesignElementLength());
     simpleRefreshCanvas(true);
-    setMode(DRAWING_MODES.FIND);
+    setDrawingMode(DRAWING_MODES.FIND);
   };
 
   const handleReset = () => {
@@ -56,7 +61,7 @@ export const DrawList = ({
     orderDesignElement,
     onDragEnd: () => {
       simpleRefreshCanvas(true);
-      setMode(DRAWING_MODES.FIND);
+      setDrawingMode(DRAWING_MODES.FIND);
     },
   });
 
@@ -66,7 +71,7 @@ export const DrawList = ({
 
   return (
     <div
-      // onMouseDown={() => setMode(DRAWING_MODES.PAUSE)}
+      // onMouseDown={() => setDrawingMode(DRAWING_MODES.PAUSE)}
       className="flex flex-col gap-3 py-2 w-44 rounded-md border-2 bg-background border-accent"
     >
       {designElementLength === 0 ? (
@@ -136,7 +141,7 @@ export const DrawList = ({
             <button
               onClick={() => {
                 simpleRefreshCanvas(true);
-                setMode(DRAWING_MODES.FIND);
+                setDrawingMode(DRAWING_MODES.FIND);
               }}
               className="btn btn-sm btn-circle hover:bg-gray-50"
             >

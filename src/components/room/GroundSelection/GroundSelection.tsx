@@ -70,7 +70,9 @@ export const GroundSelection = React.forwardRef<
     const [showAlignmentLines, setShowAlignmentLines] = useState(false);
     const previousPosition = useRef<Position | null>(null);
 
-    const { backgroundColor } = useZustandDesignStore(storeName).getState();
+    const store = useZustandDesignStore(storeName);
+
+    const backgroundColor = store ? store.getState().backgroundColor : null;
 
     React.useImperativeHandle(ref, () => groundRef.current as HTMLDivElement);
 

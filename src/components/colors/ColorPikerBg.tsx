@@ -1,7 +1,7 @@
 import { SliderPicker } from "react-color";
 import { RangeInput } from "../atom/RangeInput";
 import { ColorInput } from "./ColorInput";
-import { X } from "lucide-react";
+import { CircleCheckBig } from "lucide-react";
 import { useState } from "react";
 import { adjustBrightness } from "@/lib/utils/colors";
 import { ColorResult } from "react-color";
@@ -45,10 +45,10 @@ export const ColorPikerBg = ({
         <div className="flex justify-between items-center">
           <span className="text-xs font-semibold">{title}</span>
           <button
-            className="absolute right-1 btn btn-sm btn-circle"
+            className="absolute right-1 bg-green-500 btn btn-sm btn-circle"
             onClick={closeColorPicker}
           >
-            <X size={14} />
+            <CircleCheckBig size={16} />
           </button>
         </div>
         <SliderPicker
