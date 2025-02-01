@@ -23,6 +23,14 @@ export enum DesignType {
   image = "image",
 }
 
+export enum Menu {
+  addTable = "addTable",
+  updateTable = "updateTable",
+  tableNumbers = "tableNumbers",
+  roomDesign = "roomDesign",
+  scale = "scale",
+}
+
 export enum Mode {
   draw = "draw",
   create = "create",
@@ -36,6 +44,12 @@ export interface Table {
   type: TableType;
   tableNumber?: string;
   tableText?: string;
+}
+
+export enum TypeListTables {
+  plan = "plan",
+  list = "list",
+  hide = "hide",
 }
 
 export interface TableColors {

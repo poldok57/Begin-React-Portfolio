@@ -6,8 +6,7 @@ import { TableType } from "./types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
 import { useRoomContext } from "./RoomProvider";
-import { Menu } from "./RoomMenu";
-import { Mode } from "./types";
+import { Menu, Mode } from "./types";
 import { SelectTableType } from "./SelectTableType";
 import {
   positionTable,

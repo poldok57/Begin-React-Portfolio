@@ -13,6 +13,7 @@ interface ColorPikerBgProps {
   closeColorPicker: () => void;
   color: string;
   setColor: (color: string) => void;
+  isTouchDevice?: boolean;
 }
 export const ColorPikerBg = ({
   style,
@@ -21,6 +22,7 @@ export const ColorPikerBg = ({
   closeColorPicker,
   color,
   setColor,
+  isTouchDevice = false,
 }: ColorPikerBgProps) => {
   const [baseColor, setBaseColor] = useState(color);
   const [intensity, setIntensity] = useState(0);
@@ -48,7 +50,7 @@ export const ColorPikerBg = ({
             className="absolute right-1 bg-green-500 btn btn-sm btn-circle"
             onClick={closeColorPicker}
           >
-            <CircleCheckBig size={16} />
+            <CircleCheckBig size={isTouchDevice ? 20 : 16} />
           </button>
         </div>
         <SliderPicker

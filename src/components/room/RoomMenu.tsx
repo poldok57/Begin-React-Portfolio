@@ -6,21 +6,13 @@ import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomContext } from "./RoomProvider";
-import { DesignType } from "./types";
+import { DesignType, Menu } from "./types";
 import { TableNumbers } from "./TableNumbers";
 import { useTableDataStore } from "./stores/tables";
 import {
   showValidationFrame,
   addValidationValidAction,
 } from "./ValidationFrame";
-
-export enum Menu {
-  addTable = "addTable",
-  updateTable = "updateTable",
-  tableNumbers = "tableNumbers",
-  roomDesign = "roomDesign",
-  scale = "scale",
-}
 
 interface RoomMenuProps {
   btnSize: number;
@@ -36,7 +28,6 @@ interface RoomMenuProps {
 
 export const RoomMenu: React.FC<RoomMenuProps> = ({
   btnSize,
-  recordDesign,
   addSelectedRect,
   resetSelectedTables,
 }) => {
@@ -149,7 +140,6 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       />
       <RoomDesign
         className="w-full"
-        recordDesign={recordDesign}
         isTouch={isTouch}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}

@@ -8,6 +8,7 @@ interface ColorPickerProps {
   defaultValue?: string;
   className?: string;
   onChange?: (color: string) => void;
+  children?: React.ReactNode;
 }
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
@@ -17,6 +18,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   defaultValue,
   className,
   onChange,
+  children,
 }) => {
   const [color, setColor] = useState(defaultValue || "#000000");
   const pickerRef = React.useRef<HTMLInputElement>(null);
@@ -45,7 +47,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       />
       <div
         className={clsx(
-          "inline-block border cursor-pointer opacity-1",
+          "flex justify-center items-center border cursor-pointer opacity-1",
           className
         )}
         style={{
@@ -54,7 +56,9 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           height: `${height}px`,
         }}
         onClick={() => pickerRef.current?.click()}
-      ></div>
+      >
+        {children}
+      </div>
     </div>
   );
 };

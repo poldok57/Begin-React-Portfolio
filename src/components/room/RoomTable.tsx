@@ -108,7 +108,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       ref={ref}
       className={clsx("p-0 m-0 border-2 cursor-pointer z-10", {
         "border-dotted border-red-500": table.selected,
-        "bg-orange-400": table.selected && mode === Mode.numbering,
+        "bg-orange-300": table.selected && mode === Mode.numbering,
         "border-transparent": !table.selected,
       })}
       style={style}

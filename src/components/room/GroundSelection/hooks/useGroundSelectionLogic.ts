@@ -5,6 +5,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { useRoomContext } from "../../RoomProvider";
 import { Mode } from "../../types";
+import { Coordinate } from "@/lib/canvas/types";
 
 interface Position {
   left: number;
@@ -18,7 +19,7 @@ export const useGroundSelectionLogic = (
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
   setSelectedRect: (rect: Rectangle | null) => void,
   setShowAlignmentLines: (show: boolean) => void,
-  clearTemporaryCanvas: () => void,
+  clearTemporaryCanvas: (reason?: string) => void,
   drawAxe: () => void,
   selectZone: (rect: DOMRect | null) => void
 ) => {
@@ -30,20 +31,16 @@ export const useGroundSelectionLogic = (
 
   const { getScale, getRotation } = useRoomContext();
 
-  const getOffsetX = useCallback(() => {
-    if (!groundRef.current) return 0;
-    return (
-      groundRef.current.scrollLeft -
-      groundRef.current.getBoundingClientRect().left
-    );
-  }, []);
+  const getOffset: () => Coordinate = useCallback(() => {
+    if (!groundRef.current) return { x: 0, y: 0 };
 
-  const getOffsetY = useCallback(() => {
-    if (!groundRef.current) return 0;
-    return (
-      groundRef.current.scrollTop -
-      groundRef.current.getBoundingClientRect().top
-    );
+    const rect = groundRef.current.getBoundingClientRect();
+    const { left, top } = rect;
+
+    return {
+      x: groundRef.current.scrollLeft - left,
+      y: groundRef.current.scrollTop - top,
+    };
   }, []);
 
   const handleStart = useCallback(
@@ -70,9 +67,10 @@ export const useGroundSelectionLogic = (
 
       isSelectingRef.current = true;
       itemSelectedRef.current = false;
+      const offset = getOffset();
       startPos.current = {
-        left: clientX + getOffsetX(),
-        top: clientY + getOffsetY(),
+        left: clientX + offset.x,
+        top: clientY + offset.y,
       };
 
       setSelectedRect(null);
@@ -86,7 +84,7 @@ export const useGroundSelectionLogic = (
       setShowAlignmentLines(false);
       return false;
     },
-    [onSelectionStart, getOffsetX, getOffsetY, setSelectedRect]
+    [onSelectionStart, getOffset, setSelectedRect]
   );
 
   const debounceDrawAxe = useDebounce(drawAxe, 500);
@@ -122,17 +120,15 @@ export const useGroundSelectionLogic = (
 
   const handleMove = useCallback(
     (clientX: number, clientY: number, mode: string | null = Mode.create) => {
-      if (!groundRef.current || !containerRef.current) return false;
+      if (!groundRef.current || !containerRef.current || mode === Mode.draw)
+        return false;
 
       if (areaOffsetRef.current) {
         // move container
-        if (
-          mode !== Mode.create &&
-          mode !== Mode.draw &&
-          mode !== Mode.settings
-        ) {
+        if (mode !== Mode.create && mode !== Mode.settings) {
           return false;
         }
+
         const newLeft = Math.round(clientX + areaOffsetRef.current.left);
         const newTop = Math.round(clientY + areaOffsetRef.current.top);
 
@@ -148,7 +144,7 @@ export const useGroundSelectionLogic = (
           height: containerRef.current.offsetHeight,
         });
 
-        clearTemporaryCanvas();
+        clearTemporaryCanvas("moveItems");
         if (getRotation() === 0) {
           debounceDrawAxe();
         }
@@ -158,8 +154,9 @@ export const useGroundSelectionLogic = (
 
       // select first corner of the container
       if (isSelectingRef.current && startPos.current) {
-        const endLeft = clientX + getOffsetX();
-        const endTop = clientY + getOffsetY();
+        const offset = getOffset();
+        const endLeft = clientX + offset.x;
+        const endTop = clientY + offset.y;
 
         const width = Math.abs(Math.round(endLeft - startPos.current.left));
         const height = Math.abs(Math.round(endTop - startPos.current.top));
@@ -182,7 +179,7 @@ export const useGroundSelectionLogic = (
       }
       return false;
     },
-    [changeCoordinates, getOffsetX, getOffsetY]
+    [changeCoordinates, getOffset]
   );
 
   const handleEnd = useCallback(() => {
@@ -220,8 +217,7 @@ export const useGroundSelectionLogic = (
     areaOffsetRef,
     itemSelectedRef,
     previousPosition,
-    getOffsetX,
-    getOffsetY,
+    getOffset,
     debouncedSetSelectedRect,
   };
 };

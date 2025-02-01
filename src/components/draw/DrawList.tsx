@@ -13,10 +13,10 @@ import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { useDrawingContext } from "@/context/DrawingContext";
 
 export const DrawList = ({
-  simpleRefreshCanvas,
+  className = "flex flex-col gap-3 py-2 w-44 rounded-md border-2 bg-background border-accent",
   storeName,
 }: {
-  simpleRefreshCanvas: (withSelected: boolean) => void;
+  className?: string;
   storeName?: string | null;
 }) => {
   const [designElementLength, setDesignElementLength] = useState(0);
@@ -36,7 +36,7 @@ export const DrawList = ({
     getDesignElementLength,
   } = store.getState();
 
-  const { setDrawingMode } = useDrawingContext();
+  const { setDrawingMode, addEventAction } = useDrawingContext();
 
   const onSelectElement = (elementId: string) => {
     setSelectedDesignElement(elementId);
@@ -47,20 +47,25 @@ export const DrawList = ({
   const handleDeleteElement = (elementId: string) => {
     deleteDesignElement(elementId);
     setDesignElementLength(getDesignElementLength());
-    simpleRefreshCanvas(true);
+    handleRefresh();
     setDrawingMode(DRAWING_MODES.FIND);
+  };
+
+  const handleRefresh = () => {
+    // console.log("refresh");
+    addEventAction(DRAWING_MODES.REFRESH);
   };
 
   const handleReset = () => {
     eraseDesignElement();
-    simpleRefreshCanvas(true);
+    handleRefresh();
   };
 
   const { draggedItem, dragItemRef } = useDragAndDrop({
     designElements,
     orderDesignElement,
     onDragEnd: () => {
-      simpleRefreshCanvas(true);
+      handleRefresh();
       setDrawingMode(DRAWING_MODES.FIND);
     },
   });
@@ -72,21 +77,24 @@ export const DrawList = ({
   return (
     <div
       // onMouseDown={() => setDrawingMode(DRAWING_MODES.PAUSE)}
-      className="flex flex-col gap-3 py-2 w-44 rounded-md border-2 bg-background border-accent"
+      className={cn("flex flex-col", className)}
     >
       {designElementLength === 0 ? (
         <p className="italic text-center text-gray-500">Empty list</p>
       ) : (
         <>
           <div className="flex overflow-auto flex-col gap-1 p-2 max-h-96">
-            <ul className="space-y-2">
+            <ul className="p-0 m-0 space-y-1">
               {designElements.map(
                 (element: CanvasPointsData | ShapeDefinition) => (
                   <li
                     key={element.id}
                     data-id={element.id}
                     className={cn(
-                      "flex justify-between items-center p-1 rounded group draggable-item",
+                      [
+                        "flex justify-between items-center p-1 rounded group draggable-item",
+                        "p-1",
+                      ],
                       {
                         "outline outline-secondary outline-2 outline-offset-2":
                           element.id === selectedDesignElement,
@@ -99,7 +107,7 @@ export const DrawList = ({
                           : undefined,
                     }}
                   >
-                    <div className="flex gap-1 items-center w-full">
+                    <div className="flex gap-1 items-center p-0 w-full">
                       <span
                         ref={dragItemRef}
                         className={cn("cursor-grab active:cursor-grabbing", {
@@ -140,7 +148,8 @@ export const DrawList = ({
           <div className="flex justify-between items-center px-2 mt-auto">
             <button
               onClick={() => {
-                simpleRefreshCanvas(true);
+                setSelectedDesignElement(null);
+                handleRefresh();
                 setDrawingMode(DRAWING_MODES.FIND);
               }}
               className="btn btn-sm btn-circle hover:bg-gray-50"

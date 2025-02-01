@@ -16,8 +16,7 @@ import { ResizeButtons } from "./control/ResizeButtons";
 import { DeleteSelectedTables } from "./control/DeleteSelectedTables";
 import { RotationSquad } from "./control/RotationSquad";
 import { useRoomContext } from "./RoomProvider";
-import { Mode, TableType } from "./types";
-import { Menu } from "./RoomMenu";
+import { Mode, TableType, Menu } from "./types";
 
 import { withMousePosition } from "../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
@@ -72,7 +71,7 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
     <div className={menuRoomVariants({ width: 44 })}>
       <div className="flex flex-col gap-2 justify-center">
         <i>
-          Mofication apply to <b>{selectedTablesCount} selected table</b>
+          Modifications apply to <b>{selectedTablesCount} selected table(s)</b>
         </i>
         <RotationButtons
           btnSize={btnSize}

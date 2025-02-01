@@ -3,10 +3,9 @@ import { Mode } from "../types";
 
 import { getCanvasSize } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
-import { useTableDataStore } from "../stores/tables";
 import { useZustandDesignStore } from "@/lib/stores/design";
-import clsx from "clsx";
-import { clearCanvas } from "@/lib/canvas/canvas-tools";
+import { cn } from "@/lib/utils/cn";
+// import { clearCanvas } from "@/lib/canvas/canvas-tools";
 import { useCanvas } from "@/components/draw/hooks/useCanvas";
 
 interface CanvasProps {
@@ -28,47 +27,24 @@ export const Canvas: React.FC<CanvasProps> = ({
     width: 1000,
     height: 600,
   });
-  const { designElements, selectedDesignElement } = useTableDataStore();
   const { setCtxTemporary, scale, getScale, storeName } = useRoomContext();
 
   /**
    * Zustand design local storage
    */
-  console.log("storeName", storeName);
+  // console.log("storeName", storeName);
 
   let setSelectedDesignElement = null;
-  let refreshCanvas = null;
+  let designElements = null;
+  let selectedDesignElement = null;
 
   const store = useZustandDesignStore(storeName);
   if (store) {
-    ({ setSelectedDesignElement, refreshCanvas } = store.getState());
+    ({ designElements, selectedDesignElement, setSelectedDesignElement } =
+      store.getState());
   }
 
-  const simpleRefreshCanvas = (
-    withSelected: boolean = true,
-    lScale: number = scale
-  ) => {
-    // check if the canvas is ready
-    if (!backgroundCanvasRef.current) return;
-
-    const ctx = backgroundCanvasRef.current?.getContext("2d", {
-      willReadFrequently: true,
-    });
-    // Clear the temporary canvas
-    if (temporaryCanvasRef.current) {
-      clearCanvas(temporaryCanvasRef.current);
-    }
-
-    // Clear the mouse canvas
-    if (mouseCanvasRef.current) {
-      clearCanvas(mouseCanvasRef.current);
-    }
-    if (ctx && refreshCanvas) {
-      refreshCanvas(ctx, withSelected, lScale);
-    }
-  };
-
-  useCanvas({
+  const { simpleRefreshCanvas } = useCanvas({
     canvasRef: backgroundCanvasRef,
     canvasTemporyRef: temporaryCanvasRef,
     canvasMouseRef: mouseCanvasRef,
@@ -76,6 +52,9 @@ export const Canvas: React.FC<CanvasProps> = ({
     scale,
   });
 
+  useEffect(() => {
+    simpleRefreshCanvas(false, scale);
+  }, [designElements, selectedDesignElement]);
   /**
    * Resize canvas
    */
@@ -111,6 +90,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             canvas.height = newSize.height;
           }
         );
+        if (mouseCanvasRef.current) {
+          mouseCanvasRef.current.width = newSize.width;
+          mouseCanvasRef.current.height = newSize.height;
+        }
         if (setSelectedDesignElement) {
           setSelectedDesignElement(null);
         }
@@ -131,10 +114,6 @@ export const Canvas: React.FC<CanvasProps> = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  useEffect(() => {
-    simpleRefreshCanvas(false, scale);
-  }, [designElements, selectedDesignElement]);
 
   useEffect(() => {
     resizeCanvas(scale);
@@ -177,21 +156,33 @@ export const Canvas: React.FC<CanvasProps> = ({
       <canvas
         ref={backgroundCanvasRef}
         id="background-canvas"
-        className="overflow-visible absolute top-0 left-0 min-w-full min-h-full border-r border-b border-gray-500 border-dashed"
+        className="overflow-visible absolute top-0 left-0 min-w-full min-h-full border-r border-b border-gray-500 border-dashed pointer-events-none"
       />
       <canvas
         ref={mouseCanvasRef}
         id="mouse-canvas"
-        className="overflow-visible absolute top-0 left-0 min-w-full min-h-full"
+        className={cn(
+          "overflow-visible absolute top-0 left-0 z-10 min-w-full min-h-full pointer-events-none",
+          {
+            hidden: mode !== Mode.draw,
+          }
+        )}
       />
       <canvas
         ref={temporaryCanvasRef}
         id="temporary-canvas"
-        className={clsx(
-          "overflow-visible min-w-full min-h-full absolute top-0 left-0",
-          mode === Mode.numbering ? "z-20" : "z-0"
+        className={cn(
+          "overflow-visible absolute top-0 left-0 min-w-full min-h-full",
+          {
+            // "z-[15]": mode === Mode.numbering,
+            "z-20": mode === Mode.draw || mode === Mode.numbering,
+            "pointer-events-auto": mode === Mode.numbering,
+            "pointer-events-none": mode !== Mode.draw,
+          }
         )}
-        style={{ pointerEvents: "none" }}
+        style={{
+          pointerEvents: mode === Mode.numbering ? "none" : undefined,
+        }}
       />
     </>
   );

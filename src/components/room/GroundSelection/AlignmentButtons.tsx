@@ -1,3 +1,4 @@
+import { Coordinate } from "@/lib/canvas/types";
 import React from "react";
 
 interface AlignmentButtonsProps {
@@ -5,8 +6,7 @@ interface AlignmentButtonsProps {
   showHorizontalBtn: boolean;
   equalizeSpaces: (type: "vertical" | "horizontal") => void;
   container: HTMLDivElement | null;
-  offsetX: number;
-  offsetY: number;
+  offset: Coordinate;
 }
 
 export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
@@ -14,8 +14,7 @@ export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
   showHorizontalBtn,
   equalizeSpaces,
   container,
-  offsetX,
-  offsetY,
+  offset,
 }) => {
   const containerRect = container?.getBoundingClientRect();
   if (!containerRect) return null;
@@ -24,11 +23,13 @@ export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
     <>
       {showVerticalBtn && (
         <button
-          className="absolute px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1/2 translate-y-1"
-          onClick={() => equalizeSpaces("vertical")}
+          className="absolute z-30 px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1/2 translate-y-1 cursor-pointer"
+          onClick={() => {
+            equalizeSpaces("vertical");
+          }}
           style={{
-            left: containerRect.left - 15 + containerRect.width / 2 + offsetX,
-            top: containerRect.top + offsetY,
+            left: containerRect.left - 15 + containerRect.width / 2 + offset.x,
+            top: containerRect.top + offset.y,
           }}
         >
           =
@@ -36,11 +37,13 @@ export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
       )}
       {showHorizontalBtn && (
         <button
-          className="absolute px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2"
-          onClick={() => equalizeSpaces("horizontal")}
+          className="absolute z-30 px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2 cursor-pointer"
+          onClick={() => {
+            equalizeSpaces("horizontal");
+          }}
           style={{
-            left: containerRect.left + offsetX,
-            top: containerRect.top - 15 + containerRect.height / 2 + offsetY,
+            left: containerRect.left + offset.x,
+            top: containerRect.top - 15 + containerRect.height / 2 + offset.y,
           }}
         >
           =

@@ -9,6 +9,7 @@ const DRAWING_ACTIONS = {
   VALID: "valid",
   CLOSE_PATH: "closePath",
   STOP_PATH: "stopPath",
+  REFRESH: "refresh",
 };
 
 const IMAGE_ACTIONS = {

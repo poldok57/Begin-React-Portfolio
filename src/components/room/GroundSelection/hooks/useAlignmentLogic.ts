@@ -3,6 +3,7 @@ import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { MARGIN } from "../../scripts/table-numbers";
 import { useRoomContext } from "../../RoomProvider";
 import { Mode } from "../../types";
+import { Coordinate } from "@/lib/canvas/types";
 
 interface AxisLine {
   type: "vertical" | "horizontal";
@@ -42,7 +43,8 @@ interface AlignmentLogic {
 export const useAlignmentLogic = (
   groundRef: React.RefObject<HTMLDivElement>,
   temporaryCanvasRef: React.RefObject<HTMLCanvasElement>,
-  changeCoordinates: (params: ChangeCoordinatesParams) => void
+  changeCoordinates: (params: ChangeCoordinatesParams) => void,
+  getOffset: () => Coordinate
 ): AlignmentLogic => {
   const verticalAxis = useRef<number[]>([]);
   const horizontalAxis = useRef<number[]>([]);
@@ -54,22 +56,6 @@ export const useAlignmentLogic = (
 
   const { getRotation, getScale } = useRoomContext();
 
-  const getOffsetX = () => {
-    if (!groundRef.current) {
-      return 0;
-    }
-    return (
-      groundRef.current.scrollLeft -
-      groundRef.current.getBoundingClientRect().left
-    );
-  };
-  const getOffsetY = () => {
-    if (!groundRef.current) return 0;
-    return (
-      groundRef.current.scrollTop -
-      groundRef.current.getBoundingClientRect().top
-    );
-  };
   const lastContainerRect = useRef<DOMRect | null>(null);
 
   const elementsInContainer = useRef<HTMLDivElement[]>([]);
@@ -180,8 +166,7 @@ export const useAlignmentLogic = (
       if (getRotation() !== 0) {
         return;
       }
-      const offsetLeft = getOffsetX();
-      const offsetTop = getOffsetY();
+      const offset = getOffset();
 
       // get container rect
 
@@ -198,13 +183,10 @@ export const useAlignmentLogic = (
       verticalAxis.current.forEach((x) => {
         // alignments.vertical.forEach((x) => {
         ctx.beginPath();
-        ctx.moveTo(
-          x + offsetLeft,
-          containerRect.top - LINE_OVERLAP + offsetTop
-        );
+        ctx.moveTo(x + offset.x, containerRect.top - LINE_OVERLAP + offset.y);
         ctx.lineTo(
-          x + offsetLeft,
-          containerRect.bottom + LINE_OVERLAP + offsetTop
+          x + offset.x,
+          containerRect.bottom + LINE_OVERLAP + offset.y
         );
         ctx.stroke();
       });
@@ -213,20 +195,14 @@ export const useAlignmentLogic = (
       horizontalAxis.current.forEach((y) => {
         // alignments.horizontal.forEach((y) => {
         ctx.beginPath();
-        ctx.moveTo(
-          containerRect.left - LINE_OVERLAP + offsetLeft,
-          y + offsetTop
-        );
-        ctx.lineTo(
-          containerRect.right + LINE_OVERLAP + offsetLeft,
-          y + offsetTop
-        );
+        ctx.moveTo(containerRect.left - LINE_OVERLAP + offset.x, y + offset.y);
+        ctx.lineTo(containerRect.right + LINE_OVERLAP + offset.x, y + offset.y);
         ctx.stroke();
       });
 
       ctx.setLineDash([]);
     },
-    [getRotation, getOffsetX, getOffsetY, getScale]
+    [getRotation, getOffset, getScale]
   );
 
   const moveVerticalLine = (index: number, mouseX: number) => {
@@ -234,10 +210,11 @@ export const useAlignmentLogic = (
     verticalAxis.current[index] = mouseX;
     const group = alignmentGroups.current.vertical[index];
     if (group) {
+      const offset = getOffset();
       group.position = mouseX;
       const elementIds = group.elements.map((el) => el.id);
       changeCoordinates({
-        position: { left: (mouseX + getOffsetX()) / getScale() },
+        position: { left: (mouseX + offset.x) / getScale() },
         tableIds: elementIds,
       });
       if (selectedAlignmentLine.current) {
@@ -251,11 +228,12 @@ export const useAlignmentLogic = (
     horizontalAxis.current[index] = mouseY;
     const group = alignmentGroups.current.horizontal[index];
     if (group) {
+      const offset = getOffset();
       group.position = mouseY;
 
       const elementIds = group.elements.map((el) => el.id);
       changeCoordinates({
-        position: { top: (mouseY + getOffsetY()) / getScale() },
+        position: { top: (mouseY + offset.y) / getScale() },
         tableIds: elementIds,
       });
 
@@ -345,6 +323,7 @@ export const useAlignmentLogic = (
 
   const equalizeSpaces = useCallback(
     (type: "vertical" | "horizontal") => {
+      console.log("equalizeSpaces", type);
       const axes =
         type === "vertical" ? verticalAxis.current : horizontalAxis.current;
       if (axes.length <= 2) return;

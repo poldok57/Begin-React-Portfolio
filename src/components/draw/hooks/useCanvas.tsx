@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { clearCanvas, clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 import {
   DRAWING_MODES,
@@ -35,6 +35,7 @@ interface DrawCanvasProps {
   storeName?: string | null;
   scale: number;
 }
+
 // Draw on Canvas
 export const useCanvas = ({
   canvasRef,
@@ -96,6 +97,18 @@ export const useCanvas = ({
   };
 
   /**
+   * Set the context constants
+   */
+  const setContextConstants = (
+    ctx: CanvasRenderingContext2D | null,
+    opacity?: number | null
+  ) => {
+    if (!ctx) return;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalAlpha = opacity ?? 1;
+  };
+  /**
    * Function to set the context of the canvas
    * @param {HTMLCanvasElement} canvas
    * @param {number} opacity
@@ -113,11 +126,38 @@ export const useCanvas = ({
     ctx.strokeStyle = currentParams.general.color;
     ctx.lineWidth = currentParams.general.lineWidth * scale;
 
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.globalAlpha = opacity ?? currentParams.general.opacity;
+    setContextConstants(ctx, opacity ?? currentParams.general.opacity);
     return ctx;
   };
+
+  /**
+   * Function to clear the temporary canvas
+   */
+  const clearTemporyCanvas = () => {
+    if (!canvasTemporyRef.current) return;
+    const ctx = canvasTemporyRef.current.getContext("2d");
+
+    if (!ctx) return;
+    clearCanvasByCtx(ctx);
+  };
+
+  /**
+   * Simple refresh canvas
+   */
+  const simpleRefreshCanvas = (
+    withSelected: boolean = true,
+    lScale: number = scale
+  ) => {
+    clearTemporyCanvas();
+    if (canvasMouseRef.current) {
+      clearCanvas(canvasMouseRef.current);
+    }
+    if (contextRef.current && refreshCanvas) {
+      setContextConstants(contextRef.current);
+      refreshCanvas(contextRef.current, withSelected, lScale);
+    }
+  };
+
   /**
    * Function to get the coordinates of the mouse in the canvas
    * @param {MouseEvent | TouchEvent} event
@@ -348,6 +388,8 @@ export const useCanvas = ({
   const actionChangeMode = (newMode: string) => {
     currentParams = getDrawingParams();
 
+    // console.log("actionChangeMode", newMode);
+
     if (newMode === DRAWING_MODES.INIT) {
       generalInitialisation();
       return;
@@ -452,6 +494,10 @@ export const useCanvas = ({
         clearCanvasByCtx(contextRef.current);
         clearTemporyCanvas();
         break;
+      case DRAWING_MODES.REFRESH:
+        simpleRefreshCanvas(false, scaleRef.current);
+        break;
+
       case DRAWING_MODES.CONTROL_PANEL.IN:
         mouseOnCtrlPanel.current = true;
         drawingRef.current.actionMouseLeave();
@@ -546,17 +592,6 @@ export const useCanvas = ({
       default:
         console.error("Action not found : ", eventAction);
     }
-  };
-
-  /**
-   * Function to clear the temporary canvas
-   */
-  const clearTemporyCanvas = () => {
-    if (!canvasTemporyRef.current) return;
-    const ctx = canvasTemporyRef.current.getContext("2d");
-
-    if (!ctx) return;
-    clearCanvasByCtx(ctx);
   };
 
   /**
@@ -777,4 +812,8 @@ export const useCanvas = ({
     setContext(canvasMouseRef.current, null, lScale);
     setContext(canvasTemporyRef.current, null, lScale);
   }, [scaleRef.current]);
+
+  return {
+    simpleRefreshCanvas,
+  };
 };

@@ -1,62 +1,84 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/atom/Button";
-import { RangeInput } from "@/components/atom/RangeInput";
-import { X } from "lucide-react";
-import { useTableDataStore } from "./stores/tables";
-import { ModifyColor } from "./ModifyColor";
-import { DesignType } from "./types";
-import { getContrastColor } from "../colors/colors";
+import { inputRangeVariants } from "@/styles/input-variants";
+import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
+
+// import { getContrastColor } from "../colors/colors";
 import { useRoomContext } from "./RoomProvider";
-import { Mode } from "./types";
-import { Menu } from "./RoomMenu";
+import { Mode, Menu } from "./types";
 import { withMousePosition } from "../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
 
 import { ColorPikerBg } from "@/components/colors/ColorPikerBg";
+import {
+  DRAWING_MODES,
+  isDrawingLine,
+  isDrawingFreehand,
+  isDrawingSelect,
+  isDrawingShape,
+} from "@/lib/canvas/canvas-defines";
+import { useDrawingContext } from "@/context/DrawingContext";
 import { useZustandDesignStore } from "@/lib/stores/design";
-// import { useDrawingContext } from "@/context/DrawingContext";
+import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 
-import clsx from "clsx";
+import { DrawList } from "../draw/DrawList";
+import { cn } from "@/lib/utils/cn";
+import { ColorPicker } from "../atom/ColorPicker";
+import { RangeInput } from "../atom/RangeInput";
+
+import { CaseSensitive, MoveUpRight, Pencil } from "lucide-react";
+import { TbTimeline } from "react-icons/tb";
+import { MdLineWeight } from "react-icons/md";
 
 interface RoomDesignMenuProps {
   isTouch: boolean;
-  recordDesign: (
-    type: DesignType,
-    color: string,
-    name: string,
-    opacity: number
-  ) => void;
-  withName?: boolean;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
+  buttonIconSize?: number;
+  buttonShapeSize?: number;
 }
 
 const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
   isTouch,
-  recordDesign,
-  withName = false,
   activeMenu,
+  buttonIconSize = 20,
+  // buttonShapeSize = 16,
 }) => {
-  const [color, setColor] = useState("#e0aaaa");
-  const [name, setName] = useState("");
-  const [opacity, setOpacity] = useState(50);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const {
-    designElements,
-    deleteDesignElement,
-    selectedDesignElement,
-    setSelectedDesignElement,
-  } = useTableDataStore((state) => state);
   const [menuPosition, setMenuPosition] = useState<React.CSSProperties>({
     top: "100%",
   });
+  const selectedElementRef = useRef<string | null>(null);
 
   const { needRefresh, storeName } = useRoomContext();
+  const [showList, setShowList] = useState(false);
+
+  const {
+    addEventAction,
+    mode,
+    drawingParams,
+    handleChangeMode,
+    setGeneralParams,
+    setShapeParams,
+    setDrawingMode,
+    setDrawingParams,
+  } = useDrawingContext();
+
+  const paramsGeneral = drawingParams.general;
 
   const store = useZustandDesignStore(storeName);
 
   const backgroundColor = store ? store.getState().backgroundColor : null;
+  const displayElementsLength = store
+    ? store.getState().getDesignElementLength()
+    : 0;
+  const selectedDesignElement = store
+    ? store.getState().selectedDesignElement
+    : null;
+  const getSelectedDesignElement = store
+    ? store.getState().getSelectedDesignElement
+    : null;
 
   const setBackgroundColor = store ? store.getState().setBackgroundColor : null;
   const [background, setBackground] = useState(backgroundColor ?? "#aabbff");
@@ -89,16 +111,25 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
     }
   }, [activeMenu]);
 
-  const handleSquareColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setColor(e.target.value);
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    const type = formData.get("type") as DesignType;
-    recordDesign(type, color, name, opacity);
-  };
+  // update controle panel when an element is selected
+  useEffect(() => {
+    if (
+      selectedDesignElement &&
+      selectedDesignElement !== selectedElementRef.current &&
+      getSelectedDesignElement
+    ) {
+      const newMode = updateParamFromElement(
+        setDrawingParams,
+        getSelectedDesignElement
+      );
+      if (newMode) {
+        setDrawingMode(newMode);
+      }
+      needRefresh();
+      // alertMessage("selected element changed: " + newMode);
+      selectedElementRef.current = selectedDesignElement;
+    }
+  }, [selectedDesignElement]);
 
   return (
     <>
@@ -106,9 +137,17 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
         id="menu-design"
         className={menuRoomVariants({ width: 64 })}
         style={menuPosition}
+        onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
+        onTouchStartCapture={() =>
+          addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)
+        }
+        onMouseLeave={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)}
+        onTouchEndCapture={() =>
+          addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)
+        }
       >
         <div className="flex flex-col gap-3 mb-5 border-b-2 border-base-300">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
             <fieldset className="flex flex-col gap-2 items-center p-2 rounded-lg border-2 border-secondary">
               <legend>Background</legend>
               <div
@@ -121,6 +160,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               />
               {showColorPicker && (
                 <ColorPikerBg
+                  isTouchDevice={isTouch}
                   className="relative z-10 p-2 rounded-lg border border-gray-400 shadow-xl bg-base-100"
                   title="Background Color"
                   closeColorPicker={onCloseColorPicker}
@@ -130,97 +170,161 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               )}
             </fieldset>
           </div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-            <input type="hidden" name="type" value={DesignType.square} />
-            <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
-              <legend>Square</legend>
-              {withName && (
-                <div className="flex justify-between items-center">
-                  <label htmlFor="backgroundName" className="mr-2">
-                    Name:
-                  </label>
-                  <input
-                    type="text"
-                    id="backgroundName"
-                    name="backgroundName"
-                    placeholder="Background name"
-                    required={true}
-                    className="w-full max-w-xs input input-bordered"
-                    onChange={(e) => {
-                      setName(e.target.value);
-                    }}
-                  />
-                </div>
-              )}
-              <ModifyColor
-                label="Color:"
-                name="square"
-                value={color}
-                defaultValue={color}
-                onChange={handleSquareColorChange}
-                className="z-10 w-24 h-6"
-              />
-              <RangeInput
-                id="opacity"
-                value={opacity}
-                onChange={(value) => setOpacity(value)}
-                label="Opacité"
-                min="0"
-                max="100"
-                step="5"
-                className="w-20 h-4"
-                isTouch={isTouch}
-              />
-              <Button type="submit">Save square</Button>
-            </fieldset>
-          </form>
-        </div>
-        <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
-          <legend>Design elements ({designElements.length})</legend>
-          <div className="flex overflow-y-auto flex-col p-2 h-32 rounded-lg bg-base-200">
-            {designElements.length > 0 ? (
-              designElements.map((element) => (
-                <div
-                  key={element.id}
-                  className={clsx(
-                    "flex flex-row justify-between items-center p-1 mb-1 w-full rounded-md",
-                    {
-                      "border-2 border-red-500 border-dashed border-opacity-100":
-                        selectedDesignElement === element.id,
+          <div
+            className={cn("flex flex-row", {
+              hidden: mode === DRAWING_MODES.TEXT,
+            })}
+          >
+            <fieldset className="flex flex-row gap-2 justify-between p-2 w-full rounded-lg border-2 border-secondary">
+              <label
+                htmlFor="draw-color-picker"
+                className={cn("flex items-center justify-center gap-", {
+                  hidden: isDrawingSelect(mode) || mode === DRAWING_MODES.ERASE,
+                })}
+              >
+                <ColorPicker
+                  className="my-0"
+                  id="draw-color-picker"
+                  height={isTouch ? 50 : 40}
+                  width={40}
+                  defaultValue={paramsGeneral.color}
+                  onChange={(color) => {
+                    setGeneralParams({ color: color });
+                    if (isDrawingSelect(mode)) {
+                      setShapeParams({ blackChangeColor: color });
                     }
-                  )}
-                  style={{
-                    backgroundColor: element.color,
-                    opacity: element.opacity ?? 1,
+                  }}
+                />
+              </label>
+              <div className="flex flex-col gap-1 items-center">
+                <label htmlFor="line-width-select" className="text-center">
+                  <MdLineWeight size={16} />
+                </label>
+                <select
+                  id="line-width-select"
+                  className="px-2 py-2 text-gray-700 bg-white rounded-lg border border-gray-300 shadow-sm appearance-none cursor-pointer w-18 focus:ring-1 focus:ring-blue-400"
+                  value={paramsGeneral.lineWidth}
+                  onChange={(e) => {
+                    // console.log("lineWidth", e.target.value);
+                    paramsGeneral.lineWidth = Number(e.target.value);
+                    needRefresh();
+                    setGeneralParams({ lineWidth: Number(e.target.value) });
                   }}
                 >
-                  <span
-                    className={clsx("text-sm cursor-pointer w-full", {
-                      "border-1 border-dashed border-red-500 font-semibold text-opacity-100":
-                        selectedDesignElement === element.id,
-                    })}
-                    style={{
-                      color: getContrastColor(element.color),
-                    }}
-                    onClick={() => setSelectedDesignElement(element.id)}
-                  >
-                    {element.type}: {element.name}
-                  </span>
-                  <button
-                    className="btn btn-circle btn-xs bg-base-100"
-                    onClick={() => {
-                      deleteDesignElement(element.id);
-                      if (selectedDesignElement === element.id) {
-                        setSelectedDesignElement("");
-                      }
-                    }}
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-base-content">No design elements</p>
+                  {[
+                    2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32,
+                    36, 40,
+                  ].map((width) => (
+                    <option key={width} value={width}>
+                      {width} px
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <RangeInput
+                className={inputRangeVariants({ width: "16", size: "sm" })}
+                label="Opacity"
+                id="draw-size-picker"
+                value={paramsGeneral.opacity * 100}
+                min="5"
+                max="100"
+                step="5"
+                onChange={(value: number) =>
+                  setGeneralParams({ opacity: value / 100 })
+                }
+                isTouch={isTouch}
+              />
+              <label
+                htmlFor="toggle-filled"
+                className={cn(
+                  "flex flex-col justify-center items-center font-xs gap-2",
+                  {
+                    hidden: !(
+                      isDrawingShape(mode) ||
+                      isDrawingLine(mode) ||
+                      isDrawingFreehand(mode)
+                    ),
+                  }
+                )}
+              >
+                Filled
+                <ToggleSwitch
+                  id="toggle-filled"
+                  defaultChecked={paramsGeneral.filled}
+                  onChange={(event) => {
+                    setGeneralParams({ filled: event.target.checked });
+                    // setReloadControl();
+                  }}
+                />
+              </label>
+              <label
+                htmlFor="toggle-black"
+                className={cn(
+                  "flex flex-col gap-2 justify-center items-center font-xs",
+                  {
+                    hidden: !isDrawingSelect(mode),
+                  }
+                )}
+              ></label>
+            </fieldset>
+          </div>
+          <div className="flex flex-row">
+            <fieldset className="flex flex-row gap-2 justify-between p-2 w-full rounded-lg border-2 border-secondary">
+              <legend>Drawing</legend>
+              <Button
+                className="px-3"
+                selected={mode == DRAWING_MODES.DRAW}
+                onClick={() => handleChangeMode(DRAWING_MODES.DRAW)}
+                title="Free hand drawing"
+              >
+                <Pencil size={buttonIconSize} />
+              </Button>
+              <Button
+                className="px-3"
+                selected={isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW}
+                onClick={() => {
+                  handleChangeMode(DRAWING_MODES.LINE);
+                }}
+                title="Draw lines"
+              >
+                <TbTimeline size={buttonIconSize} />
+              </Button>
+              <Button
+                className="px-3"
+                selected={mode == DRAWING_MODES.ARROW}
+                onClick={() => handleChangeMode(DRAWING_MODES.ARROW)}
+                title="Arrow"
+              >
+                <MoveUpRight size={buttonIconSize} />
+              </Button>
+              <Button
+                className="px-3"
+                selected={mode == DRAWING_MODES.TEXT}
+                onClick={() => handleChangeMode(DRAWING_MODES.TEXT)}
+              >
+                <CaseSensitive size={buttonIconSize} />
+              </Button>
+            </fieldset>
+          </div>
+          <div className="flex flex-col gap-2">
+            <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
+              <legend>Square and ellipse</legend>
+              <Button type="submit">Save square</Button>
+            </fieldset>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2"></div>
+        <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-accent">
+          <legend>Design elements ({displayElementsLength})</legend>
+          <div className="flex flex-col gap-2 items-center">
+            <Button onClick={() => setShowList(!showList)} className="w-full">
+              {showList ? "Hide" : "Show"} elements
+            </Button>
+            {showList && (
+              <DrawList
+                className="flex flex-col gap-1 px-0 py-2 w-56 text-sm"
+                storeName={storeName}
+              />
             )}
           </div>
         </fieldset>
@@ -237,19 +341,12 @@ interface RoomDesignProps {
   isTouch: boolean;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
-  recordDesign: (
-    type: DesignType,
-    color: string,
-    name: string,
-    opacity: number
-  ) => void;
   disabled?: boolean;
 }
 
 export const RoomDesign: React.FC<RoomDesignProps> = ({
   className,
   isTouch,
-  recordDesign,
   activeMenu,
   setActiveMenu,
   disabled = false,
@@ -276,7 +373,6 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
       {activeMenu === Menu.roomDesign && (
         <RoomDesignMenuWP
           isTouch={isTouch}
-          recordDesign={recordDesign}
           activeMenu={activeMenu}
           setActiveMenu={setActiveMenu}
           className="absolute z-30 translate-y-24"

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { GroupCreat } from "./GroupCreat";
 import { Rectangle } from "@/lib/canvas/types";
-import { DesignElement, DesignType, TableData } from "./types";
+import { TableData } from "./types";
 import { RectPosition as Position } from "@/lib/canvas/types";
 import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
@@ -17,15 +17,13 @@ import { Mode } from "./types";
 import { DrawingProvider } from "@/context/DrawingContext";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
-
+import { TypeListTables } from "./types";
 export const GROUND_ID = "back-ground";
 export const CONTAINER_ID = "ground-container";
 
 const DESIGN_STORE_NAME = "room-design-storge";
 
 const MARGIN = 10;
-
-export type TypeList = "plan" | "list" | "hide";
 
 // const RoomMenuWP = withMousePosition(RoomMenu);
 const GroupCreatWP = withMousePosition(GroupCreat);
@@ -51,21 +49,13 @@ export interface ChangeCoordinatesParams {
 }
 
 export const RoomCreatTools = () => {
-  const {
-    updateTable,
-    resetSelectedTables,
-    addDesignElement,
-    getTable,
-    getSelectedTables,
-    deleteDesignElementByType,
-  } = useTableDataStore((state) => state);
+  const { updateTable, resetSelectedTables, getTable, getSelectedTables } =
+    useTableDataStore((state) => state);
 
   const btnSize = isTouchDevice() ? 20 : 16;
   const tables = useTableDataStore((state) => state.tables);
   const {
-    getSelectedRect,
     getElementRect,
-    getRotation,
     mode,
     setMode,
     addSelectedTableId,
@@ -79,7 +69,9 @@ export const RoomCreatTools = () => {
   }
   setStoreName(DESIGN_STORE_NAME);
   const { setDrawingMode } = useDrawingContext();
-  setDrawingMode(DRAWING_MODES.PAUSE);
+  if (mode !== Mode.draw) {
+    setDrawingMode(DRAWING_MODES.PAUSE);
+  }
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);
@@ -88,7 +80,9 @@ export const RoomCreatTools = () => {
 
   const roundToTwoDigits = (value: number) => Number(value.toFixed(2));
 
-  const [typeListMode, setTypeListMode] = useState<TypeList>("plan");
+  const [typeListMode, setTypeListMode] = useState<TypeListTables>(
+    TypeListTables.plan
+  );
 
   const updateTablePosition = (
     table: TableData,
@@ -199,35 +193,6 @@ export const RoomCreatTools = () => {
     setPreSelection(rect);
   };
 
-  const handleRecordDesing = (
-    type: DesignType = DesignType.square,
-    color: string,
-    name: string,
-    opacity: number = 100
-  ) => {
-    const rect = getSelectedRect();
-    if (!rect && type === DesignType.square) {
-      return;
-    }
-
-    const designElement: DesignElement = {
-      id: "",
-      type,
-      name: name,
-      rect,
-      color,
-      opacity: opacity <= 1 ? opacity : opacity / 100,
-    };
-    const rotation = getRotation();
-    if (rotation) {
-      designElement.rotation = rotation;
-    }
-    if (type === DesignType.background) {
-      deleteDesignElementByType(type);
-    }
-    addDesignElement(designElement);
-  };
-
   const handleNumberingTableClick = (id: string) => {
     const table = getTable(id);
     if (!table) return;
@@ -262,7 +227,6 @@ export const RoomCreatTools = () => {
     <>
       <RoomMenu2
         btnSize={btnSize}
-        recordDesign={handleRecordDesing}
         addSelectedRect={addSelectedRect}
         typeListMode={typeListMode}
         setTypeListMode={setTypeListMode}
@@ -292,9 +256,9 @@ export const RoomCreatTools = () => {
                 />
                 <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
               </>
-            ) : (
+            ) : typeListMode === "list" ? (
               <ListTablesText maxRowsPerColumn={20} />
-            )}
+            ) : null}
           </GroundSelection>
           <GroupCreatWP
             className="absolute top-0 left-0 z-10"

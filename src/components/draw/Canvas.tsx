@@ -3,7 +3,6 @@ import { useCanvas } from "./hooks/useCanvas";
 import { withMousePosition } from "../windows/withMousePosition";
 import { DrawList } from "./DrawList";
 import { useZustandDesignStore } from "@/lib/stores/design";
-import { clearCanvas } from "@/lib/canvas/canvas-tools";
 import { ColorPikerBg } from "@/components/colors/ColorPikerBg";
 
 interface CanvasProps {
@@ -30,7 +29,6 @@ export const Canvas: React.FC<CanvasProps> = ({
   let scale = 1;
   let setScale = null;
   let setSelectedDesignElement = null;
-  let refreshCanvas = null;
   let backgroundColor = "#eeeeee";
   let setBackgroundColor = null;
 
@@ -39,7 +37,6 @@ export const Canvas: React.FC<CanvasProps> = ({
       scale,
       setScale,
       setSelectedDesignElement,
-      refreshCanvas,
       backgroundColor,
       setBackgroundColor,
     } = store.getState());
@@ -55,29 +52,13 @@ export const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const simpleRefreshCanvas = (
-    withSelected: boolean = true,
-    lScale: number = scale
-  ) => {
-    // check if the canvas is ready
-    if (!canvasRef.current) return;
-
-    const ctx = canvasRef.current?.getContext("2d", {
-      willReadFrequently: true,
-    });
-    // Clear the temporary canvas
-    if (canvasTemporyRef.current) {
-      clearCanvas(canvasTemporyRef.current);
-    }
-
-    // Clear the mouse canvas
-    if (canvasMouseRef.current) {
-      clearCanvas(canvasMouseRef.current);
-    }
-    if (ctx && refreshCanvas) {
-      refreshCanvas(ctx, withSelected, lScale);
-    }
-  };
+  const { simpleRefreshCanvas } = useCanvas({
+    canvasRef,
+    canvasTemporyRef,
+    canvasMouseRef,
+    storeName,
+    scale,
+  });
 
   const changeScale = (scale: number) => {
     if (setScale) {
@@ -90,14 +71,6 @@ export const Canvas: React.FC<CanvasProps> = ({
 
     simpleRefreshCanvas(false, scale);
   };
-
-  useCanvas({
-    canvasRef,
-    canvasTemporyRef,
-    canvasMouseRef,
-    storeName,
-    scale,
-  });
 
   return (
     <>
@@ -196,7 +169,6 @@ export const Canvas: React.FC<CanvasProps> = ({
 
       <DrawListWP
         storeName={storeName}
-        simpleRefreshCanvas={simpleRefreshCanvas}
         withMinimize={true}
         style={{
           top: "120px",

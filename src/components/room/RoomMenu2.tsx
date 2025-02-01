@@ -6,40 +6,24 @@ import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomContext } from "./RoomProvider";
-import { DesignType } from "./types";
 import { TableNumbers } from "./TableNumbers";
 import { useTableDataStore } from "./stores/tables";
 import {
   showValidationFrame,
   addValidationValidAction,
 } from "./ValidationFrame";
-import { TypeList } from "./RoomCreat";
+import { TypeListTables, Menu } from "./types";
 import { NotepadText } from "lucide-react";
-
-export enum Menu {
-  addTable = "addTable",
-  updateTable = "updateTable",
-  tableNumbers = "tableNumbers",
-  roomDesign = "roomDesign",
-  scale = "scale",
-}
 
 interface RoomMenu2Props {
   btnSize: number;
-  recordDesign: (
-    type: DesignType,
-    color: string,
-    name: string,
-    opacity: number
-  ) => void;
   addSelectedRect: (rect: Rectangle) => void;
-  typeListMode: TypeList;
-  setTypeListMode: (type: TypeList) => void;
+  typeListMode: TypeListTables;
+  setTypeListMode: (type: TypeListTables) => void;
 }
 
 export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   btnSize,
-  recordDesign,
   addSelectedRect,
   typeListMode,
   setTypeListMode,
@@ -51,6 +35,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
   const [isPlanMode, setIsPlanMode] = useState(true);
+  const refDetails = useRef<HTMLDetailsElement>(null);
   const {
     tables,
     updateTable,
@@ -61,6 +46,11 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
+  };
+
+  const handleSelectTypeList = (type: TypeListTables) => {
+    setTypeListMode(type);
+    refDetails.current?.removeAttribute("open");
   };
 
   useEffect(() => {
@@ -131,7 +121,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   }, []);
 
   useEffect(() => {
-    setIsPlanMode(typeListMode === "plan");
+    setIsPlanMode(typeListMode === TypeListTables.plan);
   }, [typeListMode]);
 
   return (
@@ -176,7 +166,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                 <li>
                   <RoomDesign
                     className="flex flex-col p-1 w-full rounded-lg"
-                    recordDesign={recordDesign}
                     isTouch={isTouch}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
@@ -190,18 +179,32 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                 <ul>
                   <li>
                     <a
-                      className={typeListMode === "plan" ? "active" : ""}
-                      onClick={() => setTypeListMode("plan")}
+                      className={
+                        typeListMode === TypeListTables.plan ? "active" : ""
+                      }
+                      onClick={() => handleSelectTypeList(TypeListTables.plan)}
                     >
                       Floor plan
                     </a>
                   </li>
                   <li>
                     <a
-                      className={typeListMode === "list" ? "active" : ""}
-                      onClick={() => setTypeListMode("list")}
+                      className={
+                        typeListMode === TypeListTables.list ? "active" : ""
+                      }
+                      onClick={() => handleSelectTypeList(TypeListTables.list)}
                     >
                       List tables
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      className={
+                        typeListMode === TypeListTables.hide ? "active" : ""
+                      }
+                      onClick={() => handleSelectTypeList(TypeListTables.hide)}
+                    >
+                      Hide tables
                     </a>
                   </li>
                 </ul>
@@ -244,31 +247,44 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           <li className="flex items-center">
             <RoomDesign
               className="px-2"
-              recordDesign={recordDesign}
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
               isTouch={isTouch}
-              disabled={!isPlanMode}
+              disabled={typeListMode === "list"}
             />
           </li>
-          <li className="flex z-40 items-center">
-            <details>
+          <li className="flex z-40 items-center mx-2">
+            <details ref={refDetails}>
               <summary>Table view</summary>
-              <ul className="p-2 bg-base-100 rounded-box">
+              <ul className="p-2 w-32 bg-base-100 rounded-box">
                 <li>
                   <a
-                    className={typeListMode === "plan" ? "active" : ""}
-                    onClick={() => setTypeListMode("plan")}
+                    className={
+                      typeListMode === TypeListTables.plan ? "active" : ""
+                    }
+                    onClick={() => handleSelectTypeList(TypeListTables.plan)}
                   >
                     Floor plan
                   </a>
                 </li>
                 <li>
                   <a
-                    className={typeListMode === "list" ? "active" : ""}
-                    onClick={() => setTypeListMode("list")}
+                    className={
+                      typeListMode === TypeListTables.list ? "active" : ""
+                    }
+                    onClick={() => handleSelectTypeList(TypeListTables.list)}
                   >
                     Tables list
+                  </a>
+                </li>
+                <li>
+                  <a
+                    className={
+                      typeListMode === TypeListTables.hide ? "active" : ""
+                    }
+                    onClick={() => handleSelectTypeList(TypeListTables.hide)}
+                  >
+                    Hide tables
                   </a>
                 </li>
               </ul>
