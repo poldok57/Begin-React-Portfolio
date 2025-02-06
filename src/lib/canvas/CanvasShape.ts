@@ -67,6 +67,13 @@ export class CanvasShape extends CanvasDrawableObject {
     ) {
       return null;
     }
+    // Return null if text mode and text is empty
+    if (
+      d.type === DRAWING_MODES.TEXT &&
+      (!d.text?.text || d.text.text.trim() === "")
+    ) {
+      return null;
+    }
 
     const cpy: ShapeDefinition = {
       id: d.id,
@@ -201,6 +208,20 @@ export class CanvasShape extends CanvasDrawableObject {
   }
   getType() {
     return this.data.type;
+  }
+
+  getWithText() {
+    return this.data.shape?.withText;
+  }
+
+  setSizeForText(ctx: CanvasRenderingContext2D): boolean {
+    if (this.drawer && this.data.text) {
+      const textSize = this.drawer.textSize(ctx, this.data.text);
+      this.data.size.width = textSize.width;
+      this.data.size.height = textSize.height;
+      return true;
+    }
+    return false;
   }
 
   getDataSize(): Area {

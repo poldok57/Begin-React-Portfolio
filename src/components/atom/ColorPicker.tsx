@@ -47,7 +47,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       />
       <div
         className={clsx(
-          "flex justify-center items-center border cursor-pointer opacity-1",
+          "flex z-10 justify-center items-center border cursor-pointer opacity-1",
           className
         )}
         style={{

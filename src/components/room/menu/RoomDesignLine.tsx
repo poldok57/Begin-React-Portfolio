@@ -1,7 +1,7 @@
-import { inputRangeVariants } from "../../styles/input-variants";
-import { RangeInput } from "../atom/RangeInput";
-import { Button } from "../atom/Button";
-import { ColorPicker } from "../atom/ColorPicker";
+import { inputRangeVariants } from "../../../styles/input-variants";
+import { RangeInput } from "../../atom/RangeInput";
+import { Button } from "../../atom/Button";
+import { ColorPicker } from "../../atom/ColorPicker";
 import { DRAWING_MODES, ParamsPath } from "@/lib/canvas/canvas-defines";
 import { useDrawingContext } from "@/context/DrawingContext";
 
@@ -9,12 +9,12 @@ import { TbLine } from "react-icons/tb";
 import { Spline } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-interface DrawControlLineProps {
+interface RoomDesignLineProps {
   isTouch?: boolean;
   buttonIconSize?: number;
 }
 
-export const DrawControlLine: React.FC<DrawControlLineProps> = ({
+export const RoomDesignLine: React.FC<RoomDesignLineProps> = ({
   isTouch = false,
   buttonIconSize = 28,
 }) => {
@@ -39,53 +39,55 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
   }
 
   return (
-    <div
+    <fieldset
       className={cn([
-        "flex flex-row gap-2 px-2 py-1 align-middle border border-secondary",
-        "bg-paper",
+        "flex flex-col gap-2 p-2 rounded-lg border border-secondary",
       ])}
     >
-      <Button
-        className="px-4 py-1"
-        selected={mode == DRAWING_MODES.LINE}
-        onClick={() => {
-          handleChangeMode(DRAWING_MODES.LINE);
-        }}
-        title="Draw lines"
-      >
-        <TbLine size={buttonIconSize} />
-      </Button>
-      <Button
-        className="px-4 py-1"
-        selected={mode == DRAWING_MODES.ARC}
-        onClick={() => handleChangeMode(DRAWING_MODES.ARC)}
-        title="Draw arcs"
-      >
-        <Spline size={buttonIconSize} />
-      </Button>
-      <Button
-        onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
-        className="w-16 h-8"
-        title="Stop path"
-      >
-        Stop path
-      </Button>
-      <Button
-        onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
-        className="w-16 h-8"
-        title="Close path"
-      >
-        Close path
-      </Button>
-      <label
-        htmlFor="toggle-border"
-        className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
-      >
-        {drawingParams.general.filled ? "Filled path: " : "Not filled"}
-      </label>
+      <legend>Line, curve & path</legend>
+      <div className="flex flex-row justify-between p-0 w-full">
+        <Button
+          className="px-3 py-1"
+          selected={mode == DRAWING_MODES.LINE}
+          onClick={() => {
+            handleChangeMode(DRAWING_MODES.LINE);
+          }}
+          title="Draw lines"
+        >
+          <TbLine size={buttonIconSize} />
+        </Button>
+        <Button
+          className="px-3 py-1"
+          selected={mode == DRAWING_MODES.ARC}
+          onClick={() => handleChangeMode(DRAWING_MODES.ARC)}
+          title="Draw arcs"
+        >
+          <Spline size={buttonIconSize} />
+        </Button>
+        <Button
+          onClick={() => addEventAction(DRAWING_MODES.STOP_PATH)}
+          className="items-center p-1 w-12 h-8"
+          title="Stop path"
+        >
+          Stop path
+        </Button>
+        <Button
+          onClick={() => addEventAction(DRAWING_MODES.CLOSE_PATH)}
+          className="items-center p-1 w-12 h-8"
+          title="Close path"
+        >
+          Close path
+        </Button>
+      </div>
 
       {drawingParams.general.filled && (
-        <>
+        <div className="flex flex-row gap-2 justify-between p-0 mt-2">
+          <label
+            htmlFor="toggle-border"
+            className="flex flex-col gap-2 justify-center items-center p-2 text-sm font-bold"
+          >
+            Filled path:
+          </label>
           <label
             htmlFor="path-color-picker"
             className="flex flex-col gap-1 justify-center items-center text-sm"
@@ -117,8 +119,8 @@ export const DrawControlLine: React.FC<DrawControlLineProps> = ({
             style={{ width: "50px" }}
             isTouch={isTouch}
           />
-        </>
+        </div>
       )}
-    </div>
+    </fieldset>
   );
 };

@@ -10,6 +10,7 @@ import {
   isDrawingSelect,
   isDrawingShape,
   isDrawingLine,
+  ShapeDefinition,
 } from "../../lib/canvas/canvas-defines";
 import { DrawControlText } from "./DrawControlText";
 import { DrawControlShape } from "./DrawControlShape";
@@ -26,7 +27,7 @@ import { useZustandDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
 import { Search, MoveUpRight, Pencil, CaseSensitive } from "lucide-react";
-import { TbLine } from "react-icons/tb";
+import { TbTimeline } from "react-icons/tb";
 import { Save } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
@@ -47,15 +48,15 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     drawingParams,
     setDrawingParams,
     setDrawingMode,
+    setGeneralParams,
     mode,
     addEventDetail,
     addEventAction,
     handleChangeMode,
-    handleOpacity,
-    withText,
+    // withText,
     setLockRatio,
     reloadControl,
-    setReloadControl,
+    needReloadControl,
   } = useDrawingContext();
 
   const filenameRef: MutableRefObject<HTMLInputElement | null> = useRef(null);
@@ -124,14 +125,17 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       selectedDesignElement &&
       selectedDesignElement !== selectedElementRef.current
     ) {
-      const newMode = updateParamFromElement(
-        setDrawingParams,
-        getSelectedDesignElement
-      );
+      const selectedElement: ShapeDefinition =
+        getSelectedDesignElement() as ShapeDefinition;
+      if (!selectedElement) {
+        return;
+      }
+      const newMode = updateParamFromElement(setDrawingParams, selectedElement);
+
       if (newMode) {
         setDrawingMode(newMode);
       }
-      setReloadControl();
+      needReloadControl();
       alertMessage("selected element changed: " + newMode);
       selectedElementRef.current = selectedDesignElement;
     }
@@ -171,7 +175,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             }}
             title="Draw lines"
           >
-            <TbLine size={buttonIconSize} />
+            <TbTimeline size={buttonIconSize} />
           </Button>
           <Button
             className="px-4 py-1"
@@ -192,8 +196,8 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             className="px-4 bg-teal-400 hover:bg-teal-500"
             selected={mode == DRAWING_MODES.ERASE}
             onClick={() => {
+              setGeneralParams({ opacity: 1 });
               handleChangeMode(DRAWING_MODES.ERASE);
-              handleOpacity(100);
             }}
             title="Erase"
           >
@@ -244,7 +248,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         <DrawControlText
           hidden={
             mode != DRAWING_MODES.TEXT &&
-            (withText === false || !isDrawingShape(mode))
+            (!isDrawingShape(mode) || drawingParams.shape.withText === false)
           }
           isTouch={isTouch}
         />
@@ -310,5 +314,10 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         </div>
       </div>
     );
-  }, [mode, withText, drawingParams, reloadControl, drawingParams.lockRatio]);
+  }, [
+    mode,
+    reloadControl,
+    drawingParams.shape.withText,
+    drawingParams.lockRatio,
+  ]);
 };

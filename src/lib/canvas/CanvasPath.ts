@@ -387,19 +387,6 @@ export class CanvasPath extends CanvasPoints {
     return this.getLastItem() as LinePath;
   }
 
-  // setFillStyle(fillStyle: string | null = null) {
-  //   if (fillStyle == null) {
-  //     this.data.general.filled = false;
-  //     this.data.path = undefined;
-  //     return;
-  //   }
-  //   this.data.general.filled = true;
-  //   this.data.path = {
-  //     color: fillStyle,
-  //     opacity: 1,
-  //   };
-  // }
-
   /**
    * Close the path by adding a line to the start point,
    * if the last item is close to the start point, we can close the path

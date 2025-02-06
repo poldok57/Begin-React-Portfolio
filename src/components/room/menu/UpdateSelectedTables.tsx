@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Settings, X, PowerOff } from "lucide-react";
-import { TableSettings } from "./types";
-import { useTableDataStore } from "./stores/tables";
+import { TableSettings } from "../types";
+import { useTableDataStore } from "../stores/tables";
 import { Button } from "@/components/atom/Button";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
+
 import {
   Dialog,
   DialogContent,
   DialogOpen,
   DialogClose,
 } from "@/components/atom/Dialog";
-import { ShowTable } from "./ShowTable";
-import { RotationButtons } from "./control/RotationButtons";
-import { ResizeButtons } from "./control/ResizeButtons";
-import { DeleteSelectedTables } from "./control/DeleteSelectedTables";
-import { RotationSquad } from "./control/RotationSquad";
-import { useRoomContext } from "./RoomProvider";
-import { Mode, TableType, Menu } from "./types";
+import { ShowTable } from "../ShowTable";
+import { RotationButtons } from "../control/RotationButtons";
+import { ResizeButtons } from "../control/ResizeButtons";
+import { DeleteSelectedTables } from "../control/DeleteSelectedTables";
+import { RotationSquad } from "../control/RotationSquad";
+import { useRoomContext } from "../RoomProvider";
+import { Mode, TableType, Menu } from "../types";
 
-import { withMousePosition } from "../windows/withMousePosition";
+import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
 
 interface UpdateSelectedTablesMenuProps {

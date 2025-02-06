@@ -108,15 +108,13 @@ export class drawLine extends drawingHandler {
     }
   }
 
-  initData(initData: AllParams) {
-    this.setType(initData.mode);
-
-    if (initData.mode === DRAWING_MODES.ARROW) {
+  initData(data: AllParams) {
+    if (data.mode === DRAWING_MODES.ARROW) {
       this.path?.setDataType(DRAWING_MODES.ARROW);
     } else {
       this.path?.setDataType(DRAWING_MODES.LINES_PATH);
     }
-    this.setDataParams(initData.general, initData.arrow);
+    this.setDataParams(data.general, data.arrow);
   }
 
   changeData(data: AllParams) {

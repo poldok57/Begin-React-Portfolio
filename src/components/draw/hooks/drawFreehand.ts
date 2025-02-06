@@ -48,10 +48,10 @@ export class drawFreehand extends drawingHandler {
     this.setType(DRAWING_MODES.DRAW);
   }
 
-  initData(initData: AllParams): void {
-    this.setType(initData.mode);
-    this.changeData(initData);
+  initData(data: AllParams): void {
+    this.changeData(data);
   }
+
 
   setScale(scale: number): void {
     super.setScale(scale);

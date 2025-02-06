@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { useTableDataStore } from "./stores/tables";
-import { useRoomContext } from "./RoomProvider";
+import { useTableDataStore } from "../stores/tables";
+import { useRoomContext } from "../RoomProvider";
 import { drawArrow } from "@/lib/canvas/canvas-arrow";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { Rectangle } from "@/lib/canvas/types";
@@ -10,7 +10,7 @@ import {
   addValidationCancelAction,
   addValidationValidAction,
   hideValidationFrame,
-} from "./ValidationFrame";
+} from "../ValidationFrame";
 import { TableNumbersHelper } from "./TableNumbersHelper";
 import {
   MARGIN,
@@ -21,7 +21,7 @@ import {
   virtualTurningTables,
   calculateFourthAngle,
   clearCanvas,
-} from "./scripts/table-numbers";
+} from "../scripts/table-numbers";
 import { menuRoomVariants } from "@/styles/menu-variants";
 
 const ALIGNMENT_TOLERANCE = 25;

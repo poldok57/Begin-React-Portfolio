@@ -10,6 +10,7 @@ const DRAWING_ACTIONS = {
   CLOSE_PATH: "closePath",
   STOP_PATH: "stopPath",
   REFRESH: "refresh",
+  POSITION: "position",
 };
 
 const IMAGE_ACTIONS = {
@@ -23,7 +24,7 @@ const IMAGE_ACTIONS = {
 
 export const SHAPE_TYPE = {
   SQUARE: "Square",
-  CIRCLE: "Circle",
+  CIRCLE: "Circle & Ellipse",
   ONE_RADIUS_T: "Radius Top",
   ONE_RADIUS_B: "Radius Bottom",
   TWO_RADIUS: "Radius Half",
@@ -126,6 +127,7 @@ export type EventModeAction = {
   theme?: string;
   format?: string;
   value?: string | number | boolean;
+  position?: Coordinate;
 };
 
 export interface EventDetail extends Event {

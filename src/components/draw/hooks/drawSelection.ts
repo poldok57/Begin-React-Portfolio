@@ -31,7 +31,7 @@ export class drawSelection extends drawElement {
   private originalSize: Size | null = null;
 
   setType(type: string) {
-    this.shape.setType(type);
+    super.setType(type);
     if (type === DRAWING_MODES.SELECT) {
       this.shape.setWithAllButtons(false);
     } else {
@@ -54,12 +54,14 @@ export class drawSelection extends drawElement {
     return this.originalSize;
   }
 
-  initData(initData: AllParams) {
-    if (initData.mode === DRAWING_MODES.IMAGE) {
+  initData(data: AllParams) {
+    super.initData(data);
+
+    if (data.mode === DRAWING_MODES.IMAGE) {
       this.lockRatio = true;
     }
-    super.initData(initData);
   }
+
   /**
    * Function to set the draw data
    * @param {object} data - data to set

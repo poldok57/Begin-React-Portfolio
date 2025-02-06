@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { RoomAddTables } from "./RoomAddTables";
+import { RoomAddTables } from "./menu/RoomAddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
 import { Rectangle } from "@/lib/canvas/types";

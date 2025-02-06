@@ -18,7 +18,8 @@ export class drawFindElement extends drawingHandler {
   private setSelectedDesignElement: (elementId: string) => void;
   private refreshCanvas: (
     ctx: CanvasRenderingContext2D | null | undefined,
-    withSelected?: boolean
+    withSelected?: boolean,
+    scale?: number | null
   ) => void;
 
   constructor(
@@ -38,9 +39,7 @@ export class drawFindElement extends drawingHandler {
     this.designElements = this.designStore.getState().designElements;
   }
 
-  initData(initData: AllParams): void {
-    this.setType(initData.mode);
-  }
+  initData(_data: AllParams): void {}
 
   setType(type: string) {
     this.type = type;
@@ -60,9 +59,8 @@ export class drawFindElement extends drawingHandler {
   }
 
   refreshDrawing() {
-    // console.log("refreshDrawing free curve");
     this.clearTemporyCanvas();
-    this.refreshCanvas(this.context, true);
+    this.refreshCanvas(this.context, true, this.scale);
   }
 
   hightLightDrawing() {}

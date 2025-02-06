@@ -30,11 +30,10 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
   const {
     mode,
     drawingParams,
-    // addEventAction,
     handleChangeMode,
     setShapeParams,
     setBorderParams,
-    setWithText,
+    needReloadControl,
   } = useDrawingContext();
 
   const paramsShape = drawingParams.shape;
@@ -42,8 +41,19 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
   const [withBorder, setWithBorder] = useState(drawingParams.shape.withBorder);
 
   const handleWithText = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setWithText(event.target.checked);
     setShapeParams({ withText: event.target.checked });
+    needReloadControl();
+  };
+
+  const handleChangeModeWithEvent = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    mode: string
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    handleChangeMode(mode, {
+      x: Math.round(event.clientX),
+      y: Math.round(rect.top),
+    });
   };
 
   useEffect(() => {
@@ -61,58 +71,54 @@ export const DrawControlShape: React.FC<DrawControlShapeProps> = ({
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.CIRCLE}
-            onClick={() => handleChangeMode(DRAWING_MODES.CIRCLE)}
+            onClick={(event) =>
+              handleChangeModeWithEvent(event, DRAWING_MODES.CIRCLE)
+            }
           >
-            <MdRadioButtonUnchecked size="20px" />
+            <MdRadioButtonUnchecked size={buttonShapeSize} />
           </Button>
+
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.SQUARE}
-            onClick={() => handleChangeMode(DRAWING_MODES.SQUARE)}
+            onClick={(event) =>
+              handleChangeModeWithEvent(event, DRAWING_MODES.SQUARE)
+            }
           >
             <BiSquare size={buttonShapeSize} />
           </Button>
+
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.ONE_RADIUS_T}
-            onClick={() => handleChangeMode(DRAWING_MODES.ONE_RADIUS_T)}
+            onClick={(event) =>
+              handleChangeModeWithEvent(event, DRAWING_MODES.ONE_RADIUS_T)
+            }
           >
             <AiOutlineRadiusUpright size={buttonShapeSize} />
           </Button>
+
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.ONE_RADIUS_B}
-            onClick={() => handleChangeMode(DRAWING_MODES.ONE_RADIUS_B)}
+            onClick={(event) =>
+              handleChangeModeWithEvent(event, DRAWING_MODES.ONE_RADIUS_B)
+            }
           >
             <AiOutlineRadiusBottomright size={buttonShapeSize} />
           </Button>
+
           <Button
             className="py-1"
             selected={mode == DRAWING_MODES.TWO_RADIUS}
-            onClick={() => handleChangeMode(DRAWING_MODES.TWO_RADIUS)}
+            onClick={(event) =>
+              handleChangeModeWithEvent(event, DRAWING_MODES.TWO_RADIUS)
+            }
           >
             <WiMoonFirstQuarter size={buttonShapeSize} />
           </Button>
         </div>
         <div className="flex flex-row gap-5">
-          {/* <label
-            htmlFor="toggle-filled"
-            className={clsx(
-              "flex flex-col justify-center items-center font-bold",
-              {
-                hidden: !isDrawingShape(mode),
-              }
-            )}
-          >
-            Filled
-            <ToggleSwitch
-              id="toggle-filled"
-              defaultChecked={drawingParams.general.filled}
-              onChange={(event) =>
-                handleGeneral({ filled: event.target.checked })
-              }
-            />
-          </label> */}
           {mode !== DRAWING_MODES.CIRCLE && (
             <RangeInput
               className={inputRangeVariants({ width: "16", size: "xs" })}

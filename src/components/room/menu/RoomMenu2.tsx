@@ -5,14 +5,15 @@ import { RoomDesign } from "./RoomDesign";
 import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
-import { useRoomContext } from "./RoomProvider";
+import { useRoomContext } from "../RoomProvider";
 import { TableNumbers } from "./TableNumbers";
-import { useTableDataStore } from "./stores/tables";
+
+import { useTableDataStore } from "../stores/tables";
 import {
   showValidationFrame,
   addValidationValidAction,
-} from "./ValidationFrame";
-import { TypeListTables, Menu } from "./types";
+} from "../ValidationFrame";
+import { TypeListTables, Menu } from "../types";
 import { NotepadText } from "lucide-react";
 
 interface RoomMenu2Props {
@@ -235,7 +236,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               disabled={!isPlanMode}
             />
           </li>
-
           <li className="flex items-center">
             <TableNumbers
               className="px-2"

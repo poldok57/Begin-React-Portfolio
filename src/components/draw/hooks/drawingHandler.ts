@@ -112,8 +112,13 @@ export abstract class drawingHandler {
   setType(type: string) {
     this.type = type;
   }
+
   getType() {
     return this.type;
+  }
+
+  newElement(type: string) {
+    this.setType(type);
   }
 
   setScale(scale: number) {
@@ -154,7 +159,7 @@ export abstract class drawingHandler {
     coord: Coordinate
   ): returnMouseDown;
   abstract actionMouseMove(
-    event: MouseEvent | TouchEvent,
+    event: MouseEvent | TouchEvent | null,
     coord: Coordinate
   ): string | null;
   abstract actionMouseUp(): void;

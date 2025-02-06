@@ -47,3 +47,51 @@ export const inputRangeVariants = cva(
     },
   }
 );
+export const inputSelectVariants = cva(
+  [
+    "transition-opacity opacity-70& hover:opacity-100",
+    "px-1 py-2 rounded-md border-2 cursor-pointer border-primary",
+  ],
+  {
+    variants: {
+      width: {
+        "8": "w-8",
+        "10": "w-10",
+        "12": "w-12",
+        "14": "w-14",
+        "16": "w-16",
+        "18": "w-18",
+        "20": "w-20",
+        "24": "w-24",
+        "28": "w-28",
+        "32": "w-32",
+      },
+      appearance: {
+        none: "appearance-none",
+        default: "",
+      },
+      bg: {
+        none: "",
+        paper: "bg-paper",
+        primary: "bg-primary",
+        secondary: "bg-secondary",
+        success: "bg-success",
+        warning: "bg-warning",
+      },
+      focus: {
+        none: "",
+        blue: "focus:ring-blue-500",
+        primary: "focus:ring-primary",
+        secondary: "focus:ring-secondary",
+        success: "focus:ring-success",
+        warning: "focus:ring-warning",
+      },
+    },
+    defaultVariants: {
+      width: "14",
+      appearance: "none",
+      bg: "paper",
+      focus: "blue",
+    },
+  }
+);

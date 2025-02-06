@@ -1,17 +1,21 @@
 import { useEffect } from "react";
 
 import styled from "styled-components";
-import { SVGProps } from "react";
 
-interface SvgWrapperProps extends SVGProps<SVGSVGElement> {
-  rotation: number;
-  animationkey: number;
+interface SvgWrapperProps {
+  children: React.ReactNode;
+  width: number;
+  height: number;
+  viewBox: string;
+  $rotation: number;
+  $animationkey: number;
+  style?: React.CSSProperties;
 }
 
 export const SvgWrapper = styled.svg<SvgWrapperProps>`
-  transform: rotate(${(props) => props.rotation}deg);
+  transform: rotate(${(props) => props.$rotation}deg);
   ${(props) =>
-    props.animationkey > 0 &&
+    props.$animationkey > 0 &&
     `
     @keyframes flash {
       0%, 100% { fill-opacity: 1;
@@ -20,7 +24,7 @@ export const SvgWrapper = styled.svg<SvgWrapperProps>`
       scale: 1.05; }
     }
     animation: flash 1s infinite;
-    animation-play-state: ${props.animationkey > 0 ? "running" : "paused"};
+    animation-play-state: ${props.$animationkey > 0 ? "running" : "paused"};
   `}
 `;
 

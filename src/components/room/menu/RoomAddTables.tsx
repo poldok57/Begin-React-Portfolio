@@ -1,19 +1,19 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/atom/Button";
-import { SelectionItems } from "./SelectionItems";
-import { useTableDataStore } from "./stores/tables";
-import { TableType } from "./types";
+import { SelectionItems } from "../SelectionItems";
+import { useTableDataStore } from "../stores/tables";
+import { TableType } from "../types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
-import { useRoomContext } from "./RoomProvider";
-import { Menu, Mode } from "./types";
-import { SelectTableType } from "./SelectTableType";
+import { useRoomContext } from "../RoomProvider";
+import { Menu, Mode } from "../types";
+import { SelectTableType } from "../SelectTableType";
 import {
   positionTable,
   calculateSelectedRect,
   DEFAULT_TABLE_SIZE,
-} from "./scripts/room-add-tables";
-import { withMousePosition } from "../windows/withMousePosition";
+} from "../scripts/room-add-tables";
+import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
 interface RoomAddTablesMenuProps {
   addSelectedRect: (rect: Rectangle) => void;

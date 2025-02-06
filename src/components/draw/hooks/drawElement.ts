@@ -2,6 +2,7 @@ import { Coordinate, Area } from "@/lib/canvas/types";
 import {
   AllParams,
   DRAWING_MODES,
+  isDrawingShape,
   ParamsGeneral,
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
@@ -36,9 +37,6 @@ export class drawElement extends drawingHandler {
   ) {
     super(canvas, canvasContext, temporyCanvas, setMode, storeName);
 
-    this.fixed = false;
-
-    this.offset = null;
     this.shape = new CanvasShape();
 
     this.coordinates = { x: 0, y: 0 };
@@ -46,6 +44,15 @@ export class drawElement extends drawingHandler {
 
   setType(type: string): void {
     this.shape.setType(type);
+  }
+
+  newElement(type: string): void {
+    const prevType = this.getType();
+    if (!isDrawingShape(prevType)) {
+      this.readyForNewDrawing();
+    }
+
+    super.newElement(type);
   }
 
   setScale(scale: number): void {
@@ -56,18 +63,20 @@ export class drawElement extends drawingHandler {
    * Function to initialize the data of the shape
    * @param {AllParams} initData - initial data
    */
-  initData(initData: AllParams) {
-    this.shape.initData(initData);
-    this.setType(initData.mode);
+  initData(data: AllParams) {
+    this.shape.initData(data);
+
     if (!this.context) return;
     this.shape.setDataSize({
       x: this.context.canvas.width / 2 - SQUARE_WIDTH / 2,
       y: this.context.canvas.height / 2 - SQUARE_HEIGHT / 2,
-      width: initData.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_WIDTH,
-      height: initData.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_HEIGHT,
+      width: data.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_WIDTH,
+      height: data.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_HEIGHT,
     });
     this.shape.setWithAllButtons(true);
-    this.lockRatio = initData.lockRatio;
+    this.lockRatio = data.lockRatio;
+
+    this.readyForNewDrawing();
   }
 
   /**
@@ -92,6 +101,8 @@ export class drawElement extends drawingHandler {
    * @param {ShapeDefinition} draw - data to set
    */
   async setDraw(draw: ShapeDefinition) {
+    this.eraseOffset();
+    this.setFixed(true);
     await this.shape.setData(draw);
   }
 
@@ -143,16 +154,23 @@ export class drawElement extends drawingHandler {
     this.offset = null;
   }
 
+  readyForNewDrawing() {
+    this.fixed = false;
+    const size = this.shape.getDataSize();
+    this.offset = { x: -size.width / 2, y: -10 };
+  }
+
   /**
    * Function to calculate the offset of the shape
+
    */
   calculOffset() {
     if (!this.coordinates) return;
     const size: Area = this.shape.getDataSize();
 
     this.offset = {
-      x: size.x - this.coordinates.x,
-      y: size.y - this.coordinates.y,
+      x: Math.round(size.x - this.coordinates.x),
+      y: Math.round(size.y - this.coordinates.y),
     };
   }
 
@@ -168,7 +186,7 @@ export class drawElement extends drawingHandler {
    * Function to resize the square on the canvas
    */
   resizingSquare(witchBorder: string): void {
-    this.clearTemporyCanvas();
+    // this.clearTemporyCanvas();
 
     if (!this.coordinates || !this.ctxTempory) return;
 
@@ -352,7 +370,7 @@ export class drawElement extends drawingHandler {
    * @returns {string | null} - cursor type
    */
   actionMouseMove(
-    event: MouseEvent | TouchEvent,
+    event: MouseEvent | TouchEvent | null,
     coord: Coordinate
   ): string | null {
     this.setCoordinates(coord);
@@ -410,25 +428,30 @@ export class drawElement extends drawingHandler {
   /**
    * Function to end the action on the canvas affter changing the mode
    */
-  endAction() {
-    this.setFixed(true);
+  endAction(prevType?: string) {
+    if (prevType && isDrawingShape(prevType)) {
+      // if the previous type is a drawing shape, do nothing
+      return;
+    }
     this.setResizingBorder(null);
     this.clearTemporyCanvas();
+
     this.eraseOffset();
+    this.setFixed(true);
+    this.setType(DRAWING_MODES.PAUSE);
   }
 
   /**
-   * Function to egalise the size of the square
+   * Function to adjust the size of the shape
    */
-  actionMouseDblClick(): void {
-    // check position of the mouse, if mouse is on a button, do nothing
-    if (!this.coordinates) return;
-    const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
-    if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
-      return;
-    }
-
+  adjustSize() {
     const size = this.shape.getDataSize();
+
+    if (this.shape.getWithText() && this.ctxTempory) {
+      if (this.shape.setSizeForText(this.ctxTempory)) {
+        return;
+      }
+    }
 
     const diagonal = Math.sqrt(
       Math.pow(size.width, 2) + Math.pow(size.height, 2)
@@ -451,6 +474,20 @@ export class drawElement extends drawingHandler {
       this.shape.setRotation(0);
       this.shape.calculateWithTurningButtons();
     }
+  }
+
+  /**
+   * Function to egalise the size of the square
+   */
+  actionMouseDblClick(): void {
+    // check position of the mouse, if mouse is on a button, do nothing
+    if (!this.coordinates) return;
+    const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
+    if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
+      return;
+    }
+
+    this.adjustSize();
 
     this.refreshDrawing(0, mouseOnShape);
   }

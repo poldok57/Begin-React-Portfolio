@@ -1,28 +1,16 @@
 import { LinePath, LineType } from "./types";
 import {
   DRAW_TYPE,
-  CanvasPointsData,
   ShapeDefinition,
   GroupParams,
   ParamsGeneral,
-  ThingsToDraw,
   ParamsArrow,
 } from "./canvas-defines";
 
 export const updateParamFromElement = (
   setParams: (params: GroupParams) => void,
-  getSelectedElement: () => ThingsToDraw | null
+  selectedElement: ShapeDefinition
 ): string | null => {
-  const selectedElement: CanvasPointsData | ShapeDefinition | null | undefined =
-    getSelectedElement();
-
-  if (!selectedElement) {
-    console.log("update ParamFromElement", "NO selectedElement");
-    return null;
-  }
-
-  // console.log("update ParamFromElement", selectedElement);
-
   const general: ParamsGeneral = selectedElement.general ?? {
     lineWidth: 0,
     color: "",

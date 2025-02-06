@@ -82,8 +82,8 @@ const MemorizedSymetricTable = React.memo(
         width={size}
         height={bottomTable + strokeWidth}
         viewBox={`0 0 ${size} ${bottomTable}`}
-        rotation={rotation}
-        animationkey={animationkey}
+        $rotation={rotation}
+        $animationkey={animationkey}
         style={style}
       >
         {type === TableType.craps && (

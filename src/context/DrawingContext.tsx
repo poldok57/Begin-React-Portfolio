@@ -7,15 +7,14 @@ import {
   EventModeAction,
   Params,
 } from "@/lib/canvas/canvas-defines";
+import { Coordinate } from "@/lib/canvas/types";
 
 interface DrawingContextProps {
   drawingParams: AllParams;
   addEventDetail: (detail: EventModeAction) => void;
   addEventAction: (action: string) => void;
-  addEventMode: (mode: string) => void;
   handleChangeParams: (newParams: GroupParams) => void;
-  handleChangeMode: (newMode: string) => void;
-  handleOpacity: (value: number) => void;
+  handleChangeMode: (newMode: string, position?: Coordinate) => void;
   setDrawingParams: (params: Partial<AllParams>) => void;
   getDrawingParams: () => AllParams;
   setGeneralParams: (param: Params) => void;
@@ -26,11 +25,9 @@ interface DrawingContextProps {
   setBorderParams: (param: Params) => void;
   setDrawingMode: (mode: string) => void;
   mode: string;
-  withText: boolean;
-  setWithText: (withText: boolean) => void;
   setLockRatio: (ratio: boolean) => void;
   reloadControl: number;
-  setReloadControl: () => void;
+  needReloadControl: () => void;
   needRefresh: () => void;
 }
 
@@ -42,14 +39,14 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [mode, setDrawingModeState] = useState(DRAWING_MODES.INIT);
-  const [toRefresh, setToRefresh] = useState(0);
+  const [, setToRefresh] = useState(0);
 
   const drawingParamsRef = useRef<AllParams>(DEFAULT_PARAMS);
 
-  const [withText, setWithText] = useState(false);
+  // const [withText, setWithText] = useState(false);
 
   const needRefresh = () => {
-    setToRefresh(toRefresh + 1);
+    setToRefresh((current) => current + 1);
   };
 
   const setDrawingParams = (params: Partial<AllParams>) => {
@@ -64,23 +61,26 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   const addEventAction = (action: string) => {
     addEventDetail({ mode: DRAWING_MODES.ACTION, action });
   };
-  const addEventMode = (mode: string) => {
-    addEventDetail({ mode });
-  };
 
   const handleChangeParams = (newParams: GroupParams) => {
     setDrawingParams(newParams);
     addEventDetail({ mode: DRAWING_MODES.CHANGE });
   };
-  const handleOpacity = (value: number) => {
-    drawingParamsRef.current.general.opacity = value / 100;
-    handleChangeParams({ general: drawingParamsRef.current.general });
-  };
 
-  const handleChangeMode = (newMode: string) => {
+  const handleChangeMode = (
+    newMode: string,
+    position?: { x: number; y: number }
+  ) => {
     setDrawingMode(newMode);
-    addEventMode(newMode);
-    // mode = newMode;
+    if (position) {
+      setTimeout(() => {
+        addEventDetail({
+          mode: DRAWING_MODES.ACTION,
+          action: DRAWING_MODES.POSITION,
+          position,
+        });
+      }, 50);
+    }
   };
 
   const getDrawingParams = () => {
@@ -124,13 +124,13 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setLockRatio = (ratio: boolean) => {
     setDrawingParams({ lockRatio: ratio });
-    addEventMode(DRAWING_MODES.CHANGE);
+    addEventDetail({ mode: DRAWING_MODES.CHANGE });
   };
 
-  const [reloadControl, setReloadControlState] = useState(0);
+  const [reloadControl, setReloadControl] = useState(0);
 
-  const setReloadControl = () => {
-    setReloadControlState(reloadControl + 1);
+  const needReloadControl = () => {
+    setReloadControl((current) => current + 1);
   };
 
   return (
@@ -139,10 +139,8 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
         drawingParams: drawingParamsRef.current,
         addEventDetail,
         addEventAction,
-        addEventMode,
         handleChangeParams,
         handleChangeMode,
-        handleOpacity,
         setDrawingParams,
         getDrawingParams,
         setGeneralParams,
@@ -153,11 +151,9 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
         setTextParams,
         setDrawingMode,
         mode,
-        withText,
-        setWithText,
         setLockRatio,
         reloadControl,
-        setReloadControl,
+        needReloadControl,
         needRefresh,
       }}
     >

@@ -69,8 +69,8 @@ const MemorizedPokerTable = React.memo(
         width={size}
         height={radius * 2 + strokeWidth}
         viewBox={`0 0 ${size} ${radius * 2 + strokeWidth}`}
-        rotation={rotation}
-        animationkey={animationkey}
+        $rotation={rotation}
+        $animationkey={animationkey}
         style={style}
       >
         <path

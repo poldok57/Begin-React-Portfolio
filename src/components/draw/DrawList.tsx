@@ -58,6 +58,7 @@ export const DrawList = ({
 
   const handleReset = () => {
     eraseDesignElement();
+    // needReloadControl();
     handleRefresh();
   };
 
@@ -72,7 +73,7 @@ export const DrawList = ({
 
   useEffect(() => {
     setDesignElementLength(getDesignElementLength());
-  }, [getDesignElementLength]);
+  }, [getDesignElementLength()]);
 
   return (
     <div

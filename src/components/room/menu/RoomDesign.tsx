@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/atom/Button";
-import { inputRangeVariants } from "@/styles/input-variants";
+import {
+  inputRangeVariants,
+  inputSelectVariants,
+} from "@/styles/input-variants";
 import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
 
 // import { getContrastColor } from "../colors/colors";
-import { useRoomContext } from "./RoomProvider";
-import { Mode, Menu } from "./types";
-import { withMousePosition } from "../windows/withMousePosition";
+import { useRoomContext } from "../RoomProvider";
+import { Mode, Menu } from "../types";
+import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
 
 import { ColorPikerBg } from "@/components/colors/ColorPikerBg";
@@ -16,19 +19,26 @@ import {
   isDrawingFreehand,
   isDrawingSelect,
   isDrawingShape,
+  ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 
-import { DrawList } from "../draw/DrawList";
+import { DrawList } from "../../draw/DrawList";
 import { cn } from "@/lib/utils/cn";
-import { ColorPicker } from "../atom/ColorPicker";
-import { RangeInput } from "../atom/RangeInput";
+import { ColorPicker } from "../../atom/ColorPicker";
+import { RangeInput } from "../../atom/RangeInput";
 
-import { CaseSensitive, MoveUpRight, Pencil } from "lucide-react";
+import { CaseSensitive, MoveUpRight, Pencil, Search } from "lucide-react";
 import { TbTimeline } from "react-icons/tb";
-import { MdLineWeight } from "react-icons/md";
+import { MdLineWeight, MdOpacity } from "react-icons/md";
+
+import { RoomDesignLine } from "./RoomDesignLine";
+import { RoomDesignShape } from "./RoomDesignShape";
+import { RoomDesignBorder } from "./RoomDesignBorder";
+import { RoomDesignText } from "./RoomDesignText";
+import { RoomDesignArrow } from "./RoomDesignArrow";
 
 interface RoomDesignMenuProps {
   isTouch: boolean;
@@ -42,7 +52,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
   isTouch,
   activeMenu,
   buttonIconSize = 20,
-  // buttonShapeSize = 16,
+  buttonShapeSize = 16,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -63,6 +73,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
     setShapeParams,
     setDrawingMode,
     setDrawingParams,
+    needReloadControl,
   } = useDrawingContext();
 
   const paramsGeneral = drawingParams.general;
@@ -118,10 +129,13 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
       selectedDesignElement !== selectedElementRef.current &&
       getSelectedDesignElement
     ) {
-      const newMode = updateParamFromElement(
-        setDrawingParams,
-        getSelectedDesignElement
-      );
+      const selectedElement: ShapeDefinition | null =
+        getSelectedDesignElement() as ShapeDefinition | null;
+      if (!selectedElement) {
+        return;
+      }
+
+      const newMode = updateParamFromElement(setDrawingParams, selectedElement);
       if (newMode) {
         setDrawingMode(newMode);
       }
@@ -130,6 +144,8 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
       selectedElementRef.current = selectedDesignElement;
     }
   }, [selectedDesignElement]);
+
+  // console.log("redrawing mode", mode);
 
   return (
     <>
@@ -146,7 +162,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
           addEventAction(DRAWING_MODES.CONTROL_PANEL.OUT)
         }
       >
-        <div className="flex flex-col gap-3 mb-5 border-b-2 border-base-300">
+        <div className="flex flex-col gap-2 mb-5 border-b-2 border-base-300">
           <div className="flex flex-col">
             <fieldset className="flex flex-col gap-2 items-center p-2 rounded-lg border-2 border-secondary">
               <legend>Background</legend>
@@ -202,13 +218,13 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
                 </label>
                 <select
                   id="line-width-select"
-                  className="px-2 py-2 text-gray-700 bg-white rounded-lg border border-gray-300 shadow-sm appearance-none cursor-pointer w-18 focus:ring-1 focus:ring-blue-400"
+                  className={inputSelectVariants({ width: "18" })}
                   value={paramsGeneral.lineWidth}
                   onChange={(e) => {
                     // console.log("lineWidth", e.target.value);
                     paramsGeneral.lineWidth = Number(e.target.value);
-                    needRefresh();
                     setGeneralParams({ lineWidth: Number(e.target.value) });
+                    needRefresh();
                   }}
                 >
                   {[
@@ -223,7 +239,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               </div>
               <RangeInput
                 className={inputRangeVariants({ width: "16", size: "sm" })}
-                label="Opacity"
+                label={<MdOpacity size={16} />}
                 id="draw-size-picker"
                 value={paramsGeneral.opacity * 100}
                 min="5"
@@ -239,11 +255,12 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
                 className={cn(
                   "flex flex-col justify-center items-center font-xs gap-2",
                   {
-                    hidden: !(
-                      isDrawingShape(mode) ||
-                      isDrawingLine(mode) ||
-                      isDrawingFreehand(mode)
-                    ),
+                    hidden:
+                      !(
+                        isDrawingShape(mode) ||
+                        isDrawingLine(mode) ||
+                        isDrawingFreehand(mode)
+                      ) || mode === DRAWING_MODES.ARROW,
                   }
                 )}
               >
@@ -253,7 +270,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
                   defaultChecked={paramsGeneral.filled}
                   onChange={(event) => {
                     setGeneralParams({ filled: event.target.checked });
-                    // setReloadControl();
+                    needReloadControl();
                   }}
                 />
               </label>
@@ -268,7 +285,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               ></label>
             </fieldset>
           </div>
-          <div className="flex flex-row">
+          <div className="flex flex-col">
             <fieldset className="flex flex-row gap-2 justify-between p-2 w-full rounded-lg border-2 border-secondary">
               <legend>Drawing</legend>
               <Button
@@ -306,20 +323,58 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               </Button>
             </fieldset>
           </div>
-          <div className="flex flex-col gap-2">
-            <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
-              <legend>Square and ellipse</legend>
-              <Button type="submit">Save square</Button>
-            </fieldset>
-          </div>
+          {mode === DRAWING_MODES.ARROW && (
+            <RoomDesignArrow isTouch={isTouch} />
+          )}
+          {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
+            <div className="flex flex-col">
+              <RoomDesignLine
+                buttonIconSize={buttonIconSize}
+                isTouch={isTouch}
+              />
+            </div>
+          )}
+          {((isDrawingShape(mode) && drawingParams.shape.withText) ||
+            mode === DRAWING_MODES.TEXT) && (
+            <RoomDesignText
+              buttonShapeSize={buttonShapeSize}
+              buttonIconSize={buttonIconSize}
+              isTouch={isTouch}
+            />
+          )}
+          <RoomDesignShape
+            buttonShapeSize={buttonShapeSize}
+            buttonIconSize={buttonIconSize}
+            isTouch={isTouch}
+          />
+          {(isDrawingShape(mode) || isDrawingSelect(mode)) && (
+            <RoomDesignBorder
+              buttonIconSize={buttonIconSize}
+              isTouch={isTouch}
+            />
+          )}
         </div>
         <div className="flex flex-col gap-2"></div>
         <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-accent">
           <legend>Design elements ({displayElementsLength})</legend>
           <div className="flex flex-col gap-2 items-center">
-            <Button onClick={() => setShowList(!showList)} className="w-full">
-              {showList ? "Hide" : "Show"} elements
-            </Button>
+            <div className="flex flex-row gap-2 justify-between items-center w-full">
+              <Button onClick={() => setShowList(!showList)} className="w-3/4">
+                {showList ? "Hide" : "Show"} elements
+              </Button>
+              <button
+                onClick={() => handleChangeMode(DRAWING_MODES.FIND)}
+                className={cn(
+                  "btn  btn-circle bg-gray-300 transition hover:bg-accent",
+                  {
+                    "bg-accent": mode == DRAWING_MODES.FIND,
+                  }
+                )}
+                title="Find element by clicking on canvas"
+              >
+                <Search size={buttonIconSize} />
+              </button>
+            </div>
             {showList && (
               <DrawList
                 className="flex flex-col gap-1 px-0 py-2 w-56 text-sm"
@@ -352,10 +407,17 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   disabled = false,
 }) => {
   const { setMode } = useRoomContext();
+  const { handleChangeMode } = useDrawingContext();
 
   const handleOpen = () => {
     setActiveMenu(Menu.roomDesign);
+
     setMode(Mode.draw);
+  };
+
+  const handleClose = () => {
+    setActiveMenu(null);
+    handleChangeMode(DRAWING_MODES.PAUSE);
   };
 
   return (
@@ -376,7 +438,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
           activeMenu={activeMenu}
           setActiveMenu={setActiveMenu}
           className="absolute z-30 translate-y-24"
-          onClose={() => setActiveMenu(null)}
+          onClose={handleClose}
           withToggleLock={false}
           withTitleBar={true}
           titleText="Room design"

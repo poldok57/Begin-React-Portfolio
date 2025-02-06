@@ -54,7 +54,7 @@ export const RangeInput: React.FC<{
   max: string;
   step?: string;
   onChange: (_value: number) => void;
-  label: string;
+  label: string | React.ReactNode;
   isTouch?: boolean;
 }> = ({
   id,
@@ -90,8 +90,11 @@ export const RangeInput: React.FC<{
 
   return (
     <div className="flex flex-col items-center">
-      <label htmlFor={id} className="mb-1 text-sm text-nowrap">
-        {label}{" "}
+      <label
+        htmlFor={id}
+        className="flex flex-row gap-1 items-center mb-1 text-sm text-nowrap"
+      >
+        {label}
         <FormattedRapport value={inputValue} max={max} decimal={decimalCount} />
       </label>
       <div className="flex items-center">

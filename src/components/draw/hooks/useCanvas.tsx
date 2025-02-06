@@ -255,9 +255,8 @@ export const useCanvas = ({
       // console.log("initData ->", currentParams);
       drawingHdl.initData(currentParams);
       drawingHdl.setMouseCanvas(canvasMouseRef.current);
-    } else {
-      drawingHdl.setType(mode);
     }
+    drawingHdl.newElement(mode);
 
     drawingHdl.setScale(scaleRef.current);
 
@@ -372,8 +371,18 @@ export const useCanvas = ({
    */
   const drawingParamChanged = () => {
     currentParams = getDrawingParams();
+    // console.log("paramChanged mode", currentParams.mode);
+
     if (!drawingRef.current) return;
     drawingRef.current.changeData(currentParams);
+
+    if (
+      currentParams.mode === DRAWING_MODES.PAUSE ||
+      currentParams.mode === DRAWING_MODES.FIND
+    )
+      return;
+
+    // console.log("paramChange -> refreshDrawing");
     drawingRef.current.refreshDrawing(
       currentParams.general.opacity,
       null,
@@ -476,6 +485,39 @@ export const useCanvas = ({
         "show"
       );
     }, 20);
+  };
+
+  /**
+   * Function to get the nearest position to the mouse inside the canvas
+   * @param {Coordinate} position - position of the mouse
+   * @returns {Coordinate} - nearest position
+   */
+  const nearestPosition = (position?: Coordinate) => {
+    if (!position || !canvasTemporyRef.current) {
+      return null;
+    }
+    // Check if position is inside canvas and adjust if needed
+    const canvas = canvasTemporyRef.current;
+    const bounds = canvas.getBoundingClientRect();
+    const margin = 5;
+
+    // Adjust x coordinate if needed
+    if (position.x < bounds.left + margin) {
+      position.x = bounds.left + margin;
+    } else if (position.x > bounds.right - margin) {
+      position.x = bounds.right - margin;
+    }
+
+    // Adjust y coordinate if needed
+    if (position.y < bounds.top + margin) {
+      position.y = bounds.top + margin;
+    } else if (position.y > bounds.bottom - margin) {
+      position.y = bounds.bottom - margin;
+    }
+    return {
+      x: Math.round(position.x - bounds.left),
+      y: Math.round(position.y - bounds.top),
+    };
   };
 
   const handleActionEvent = (event: EventDetail) => {
@@ -589,6 +631,19 @@ export const useCanvas = ({
           selectionRef.current.refreshDrawing();
         }
         break;
+      case DRAWING_MODES.POSITION:
+        const position = nearestPosition(event.detail.position);
+        if (position) {
+          if (drawingRef.current) {
+            const type = drawingRef.current.getType();
+            // console.log("type:", type, "position:", position);
+            if (isDrawingShape(type)) {
+              drawingRef.current.actionMouseMove(null, position);
+            }
+          }
+        }
+        break;
+
       default:
         console.error("Action not found : ", eventAction);
     }
@@ -645,6 +700,9 @@ export const useCanvas = ({
       drawingRef.current?.endAction();
       // restart with basic drawing mode
       setDrawingMode(DRAWING_MODES.FIND);
+      if (setSelectedDesignElement) {
+        setSelectedDesignElement(null);
+      }
 
       drawingRef.current = selectDrawingHandler(DRAWING_MODES.FIND);
       drawingRef.current?.setType(DRAWING_MODES.FIND);
@@ -706,11 +764,13 @@ export const useCanvas = ({
       switch (newMode) {
         case DRAWING_MODES.CHANGE:
           drawingParamChanged();
+
           break;
         case DRAWING_MODES.ACTION:
           handleActionEvent(event);
           break;
         default:
+          // drawing mode are managed by the useEffect
           if (!isDrawingMode(newMode)) {
             console.error("Mode not found : ", newMode);
           }

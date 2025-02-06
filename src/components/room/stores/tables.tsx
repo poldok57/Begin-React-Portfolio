@@ -4,6 +4,7 @@ import { TableData } from "../types";
 import { produce } from "immer";
 import { StateCreator } from "zustand";
 import { generateUniqueId } from "../../../lib/utils/unique-id";
+import { createLocalStoragePersist } from "@/lib/stores/persist";
 // import { DesignType } from "../types";
 interface TableDataState {
   tables: TableData[];
@@ -20,10 +21,6 @@ interface TableDataState {
   sizeSelectedTable: (size: number) => void;
   deleteTable: (id: string) => void;
   deleteSelectedTable: () => void;
-  // addDesignElement: (designElement: DesignElement) => void;
-  // deleteDesignElement: (id: string) => void;
-  // deleteDesignElementByType: (type: DesignType) => void;
-  // setSelectedDesignElement: (id: string | null) => void;
   getTables: () => TableData[];
 }
 
@@ -109,40 +106,7 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
     set((state) => ({
       tables: state.tables.filter((table) => !table.selected),
     })),
-  // addDesignElement: (designElement: DesignElement) => {
-  //   const newDesignElement = {
-  //     ...designElement,
-  //     id: designElement.id || generateUniqueId("des"),
-  //   };
-  //   set((state: TableDataState) => ({
-  //     designElements: [...state.designElements, newDesignElement],
-  //   }));
-  //   return newDesignElement.id;
-  // },
-  // deleteDesignElement: (id: string) =>
-  //   set((state: TableDataState) => ({
-  //     designElements: state.designElements.filter(
-  //       (designElement) => designElement.id !== id
-  //     ),
-  //   })),
-  // deleteDesignElementByType: (type: DesignType) =>
-  //   set((state: TableDataState) => ({
-  //     designElements: state.designElements.filter(
-  //       (designElement) => designElement.type !== type
-  //     ),
-  //   })),
-  // setSelectedDesignElement: (id: string | null) =>
-  //   set(() => ({
-  //     selectedDesignElement: id,
-  //   })),
 });
-
-// export const useTableDataStore = create<TableDataState>()(
-//   persist(tableStore, {
-//     name: "table-data-storage",
-//     getStorage: () => localStorage,
-//   })
-// );
 
 export const useTableDataStore = create<TableDataState>()(
   persist(
@@ -151,7 +115,7 @@ export const useTableDataStore = create<TableDataState>()(
     }),
     {
       name: "table-data-storage",
-      getStorage: () => localStorage,
+      storage: createLocalStoragePersist<TableDataState>(),
     }
   )
 );

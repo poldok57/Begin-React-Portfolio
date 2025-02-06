@@ -84,7 +84,7 @@ export const DrawControlText: React.FC<DrawControlTextProps> = ({
           value={drawingParams.text.bold / 100}
           min="1"
           max="9"
-          step="1"
+          step="2"
           onChange={(value) => setTextParams({ bold: value * 100 })}
           label="Bold"
           isTouch={isTouch}

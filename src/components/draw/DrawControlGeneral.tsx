@@ -24,7 +24,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
     mode,
     drawingParams,
     setGeneralParams,
-    setReloadControl,
+    needReloadControl,
     setShapeParams,
   } = useDrawingContext();
 
@@ -121,7 +121,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
             defaultChecked={paramsGeneral.filled}
             onChange={(event) => {
               setGeneralParams({ filled: event.target.checked });
-              setReloadControl();
+              needReloadControl();
             }}
           />
         </label>
@@ -145,7 +145,7 @@ export const DrawControlGeneral: React.FC<DrawControlGeneralProps> = ({
               } else {
                 setShapeParams({ blackChangeColor: undefined });
               }
-              setReloadControl();
+              needReloadControl();
             }}
           />
         </label>

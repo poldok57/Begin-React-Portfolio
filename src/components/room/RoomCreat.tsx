@@ -7,7 +7,7 @@ import { useTableDataStore } from "./stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { withMousePosition } from "@/components/windows/withMousePosition";
-import { RoomMenu2 } from "./RoomMenu2";
+import { RoomMenu2 } from "./menu/RoomMenu2";
 import { GroundSelection } from "./GroundSelection/GroundSelection";
 import { RoomProvider, useRoomContext } from "./RoomProvider";
 import { ListTablesPlan } from "./ListTablesPlan";
@@ -63,15 +63,16 @@ export const RoomCreatTools = () => {
     setStoreName,
   } = useRoomContext();
 
-  if (mode === null) {
-    console.log("RoomCreatTools setMode Create");
-    setMode(Mode.create);
-  }
-  setStoreName(DESIGN_STORE_NAME);
   const { setDrawingMode } = useDrawingContext();
-  if (mode !== Mode.draw) {
-    setDrawingMode(DRAWING_MODES.PAUSE);
-  }
+
+  useEffect(() => {
+    if (mode === null) {
+      setMode(Mode.create);
+    } else if (mode !== Mode.draw) {
+      setDrawingMode(DRAWING_MODES.PAUSE);
+    }
+    setStoreName(DESIGN_STORE_NAME);
+  }, [mode]);
 
   const [preSelection, setPreSelection] = useState<Rectangle | null>(null);
   const groundRef = useRef<HTMLDivElement>(null);

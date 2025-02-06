@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, StorageValue, PersistOptions } from "zustand/middleware";
+import { persist } from "zustand/middleware";
 import { StateCreator } from "zustand";
 
 import {
@@ -10,6 +10,7 @@ import {
 import { generateUniqueId } from "../utils/unique-id";
 import { showDrawElement } from "../canvas/showDrawElement";
 import { clearCanvasByCtx } from "../canvas/canvas-tools";
+import { createLocalStoragePersist } from "./persist";
 
 const defaultDesignStoreName = "design-data-storage";
 
@@ -220,23 +221,6 @@ const createDesignStore = (storageName: string) => {
     getDesignElementLength: () => get().designElements.length,
   });
 
-  const localStoragePersist: PersistOptions<DesignState>["storage"] = {
-    getItem: (key: string) => {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
-    },
-    setItem: (key: string, value: StorageValue<DesignState>) => {
-      if (value !== undefined) {
-        localStorage.setItem(key, JSON.stringify(value));
-      } else {
-        localStorage.removeItem(key);
-      }
-    },
-    removeItem: (key: string) => {
-      localStorage.removeItem(key);
-    },
-  };
-
   return create<DesignState>()(
     persist(
       (set, get, api) => ({
@@ -244,7 +228,7 @@ const createDesignStore = (storageName: string) => {
       }),
       {
         name: storageName,
-        storage: localStoragePersist,
+        storage: createLocalStoragePersist<DesignState>(),
       }
     )
   );
@@ -283,7 +267,7 @@ export const zustandDesignStore = (storeName: string | null) => {
 // For React components
 export const useZustandDesignStore = (storeName: string | null) => {
   if (storeName === null) {
-    console.log("storeName is null");
+    // console.log("storeName is null");
     return null;
   }
 

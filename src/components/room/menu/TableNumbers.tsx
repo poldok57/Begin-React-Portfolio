@@ -1,11 +1,11 @@
 import { useRef } from "react";
 import { Button } from "@/components/atom/Button";
-import { useTableDataStore } from "./stores/tables";
-import { useRoomContext } from "./RoomProvider";
-import { Mode, Menu } from "./types";
+import { useTableDataStore } from "../stores/tables";
+import { useRoomContext } from "../RoomProvider";
+import { Mode, Menu } from "../types";
 import { TableNumbersProcess } from "./TableNumbersProcess";
-import { clearCanvas } from "./scripts/table-numbers";
-import { withMousePosition } from "../windows/withMousePosition";
+import { clearCanvas } from "../scripts/table-numbers";
+import { withMousePosition } from "../../windows/withMousePosition";
 
 const TableNumbersProcessWP = withMousePosition(TableNumbersProcess);
 
