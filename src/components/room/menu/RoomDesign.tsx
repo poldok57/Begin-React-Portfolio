@@ -39,6 +39,8 @@ import { RoomDesignShape } from "./RoomDesignShape";
 import { RoomDesignBorder } from "./RoomDesignBorder";
 import { RoomDesignText } from "./RoomDesignText";
 import { RoomDesignArrow } from "./RoomDesignArrow";
+import { useControlKeyboard } from "@/components/draw/hooks/useControlKeyboard";
+import { RoomDesignSelect } from "./RoomDesignSelect";
 
 interface RoomDesignMenuProps {
   isTouch: boolean;
@@ -101,6 +103,8 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
     }
     needRefresh();
   };
+
+  useControlKeyboard(isTouch);
 
   useEffect(() => {
     if (activeMenu === Menu.roomDesign) {
@@ -353,13 +357,21 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               isTouch={isTouch}
             />
           )}
+          <RoomDesignSelect buttonIconSize={buttonIconSize} isTouch={isTouch} />
         </div>
         <div className="flex flex-col gap-2"></div>
         <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-accent">
           <legend>Design elements ({displayElementsLength})</legend>
           <div className="flex flex-col gap-2 items-center">
             <div className="flex flex-row gap-2 justify-between items-center w-full">
-              <Button onClick={() => setShowList(!showList)} className="w-3/4">
+              <Button
+                onClick={() => setShowList(!showList)}
+                className={cn("w-3/4", {
+                  "bg-gray-300": showList,
+                  "hover:bg-gray-400": showList,
+                })}
+                title={showList ? "Hide" : "Show"}
+              >
                 {showList ? "Hide" : "Show"} elements
               </Button>
               <button
@@ -408,16 +420,18 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
 }) => {
   const { setMode } = useRoomContext();
   const { handleChangeMode } = useDrawingContext();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleOpen = () => {
     setActiveMenu(Menu.roomDesign);
-
+    setIsOpen(true);
     setMode(Mode.draw);
   };
 
   const handleClose = () => {
     setActiveMenu(null);
     handleChangeMode(DRAWING_MODES.PAUSE);
+    setIsOpen(false);
   };
 
   return (
@@ -432,7 +446,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
           Room design
         </Button>
       </div>
-      {activeMenu === Menu.roomDesign && (
+      {activeMenu === Menu.roomDesign && isOpen && (
         <RoomDesignMenuWP
           isTouch={isTouch}
           activeMenu={activeMenu}

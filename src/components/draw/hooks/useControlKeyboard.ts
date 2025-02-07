@@ -35,6 +35,7 @@ export const useControlKeyboard = (isTouch: boolean) => {
         addEventAction(DRAWING_MODES.ABORT);
         break;
       case "Enter":
+        console.log("Enter -> actionValid");
         addEventAction(DRAWING_MODES.VALID);
         break;
       case "z":
@@ -86,5 +87,5 @@ export const useControlKeyboard = (isTouch: boolean) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mode]);
+  }, [mode, isTouch]);
 };

@@ -55,6 +55,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     handleChangeMode,
     // withText,
     setLockRatio,
+    handleSelectZone,
     reloadControl,
     needReloadControl,
   } = useDrawingContext();
@@ -99,22 +100,6 @@ export const DrawControl: React.FC<DrawControlProps> = ({
     setDrawingMode(DRAWING_MODES.INIT);
     // eraseHistory();
     eraseDesignElement();
-  };
-
-  const handleImage = (mode: string) => {
-    setDrawingMode(DRAWING_MODES.IMAGE);
-    addEventAction(mode);
-  };
-
-  const handleSelectZone = () => {
-    if (mode !== DRAWING_MODES.SELECT) {
-      // active selection mode
-      handleChangeMode(DRAWING_MODES.SELECT);
-      setLockRatio(false);
-      return;
-    }
-    // reselect zone
-    addEventAction(DRAWING_MODES.SELECT_AREA);
   };
 
   useControlKeyboard(isTouch);
@@ -244,7 +229,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
             </button>
           </div>
         </div>
-        <DrawControlSelect handleImage={handleImage} isTouch={isTouch} />
+        <DrawControlSelect isTouch={isTouch} />
         <DrawControlText
           hidden={
             mode != DRAWING_MODES.TEXT &&

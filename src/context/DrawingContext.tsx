@@ -15,9 +15,11 @@ interface DrawingContextProps {
   addEventAction: (action: string) => void;
   handleChangeParams: (newParams: GroupParams) => void;
   handleChangeMode: (newMode: string, position?: Coordinate) => void;
+  handleImage: (mode: string) => void;
   setDrawingParams: (params: Partial<AllParams>) => void;
   getDrawingParams: () => AllParams;
   setGeneralParams: (param: Params) => void;
+
   setPathParams: (param: Params) => void;
   setTextParams: (param: Params) => void;
   setArrowParams: (param: Params) => void;
@@ -26,6 +28,7 @@ interface DrawingContextProps {
   setDrawingMode: (mode: string) => void;
   mode: string;
   setLockRatio: (ratio: boolean) => void;
+  handleSelectZone: () => void;
   reloadControl: number;
   needReloadControl: () => void;
   needRefresh: () => void;
@@ -65,6 +68,11 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
   const handleChangeParams = (newParams: GroupParams) => {
     setDrawingParams(newParams);
     addEventDetail({ mode: DRAWING_MODES.CHANGE });
+  };
+
+  const handleImage = (mode: string) => {
+    setDrawingMode(DRAWING_MODES.IMAGE);
+    addEventAction(mode);
   };
 
   const handleChangeMode = (
@@ -127,6 +135,17 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
     addEventDetail({ mode: DRAWING_MODES.CHANGE });
   };
 
+  const handleSelectZone = () => {
+    if (mode !== DRAWING_MODES.SELECT) {
+      // active selection mode
+      handleChangeMode(DRAWING_MODES.SELECT);
+      setLockRatio(false);
+      return;
+    }
+    // reselect zone
+    addEventAction(DRAWING_MODES.SELECT_AREA);
+  };
+
   const [reloadControl, setReloadControl] = useState(0);
 
   const needReloadControl = () => {
@@ -140,18 +159,21 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
         addEventDetail,
         addEventAction,
         handleChangeParams,
+        handleImage,
         handleChangeMode,
         setDrawingParams,
         getDrawingParams,
         setGeneralParams,
         setPathParams,
         setArrowParams,
+
         setShapeParams,
         setBorderParams,
         setTextParams,
         setDrawingMode,
         mode,
         setLockRatio,
+        handleSelectZone,
         reloadControl,
         needReloadControl,
         needRefresh,

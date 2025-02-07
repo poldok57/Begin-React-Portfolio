@@ -73,44 +73,48 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setActiveMenu(null);
-        clearSelectedTableIds();
-        return;
-      }
-      // Sélectionner toutes les tables avec Ctrl+A
-      if (event.ctrlKey && event.key === "a") {
-        event.preventDefault();
-        tables.forEach((table) => {
-          updateTable(table.id, { selected: true });
-        });
-        return;
-      }
-      // Delete table with Delete key
-      if (event.key === "Delete") {
-        const containerSelect = getSelectedRect(true);
-        if (!containerSelect) {
-          return;
-        }
-        const count = countSelectedTables();
-        if (count === 0) {
-          return;
-        }
-        const text = `Delete ${count} tables`;
-        showValidationFrame(
-          {
-            left: containerSelect.left + containerSelect.width - 20,
-            top: containerSelect.top + 10,
-          },
-          text
-        );
-        addValidationValidAction(deleteSelectedTable);
-        event.preventDefault();
-        const selectedTables = tables.filter((table) => table.selected);
-        if (selectedTables.length > 0) {
-          resetSelectedTables();
-        }
-        return;
+      switch (event.key) {
+        case "Escape":
+          if (activeMenuRef.current === Menu.roomDesign) {
+            break;
+          }
+          setActiveMenu(null);
+          clearSelectedTableIds();
+          break;
+
+        case "a":
+          if (event.ctrlKey) {
+            event.preventDefault();
+            tables.forEach((table) => {
+              updateTable(table.id, { selected: true });
+            });
+          }
+          break;
+
+        case "Delete":
+          const containerSelect = getSelectedRect(true);
+          if (!containerSelect) {
+            break;
+          }
+          const count = countSelectedTables();
+          if (count === 0) {
+            break;
+          }
+          const text = `Delete ${count} tables`;
+          showValidationFrame(
+            {
+              left: containerSelect.left + containerSelect.width - 20,
+              top: containerSelect.top + 10,
+            },
+            text
+          );
+          addValidationValidAction(deleteSelectedTable);
+          event.preventDefault();
+          const selectedTables = tables.filter((table) => table.selected);
+          if (selectedTables.length > 0) {
+            resetSelectedTables();
+          }
+          break;
       }
     };
 
@@ -128,7 +132,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   return (
     <div className="flex items-center w-full align-middle bg-gray-100 min-h-12">
       <div className="navbar-start">
-        <div className="dropdown">
+        <div className="z-20 dropdown">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
             <NotepadText size={24} />
           </div>

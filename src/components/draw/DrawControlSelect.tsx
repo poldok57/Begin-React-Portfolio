@@ -1,30 +1,28 @@
 import React, { useState, useRef, useEffect } from "react";
 import { BsCircleHalf } from "react-icons/bs";
+
 import clsx from "clsx";
-import { Button } from "../atom/Button";
-import { RangeInput } from "../atom/RangeInput";
-import {
-  DRAWING_MODES,
-  isDrawingSelect,
-} from "../../lib/canvas/canvas-defines";
+import { Button } from "@/components/atom/Button";
+import { RangeInput } from "@/components/atom/RangeInput";
+import { DRAWING_MODES, isDrawingSelect } from "@/lib/canvas/canvas-defines";
+
 import { useDrawingContext } from "@/context/DrawingContext";
 import { ButtonConfirmModal } from "../atom/ButtonConfirmModal";
 import { MutableRefObject } from "react";
 
 // import clsx from "clsx";
 interface DrawControlSelectProps {
-  handleImage: (action: string) => void;
   isTouch?: boolean;
 }
 
 export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
-  handleImage,
   isTouch = false,
 }) => {
   const {
     mode,
     setDrawingMode,
     drawingParams,
+    handleImage,
     addEventDetail,
     setShapeParams,
     setGeneralParams,
@@ -78,29 +76,32 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
       })}
     >
       <div className="flex flex-row gap-3">
-        <Button
-          className="px-2 py-1"
-          title="Ctrl+C"
-          selected={mode === DRAWING_MODES.COPY}
-          onClick={() => handleImage(DRAWING_MODES.COPY)}
-        >
-          Copy
-        </Button>
-        <Button
-          className="px-2 py-1"
-          title="Ctrl+V"
-          selected={mode === DRAWING_MODES.PASTE}
-          onClick={() => handleImage(DRAWING_MODES.PASTE)}
-        >
-          Paste
-        </Button>
-        <Button
-          className="px-2 py-1"
-          title="Ctrl+X"
-          onClick={() => handleImage(DRAWING_MODES.CUT)}
-        >
-          Cut
-        </Button>
+        <>
+          <Button
+            className="px-2 py-1"
+            title="Ctrl+C"
+            selected={mode === DRAWING_MODES.COPY}
+            onClick={() => handleImage(DRAWING_MODES.COPY)}
+          >
+            Copy
+          </Button>
+          <Button
+            className="px-2 py-1"
+            title="Ctrl+V"
+            selected={mode === DRAWING_MODES.PASTE}
+            onClick={() => handleImage(DRAWING_MODES.PASTE)}
+          >
+            Paste
+          </Button>
+          <Button
+            className="px-2 py-1"
+            title="Ctrl+X"
+            onClick={() => handleImage(DRAWING_MODES.CUT)}
+          >
+            Cut
+          </Button>
+        </>
+
         <ButtonConfirmModal
           className="z-10 px-2 text-white bg-blue-500 hover:bg-blue-600"
           value="Upload image"
@@ -126,7 +127,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
             label="Detouring"
             value={drawingParams.shape.transparency || 0}
             min="0"
-            max="200"
+            max="198"
             step="3"
             onChange={(value) => {
               setShapeParams({ transparency: value });
@@ -155,7 +156,7 @@ export const DrawControlSelect: React.FC<DrawControlSelectProps> = ({
           value={drawingParams.shape.radius || 0}
           min="0"
           max="150"
-          step="1"
+          step="2"
           onChange={(value) => setShapeParams({ radius: value })}
           isTouch={isTouch}
         />

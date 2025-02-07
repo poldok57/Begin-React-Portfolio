@@ -46,13 +46,13 @@ export class drawElement extends drawingHandler {
     this.shape.setType(type);
   }
 
-  newElement(type: string): void {
+  newElement(type: string, data?: AllParams): void {
     const prevType = this.getType();
     if (!isDrawingShape(prevType)) {
       this.readyForNewDrawing();
     }
 
-    super.newElement(type);
+    super.newElement(type, data);
   }
 
   setScale(scale: number): void {
@@ -64,7 +64,7 @@ export class drawElement extends drawingHandler {
    * @param {AllParams} initData - initial data
    */
   initData(data: AllParams) {
-    this.shape.initData(data);
+    super.initData(data);
 
     if (!this.context) return;
     this.shape.setDataSize({
@@ -211,11 +211,11 @@ export class drawElement extends drawingHandler {
     this.shape.setDataId(""); // erase the id for next drawing
     this.clearTemporyCanvas();
     if (withOffset) {
-      // add 15px to the size to avoid the shape to be one on the other
+      // add 20px to the size to avoid the shape to be one on the other
       const size = this.shape.getDataSize();
       this.shape.setDataSize({
         ...size,
-        ...{ x: size.x + 15, y: size.y + 15 },
+        ...{ x: size.x + 20, y: size.y + 20 },
       });
     }
   }
@@ -375,7 +375,7 @@ export class drawElement extends drawingHandler {
   ): string | null {
     this.setCoordinates(coord);
 
-    const type = this.shape.getType();
+    const type = this.getType();
 
     if (this.resizingBorder !== null) {
       this.resizingSquare(this.resizingBorder);
@@ -423,10 +423,11 @@ export class drawElement extends drawingHandler {
    */
   actionValid() {
     this.validDrawedElement(true);
+    this.setMode(DRAWING_MODES.FIND);
   }
 
   /**
-   * Function to end the action on the canvas affter changing the mode
+   * Function to end the action on the canvas after changing the mode
    */
   endAction(prevType?: string) {
     if (prevType && isDrawingShape(prevType)) {
@@ -447,6 +448,7 @@ export class drawElement extends drawingHandler {
   adjustSize() {
     const size = this.shape.getDataSize();
 
+    // if the shape has text, adjust the size of the shape to fit the text
     if (this.shape.getWithText() && this.ctxTempory) {
       if (this.shape.setSizeForText(this.ctxTempory)) {
         return;
@@ -470,14 +472,14 @@ export class drawElement extends drawingHandler {
     });
 
     // if the element is rond, set rotation to 0
-    if (this.shape.getType() === DRAWING_MODES.CIRCLE) {
+    if (this.getType() === DRAWING_MODES.CIRCLE) {
       this.shape.setRotation(0);
       this.shape.calculateWithTurningButtons();
     }
   }
 
   /**
-   * Function to egalise the size of the square
+   * Function double click to egalise the size of the square
    */
   actionMouseDblClick(): void {
     // check position of the mouse, if mouse is on a button, do nothing

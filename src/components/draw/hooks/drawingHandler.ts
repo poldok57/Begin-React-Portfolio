@@ -117,8 +117,14 @@ export abstract class drawingHandler {
     return this.type;
   }
 
-  newElement(type: string) {
+  initData(data: AllParams): void {
+    this.setType(data.mode);
+    this.changeData(data);
+  }
+
+  newElement(type: string, data?: AllParams) {
     this.setType(type);
+    if (data) this.changeData(data);
   }
 
   setScale(scale: number) {
@@ -152,7 +158,6 @@ export abstract class drawingHandler {
 
   abstract endAction(nextMode?: string): void;
   abstract changeData(data: AllParams): void;
-  abstract initData(data: AllParams): void;
 
   abstract actionMouseDown(
     event: MouseEvent | TouchEvent,

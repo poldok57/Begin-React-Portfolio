@@ -255,8 +255,9 @@ export const useCanvas = ({
       // console.log("initData ->", currentParams);
       drawingHdl.initData(currentParams);
       drawingHdl.setMouseCanvas(canvasMouseRef.current);
+    } else {
+      drawingHdl.newElement(mode, currentParams);
     }
-    drawingHdl.newElement(mode);
 
     drawingHdl.setScale(scaleRef.current);
 

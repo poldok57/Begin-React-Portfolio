@@ -8,6 +8,7 @@ import { basicLine, crossLine } from "./canvas-basic";
 import { Coordinate, LinePath, LineType } from "./types";
 import { drawArrow } from "./canvas-arrow";
 import { scaledCoordinate } from "../utils/scaledSize";
+import { ParamsArrow } from "./canvas-defines";
 
 export class CanvasLine implements LinePath {
   mCanvas: HTMLCanvasElement | null = null;
@@ -57,6 +58,12 @@ export class CanvasLine implements LinePath {
   }
   eraseCoordinates() {
     this.coordinates = null;
+  }
+
+  setArrowData(data: ParamsArrow) {
+    this.curvature = data.curvature ?? 0.2;
+    this.headSize = data.headSize ?? 15;
+    this.padding = data.padding ?? 2;
   }
 
   setStartCoordinates(coord: Coordinate | null = null) {

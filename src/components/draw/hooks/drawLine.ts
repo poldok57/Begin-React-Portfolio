@@ -93,7 +93,6 @@ export class drawLine extends drawingHandler {
         this.finishedDrawingStep1 = false;
         return;
       }
-      // console.log("changeParamsGeneral", dataGeneral);
       // after finised path we can change the color of the path, by the beginning of the path
       this.path.changeParams(dataGeneral, dataArrow);
       return;
@@ -114,24 +113,17 @@ export class drawLine extends drawingHandler {
     } else {
       this.path?.setDataType(DRAWING_MODES.LINES_PATH);
     }
-    this.setDataParams(data.general, data.arrow);
+    super.initData(data);
+    // this.setDataParams(data.general, data.arrow);
   }
 
   changeData(data: AllParams) {
     this.setDataParams(data.general, data.arrow);
-    if (data.path) {
-      this.path?.setParamsPath(this.ctxTempory, data.path);
+    if (data.path && this.path) {
+      this.path.setParamsPath(this.ctxTempory, data.path);
     }
     if (data.arrow) {
-      if (data.arrow.curvature) {
-        this.line.curvature = data.arrow.curvature;
-      }
-      if (data.arrow.headSize) {
-        this.line.headSize = data.arrow.headSize;
-      }
-      if (data.arrow.padding) {
-        this.line.padding = data.arrow.padding;
-      }
+      this.line.setArrowData(data.arrow);
     }
   }
 

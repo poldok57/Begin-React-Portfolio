@@ -109,9 +109,9 @@ export const Dialog: React.FC<DialogProps> = ({ children, blur = null }) => {
   );
 };
 
-type ClickableProps = {
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-};
+interface ClickableProps {
+  onClick?: (e: React.MouseEvent<Element>) => void;
+}
 
 interface DialogActionProps {
   children: React.ReactElement | string;
@@ -151,7 +151,6 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
         if (onClick) {
           onClick(e);
         }
-
         if (dialogRef.current) {
           if (blur) {
             dialogRef.current.showModal();
@@ -160,7 +159,7 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
           }
         }
         break;
-      default: // toggle
+      default:
         if (dialogRef.current) {
           if (dialogRef.current.open) {
             dialogRef.current.close();
@@ -176,22 +175,24 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
     }
   };
 
-  return isClickableElement(children) && children.props.onClick ? (
-    cloneElement(children, {
-      onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+  if (isClickableElement(children)) {
+    return cloneElement(children, {
+      onClick: (e: React.MouseEvent<Element>) => {
         handleClick(e as unknown as MouseEvent);
-        if (typeof children.props.onClick === "function") {
+        if (children.props.onClick) {
           children.props.onClick(e);
         }
       },
-    })
-  ) : (
-    <button
-      className={className || ""}
+    });
+  }
+
+  return (
+    <div
+      className={className || "cursor-pointer"}
       onClick={(e) => handleClick(e as unknown as MouseEvent)}
     >
       {children}
-    </button>
+    </div>
   );
 };
 

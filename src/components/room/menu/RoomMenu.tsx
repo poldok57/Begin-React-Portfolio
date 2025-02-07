@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
-import { RoomAddTables } from "./menu/RoomAddTables";
+import { RoomAddTables } from "./RoomAddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
 import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
-import { useRoomContext } from "./RoomProvider";
-import { DesignType, Menu } from "./types";
+import { useRoomContext } from "@/components/room/RoomProvider";
+import { DesignType, Menu } from "@/components/room/types";
 import { TableNumbers } from "./TableNumbers";
-import { useTableDataStore } from "./stores/tables";
+import { useTableDataStore } from "@/components/room/stores/tables";
+
 import {
   showValidationFrame,
   addValidationValidAction,
-} from "./ValidationFrame";
+} from "../ValidationFrame";
 
 interface RoomMenuProps {
   btnSize: number;

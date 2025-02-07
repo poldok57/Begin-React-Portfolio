@@ -29,12 +29,14 @@ export const debounceThrottle = <T extends unknown[]>(
     }
 
     const now = Date.now();
+    // execute the callback if the time is up
     if (now - lastExecTime >= time) {
       lastExecTime = now;
       callback(...args);
       return;
     }
 
+    // execute the callback after the final delay
     timeoutDebouce = setTimeout(() => {
       callback(...args);
     }, finalDelay);
