@@ -252,7 +252,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
                 onChange={(value: number) =>
                   setGeneralParams({ opacity: value / 100 })
                 }
-                isTouch={isTouch}
+                isTouch={false}
               />
               <label
                 htmlFor="toggle-filled"
@@ -332,10 +332,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
           )}
           {isDrawingLine(mode) && mode !== DRAWING_MODES.ARROW && (
             <div className="flex flex-col">
-              <RoomDesignLine
-                buttonIconSize={buttonIconSize}
-                isTouch={isTouch}
-              />
+              <RoomDesignLine buttonIconSize={buttonIconSize} />
             </div>
           )}
           {((isDrawingShape(mode) && drawingParams.shape.withText) ||
@@ -357,7 +354,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
               isTouch={isTouch}
             />
           )}
-          <RoomDesignSelect buttonIconSize={buttonIconSize} isTouch={isTouch} />
+          <RoomDesignSelect buttonIconSize={buttonIconSize} />
         </div>
         <div className="flex flex-col gap-2"></div>
         <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-accent">

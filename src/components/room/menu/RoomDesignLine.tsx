@@ -10,12 +10,10 @@ import { Spline } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface RoomDesignLineProps {
-  isTouch?: boolean;
   buttonIconSize?: number;
 }
 
 export const RoomDesignLine: React.FC<RoomDesignLineProps> = ({
-  isTouch = false,
   buttonIconSize = 28,
 }) => {
   const {
@@ -117,7 +115,7 @@ export const RoomDesignLine: React.FC<RoomDesignLineProps> = ({
               setPathParams({ opacity: value / 100 });
             }}
             style={{ width: "50px" }}
-            isTouch={isTouch}
+            isTouch={false}
           />
         </div>
       )}

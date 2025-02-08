@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button } from "@/components/atom/Button";
-// import { RangeInput } from "@/components/atom/RangeInput";
 import { TbRotate2, TbRotateClockwise2, TbItalic } from "react-icons/tb";
 
 import { fontOptions } from "@/lib/canvas/font-family";

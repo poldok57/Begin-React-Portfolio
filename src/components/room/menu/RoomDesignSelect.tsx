@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { BsCircleHalf } from "react-icons/bs";
-import clsx from "clsx";
 import { Button } from "@/components/atom/Button";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
@@ -11,14 +10,11 @@ import { MutableRefObject } from "react";
 import { ImageUp, X } from "lucide-react";
 import { PiSelectionPlusLight } from "react-icons/pi";
 import { cn } from "@/lib/utils/cn";
-// import clsx from "clsx";
 interface RoomDesignSelectProps {
-  isTouch?: boolean;
   buttonIconSize?: number;
 }
 
 export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
-  isTouch = false,
   buttonIconSize = 20,
 }) => {
   const {
@@ -75,10 +71,7 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
 
   return (
     <fieldset
-      className={clsx(
-        "flex relative flex-col p-2 border-2 border-secondary",
-        {}
-      )}
+      className={cn("flex relative flex-col p-2 border-2 border-secondary", {})}
     >
       <div className="flex absolute right-0 -top-4 justify-end">
         <button
@@ -171,7 +164,7 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
                     <input
                       value=""
                       formMethod="dialog"
-                      className={clsx(
+                      className={cn(
                         "py-0 pr-2 w-72 text-sm bg-white rounded-md border-2 border-blue-300 h-fit",
                         "file:mr-4 file:rounded-l-md file:border file:bg-blue-500 file:py-2 file:px-2 file:font-semibold file:text-white hover:file:bg-blue-600"
                       )}
@@ -182,7 +175,7 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
                 )}
               </div>
               <Button
-                className={clsx("px-2 py-1 font-bold", {
+                className={cn("px-2 py-1 font-bold", {
                   "text-white bg-gradient-to-r from-green-400 via-blue-500 to-red-600 hover:from-red-700 hover:via-green-500 hover:to-blue-600":
                     !isBlackWhite,
                   "bg-gradient-to-r from-gray-800 to-gray-200 hover:from-black hover:to-white":
@@ -211,7 +204,7 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
               onChange={(value) => {
                 setShapeParams({ transparency: value });
               }}
-              isTouch={isTouch}
+              isTouch={false}
             />
             <RangeInput
               className="w-20 h-2 bg-gray-300 opacity-70 transition-opacity outline-none hover:opacity-100"
@@ -222,7 +215,7 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
               max="150"
               step="2"
               onChange={(value) => setShapeParams({ radius: value })}
-              isTouch={isTouch}
+              isTouch={false}
             />
           </div>
         )}

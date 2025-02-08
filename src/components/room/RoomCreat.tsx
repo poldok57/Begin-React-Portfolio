@@ -145,6 +145,7 @@ export const RoomCreatTools = () => {
 
     tableIds.forEach((id) => {
       const table = getTable(id);
+
       if (table) {
         updateTablePosition(table, position, offset);
       }

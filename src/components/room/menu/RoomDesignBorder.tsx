@@ -121,7 +121,7 @@ export const RoomDesignBorder: React.FC<RoomDesignBorderProps> = ({
             step="10"
             onChange={(value) => setBorderParams({ opacity: value / 100 })}
             style={{ width: "50px" }}
-            isTouch={isTouch}
+            isTouch={false}
           />
         </fieldset>
       )}

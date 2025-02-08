@@ -4,6 +4,7 @@ import { MARGIN } from "../../scripts/table-numbers";
 import { useRoomContext } from "../../RoomProvider";
 import { Mode } from "../../types";
 import { Coordinate } from "@/lib/canvas/types";
+import { debounceThrottle } from "@/lib/utils/debounce";
 
 interface AxisLine {
   type: "vertical" | "horizontal";
@@ -161,7 +162,7 @@ export const useAlignmentLogic = (
   };
 
   const drawAlignmentLines = useCallback(
-    (containerRect: DOMRect | null) => {
+    (containerRect: DOMRect | null, clearCanvas: boolean = false) => {
       if (!temporaryCanvasRef.current || !groundRef.current) return;
       if (getRotation() !== 0) {
         return;
@@ -174,7 +175,9 @@ export const useAlignmentLogic = (
       if (!ctx || !containerRect) return;
 
       ctx.globalAlpha = 1;
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      if (clearCanvas) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
       ctx.lineWidth = 0.5;
       ctx.setLineDash([10, 5, 3, 5]);
@@ -203,6 +206,12 @@ export const useAlignmentLogic = (
       ctx.setLineDash([]);
     },
     [getRotation, getOffset, getScale]
+  );
+
+  const drawAlignmentLinesDebounced = debounceThrottle(
+    drawAlignmentLines,
+    50,
+    100
   );
 
   const moveVerticalLine = (index: number, mouseX: number) => {
@@ -310,11 +319,11 @@ export const useAlignmentLogic = (
       }
 
       // redraw alignment lines
-      drawAlignmentLines(lastContainerRect.current);
+      drawAlignmentLinesDebounced(lastContainerRect.current, true);
 
       return true;
     },
-    [getRotation, drawAlignmentLines, moveVerticalLine, moveHorizontalLine]
+    [getRotation]
   );
 
   const stopMoveLine = () => {
@@ -323,7 +332,7 @@ export const useAlignmentLogic = (
 
   const equalizeSpaces = useCallback(
     (type: "vertical" | "horizontal") => {
-      console.log("equalizeSpaces", type);
+      // console.log("equalizeSpaces", type);
       const axes =
         type === "vertical" ? verticalAxis.current : horizontalAxis.current;
       if (axes.length <= 2) return;
@@ -349,9 +358,9 @@ export const useAlignmentLogic = (
         }
       });
 
-      drawAlignmentLines(lastContainerRect.current);
+      drawAlignmentLinesDebounced(lastContainerRect.current, true);
     },
-    [getRotation, moveVerticalLine, moveHorizontalLine, drawAlignmentLines]
+    [getRotation]
   );
 
   const cursorStyle = (

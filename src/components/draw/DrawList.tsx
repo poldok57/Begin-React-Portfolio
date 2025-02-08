@@ -1,5 +1,4 @@
 "use client";
-import { useState, useEffect } from "react";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { X, RefreshCcw, GripVertical } from "lucide-react";
 import {
@@ -19,12 +18,12 @@ export const DrawList = ({
   className?: string;
   storeName?: string | null;
 }) => {
-  const [designElementLength, setDesignElementLength] = useState(0);
-
   const store = useZustandDesignStore(storeName ?? null);
   if (!store) {
     throw new Error("Design store not found");
   }
+
+  const designElementLength = store((state) => state.designElements.length);
 
   const {
     designElements,
@@ -33,7 +32,6 @@ export const DrawList = ({
     orderDesignElement,
     setSelectedDesignElement,
     selectedDesignElement,
-    getDesignElementLength,
   } = store.getState();
 
   const { setDrawingMode, addEventAction } = useDrawingContext();
@@ -46,7 +44,6 @@ export const DrawList = ({
 
   const handleDeleteElement = (elementId: string) => {
     deleteDesignElement(elementId);
-    setDesignElementLength(getDesignElementLength());
     handleRefresh();
     setDrawingMode(DRAWING_MODES.FIND);
   };
@@ -58,7 +55,6 @@ export const DrawList = ({
 
   const handleReset = () => {
     eraseDesignElement();
-    // needReloadControl();
     handleRefresh();
   };
 
@@ -70,10 +66,6 @@ export const DrawList = ({
       setDrawingMode(DRAWING_MODES.FIND);
     },
   });
-
-  useEffect(() => {
-    setDesignElementLength(getDesignElementLength());
-  }, [getDesignElementLength()]);
 
   return (
     <div

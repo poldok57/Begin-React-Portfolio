@@ -176,7 +176,7 @@ export const RoomDesignShape: React.FC<RoomDesignShapeProps> = ({
                   max="50"
                   step="2"
                   onChange={(value) => setShapeParams({ radius: value })}
-                  isTouch={isTouch}
+                  isTouch={false}
                 />
               )}
             </div>

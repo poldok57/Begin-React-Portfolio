@@ -136,6 +136,19 @@ export class drawElement extends drawingHandler {
    * @param {boolean} value - fixed state
    */
   setFixed(value: boolean) {
+    if (value) {
+      // Check if the element is not outside the canvas boundaries
+      const size = this.shape.getDataSize();
+      const canvas = this.ctxTempory?.canvas;
+
+      if (canvas && size) {
+        // refuse to fix the element if it is outside the canvas
+        if (size.x > canvas.width || size.y > canvas.height) {
+          return;
+        }
+      }
+    }
+
     this.fixed = value;
   }
 

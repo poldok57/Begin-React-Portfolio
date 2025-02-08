@@ -1,11 +1,11 @@
 import { useRef, useCallback } from "react";
 import { Rectangle } from "@/lib/canvas/types";
 import { coordinateIsInsideRect } from "@/lib/mouse-position";
-import { useDebounce } from "@/hooks/useDebounce";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { useRoomContext } from "../../RoomProvider";
 import { Mode } from "../../types";
 import { Coordinate } from "@/lib/canvas/types";
+import { debounceThrottle, debounce } from "@/lib/utils/debounce";
 
 interface Position {
   left: number;
@@ -87,7 +87,15 @@ export const useGroundSelectionLogic = (
     [onSelectionStart, getOffset, setSelectedRect]
   );
 
-  const debounceDrawAxe = useDebounce(drawAxe, 500);
+  const debouncedSetSelectedRect = debounceThrottle(
+    (rect: { left: number; top: number; width: number; height: number }) => {
+      setSelectedRect(rect);
+    },
+    50,
+    100
+  );
+
+  const debounceDrawAxe = debounce(drawAxe, 500);
 
   const moveItems = useCallback(
     (clientX: number, clientY: number) => {
@@ -108,15 +116,29 @@ export const useGroundSelectionLogic = (
 
       changeCoordinates({ offset });
     },
-    [getScale, changeCoordinates]
+    [getScale]
   );
 
-  const debouncedSetSelectedRect = useDebounce(
-    (rect: { left: number; top: number; width: number; height: number }) => {
-      setSelectedRect(rect);
-    },
-    300
-  );
+  const debounceMoveItems = (clientX: number, clientY: number) => {
+    if (areaOffsetRef.current && containerRef.current) {
+      const newLeft = Math.round(clientX + areaOffsetRef.current.left);
+      const newTop = Math.round(clientY + areaOffsetRef.current.top);
+
+      moveItems(clientX, clientY);
+
+      containerRef.current.style.left = `${newLeft}px`;
+      containerRef.current.style.top = `${newTop}px`;
+
+      setSelectedRect({
+        left: newLeft,
+        top: newTop,
+        width: containerRef.current.offsetWidth,
+        height: containerRef.current.offsetHeight,
+      });
+    }
+  };
+
+  const debouncedMoveItems = debounceThrottle(debounceMoveItems, 50, 100);
 
   const handleMove = useCallback(
     (clientX: number, clientY: number, mode: string | null = Mode.create) => {
@@ -129,20 +151,7 @@ export const useGroundSelectionLogic = (
           return false;
         }
 
-        const newLeft = Math.round(clientX + areaOffsetRef.current.left);
-        const newTop = Math.round(clientY + areaOffsetRef.current.top);
-
-        moveItems(clientX, clientY);
-
-        containerRef.current.style.left = `${newLeft}px`;
-        containerRef.current.style.top = `${newTop}px`;
-
-        debouncedSetSelectedRect({
-          left: newLeft,
-          top: newTop,
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
+        debouncedMoveItems(clientX, clientY);
 
         clearTemporaryCanvas("moveItems");
         if (getRotation() === 0) {
@@ -179,7 +188,7 @@ export const useGroundSelectionLogic = (
       }
       return false;
     },
-    [changeCoordinates, getOffset]
+    [getOffset]
   );
 
   const handleEnd = useCallback(() => {

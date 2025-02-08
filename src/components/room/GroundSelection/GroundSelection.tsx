@@ -74,7 +74,7 @@ export const GroundSelection = React.forwardRef<
     const store = useZustandDesignStore(storeName);
 
     const backgroundColor = store ? store.getState().backgroundColor : null;
-    const traceClear = false;
+    const traceClear = true;
 
     React.useImperativeHandle(ref, () => groundRef.current as HTMLDivElement);
 
@@ -93,6 +93,7 @@ export const GroundSelection = React.forwardRef<
 
     const drawAxe = () => {
       numberOfAlignmentsRef.current = findAlignments(getMode());
+      console.log("drawAxe", numberOfAlignmentsRef.current);
       if (numberOfAlignmentsRef.current && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         setShowAlignmentLines(true);
@@ -375,6 +376,8 @@ export const GroundSelection = React.forwardRef<
         };
       }
     }, []);
+
+    // console.log("render GroundSelection");
 
     return (
       <div
