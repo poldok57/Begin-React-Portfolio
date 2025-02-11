@@ -165,17 +165,24 @@ export const RoomCreatTools = () => {
       return;
     }
 
+    const right = rect.right ?? rect.left + rect.width;
+    const bottom = rect.bottom ?? rect.top + rect.height;
+
     const freshTables = useTableDataStore.getState().tables;
 
     const updatedTables = freshTables.map((table) => {
       const tableElement = document.getElementById(table.id);
       if (tableElement) {
         const tableRect = tableElement.getBoundingClientRect();
+
+        const limitWidth = tableRect.width / 2 - MARGIN;
+        const limitHeight = tableRect.height / 2 - MARGIN;
+
         const isInside =
-          tableRect.left >= rect.left - MARGIN &&
-          tableRect.right <= (rect?.right || rect.left + rect.width) + MARGIN &&
-          tableRect.top >= rect.top - MARGIN &&
-          tableRect.bottom <= (rect?.bottom || rect.top + rect.height) + MARGIN;
+          tableRect.left + limitWidth >= rect.left &&
+          tableRect.right - limitWidth <= right &&
+          tableRect.top + limitHeight >= rect.top &&
+          tableRect.bottom - limitHeight <= bottom;
 
         const offset = {
           left: Math.round(tableRect.left - rect.left),

@@ -4,7 +4,6 @@ import { useTableDataStore } from "../stores/tables";
 import { useRoomContext } from "../RoomProvider";
 import { Mode, Menu } from "../types";
 import { TableNumbersProcess } from "./TableNumbersProcess";
-import { clearCanvas } from "../scripts/table-numbers";
 import { withMousePosition } from "../../windows/withMousePosition";
 
 const TableNumbersProcessWP = withMousePosition(TableNumbersProcess);
@@ -29,14 +28,13 @@ const TableNumbers = ({
 }: TableNumbersProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { resetSelectedTables } = useTableDataStore();
-  const { setMode, clearSelectedTableIds, ctxTemporary } = useRoomContext();
+  const { setMode, clearSelectedTableIds, clearTemporaryCanvas } =
+    useRoomContext();
 
   const startNumbering = () => {
     clearSelectedTableIds();
     resetSelectedTables();
-    if (ctxTemporary) {
-      clearCanvas(ctxTemporary);
-    }
+    clearTemporaryCanvas("startNumbering");
 
     setActiveMenu(Menu.tableNumbers);
     setMode(Mode.numbering);

@@ -14,7 +14,7 @@ import {
 } from "@/components/atom/Dialog";
 import { isTouchDevice } from "@/lib/utils/device";
 import { Mode } from "./types";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 interface RoomTableProps {
   id?: string;
@@ -31,7 +31,7 @@ interface RoomTableProps {
   setActiveTable: (id: string | null) => void;
 }
 
-const withButtonStop = false;
+const withButtonStop = true;
 
 export const RoomTable: React.FC<RoomTableProps> = ({
   id,
@@ -106,9 +106,9 @@ export const RoomTable: React.FC<RoomTableProps> = ({
     <div
       id={id}
       ref={ref}
-      className={clsx("p-0 m-0 border-2 cursor-pointer z-10", {
-        "border-dotted border-red-500": table.selected,
-        "bg-orange-300": table.selected && mode === Mode.numbering,
+      className={cn("py-6 px-2 m-0 border-2 rounded-full cursor-pointer z-10", {
+        "border-dotted border-red-500 bg-gray-200/25": table.selected,
+        "bg-orange-300 opacity-65": table.selected && mode === Mode.numbering,
         "border-transparent": !table.selected,
       })}
       style={style}
@@ -131,7 +131,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
         <div>
           {table.groupId && (
             <button
-              className="absolute -top-4 -right-4 btn btn-circle btn-sm"
+              className="absolute -top-2 -right-2 btn btn-circle btn-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 updateTable(table.id, { groupId: null });
@@ -143,7 +143,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
           )}
           {withButtonStop && (
             <button
-              className="absolute -top-4 -left-4 btn btn-circle btn-sm"
+              className="absolute -top-2 -left-2 btn btn-circle btn-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveTable("");
@@ -152,10 +152,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               <PencilOff size={btnSize} />
             </button>
           )}
-          <div className="flex absolute left-0 -bottom-1 flex-row justify-between w-full">
+          <div className="flex absolute left-0 bottom-3 flex-row justify-between w-full">
             <Dialog blur={true}>
               <DialogOpen>
-                <button className="absolute -left-4 btn btn-circle btn-sm">
+                <button className="absolute -left-2 btn btn-circle btn-sm">
                   <Settings size={btnSize} />
                 </button>
               </DialogOpen>
@@ -193,7 +193,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               onConfirm={() => onDelete(table.id)}
               confirmMessage="Delete this table?"
               confirmClassName="p-0 w-36 btn btn-warning"
-              className="absolute -right-4 btn btn-circle btn-sm"
+              className="absolute -right-3 btn btn-circle btn-sm"
             >
               <Trash2 size={btnSize} />
             </DeleteWithConfirm>

@@ -5,7 +5,6 @@ import { getCanvasSize } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { cn } from "@/lib/utils/cn";
-// import { clearCanvas } from "@/lib/canvas/canvas-tools";
 import { useCanvas } from "@/components/draw/hooks/useCanvas";
 
 interface CanvasProps {

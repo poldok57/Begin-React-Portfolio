@@ -3,7 +3,7 @@ import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { MARGIN } from "../../scripts/table-numbers";
 import { useRoomContext } from "../../RoomProvider";
 import { Mode } from "../../types";
-import { Coordinate } from "@/lib/canvas/types";
+import { Coordinate, Rectangle } from "@/lib/canvas/types";
 import { debounceThrottle } from "@/lib/utils/debounce";
 
 interface AxisLine {
@@ -19,6 +19,8 @@ interface AxisGroup {
 const TOLERANCE = 6;
 const LINE_OVERLAP = 30;
 
+const traceAlignment = false;
+
 interface AlignmentLogic {
   alignmentGroups: React.MutableRefObject<{
     vertical: AxisGroup[];
@@ -29,14 +31,16 @@ interface AlignmentLogic {
     vertical: number;
     horizontal: number;
   };
-  drawAlignmentLines: (containerRect: DOMRect | null) => void;
+
+  drawAlignmentLines: (containerRect: DOMRect | Rectangle | null) => void;
   clicOnLine: (mouseX: number, mouseY: number) => boolean;
   moveLine: (mouseX: number, mouseY: number) => boolean;
   stopMoveLine: () => void;
   cursorStyle: (
     mouseX: number,
     mouseY: number,
-    isInOverlapContainer: boolean
+    isInOverlapContainer: boolean,
+    isInContainer: boolean
   ) => string | null;
   equalizeSpaces: (type: "vertical" | "horizontal") => void;
 }
@@ -45,10 +49,9 @@ export const useAlignmentLogic = (
   groundRef: React.RefObject<HTMLDivElement>,
   temporaryCanvasRef: React.RefObject<HTMLCanvasElement>,
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
-  getOffset: () => Coordinate
+  getGroundOffset: () => Coordinate,
+  getContainerRect: () => DOMRect | Rectangle | null
 ): AlignmentLogic => {
-  const verticalAxis = useRef<number[]>([]);
-  const horizontalAxis = useRef<number[]>([]);
   const selectedAlignmentLine = useRef<AxisLine | null>(null);
   const alignmentGroups = useRef<{
     vertical: AxisGroup[];
@@ -57,26 +60,34 @@ export const useAlignmentLogic = (
 
   const { getRotation, getScale } = useRoomContext();
 
-  const lastContainerRect = useRef<DOMRect | null>(null);
-
   const elementsInContainer = useRef<HTMLDivElement[]>([]);
 
   const findElementsInContainer = useCallback(
     (container: HTMLDivElement | null) => {
-      if (!container) return;
-      const containerRect = container.getBoundingClientRect();
-      lastContainerRect.current = containerRect;
+      if (!groundRef.current) return;
+      // const containerRect = container.getBoundingClientRect();
+      const containerRect = getContainerRect();
+      if (!containerRect) return null;
 
-      if (!containerRect || !groundRef.current) return null;
+      // console.log("containerRect", containerRect);
 
       const children = Array.from(groundRef.current.children);
 
       const isInContainer = (rect: DOMRect) => {
+        const right =
+          containerRect.right ?? containerRect.left + containerRect.width;
+        const bottom =
+          containerRect.bottom ?? containerRect.top + containerRect.height;
+        const limitWidth = rect.width / 2 - MARGIN;
+        const limitHeight = rect.height / 2 - MARGIN;
+
+        // console.log("limits", limitWidth, limitHeight);
+
         return (
-          rect.left >= containerRect.left - MARGIN &&
-          rect.right <= containerRect.right + MARGIN &&
-          rect.top >= containerRect.top - MARGIN &&
-          rect.bottom <= containerRect.bottom + MARGIN
+          rect.left + limitWidth >= containerRect.left &&
+          rect.right - limitWidth <= right &&
+          rect.top + limitHeight >= containerRect.top &&
+          rect.bottom - limitHeight <= bottom
         );
       };
 
@@ -90,7 +101,7 @@ export const useAlignmentLogic = (
         }
       );
     },
-    [lastContainerRect.current]
+    [getContainerRect]
   );
 
   const findAlignments = (
@@ -98,8 +109,6 @@ export const useAlignmentLogic = (
   ): { vertical: number; horizontal: number } => {
     alignmentGroups.current = { vertical: [], horizontal: [] };
     if (mode !== Mode.create && mode !== Mode.settings) {
-      verticalAxis.current = [];
-      horizontalAxis.current = [];
       return { vertical: 0, horizontal: 0 };
     }
     elementsInContainer.current.forEach((el) => {
@@ -119,7 +128,7 @@ export const useAlignmentLogic = (
         foundVerticalGroup.position =
           foundVerticalGroup.elements.reduce((sum, groupEl) => {
             const groupRect = groupEl.getBoundingClientRect();
-            return sum + (groupRect.left + groupRect.width / 2);
+            return Math.round(sum + (groupRect.left + groupRect.width / 2));
           }, 0) / foundVerticalGroup.elements.length;
       } else {
         alignmentGroups.current.vertical.push({
@@ -138,7 +147,7 @@ export const useAlignmentLogic = (
         foundHorizontalGroup.position =
           foundHorizontalGroup.elements.reduce((sum, groupEl) => {
             const groupRect = groupEl.getBoundingClientRect();
-            return sum + (groupRect.top + groupRect.height / 2);
+            return Math.round(sum + (groupRect.top + groupRect.height / 2));
           }, 0) / foundHorizontalGroup.elements.length;
       } else {
         alignmentGroups.current.horizontal.push({
@@ -147,27 +156,27 @@ export const useAlignmentLogic = (
         });
       }
     });
-
-    verticalAxis.current = alignmentGroups.current.vertical
-      .filter((group) => group.elements.length > 1)
-      .map((group) => group.position);
-    horizontalAxis.current = alignmentGroups.current.horizontal
-      .filter((group) => group.elements.length > 1)
-      .map((group) => group.position);
+    if (traceAlignment) {
+      console.log("vertical Group", alignmentGroups.current.vertical);
+      console.log("horizontal Group", alignmentGroups.current.horizontal);
+    }
 
     return {
-      vertical: verticalAxis.current.length,
-      horizontal: horizontalAxis.current.length,
+      vertical: alignmentGroups.current.vertical.length,
+      horizontal: alignmentGroups.current.horizontal.length,
     };
   };
 
   const drawAlignmentLines = useCallback(
-    (containerRect: DOMRect | null, clearCanvas: boolean = false) => {
+    (
+      containerRect: DOMRect | Rectangle | null,
+      withClearTemporaryCanvas: boolean = false
+    ) => {
       if (!temporaryCanvasRef.current || !groundRef.current) return;
       if (getRotation() !== 0) {
         return;
       }
-      const offset = getOffset();
+      const offset = getGroundOffset();
 
       // get container rect
 
@@ -175,37 +184,53 @@ export const useAlignmentLogic = (
       if (!ctx || !containerRect) return;
 
       ctx.globalAlpha = 1;
-      if (clearCanvas) {
+      if (withClearTemporaryCanvas) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       }
+
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
       ctx.lineWidth = 0.5;
       ctx.setLineDash([10, 5, 3, 5]);
 
+      const bottom =
+        containerRect.bottom ?? containerRect.top + containerRect.height;
+      const right =
+        containerRect.right ?? containerRect.left + containerRect.width;
+
       // Lignes verticales
-      verticalAxis.current.forEach((x) => {
+
+      alignmentGroups.current.vertical.forEach((element) => {
         // alignments.vertical.forEach((x) => {
         ctx.beginPath();
-        ctx.moveTo(x + offset.x, containerRect.top - LINE_OVERLAP + offset.y);
+        ctx.moveTo(
+          element.position + offset.x,
+          containerRect.top - LINE_OVERLAP + offset.y
+        );
         ctx.lineTo(
-          x + offset.x,
-          containerRect.bottom + LINE_OVERLAP + offset.y
+          element.position + offset.x,
+          bottom + LINE_OVERLAP + offset.y
         );
         ctx.stroke();
       });
 
       // Lignes horizontales
-      horizontalAxis.current.forEach((y) => {
+      alignmentGroups.current.horizontal.forEach((element) => {
         // alignments.horizontal.forEach((y) => {
         ctx.beginPath();
-        ctx.moveTo(containerRect.left - LINE_OVERLAP + offset.x, y + offset.y);
-        ctx.lineTo(containerRect.right + LINE_OVERLAP + offset.x, y + offset.y);
+        ctx.moveTo(
+          containerRect.left - LINE_OVERLAP + offset.x,
+          element.position + offset.y
+        );
+        ctx.lineTo(
+          right + LINE_OVERLAP + offset.x,
+          element.position + offset.y
+        );
         ctx.stroke();
       });
 
       ctx.setLineDash([]);
     },
-    [getRotation, getOffset, getScale]
+    [getRotation, getGroundOffset, getScale]
   );
 
   const drawAlignmentLinesDebounced = debounceThrottle(
@@ -216,10 +241,9 @@ export const useAlignmentLogic = (
 
   const moveVerticalLine = (index: number, mouseX: number) => {
     if (index < 0) return;
-    verticalAxis.current[index] = mouseX;
     const group = alignmentGroups.current.vertical[index];
     if (group) {
-      const offset = getOffset();
+      const offset = getGroundOffset();
       group.position = mouseX;
       const elementIds = group.elements.map((el) => el.id);
       changeCoordinates({
@@ -234,10 +258,9 @@ export const useAlignmentLogic = (
 
   const moveHorizontalLine = (index: number, mouseY: number) => {
     if (index < 0) return;
-    horizontalAxis.current[index] = mouseY;
     const group = alignmentGroups.current.horizontal[index];
     if (group) {
-      const offset = getOffset();
+      const offset = getGroundOffset();
       group.position = mouseY;
 
       const elementIds = group.elements.map((el) => el.id);
@@ -256,16 +279,17 @@ export const useAlignmentLogic = (
     (mouseX: number, mouseY: number) => {
       if (
         getRotation() !== 0 ||
-        (verticalAxis.current.length === 0 &&
-          horizontalAxis.current.length === 0)
+        (alignmentGroups.current.vertical.length === 0 &&
+          alignmentGroups.current.horizontal.length === 0)
       ) {
         return false;
       }
 
-      const indexV = verticalAxis.current.findIndex(
-        (x) => Math.abs(x - mouseX) <= 5
+      const indexV = alignmentGroups.current.vertical.findIndex(
+        (x) => Math.abs(x.position - mouseX) < TOLERANCE
       );
       // clic on a vertical line
+
       if (indexV !== -1) {
         const clickedVerticalLine = alignmentGroups.current.vertical[indexV];
         selectedAlignmentLine.current = {
@@ -277,8 +301,8 @@ export const useAlignmentLogic = (
       }
 
       // clic on a horizontal line
-      const indexH = horizontalAxis.current.findIndex(
-        (y) => Math.abs(y - mouseY) <= 5
+      const indexH = alignmentGroups.current.horizontal.findIndex(
+        (y) => Math.abs(y.position - mouseY) < TOLERANCE
       );
 
       if (indexH !== -1) {
@@ -286,6 +310,7 @@ export const useAlignmentLogic = (
           alignmentGroups.current.horizontal[indexH];
         selectedAlignmentLine.current = {
           type: "horizontal",
+
           position: clickedHorizontalLine.position,
         };
         moveHorizontalLine(indexH, mouseY);
@@ -303,23 +328,25 @@ export const useAlignmentLogic = (
       }
 
       if (selectedAlignmentLine.current.type === "vertical") {
-        const index = verticalAxis.current.findIndex(
-          (x) => x === selectedAlignmentLine.current?.position
+        const index = alignmentGroups.current.vertical.findIndex(
+          (element) =>
+            element.position === selectedAlignmentLine.current?.position
         );
         if (index !== -1) {
-          moveVerticalLine(index, mouseX);
+          moveVerticalLine(index, Math.round(mouseX));
         }
       } else {
-        const index = horizontalAxis.current.findIndex(
-          (y) => y === selectedAlignmentLine.current?.position
+        const index = alignmentGroups.current.horizontal.findIndex(
+          (element) =>
+            element.position === selectedAlignmentLine.current?.position
         );
         if (index !== -1) {
-          moveHorizontalLine(index, mouseY);
+          moveHorizontalLine(index, Math.round(mouseY));
         }
       }
 
       // redraw alignment lines
-      drawAlignmentLinesDebounced(lastContainerRect.current, true);
+      drawAlignmentLinesDebounced(getContainerRect(), true);
 
       return true;
     },
@@ -327,6 +354,73 @@ export const useAlignmentLogic = (
   );
 
   const stopMoveLine = () => {
+    // Check minimum spacing between axes before stopping line movement
+    if (selectedAlignmentLine.current) {
+      const type = selectedAlignmentLine.current.type;
+      const axes =
+        type === "vertical"
+          ? alignmentGroups.current.vertical
+          : alignmentGroups.current.horizontal;
+
+      // Sort axes by position
+      const sortedAxes = [...axes].sort((a, b) => a.position - b.position);
+
+      // Find current axis index in sorted array
+      const currentAxisIndex = sortedAxes.findIndex(
+        (axis) => axis.position === selectedAlignmentLine.current?.position
+      );
+
+      // Calculate minimum space based on average object size on the axis
+      const minSpace =
+        selectedAlignmentLine.current?.type === "vertical"
+          ? alignmentGroups.current.vertical[currentAxisIndex].elements.reduce(
+              (sum, el) => sum + el.getBoundingClientRect().width,
+              0
+            ) /
+            alignmentGroups.current.vertical[currentAxisIndex].elements.length
+          : alignmentGroups.current.horizontal[
+              currentAxisIndex
+            ].elements.reduce(
+              (sum, el) => sum + el.getBoundingClientRect().height,
+              0
+            ) /
+            alignmentGroups.current.horizontal[currentAxisIndex].elements
+              .length;
+
+      let newPosition = selectedAlignmentLine.current.position;
+
+      // Check spacing with previous axis
+      if (currentAxisIndex > 0) {
+        const prevAxis = sortedAxes[currentAxisIndex - 1];
+        if (newPosition - prevAxis.position < minSpace) {
+          newPosition = prevAxis.position + minSpace;
+        }
+      }
+
+      // Check spacing with next axis
+      if (currentAxisIndex < sortedAxes.length - 1) {
+        const nextAxis = sortedAxes[currentAxisIndex + 1];
+        if (nextAxis.position - newPosition < minSpace) {
+          newPosition = nextAxis.position - minSpace;
+        }
+      }
+
+      // Apply position adjustment if needed
+      if (newPosition !== selectedAlignmentLine.current.position) {
+        const originalIndex = axes.findIndex(
+          (axis) => axis.position === selectedAlignmentLine.current?.position
+        );
+
+        if (type === "vertical") {
+          moveVerticalLine(originalIndex, newPosition);
+        } else {
+          moveHorizontalLine(originalIndex, newPosition);
+        }
+
+        drawAlignmentLinesDebounced(getContainerRect(), true);
+      }
+    }
+
     selectedAlignmentLine.current = null;
   };
 
@@ -334,31 +428,35 @@ export const useAlignmentLogic = (
     (type: "vertical" | "horizontal") => {
       // console.log("equalizeSpaces", type);
       const axes =
-        type === "vertical" ? verticalAxis.current : horizontalAxis.current;
+        type === "vertical"
+          ? alignmentGroups.current.vertical
+          : alignmentGroups.current.horizontal;
       if (axes.length <= 2) return;
 
       // Trier les axes dans l'ordre croissant
-      const sortedAxes = [...axes].sort((a, b) => a - b);
+      const sortedAxes = [...axes].sort((a, b) => a.position - b.position);
 
       const firstAxis = sortedAxes[0];
       const lastAxis = sortedAxes[sortedAxes.length - 1];
-      const totalSpace = lastAxis - firstAxis;
+      const totalSpace = lastAxis.position - firstAxis.position;
       const equalSpace = totalSpace / (sortedAxes.length - 1);
 
       sortedAxes.forEach((currentAxis, index) => {
-        const newPos = firstAxis + index * equalSpace;
+        const newPos = firstAxis.position + index * equalSpace;
         const roundedNewPos = Math.round(newPos);
 
         if (type === "vertical") {
-          const originalIndex = verticalAxis.current.indexOf(currentAxis);
+          const originalIndex =
+            alignmentGroups.current.vertical.indexOf(currentAxis);
           moveVerticalLine(originalIndex, roundedNewPos);
         } else {
-          const originalIndex = horizontalAxis.current.indexOf(currentAxis);
+          const originalIndex =
+            alignmentGroups.current.horizontal.indexOf(currentAxis);
           moveHorizontalLine(originalIndex, roundedNewPos);
         }
       });
 
-      drawAlignmentLinesDebounced(lastContainerRect.current, true);
+      drawAlignmentLinesDebounced(getContainerRect(), true);
     },
     [getRotation]
   );
@@ -366,20 +464,22 @@ export const useAlignmentLogic = (
   const cursorStyle = (
     mouseX: number,
     mouseY: number,
-    isInOverlapContainer: boolean
+    isInOverlapContainer: boolean,
+    isInContainer: boolean
   ): string | null => {
     if (!temporaryCanvasRef.current || !groundRef.current) return null;
     let cursorStyle = "default";
 
     if (
-      (verticalAxis.current.length > 0 || horizontalAxis.current.length > 0) &&
+      (alignmentGroups.current.vertical.length > 0 ||
+        alignmentGroups.current.horizontal.length > 0) &&
       getRotation() === 0
     ) {
-      const isNearVerticalLine = verticalAxis.current.some(
-        (x) => Math.abs(x - mouseX) <= 5
+      const isNearVerticalLine = alignmentGroups.current.vertical.some(
+        (x) => Math.abs(x.position - mouseX) < TOLERANCE
       );
-      const isNearHorizontalLine = horizontalAxis.current.some(
-        (y) => Math.abs(y - mouseY) <= 5
+      const isNearHorizontalLine = alignmentGroups.current.horizontal.some(
+        (y) => Math.abs(y.position - mouseY) < TOLERANCE
       );
 
       if (isInOverlapContainer) {
@@ -387,6 +487,8 @@ export const useAlignmentLogic = (
           cursorStyle = "ew-resize";
         } else if (isNearHorizontalLine) {
           cursorStyle = "ns-resize";
+        } else if (isInContainer) {
+          cursorStyle = "move";
         }
       }
     }
@@ -399,7 +501,6 @@ export const useAlignmentLogic = (
 
   return {
     alignmentGroups,
-    // selectedAlignmentLine,
     findElementsInContainer,
     findAlignments,
     drawAlignmentLines,

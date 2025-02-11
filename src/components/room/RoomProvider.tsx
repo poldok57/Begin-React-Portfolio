@@ -12,6 +12,7 @@ import { Mode } from "@/components/room/types";
 interface RoomContextProps {
   ctxTemporary: CanvasRenderingContext2D | null;
   setCtxTemporary: (ctx: CanvasRenderingContext2D | null) => void;
+  clearTemporaryCanvas: (reason?: string) => void;
   scale: number;
   setScale: (scale: number) => void;
   getScale: () => number;
@@ -19,6 +20,7 @@ interface RoomContextProps {
   setRotation: (rotation: number) => void;
   getRotation: () => number;
   getElementRect: (id: string) => Rectangle | null;
+  // isInContainer: (rect: DOMRect) => boolean;
   selectedRect: Rectangle | null;
   setSelectedRect: (rect: Rectangle | null) => void;
   getSelectedRect: (scaleSize?: boolean) => Rectangle | null;
@@ -34,13 +36,15 @@ interface RoomContextProps {
   setStoreName: (storeName: string | null) => void;
 }
 
+const traceClear = false;
 const RoomContext = createContext<RoomContextProps | undefined>(undefined);
 
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [ctxTemporary, setCtxTemporary] =
+  const [ctxTemporary, setCtxTemporaryStore] =
     useState<CanvasRenderingContext2D | null>(null);
+  const ctxTemporaryRef = useRef<CanvasRenderingContext2D | null>(null);
   const [storeName, setStoreName] = useState<string | null>(null);
   const [, setToRefresh] = useState<number>(0);
   const [scale, setStateScale] = useState<number>(1);
@@ -49,6 +53,14 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     scaleRef.current = newScale;
     setStateScale(newScale);
   }, []);
+
+  const setCtxTemporary = useCallback(
+    (newCtxTemporary: CanvasRenderingContext2D | null) => {
+      ctxTemporaryRef.current = newCtxTemporary;
+      setCtxTemporaryStore(newCtxTemporary);
+    },
+    []
+  );
 
   const needRefresh = useCallback(() => {
     setToRefresh((prev) => prev + 1);
@@ -133,6 +145,29 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     return null;
   }, []);
 
+  // const isInContainer = (rect: DOMRect): boolean => {
+  //   const currentRect = selectedRectRef.current;
+  //   if (!currentRect) {
+  //     return false;
+  //   }
+  //   const containerRect = {
+  //     left: currentRect.left,
+  //     top: currentRect.top,
+  //     right: currentRect.right ?? currentRect.left + currentRect.width,
+  //     bottom: currentRect.bottom ?? currentRect.top + currentRect.height,
+  //   };
+
+  //   const limitWidth = rect.width / 2 - 12;
+  //   const limitHeight = rect.height / 2;
+
+  //   return (
+  //     rect.left + limitWidth >= containerRect.left &&
+  //     rect.right - limitWidth <= containerRect.right &&
+  //     rect.top + limitHeight >= containerRect.top &&
+  //     rect.bottom - limitHeight <= containerRect.bottom
+  //   );
+  // };
+
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
 
   const addSelectedTableId = useCallback((id: string) => {
@@ -161,17 +196,38 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     return modeRef.current;
   }, []);
 
+  const clearTemporaryCanvas = (reason?: string) => {
+    if (!ctxTemporaryRef.current) {
+      console.log("ctxTemporary is null");
+      return;
+    }
+
+    ctxTemporaryRef.current.clearRect(
+      0,
+      0,
+      ctxTemporaryRef.current.canvas.width,
+      ctxTemporaryRef.current.canvas.height
+    );
+
+    if (traceClear) {
+      console.log("clear temporary canvas: ", reason ?? "unknown");
+    }
+  };
+
   return (
     <RoomContext.Provider
       value={{
         ctxTemporary,
         setCtxTemporary,
+        clearTemporaryCanvas,
         scale: scale,
         setScale,
         getScale,
         getElementRect,
+        // isInContainer,
         selectedRect,
         setSelectedRect,
+
         getSelectedRect,
         rotation,
         setRotation,

@@ -5,15 +5,22 @@ export const TableNumbersHelper = ({
   withAngle,
   numberingMode,
   tableNumber,
+  onClick,
 }: {
   nbSelected: number;
   withAngle: boolean;
   numberingMode: NumberingMode;
   tableNumber: number | null;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }) => {
   return (
     <>
-      <p className="p-2 mt-2 text-center text-gray-800 bg-red-200 rounded border-2 border-red-500">
+      <p
+        className="p-2 mt-2 text-center text-gray-800 bg-red-200 rounded border-2 border-red-500"
+        onClick={(event) => {
+          onClick?.(event);
+        }}
+      >
         {nbSelected === 0 && numberingMode !== NumberingMode.OneByOne ? (
           <>
             Clic on the <b>first table</b> of the line

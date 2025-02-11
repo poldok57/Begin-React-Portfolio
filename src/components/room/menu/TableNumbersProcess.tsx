@@ -20,7 +20,6 @@ import {
   selectTablesInRect,
   virtualTurningTables,
   calculateFourthAngle,
-  clearCanvas,
 } from "../scripts/table-numbers";
 import { menuRoomVariants } from "@/styles/menu-variants";
 
@@ -48,8 +47,12 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     resetSelectedTables,
     countSelectedTables,
   } = useTableDataStore();
-  const { selectedTableIds, clearSelectedTableIds, ctxTemporary } =
-    useRoomContext();
+  const {
+    selectedTableIds,
+    clearSelectedTableIds,
+    ctxTemporary,
+    clearTemporaryCanvas,
+  } = useRoomContext();
 
   // Déplacer l'état tableCurrentNumber ici
   const [tableCurrentNumber, setStateTableCurrentNumber] =
@@ -87,6 +90,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     tableNumber.current.number = numberMatch ? parseInt(numberMatch[0]) : null;
 
     setStateTableCurrentNumber(number);
+    resetSelectedTables();
   };
 
   // update the table number or the state tableCurrentNumber then id is null
@@ -103,11 +107,11 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     updateTable(id, { tableNumber: newTableNumber });
   };
 
-  const clearSelection = (clearTemporaryCanvas: boolean = true) => {
+  const clearSelection = (withClearTemporaryCanvas: boolean = true) => {
     clearSelectedTableIds();
     resetSelectedTables();
-    if (ctxTemporary && clearTemporaryCanvas) {
-      clearCanvas(ctxTemporary);
+    if (withClearTemporaryCanvas) {
+      clearTemporaryCanvas("clearSelection");
     }
   };
 
@@ -281,7 +285,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
 
   useEffect(() => {
     if (selectedTableIds.length === 0) {
-      clearCanvas(ctxTemporary);
+      clearTemporaryCanvas("resetTablesNumber");
       toggleValidationButtons(false);
       return;
     }
@@ -452,6 +456,9 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
             withAngle={withAngle.current}
             numberingMode={numberingMode}
             tableNumber={tableNumber.current.number}
+            onClick={() => {
+              resetSelectedTables();
+            }}
           />
         )}
       </div>

@@ -37,13 +37,8 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
   const [isPlanMode, setIsPlanMode] = useState(true);
   const refDetails = useRef<HTMLDetailsElement>(null);
-  const {
-    tables,
-    updateTable,
-    resetSelectedTables,
-    deleteSelectedTable,
-    countSelectedTables,
-  } = useTableDataStore();
+  const { tables, updateTable, deleteSelectedTable, countSelectedTables } =
+    useTableDataStore();
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
@@ -108,12 +103,10 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             },
             text
           );
+
           addValidationValidAction(deleteSelectedTable);
+
           event.preventDefault();
-          const selectedTables = tables.filter((table) => table.selected);
-          if (selectedTables.length > 0) {
-            resetSelectedTables();
-          }
           break;
       }
     };

@@ -1,11 +1,11 @@
-import { Coordinate } from "@/lib/canvas/types";
+import { Coordinate, Rectangle } from "@/lib/canvas/types";
 import React from "react";
 
 interface AlignmentButtonsProps {
   showVerticalBtn: boolean;
   showHorizontalBtn: boolean;
   equalizeSpaces: (type: "vertical" | "horizontal") => void;
-  container: HTMLDivElement | null;
+  getContainerRect: () => Rectangle | null;
   offset: Coordinate;
 }
 
@@ -13,10 +13,10 @@ export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
   showVerticalBtn,
   showHorizontalBtn,
   equalizeSpaces,
-  container,
+  getContainerRect,
   offset,
 }) => {
-  const containerRect = container?.getBoundingClientRect();
+  const containerRect = getContainerRect();
   if (!containerRect) return null;
 
   return (

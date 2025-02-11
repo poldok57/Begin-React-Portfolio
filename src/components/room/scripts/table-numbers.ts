@@ -316,9 +316,3 @@ export const virtualTurningTables = ({
     }
   });
 };
-
-export const clearCanvas = (ctx: CanvasRenderingContext2D | null) => {
-  if (ctx) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  }
-};

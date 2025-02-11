@@ -131,10 +131,14 @@ export const ValidationFrame = ({
             "hover:bg-green-600",
             { "btn-lg": isTouch }
           )}
-          onClick={handleValid}
+          onClick={(e) => {
+            e.preventDefault();
+            handleValid();
+          }}
         >
           <CircleCheckBig size={btnSize} />
         </button>
+
         <button
           id={VALIDATION_ID.CANCEL}
           className={clsx(
@@ -142,7 +146,10 @@ export const ValidationFrame = ({
             "hover:bg-red-600",
             { "btn-lg": isTouch }
           )}
-          onClick={handleCancel}
+          onClick={(e) => {
+            e.preventDefault();
+            handleCancel();
+          }}
         >
           <CircleX size={btnSize} />
         </button>

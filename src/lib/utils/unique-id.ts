@@ -1,5 +1,5 @@
 export const generateUniqueId = (prefix: string = "id") => {
-  return `${prefix}_${Date.now().toString().slice(5, 11)}_${Math.random()
+  return `${prefix}_${Date.now().toString().slice(6, 13)}_${Math.random()
     .toString(36)
-    .slice(2, 11)}`;
+    .slice(2, 10)}`;
 };
