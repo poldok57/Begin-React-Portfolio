@@ -19,7 +19,6 @@ import { useDrawingContext } from "@/context/DrawingContext";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { TypeListTables } from "./types";
 export const GROUND_ID = "back-ground";
-export const CONTAINER_ID = "ground-container";
 
 const DESIGN_STORE_NAME = "room-design-storge";
 
@@ -248,7 +247,6 @@ export const RoomCreatTools = () => {
           <GroundSelection
             ref={groundRef}
             id={GROUND_ID}
-            containerId={CONTAINER_ID}
             changeCoordinates={changeCoordinates}
             onSelectionStart={onZoneSelectedStart}
             onSelectionEnd={onZoneSelectedEnd}

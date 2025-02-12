@@ -10,7 +10,7 @@ import { Rectangle } from "@/lib/canvas/types";
 import { Mode } from "@/components/room/types";
 
 interface RoomContextProps {
-  ctxTemporary: CanvasRenderingContext2D | null;
+  getCtxTemporary: () => CanvasRenderingContext2D | null;
   setCtxTemporary: (ctx: CanvasRenderingContext2D | null) => void;
   clearTemporaryCanvas: (reason?: string) => void;
   scale: number;
@@ -42,8 +42,6 @@ const RoomContext = createContext<RoomContextProps | undefined>(undefined);
 export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [ctxTemporary, setCtxTemporaryStore] =
-    useState<CanvasRenderingContext2D | null>(null);
   const ctxTemporaryRef = useRef<CanvasRenderingContext2D | null>(null);
   const [storeName, setStoreName] = useState<string | null>(null);
   const [, setToRefresh] = useState<number>(0);
@@ -57,7 +55,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   const setCtxTemporary = useCallback(
     (newCtxTemporary: CanvasRenderingContext2D | null) => {
       ctxTemporaryRef.current = newCtxTemporary;
-      setCtxTemporaryStore(newCtxTemporary);
     },
     []
   );
@@ -196,18 +193,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     return modeRef.current;
   }, []);
 
+  const getCtxTemporary = useCallback(() => {
+    return ctxTemporaryRef.current;
+  }, []);
+
   const clearTemporaryCanvas = (reason?: string) => {
-    if (!ctxTemporaryRef.current) {
+    const ctx = getCtxTemporary();
+    if (!ctx) {
       console.log("ctxTemporary is null");
       return;
     }
 
-    ctxTemporaryRef.current.clearRect(
-      0,
-      0,
-      ctxTemporaryRef.current.canvas.width,
-      ctxTemporaryRef.current.canvas.height
-    );
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     if (traceClear) {
       console.log("clear temporary canvas: ", reason ?? "unknown");
@@ -217,7 +214,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <RoomContext.Provider
       value={{
-        ctxTemporary,
+        getCtxTemporary,
         setCtxTemporary,
         clearTemporaryCanvas,
         scale: scale,

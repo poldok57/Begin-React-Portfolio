@@ -131,7 +131,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
         <div>
           {table.groupId && (
             <button
-              className="absolute -top-2 -right-2 btn btn-circle btn-sm"
+              className="absolute -right-2 -top-4 btn btn-circle btn-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 updateTable(table.id, { groupId: null });
@@ -143,7 +143,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
           )}
           {withButtonStop && (
             <button
-              className="absolute -top-2 -left-2 btn btn-circle btn-sm"
+              className="absolute -left-2 -top-4 btn btn-circle btn-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveTable("");
@@ -174,8 +174,9 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                   rotation={table.rotation ?? 0}
                   rotationStep={5}
                   handleRotation={handleRotation}
-                  size={table.size}
-                  handleSize={handleSize}
+                  size={(table?.size ?? 200) * 2}
+                  handleSize={(size) => handleSize(size / 2)}
+                  withTopPanel={true}
                   tableNumber={table.tableNumber}
                   resetTable={() => {
                     saveSettings(null);

@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
-import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
+import { Rectangle } from "@/lib/canvas/types";
 import { changeToucheMessage } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { isTouchDevice } from "@/lib/utils/device";
 import { Canvas } from "./Canvas";
-import { SelectionContainer } from "./SelectionContainer";
+// import { SelectionContainer } from "./SelectionContainer";
 import { AlignmentButtons } from "./AlignmentButtons";
 import { useAlignmentLogic } from "./hooks/useAlignmentLogic";
 import { useGroundSelectionLogic } from "./hooks/useGroundSelectionLogic";
@@ -18,7 +18,6 @@ interface GroundSelectionProps {
   id: string;
   preSelection: Rectangle | null;
   children: React.ReactNode;
-  containerId?: string;
   typeListMode?: TypeListTables;
   changeCoordinates: ({
     position,
@@ -45,7 +44,6 @@ export const GroundSelection = React.forwardRef<
       id,
       preSelection,
       children,
-      containerId = "container",
       typeListMode,
     },
     ref
@@ -68,7 +66,6 @@ export const GroundSelection = React.forwardRef<
 
     const numberOfAlignmentsRef = useRef({ vertical: 0, horizontal: 0 });
     const [showAlignmentLines, setShowAlignmentLines] = useState(false);
-    const previousPosition = useRef<Position | null>(null);
 
     const store = useZustandDesignStore(storeName);
 
@@ -79,13 +76,14 @@ export const GroundSelection = React.forwardRef<
     const drawAxe = () => {
       numberOfAlignmentsRef.current = findAlignments(getMode());
       // console.log("drawAxe", numberOfAlignmentsRef.current);
-      if (numberOfAlignmentsRef.current && containerRef.current) {
+      if (numberOfAlignmentsRef.current) {
         setShowAlignmentLines(true);
 
         clearTemporaryCanvas("drawAxe");
         if (getRotation() === 0) {
           const rect = getContainerRect();
 
+          refreshContainer();
           drawAlignmentLines(rect);
         }
       }
@@ -97,7 +95,7 @@ export const GroundSelection = React.forwardRef<
       if (rect === null) {
         numberOfAlignmentsRef.current = { vertical: 0, horizontal: 0 };
         setRotation(0);
-        clearTemporaryCanvas("select Zone 1");
+        // clearTemporaryCanvas("select Zone 1");
         setShowAlignmentLines(false);
         return;
       }
@@ -110,7 +108,7 @@ export const GroundSelection = React.forwardRef<
       }
 
       if (getRotation() === 0) {
-        clearTemporaryCanvas("select Zone 2");
+        // clearTemporaryCanvas("select Zone 2");
         drawAlignmentLines(rect);
       }
       setShowAlignmentLines(
@@ -126,6 +124,7 @@ export const GroundSelection = React.forwardRef<
       handleMove,
       handleEnd,
       moveContainer,
+      refreshContainer,
     } = useGroundSelectionLogic(
       groundRef,
       containerRef,
@@ -151,7 +150,8 @@ export const GroundSelection = React.forwardRef<
       temporaryCanvasRef,
       changeCoordinates,
       getGroundOffset,
-      getContainerRect
+      getContainerRect,
+      refreshContainer
     );
 
     const disableAction = () => {
@@ -194,18 +194,35 @@ export const GroundSelection = React.forwardRef<
         return;
       }
 
-      const { inOverlap, inContainer } = isInOverlapContainer(clientX, clientY);
+      const { inOverlap, inContainer, showContainer } = isInOverlapContainer(
+        clientX,
+        clientY
+      );
 
-      const cursor = cursorStyle(clientX, clientY, inOverlap, inContainer);
+      if (showContainer) {
+        const cursor = cursorStyle(clientX, clientY, inOverlap, inContainer);
 
-      if (cursor) {
-        temporaryCanvasRef.current.style.cursor = cursor;
-        if (containerRef.current) {
-          containerRef.current.style.cursor = cursor;
+        if (cursor) {
+          // console.log("cursor", cursor);
+          temporaryCanvasRef.current.style.cursor = cursor;
+          groundRef.current.style.cursor = cursor;
+          if (containerRef.current) {
+            containerRef.current.style.cursor = cursor;
+          }
         }
-        // groundRef.current.style.cursor = cursor;
+        // Only call handleMove if a mouse button is pressed
+        if (inOverlap || e.buttons > 0) {
+          handleMove(clientX, clientY, getMode());
+        }
+        return;
       }
-      handleMove(clientX, clientY, getMode());
+
+      // no container so we can move the ground
+      temporaryCanvasRef.current.style.cursor = "default";
+      // Only call handleMove if a mouse button is pressed
+      if (e.buttons > 0) {
+        handleMove(clientX, clientY, getMode());
+      }
     };
 
     const handleMouseUp = () => {
@@ -213,22 +230,22 @@ export const GroundSelection = React.forwardRef<
         return;
       }
       stopMoveLine();
-      previousPosition.current = null;
       handleEnd();
     };
 
     useEffect(() => {
       if (rotation !== 0) {
         setShowAlignmentLines(false);
-        clearTemporaryCanvas();
       }
+      clearTemporaryCanvas();
+      refreshContainer();
     }, [rotation]);
 
     /**
      * Set pre selection
      */
     useEffect(() => {
-      if (!preSelection || !containerRef.current) {
+      if (!preSelection) {
         return; // no preSelection
       }
       const { left, top, width, height } = preSelection;
@@ -387,11 +404,10 @@ export const GroundSelection = React.forwardRef<
 
               {getMode() !== Mode.draw && (
                 <>
-                  <SelectionContainer
+                  {/* <SelectionContainer
                     containerRef={containerRef}
-                    containerId={containerId}
                     rotation={rotation}
-                  />
+                  /> */}
                   {showAlignmentLines && rotation === 0 && (
                     <AlignmentButtons
                       offset={getGroundOffset()}

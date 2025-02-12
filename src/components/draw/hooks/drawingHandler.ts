@@ -30,6 +30,7 @@ export abstract class drawingHandler {
   protected setMode: (mode: string) => void;
   protected lockRatio: boolean = false;
   protected type: string = DRAWING_MODES.PAUSE;
+  protected typeHandler: string = "unknown";
   protected scale: number = 1;
 
   protected coordinates: Coordinate | null = { x: 0, y: 0 };
@@ -115,6 +116,10 @@ export abstract class drawingHandler {
 
   getType() {
     return this.type;
+  }
+
+  getTypeHandler() {
+    return this.typeHandler;
   }
 
   initData(data: AllParams): void {

@@ -50,7 +50,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
   const {
     selectedTableIds,
     clearSelectedTableIds,
-    ctxTemporary,
+    getCtxTemporary,
     clearTemporaryCanvas,
   } = useRoomContext();
 
@@ -320,8 +320,9 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
           }
         }
       }
+      const ctx = getCtxTemporary();
 
-      if (selectedTableIds.length >= 2 && ctxTemporary) {
+      if (selectedTableIds.length >= 2 && ctx) {
         const [firstTableId, secondTableId, thirdTableId, fourthTableId] =
           selectedTableIds;
         const firstTable = getElementById(firstTableId);
@@ -336,7 +337,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
           const endY = secondTable.top + secondTable.height / 2;
 
           drawArrow({
-            ctx: ctxTemporary,
+            ctx: ctx,
             from: { x: startX, y: startY },
             to: { x: endX, y: endY },
             color: "rgba(120, 20, 20, 0.5)",
@@ -353,7 +354,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
 
           if (secondTableId !== thirdTableId) {
             drawArrow({
-              ctx: ctxTemporary,
+              ctx: ctx,
               from: { x: startX, y: startY },
               to: { x: endX, y: endY },
               color: "rgba(20, 80, 20, 0.5)",
@@ -376,7 +377,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
               firstTable,
               secondTable,
               thirdTable,
-              ctxTemporary
+              ctx
             );
 
             if (!fourthTable) {
@@ -389,7 +390,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
             secondTable,
             thirdTable,
             fourthTable,
-            ctxTemporary
+            ctx
           );
 
           toggleValidationButtons(true, {

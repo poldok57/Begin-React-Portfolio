@@ -34,6 +34,7 @@ interface DrawCanvasProps {
   canvasMouseRef: React.RefObject<HTMLCanvasElement>;
   storeName?: string | null;
   scale: number;
+  defaultMode?: string;
 }
 
 // Draw on Canvas
@@ -43,6 +44,7 @@ export const useCanvas = ({
   canvasMouseRef,
   storeName = null,
   scale,
+  defaultMode = DRAWING_MODES.DRAW,
 }: DrawCanvasProps) => {
   useRef(undefined);
   const mouseOnCtrlPanel = useRef(false);
@@ -267,7 +269,7 @@ export const useCanvas = ({
   const generalInitialisation = () => {
     // Initialize canvas
     currentParams = getDrawingParams();
-    setDrawingMode(DRAWING_MODES.DRAW);
+    setDrawingMode(defaultMode);
 
     if (setSelectedDesignElement) {
       setSelectedDesignElement(null);
@@ -281,9 +283,6 @@ export const useCanvas = ({
         willReadFrequently: true,
       });
     }
-
-    // default drawing handler
-    drawingRef.current = selectDrawingHandler(DRAWING_MODES.DRAW);
 
     if (selectionRef.current !== null) selectionRef.current.eraseSelectedArea();
 
@@ -397,8 +396,6 @@ export const useCanvas = ({
    */
   const actionChangeMode = (newMode: string) => {
     currentParams = getDrawingParams();
-
-    // console.log("actionChangeMode", newMode);
 
     if (newMode === DRAWING_MODES.INIT) {
       generalInitialisation();

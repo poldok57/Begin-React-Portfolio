@@ -32,6 +32,8 @@ export class drawFindElement extends drawingHandler {
     super(canvas, canvasContext, temporyCanvas, setMode, localStorageName);
     this.extendedMouseArea = false;
 
+    this.typeHandler = DRAWING_MODES.FIND;
+
     this.setSelectedDesignElement =
       this.designStore.getState().setSelectedDesignElement;
     this.refreshCanvas = this.designStore.getState().refreshCanvas;

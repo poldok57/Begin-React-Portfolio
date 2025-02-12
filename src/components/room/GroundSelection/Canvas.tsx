@@ -6,6 +6,7 @@ import { useRoomContext } from "../RoomProvider";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { cn } from "@/lib/utils/cn";
 import { useCanvas } from "@/components/draw/hooks/useCanvas";
+import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 
 interface CanvasProps {
   backgroundCanvasRef: React.RefObject<HTMLCanvasElement>;
@@ -49,6 +50,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     canvasMouseRef: mouseCanvasRef,
     storeName,
     scale,
+    defaultMode: DRAWING_MODES.PAUSE,
   });
 
   useEffect(() => {

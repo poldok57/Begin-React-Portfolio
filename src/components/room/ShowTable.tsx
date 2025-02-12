@@ -16,7 +16,7 @@ import {
   PencilOff,
 } from "lucide-react";
 import SettingsOff from "@/components/atom/svg/SettingsOff";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 import { SelectTableType } from "./SelectTableType";
 
 const DEFAULT_SETTINGS = {
@@ -56,6 +56,7 @@ interface ShowTableProps {
   tableNumber?: string;
   flashDuration?: number;
   bgTable?: string;
+  withTopPanel?: boolean;
 }
 export const ShowTable: React.FC<ShowTableProps> = ({
   colors,
@@ -77,12 +78,13 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   handleSize,
   tableNumber = "88",
   flashDuration = 0,
+  withTopPanel = false,
   bgTable,
 }) => {
   // states for size and rotation
-  const [_size, setSize] = useState(size);
-  const [_rotation, setRotation] = useState(rotation);
-  const [_flashDuration, setFlashDuration] = useState(flashDuration);
+  const [sizeValue, setSize] = useState(size);
+  const [rotationValue, setRotation] = useState(rotation);
+  const [flashDurationValue, setFlashDuration] = useState(flashDuration);
   const [openSettings, setOpenSettings] = useState(editing);
   const [tableSettings, setTableSettings] =
     useState<TableSettings>(DEFAULT_SETTINGS);
@@ -96,13 +98,13 @@ export const ShowTable: React.FC<ShowTableProps> = ({
   };
   // Fonctions pour modifier la rotation et la taille
   const changeRotation = (increment: number) => {
-    const newRotation = (_rotation + increment + 360) % 360;
+    const newRotation = (rotationValue + increment + 360) % 360;
     setRotation(newRotation);
     handleRotation && handleRotation(newRotation);
   };
 
   const changeSize = (increment: number) => {
-    const newSize = Math.max(50, Math.min(500, _size + increment));
+    const newSize = Math.max(50, Math.min(500, sizeValue + increment));
     setSize(newSize);
     handleSize && handleSize(newSize);
   };
@@ -115,7 +117,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
 
   return (
     <div
-      className={clsx(
+      className={cn(
         "flex flex-col gap-1 items-center border border-red",
         className
       )}
@@ -123,11 +125,18 @@ export const ShowTable: React.FC<ShowTableProps> = ({
       onMouseEnter={(e) => e.stopPropagation()}
       onMouseLeave={(e) => e.stopPropagation()}
     >
-      <div className="flex z-[1] mx-3 justify-between border-b-2 border-gray-200 pb-1 w-full">
+      <div
+        className={cn(
+          "flex justify-between pb-1 mx-3 w-full border-b-2 border-gray-200 z-[1]",
+          {
+            hidden: !withTopPanel,
+          }
+        )}
+      >
         <div className="flex flex-row gap-4">
           <button
             onClick={() => changeRotation(-rotationStep)}
-            className={clsx("btn btn-circle", {
+            className={cn("btn btn-circle", {
               "btn-sm": !isTouch,
               "btn-md": isTouch,
             })}
@@ -136,7 +145,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           </button>
           <button
             onClick={() => changeRotation(rotationStep)}
-            className={clsx("btn btn-circle", {
+            className={cn("btn btn-circle", {
               "btn-sm": !isTouch,
               "btn-md": isTouch,
             })}
@@ -148,7 +157,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           className="w-24 h-4"
           id="flashDuration"
           label="Flash duration"
-          value={_flashDuration || 0}
+          value={flashDurationValue || 0}
           min="0"
           max="10"
           step="0.5"
@@ -158,7 +167,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
         <div className="flex flex-row gap-4">
           <button
             onClick={() => changeSize(-sizeStep)}
-            className={clsx("btn btn-circle", {
+            className={cn("btn btn-circle", {
               "btn-sm": !isTouch,
               "btn-md": isTouch,
             })}
@@ -167,7 +176,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           </button>
           <button
             onClick={() => changeSize(sizeStep)}
-            className={clsx("btn btn-circle", {
+            className={cn("btn btn-circle", {
               "btn-sm": !isTouch,
               "btn-md": isTouch,
             })}
@@ -177,7 +186,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
         </div>
       </div>
       <div
-        className={clsx(
+        className={cn(
           [
             "flex flex-col p-2 mx-3 min-w-full w-fit z-[1]",
             "transition-all duration-300 ease-in-out",
@@ -193,7 +202,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
         <div className="flex flex-row gap-2 justify-between mb-3 w-full">
           <button
             onClick={() => setOpenSettings(!openSettings)}
-            className={clsx("btn btn-circle", {
+            className={cn("btn btn-circle", {
               "btn-sm": !isTouch,
             })}
           >
@@ -206,7 +215,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           <SelectTableType tableType={tableType} setTableType={setTableType} />
           {onClose && !openSettings && (
             <button
-              className={clsx("btn btn-circle", {
+              className={cn("btn btn-circle", {
                 "btn-sm": !isTouch,
               })}
               onClick={onClose}
@@ -215,14 +224,14 @@ export const ShowTable: React.FC<ShowTableProps> = ({
             </button>
           )}
           <div
-            className={clsx("flex relative flex-row gap-4", {
+            className={cn("flex relative flex-row gap-4", {
               hidden: !openSettings,
             })}
           >
             {resetTable && (
               <DeleteWithConfirm
                 confirmClassName="p-2 m-1 btn btn-sm"
-                className={clsx("btn btn-circle", {
+                className={cn("btn btn-circle", {
                   "btn-sm": !isTouch,
                   "btn-md": isTouch,
                 })}
@@ -236,7 +245,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
               </DeleteWithConfirm>
             )}
             <button
-              className={clsx("btn btn-circle", {
+              className={cn("btn btn-circle", {
                 "btn-sm": !isTouch,
                 hidden: !openSettings,
               })}
@@ -248,7 +257,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           </div>
         </div>
         <div
-          className={clsx("flex flex-row gap-2 justify-between pt-2 w-full", {
+          className={cn("flex flex-row gap-2 justify-between pt-2 w-full", {
             hidden: !openSettings,
           })}
         >
@@ -287,7 +296,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           />
         </div>
         <div
-          className={clsx("flex flex-row gap-2 justify-between w-full", {
+          className={cn("flex flex-row gap-2 justify-between w-full", {
             hidden: !openSettings,
           })}
         >
@@ -318,11 +327,11 @@ export const ShowTable: React.FC<ShowTableProps> = ({
       </div>
 
       <TableComponent
-        size={_size}
-        rotation={_rotation}
+        size={sizeValue}
+        rotation={rotationValue}
         {...colors}
         {...tableSettings}
-        flashDuration={_flashDuration}
+        flashDuration={flashDurationValue}
         tableNumber={tableNumber}
         tableText={title}
         type={tableType}

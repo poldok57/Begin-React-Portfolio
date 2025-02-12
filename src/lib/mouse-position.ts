@@ -104,9 +104,10 @@ export const getRectPosition = (
 
 export const coordinateIsInsideRect = (
   coord: Coordinate | Area,
-  rect: DOMRect | Rectangle,
+  rect: DOMRect | Rectangle | null,
   extend = false
 ): boolean => {
+  if (!rect) return false;
   const overhang = !extend ? 0 : isTouchDevice() ? margin : margin / 2;
   return (
     coord.x >= rect.left - overhang &&

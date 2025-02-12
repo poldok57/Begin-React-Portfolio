@@ -50,7 +50,8 @@ export const useAlignmentLogic = (
   temporaryCanvasRef: React.RefObject<HTMLCanvasElement>,
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
   getGroundOffset: () => Coordinate,
-  getContainerRect: () => DOMRect | Rectangle | null
+  getContainerRect: () => DOMRect | Rectangle | null,
+  refreshContainer: (ctx?: CanvasRenderingContext2D) => void
 ): AlignmentLogic => {
   const selectedAlignmentLine = useRef<AxisLine | null>(null);
   const alignmentGroups = useRef<{
@@ -176,7 +177,6 @@ export const useAlignmentLogic = (
       if (getRotation() !== 0) {
         return;
       }
-      const offset = getGroundOffset();
 
       // get container rect
 
@@ -186,6 +186,7 @@ export const useAlignmentLogic = (
       ctx.globalAlpha = 1;
       if (withClearTemporaryCanvas) {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        refreshContainer(ctx);
       }
 
       ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
@@ -197,8 +198,9 @@ export const useAlignmentLogic = (
       const right =
         containerRect.right ?? containerRect.left + containerRect.width;
 
-      // Lignes verticales
+      const offset = getGroundOffset();
 
+      // Lignes verticales
       alignmentGroups.current.vertical.forEach((element) => {
         // alignments.vertical.forEach((x) => {
         ctx.beginPath();
@@ -356,9 +358,9 @@ export const useAlignmentLogic = (
   const stopMoveLine = () => {
     // Check minimum spacing between axes before stopping line movement
     if (selectedAlignmentLine.current) {
-      const type = selectedAlignmentLine.current.type;
+      const direction = selectedAlignmentLine.current.type;
       const axes =
-        type === "vertical"
+        direction === "vertical"
           ? alignmentGroups.current.vertical
           : alignmentGroups.current.horizontal;
 
@@ -370,22 +372,18 @@ export const useAlignmentLogic = (
         (axis) => axis.position === selectedAlignmentLine.current?.position
       );
 
+      // Select direction
+      const elements =
+        direction === "vertical"
+          ? alignmentGroups.current.vertical[currentAxisIndex].elements
+          : alignmentGroups.current.horizontal[currentAxisIndex].elements;
       // Calculate minimum space based on average object size on the axis
       const minSpace =
-        selectedAlignmentLine.current?.type === "vertical"
-          ? alignmentGroups.current.vertical[currentAxisIndex].elements.reduce(
-              (sum, el) => sum + el.getBoundingClientRect().width,
-              0
-            ) /
-            alignmentGroups.current.vertical[currentAxisIndex].elements.length
-          : alignmentGroups.current.horizontal[
-              currentAxisIndex
-            ].elements.reduce(
-              (sum, el) => sum + el.getBoundingClientRect().height,
-              0
-            ) /
-            alignmentGroups.current.horizontal[currentAxisIndex].elements
-              .length;
+        elements.reduce(
+          (sum, el) => sum + el.getBoundingClientRect().width,
+          0
+        ) /
+        (elements.length * 2);
 
       let newPosition = selectedAlignmentLine.current.position;
 
@@ -411,7 +409,7 @@ export const useAlignmentLogic = (
           (axis) => axis.position === selectedAlignmentLine.current?.position
         );
 
-        if (type === "vertical") {
+        if (direction === "vertical") {
           moveVerticalLine(originalIndex, newPosition);
         } else {
           moveHorizontalLine(originalIndex, newPosition);
@@ -471,6 +469,7 @@ export const useAlignmentLogic = (
     let cursorStyle = "default";
 
     if (
+      isInOverlapContainer &&
       (alignmentGroups.current.vertical.length > 0 ||
         alignmentGroups.current.horizontal.length > 0) &&
       getRotation() === 0

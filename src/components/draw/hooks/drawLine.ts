@@ -50,6 +50,8 @@ export class drawLine extends drawingHandler {
     storeName?: string | null
   ) {
     super(canvas, canvasContext, temporyCanvas, setMode, storeName);
+
+    this.typeHandler = DRAWING_MODES.LINE;
     this.line = new CanvasLine(canvas);
 
     this.setType(DRAWING_MODES.LINE);

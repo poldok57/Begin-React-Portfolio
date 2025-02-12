@@ -43,6 +43,7 @@ export class drawFreehand extends drawingHandler {
     storeName?: string | null
   ) {
     super(canvas, canvasContext, temporyCanvas, setMode, storeName);
+    this.typeHandler = DRAWING_MODES.DRAW;
     this.freeCurve = new CanvasFreeCurve();
     this.extendedMouseArea = false;
     this.setType(DRAWING_MODES.DRAW);

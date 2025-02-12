@@ -15,6 +15,8 @@ interface Position {
 
 const LINE_OVERLAP = 30;
 
+const withContainer = false;
+
 export const useGroundSelectionLogic = (
   groundRef: React.RefObject<HTMLDivElement>,
   containerRef: React.RefObject<HTMLDivElement>,
@@ -25,14 +27,16 @@ export const useGroundSelectionLogic = (
   drawAxe: () => void,
   selectZone: (rect: Rectangle | null) => void
 ) => {
-  const isSelectingRef = useRef(false);
   const startPos = useRef<Position | null>(null);
 
   const areaOffsetRef = useRef<Position | null>(null);
   const itemSelectedRef = useRef(false);
   const previousPosition = useRef<Position | null>(null);
+  const showContainerRef = useRef(false);
+  const containerRectRef = useRef<Rectangle | null>(null);
 
-  const { getScale, getRotation, clearTemporaryCanvas } = useRoomContext();
+  const { getScale, getRotation, getCtxTemporary, clearTemporaryCanvas } =
+    useRoomContext();
 
   const getGroundOffset: () => Coordinate = useCallback(() => {
     if (!groundRef.current) return { x: 0, y: 0 };
@@ -46,39 +50,121 @@ export const useGroundSelectionLogic = (
     };
   }, []);
 
+  const refreshContainer = (ctx?: CanvasRenderingContext2D | null) => {
+    if (!ctx) {
+      ctx = getCtxTemporary();
+      if (!ctx) {
+        return;
+      }
+    }
+    if (containerRectRef.current) {
+      const rotation = getRotation();
+
+      const rect = containerRectRef.current;
+      // Draw a frame around the container (+2px)
+
+      // Save context state
+      ctx.save();
+
+      // Translate to center of rectangle
+      ctx.translate(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+      // Apply rotation
+      ctx.rotate((rotation * Math.PI) / 180);
+
+      ctx.strokeStyle = "#0000aa";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      // Draw rotated rectangle
+      ctx.strokeRect(
+        -rect.width / 2,
+        -rect.height / 2,
+        rect.width,
+        rect.height
+      );
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#e5e7eb33";
+      ctx.fillRect(-rect.width / 2, -rect.height / 2, rect.width, rect.height);
+
+      // Restore context state
+      ctx.restore();
+    }
+  };
+
   const moveContainer = (
     rect: { top: number; left: number; width?: number; height?: number } | null
   ) => {
-    if (!containerRef.current) return;
-
-    if (!rect) {
-      containerRef.current.style.display = "none";
+    if (!containerRef.current && withContainer) {
+      showContainerRef.current = false;
       return;
     }
 
-    const style = containerRef.current.style;
-
-    style.left = `${rect.left}px`;
-    style.top = `${rect.top}px`;
-    if (rect.width !== undefined) {
-      style.width = `${rect.width}px`;
+    if (!rect) {
+      showContainerRef.current = false;
+      if (containerRef.current) {
+        containerRef.current.style.display = "none";
+      }
+      containerRectRef.current = null;
+      return;
     }
 
-    if (rect.height !== undefined) {
-      style.height = `${rect.height}px`;
+    if (withContainer && containerRef.current) {
+      const style = containerRef.current.style;
+
+      style.left = `${rect.left}px`;
+      style.top = `${rect.top}px`;
+      if (rect.width !== undefined) {
+        style.width = `${rect.width}px`;
+      }
+
+      if (rect.height !== undefined) {
+        style.height = `${rect.height}px`;
+      }
+      style.display = "block";
     }
-    style.display = "block";
+
+    showContainerRef.current = true;
+
+    if (rect) {
+      if (!containerRectRef.current) {
+        containerRectRef.current = {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width ?? 0,
+          height: rect.height ?? 0,
+        };
+      } else {
+        containerRectRef.current = {
+          ...containerRectRef.current,
+          ...rect,
+        };
+      }
+      clearTemporaryCanvas("moveContainer");
+      refreshContainer();
+    }
   };
 
-  const getContainerRect: () => Rectangle = () => {
-    if (!containerRef.current)
-      return {
-        left: 0,
-        top: 0,
-        width: 0,
-        height: 0,
-      };
-    const rect = containerRef.current.getBoundingClientRect();
+  const getContainerRect: () => Rectangle | null = () => {
+    let rect = null;
+    if (withContainer) {
+      if (!containerRef.current) return null;
+
+      rect = containerRef.current.getBoundingClientRect();
+    } else {
+      const offset = getGroundOffset();
+      if (containerRectRef.current) {
+        rect = {
+          ...containerRectRef.current,
+          left: containerRectRef.current.left - offset.x,
+          top: containerRectRef.current.top - offset.y,
+        };
+      }
+    }
+
+    if (!rect) {
+      return null;
+    }
+
     return {
       left: rect.left,
       top: rect.top,
@@ -91,63 +177,77 @@ export const useGroundSelectionLogic = (
 
   // container with overlap of LINE_OVERLAP return true if the point is in the container or in the overlap
   const isInOverlapContainer = (x: number, y: number) => {
-    if (!containerRef.current) return { inOverlap: false, inContainer: false };
+    let showContainer = false;
+    let inOverlap = false;
+    let inContainer = false;
 
-    const containerRect = getContainerRect();
-    const right =
-      containerRect.right ?? containerRect.left + containerRect.width;
-    const bottom =
-      containerRect.bottom ?? containerRect.top + containerRect.height;
+    if (showContainerRef.current) {
+      const containerRect = getContainerRect();
 
-    const inOverlap =
-      x >= containerRect.left - LINE_OVERLAP &&
-      x <= right + LINE_OVERLAP &&
-      y >= containerRect.top - LINE_OVERLAP &&
-      y <= bottom + LINE_OVERLAP;
+      if (containerRect) {
+        const right =
+          containerRect.right ?? containerRect.left + containerRect.width;
+        const bottom =
+          containerRect.bottom ?? containerRect.top + containerRect.height;
 
-    if (!inOverlap) {
-      return { inOverlap: false, inContainer: false };
+        inOverlap =
+          x >= containerRect.left - LINE_OVERLAP &&
+          x <= right + LINE_OVERLAP &&
+          y >= containerRect.top - LINE_OVERLAP &&
+          y <= bottom + LINE_OVERLAP;
+
+        if (inOverlap) {
+          inContainer =
+            x >= containerRect.left &&
+            x <= right &&
+            y >= containerRect.top &&
+            y <= bottom;
+        }
+        showContainer = true;
+      }
     }
-    const inContainer =
-      x >= containerRect.left &&
-      x <= right &&
-      y >= containerRect.top &&
-      y <= bottom;
-    return { inOverlap, inContainer };
+    return { inOverlap, inContainer, showContainer };
   };
 
   const handleStart = useCallback(
     (clientX: number, clientY: number) => {
       const containerRect = getContainerRect();
 
-      if (!containerRect) return false;
       previousPosition.current = {
         left: clientX,
         top: clientY,
       };
 
       if (
-        containerRef.current &&
+        containerRect &&
         coordinateIsInsideRect({ x: clientX, y: clientY }, containerRect)
       ) {
         //  console.log("clic inside the container");
 
-        // Clic inside the container start moving the container
-        areaOffsetRef.current = {
-          left: containerRef.current.offsetLeft - clientX,
-          top: containerRef.current.offsetTop - clientY,
-        };
+        if (withContainer && containerRef.current) {
+          // Clic inside the container start moving the container
+          areaOffsetRef.current = {
+            left: containerRef.current.offsetLeft - clientX,
+            top: containerRef.current.offsetTop - clientY,
+          };
+        } else if (containerRectRef.current && groundRef.current) {
+          // clic outside the container start moving the ground
+          // const offset = getGroundOffset();
+          areaOffsetRef.current = {
+            left: containerRectRef.current.left - clientX,
+            top: containerRectRef.current.top - clientY,
+          };
+        }
 
         onSelectionStart();
         return true;
       }
 
-      isSelectingRef.current = true;
       itemSelectedRef.current = false;
       const offset = getGroundOffset();
       startPos.current = {
-        left: clientX + offset.x,
-        top: clientY + offset.y,
+        left: Math.round(clientX + offset.x),
+        top: Math.round(clientY + offset.y),
       };
 
       setSelectedRect(null);
@@ -204,14 +304,18 @@ export const useGroundSelectionLogic = (
         left: newLeft,
         top: newTop,
       });
-      const { width, height } = getContainerRect();
 
-      setSelectedRect({
-        left: newLeft,
-        top: newTop,
-        width: width,
-        height: height,
-      });
+      const rect = getContainerRect();
+      if (rect) {
+        const { width, height } = rect;
+
+        setSelectedRect({
+          left: newLeft,
+          top: newTop,
+          width: width,
+          height: height,
+        });
+      }
     }
   };
 
@@ -222,7 +326,7 @@ export const useGroundSelectionLogic = (
       if (!groundRef.current || mode === Mode.draw) return false;
 
       if (areaOffsetRef.current) {
-        // move container
+        // container is defined so we can move it
         if (mode !== Mode.create && mode !== Mode.settings) {
           return false;
         }
@@ -237,24 +341,25 @@ export const useGroundSelectionLogic = (
         return true;
       }
 
-      // select first corner of the container
-      if (isSelectingRef.current && startPos.current) {
+      // First corner is defined so we can define the opposite corner
+      if (startPos.current) {
         const offset = getGroundOffset();
-        const endLeft = clientX + offset.x;
-        const endTop = clientY + offset.y;
+        const endLeft = Math.round(clientX + offset.x);
+        const endTop = Math.round(clientY + offset.y);
 
         const width = Math.abs(Math.round(endLeft - startPos.current.left));
         const height = Math.abs(Math.round(endTop - startPos.current.top));
+
         moveContainer({
-          left: Math.round(Math.min(startPos.current.left, endLeft)),
-          top: Math.round(Math.min(startPos.current.top, endTop)),
+          left: Math.min(startPos.current.left, endLeft),
+          top: Math.min(startPos.current.top, endTop),
           width: width,
           height: height,
         });
 
         debouncedSetSelectedRect({
-          left: Math.round(Math.min(startPos.current.left, endLeft)),
-          top: Math.round(Math.min(startPos.current.top, endTop)),
+          left: Math.min(startPos.current.left, endLeft),
+          top: Math.min(startPos.current.top, endTop),
           width: width,
           height: height,
         });
@@ -266,9 +371,11 @@ export const useGroundSelectionLogic = (
   );
 
   const handleEnd = useCallback(() => {
-    isSelectingRef.current = false;
+    startPos.current = null;
     areaOffsetRef.current = null;
-    const rect = getContainerRect();
+
+    let rect: Rectangle | null = null;
+    rect = getContainerRect();
 
     if (!rect) {
       selectZone(null);
@@ -282,28 +389,20 @@ export const useGroundSelectionLogic = (
       return;
     }
 
-    if (itemSelectedRef.current) {
-      return;
+    if (!itemSelectedRef.current) {
+      selectZone(rect);
+      itemSelectedRef.current = true;
     }
-
-    selectZone(rect);
-
-    itemSelectedRef.current = true;
   }, [selectZone]);
 
   return {
     isInOverlapContainer,
     moveContainer,
+    refreshContainer,
     getContainerRect,
+    getGroundOffset,
     handleStart,
     handleMove,
     handleEnd,
-    isSelectingRef,
-    startPos,
-    areaOffsetRef,
-    itemSelectedRef,
-    previousPosition,
-    getGroundOffset,
-    debouncedSetSelectedRect,
   };
 };

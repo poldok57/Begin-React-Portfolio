@@ -37,6 +37,8 @@ export class drawElement extends drawingHandler {
   ) {
     super(canvas, canvasContext, temporyCanvas, setMode, storeName);
 
+    this.typeHandler = DRAWING_MODES.SQUARE;
+
     this.shape = new CanvasShape();
 
     this.coordinates = { x: 0, y: 0 };

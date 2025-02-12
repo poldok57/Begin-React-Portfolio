@@ -208,6 +208,7 @@ export const GroupCreat = ({
                 resetTable={currentId ? undefined : resetTable}
                 isTouch={isTouch}
                 onClose={() => setEditing(false)}
+                withTopPanel={true}
                 bgTable="rgb(210,210,210, 0.5)"
               />
             </div>
