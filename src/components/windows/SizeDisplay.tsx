@@ -45,7 +45,7 @@ export const SizeDisplay: React.FC<{ size: Size }> = ({ size }) => {
         padding: "2px 5px",
         opacity: visible ? 0.9 : 0,
         transition: visible ? "" : "opacity 2.5s",
-        zIndex: 1001,
+        zIndex: visible ? 1001 : 0,
       }}
     >
       {Math.round(size.width)} x {Math.round(size.height)}

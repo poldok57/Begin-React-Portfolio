@@ -31,8 +31,15 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
 }) => {
   const isTouch = isTouchDevice();
   const ref = useRef<HTMLDivElement>(null);
-  const { mode, scale, setScale, clearSelectedTableIds, getSelectedRect } =
-    useRoomContext();
+  const {
+    mode,
+    scale,
+    setScale,
+    clearSelectedTableIds,
+    getSelectedRect,
+    maxRowsPerColumn,
+    setMaxRowsPerColumn,
+  } = useRoomContext();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
   const [isPlanMode, setIsPlanMode] = useState(true);
@@ -214,42 +221,44 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
       </div>
       <div className="hidden navbar-center lg:flex">
         <ul className="items-center px-1 menu menu-horizontal">
-          <li className="flex items-center">
-            <RoomAddTables
-              className="px-2"
-              addSelectedRect={addSelectedRect}
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              disabled={!isPlanMode}
-            />
-          </li>
-          <li className="flex items-center">
-            <UpdateSelectedTables
-              className="px-2"
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              btnSize={btnSize}
-              isTouch={isTouch}
-              disabled={!isPlanMode}
-            />
-          </li>
-          <li className="flex items-center">
-            <TableNumbers
-              className="px-2"
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              disabled={!isPlanMode}
-            />
-          </li>
-          <li className="flex items-center">
-            <RoomDesign
-              className="px-2"
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              isTouch={isTouch}
-              disabled={typeListMode === "list"}
-            />
-          </li>
+          {typeListMode === TypeListTables.plan && (
+            <>
+              <li className="flex items-center">
+                <RoomAddTables
+                  className="px-2"
+                  addSelectedRect={addSelectedRect}
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  disabled={!isPlanMode}
+                />
+              </li>
+              <li className="flex items-center">
+                <UpdateSelectedTables
+                  className="px-2"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  btnSize={btnSize}
+                  isTouch={isTouch}
+                />
+              </li>
+              <li className="flex items-center">
+                <TableNumbers
+                  className="px-2"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                />
+              </li>
+              <li className="flex items-center">
+                <RoomDesign
+                  className="px-2"
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                  isTouch={isTouch}
+                />
+              </li>
+            </>
+          )}
+
           <li className="flex z-40 items-center mx-2">
             <details ref={refDetails}>
               <summary>Table view</summary>
@@ -289,7 +298,29 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           </li>
         </ul>
       </div>
-      <div className="navbar-end">
+      <div className="flex flex-row gap-3 items-center px-4 navbar-end">
+        {typeListMode === TypeListTables.list && (
+          <div className="flex flex-row items-center">
+            <label htmlFor="maxRows" className="mr-2 text-nowrap">
+              Max rows
+            </label>
+            <select
+              id="maxRows"
+              className="w-full max-w-xs select select-bordered"
+              value={maxRowsPerColumn}
+              onChange={(e) => setMaxRowsPerColumn(Number(e.target.value))}
+            >
+              <option value="10">10 rows</option>
+              <option value="12">12 rows</option>
+              <option value="16">16 rows</option>
+              <option value="20">20 rows</option>
+              <option value="25">25 rows</option>
+              <option value="30">30 rows</option>
+              <option value="40">40 rows</option>
+              <option value="50">50 rows</option>
+            </select>
+          </div>
+        )}
         <RangeInput
           id="scale"
           label="Scale"
@@ -301,8 +332,8 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           isTouch={isTouch}
           onChange={(value: number) => setScale(value)}
         />
+        {mode}
       </div>
-      {mode}
     </div>
   );
 };

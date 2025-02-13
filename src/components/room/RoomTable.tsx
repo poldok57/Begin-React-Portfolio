@@ -16,6 +16,7 @@ import { isTouchDevice } from "@/lib/utils/device";
 import { Mode } from "./types";
 import { cn } from "@/lib/utils/cn";
 
+const withButtonStop = false;
 interface RoomTableProps {
   id?: string;
   table: TableData;
@@ -30,8 +31,6 @@ interface RoomTableProps {
   mode?: Mode | null;
   setActiveTable: (id: string | null) => void;
 }
-
-const withButtonStop = true;
 
 export const RoomTable: React.FC<RoomTableProps> = ({
   id,
@@ -112,47 +111,56 @@ export const RoomTable: React.FC<RoomTableProps> = ({
         "border-transparent": !table.selected,
       })}
       style={style}
-      onClick={(event) => {
-        changeSelected(table.id, !table.selected);
-        onClick?.(event);
-        event.stopPropagation();
-      }}
     >
-      <TableComponent
-        size={localSize}
-        rotation={table.rotation ?? 0}
-        tableNumber={table.tableNumber ?? ""}
-        tableText={table.tableText ?? ""}
-        {...settings}
-        {...colors}
-        type={table.type}
-      />
+      <div
+        onClick={(event) => {
+          // Do not handle click if it occurred on a button
+          if (onClick) {
+            onClick(event);
+            event.stopPropagation();
+          } else {
+            changeSelected(table.id, !table.selected);
+          }
+        }}
+      >
+        <TableComponent
+          size={localSize}
+          rotation={table.rotation ?? 0}
+          tableNumber={table.tableNumber ?? ""}
+          tableText={table.tableText ?? ""}
+          {...settings}
+          {...colors}
+          type={table.type}
+        />
+      </div>
       {showButton && (
-        <div>
-          {table.groupId && (
-            <button
-              className="absolute -right-2 -top-4 btn btn-circle btn-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                updateTable(table.id, { groupId: null });
-                setActiveTable("");
-              }}
-            >
-              <PowerOff size={btnSize} />
-            </button>
-          )}
-          {withButtonStop && (
-            <button
-              className="absolute -left-2 -top-4 btn btn-circle btn-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveTable("");
-              }}
-            >
-              <PencilOff size={btnSize} />
-            </button>
-          )}
-          <div className="flex absolute left-0 bottom-3 flex-row justify-between w-full">
+        <>
+          <div className="flex absolute left-0 -top-5 z-40 w-full">
+            {table.groupId && (
+              <button
+                className="absolute -right-2 btn btn-circle btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  updateTable(table.id, { groupId: null });
+                  setActiveTable("");
+                }}
+              >
+                <PowerOff size={btnSize} />
+              </button>
+            )}
+            {withButtonStop && (
+              <button
+                className="absolute -left-2 cursor-pointer btn btn-circle btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTable("");
+                }}
+              >
+                <PencilOff size={btnSize} />
+              </button>
+            )}
+          </div>
+          <div className="flex absolute left-0 bottom-3 z-40 flex-row justify-between w-full">
             <Dialog blur={true}>
               <DialogOpen>
                 <button className="absolute -left-2 btn btn-circle btn-sm">
@@ -199,7 +207,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               <Trash2 size={btnSize} />
             </DeleteWithConfirm>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

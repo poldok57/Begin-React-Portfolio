@@ -9,6 +9,7 @@ interface SvgWrapperProps {
   viewBox: string;
   $rotation: number;
   $animationkey: number;
+  ref?: React.RefObject<SVGSVGElement>;
   style?: React.CSSProperties;
 }
 

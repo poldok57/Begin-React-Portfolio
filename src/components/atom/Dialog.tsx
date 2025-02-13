@@ -138,10 +138,12 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
   const { blur, dialogRef } = useDialogContext();
 
   const handleClick = (e: MouseEvent) => {
+    console.log("DialogTrigger handleClick");
     switch (type) {
       case "close":
         if (onClick) {
           onClick(e);
+          e.stopPropagation();
         }
         if (dialogRef.current) {
           dialogRef.current.close();
@@ -150,6 +152,7 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
       case "open":
         if (onClick) {
           onClick(e);
+          e.stopPropagation();
         }
         if (dialogRef.current) {
           if (blur) {
@@ -163,12 +166,14 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
         if (dialogRef.current) {
           if (dialogRef.current.open) {
             dialogRef.current.close();
+            e.stopPropagation();
           } else {
             if (blur) {
               dialogRef.current.showModal();
             } else {
               dialogRef.current.show();
             }
+            e.stopPropagation();
           }
         }
         break;

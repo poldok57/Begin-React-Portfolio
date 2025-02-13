@@ -60,7 +60,6 @@ export const GroupTitle = ({
 interface ListTablesTournamentProps {
   tournamentId: string;
   tables: TableData[];
-  maxRowsPerColumn: number;
   nbTables: number;
   btnSize: number;
 }
@@ -68,14 +67,13 @@ interface ListTablesTournamentProps {
 const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
   tournamentId,
   tables,
-  maxRowsPerColumn,
   nbTables,
   btnSize,
 }: ListTablesTournamentProps) => {
   const { getGroup } = useGroupStore();
   const { updateTable, resetSelectedTables, deleteSelectedTable } =
     useTableDataStore();
-  const { scale } = useRoomContext();
+  const { scale, maxRowsPerColumn } = useRoomContext();
 
   const [fontSize, setFontSize] = useState("0.5rem");
   const [titleFontSize, setTitleFontSize] = useState("1rem");
@@ -124,6 +122,7 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
     });
     setCheckedTables(new Set());
     updateWithCheckBox(false);
+    resetSelectedTables();
   }, [checkedTables]);
 
   const checkedToSelected = useCallback(() => {
@@ -138,6 +137,7 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
     checkedToSelected();
     deleteSelectedTable();
     updateWithCheckBox(false);
+    resetSelectedTables();
   }, [checkedTables]);
 
   useEffect(() => {
@@ -257,13 +257,7 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
   );
 };
 
-interface TableListProps {
-  maxRowsPerColumn: number;
-}
-
-export const ListTablesText: React.FC<TableListProps> = ({
-  maxRowsPerColumn = 25,
-}) => {
+export const ListTablesText = () => {
   const { tables } = useTableDataStore();
   const btnSize = isTouchDevice() ? 20 : 16;
 
@@ -307,7 +301,6 @@ export const ListTablesText: React.FC<TableListProps> = ({
               key={tournamentId}
               tournamentId={tournamentId}
               tables={sortedTables}
-              maxRowsPerColumn={maxRowsPerColumn}
               nbTables={tournamentTables.length}
               btnSize={btnSize}
             />

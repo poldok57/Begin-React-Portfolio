@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { RectPosition as Position } from "@/lib/canvas/types";
 import { TableData } from "./types";
 import { useTableDataStore } from "./stores/tables";
@@ -17,9 +17,10 @@ interface ListTablesProps {
 
 export const ListTablesPlan = React.memo(
   ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
-    const [tableActive, setTableActive] = useState<string | null>(null);
+    // const [activeTable, setActiveTable] = useState<string | null>(null);
     const { scale, getScale, mode } = useRoomContext();
-    const { updateTable, deleteTable } = useTableDataStore((state) => state);
+    const { updateTable, deleteTable, activeTable, setActiveTable } =
+      useTableDataStore((state) => state);
 
     const handleMove = useCallback(
       (id: string, position: Position) => {
@@ -43,23 +44,25 @@ export const ListTablesPlan = React.memo(
     );
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
+      if (activeTable === id) {
+        setActiveTable(null);
+        updateTable(id, { selected: false });
+        return;
+      } else {
+        setActiveTable(id);
+        updateTable(id, { selected: true });
+      }
       if (!editable) {
+        // For numberinf mode
         onClick?.(id);
         return;
       }
-      if (tableActive === id) {
-        setTableActive(null);
-        updateTable(id, { selected: false });
-        return;
-      }
-      setTableActive(id);
-      updateTable(id, { selected: true });
     };
 
     useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
-          setTableActive(null);
+          setActiveTable(null);
         }
       };
 
@@ -73,7 +76,7 @@ export const ListTablesPlan = React.memo(
     return tables.map((table: TableData) => {
       const left = table.position.left * scale;
       const top = table.position.top * scale;
-      const isActive = table.id === tableActive;
+      const isActive = table.id === activeTable;
       const showButton = mode === Mode.create && isActive;
 
       const TableComponent =
@@ -99,11 +102,11 @@ export const ListTablesPlan = React.memo(
             top: `${top}px`,
           }}
           scale={scale}
-          onClick={(e) => handleClick(e, table.id)}
+          onClick={(e) => handleClick?.(e, table.id)}
           isActive={isActive}
           mode={mode}
           showButton={showButton}
-          setActiveTable={setTableActive}
+          setActiveTable={setActiveTable}
         />
       );
     });

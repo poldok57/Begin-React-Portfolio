@@ -34,6 +34,8 @@ interface RoomContextProps {
   needRefresh: () => void;
   storeName: string | null;
   setStoreName: (storeName: string | null) => void;
+  maxRowsPerColumn: number;
+  setMaxRowsPerColumn: (maxRowsPerColumn: number) => void;
 }
 
 const traceClear = false;
@@ -51,6 +53,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     scaleRef.current = newScale;
     setStateScale(newScale);
   }, []);
+  const [maxRowsPerColumn, setMaxRowsPerColumn] = useState<number>(20);
 
   const setCtxTemporary = useCallback(
     (newCtxTemporary: CanvasRenderingContext2D | null) => {
@@ -239,6 +242,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
         needRefresh,
         storeName,
         setStoreName,
+        maxRowsPerColumn,
+        setMaxRowsPerColumn,
       }}
     >
       {children}

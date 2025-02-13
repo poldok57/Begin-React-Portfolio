@@ -54,8 +54,8 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     };
     const position: Position = positionTable(offsetStart, x, y);
     const offset: Position = {
-      left: (position.left - selectedRect.left) * scale,
-      top: (position.top - selectedRect.top) * scale,
+      left: Math.round((position.left - selectedRect.left) * scale),
+      top: Math.round((position.top - selectedRect.top) * scale),
     };
 
     const newTable = {

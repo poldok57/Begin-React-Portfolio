@@ -79,6 +79,7 @@ export interface TableData extends Table {
   groupId?: string | null;
   selected: boolean;
   position: Position;
+  offset?: Position;
   settings?: TableSettings | null;
 }
 

@@ -1,4 +1,5 @@
-import clsx from "clsx";
+import { useRef } from "react";
+import { cn } from "@/lib/utils/cn";
 interface DeleteWithConfirmProps {
   className?: string;
   position?: "top" | "bottom" | "left" | "right";
@@ -18,10 +19,18 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
   confirmClassName,
   confirmMessage = "Confirm delete?",
 }) => {
+  const refDetails = useRef<HTMLDetailsElement>(null);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onConfirm?.();
+    refDetails.current?.removeAttribute("open");
+  };
+
   return (
     <>
       <div
-        className={clsx("dropdown z-10", {
+        className={cn("dropdown z-10", {
           "dropdown-top": position === "top",
           "dropdown-bottom": position === "bottom",
           "dropdown-left": position === "left",
@@ -29,7 +38,7 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
           "dropdown-end": align === "end",
         })}
       >
-        <details>
+        <details ref={refDetails}>
           <summary tabIndex={0} className={className} role="button">
             {children}
           </summary>
@@ -38,7 +47,7 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
             className="dropdown-content menu bg-base-100 rounded-box z-[1] w-fit p-1 text-nowrap shadow"
           >
             <li className="z-40 p-1 text-nowrap">
-              <button className={confirmClassName} onClick={onConfirm}>
+              <button className={confirmClassName} onClick={handleClick}>
                 {confirmMessage}
               </button>
             </li>

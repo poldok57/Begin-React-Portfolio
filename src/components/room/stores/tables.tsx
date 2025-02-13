@@ -8,8 +8,8 @@ import { createLocalStoragePersist } from "@/lib/stores/persist";
 // import { DesignType } from "../types";
 interface TableDataState {
   tables: TableData[];
-  // designElements: DesignElement[];
-  // selectedDesignElement: string | null;
+  activeTable: string | null;
+  setActiveTable: (id: string | null) => void;
   addTable: (table: TableData) => void;
   getTable: (id: string) => TableData | undefined;
   getSelectedTables: () => TableData[];
@@ -30,8 +30,8 @@ interface TableDataWithIndex extends TableData {
 
 const tableStore: StateCreator<TableDataState> = (set, get) => ({
   tables: [],
-  designElements: [],
-  selectedDesignElement: null,
+  activeTable: null,
+  setActiveTable: (id) => set({ activeTable: id }),
   addTable: (table) => {
     const newTable = {
       ...table,
@@ -82,7 +82,11 @@ const tableStore: StateCreator<TableDataState> = (set, get) => ({
   },
   resetSelectedTables: () =>
     set((state) => ({
-      tables: state.tables.map((table) => ({ ...table, selected: false })),
+      tables: state.tables.map((table) => ({
+        ...table,
+        selected: false,
+        offset: undefined,
+      })),
     })),
   rotationSelectedTable: (angle: number) =>
     set((state) => ({
