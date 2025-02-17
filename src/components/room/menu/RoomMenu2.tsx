@@ -148,7 +148,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                     addSelectedRect={addSelectedRect}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
-                    disabled={!isPlanMode}
                   />
                 </li>
                 <li>
@@ -158,7 +157,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                     isTouch={isTouch}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
-                    disabled={!isPlanMode}
                   />
                 </li>
                 <li>
@@ -168,15 +166,17 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                     setActiveMenu={setActiveMenu}
                   />
                 </li>
-                <li>
-                  <RoomDesign
-                    className="flex flex-col p-1 w-full rounded-lg"
-                    isTouch={isTouch}
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                  />
-                </li>
               </>
+            )}
+            {typeListMode !== TypeListTables.list && (
+              <li>
+                <RoomDesign
+                  className="flex flex-col p-1 w-full rounded-lg"
+                  isTouch={isTouch}
+                  activeMenu={activeMenu}
+                  setActiveMenu={setActiveMenu}
+                />
+              </li>
             )}
             <li>
               <details open>
@@ -248,6 +248,10 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                   setActiveMenu={setActiveMenu}
                 />
               </li>
+            </>
+          )}
+          {typeListMode !== TypeListTables.list && (
+            <>
               <li className="flex items-center">
                 <RoomDesign
                   className="px-2"

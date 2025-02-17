@@ -241,7 +241,7 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
             </DialogOpen>
 
             <DialogContent position="modal">
-              <GroupCreat onSelect={(_) => setWithCheckBox(false)} />
+              <GroupCreat onSelect={(_) => updateWithCheckBox(false)} />
             </DialogContent>
           </Dialog>
           <Button

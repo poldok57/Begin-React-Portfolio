@@ -24,7 +24,7 @@ export abstract class drawingHandler {
   protected mCanvas: HTMLCanvasElement | null = null;
 
   protected context: CanvasRenderingContext2D | null = null;
-  protected ctxTempory: CanvasRenderingContext2D | null = null;
+  protected ctxTemporary: CanvasRenderingContext2D | null = null;
   protected ctxMouse: CanvasRenderingContext2D | null = null;
   protected lastMouseOnShape: string | null = null;
   protected setMode: (mode: string) => void;
@@ -46,7 +46,7 @@ export abstract class drawingHandler {
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
-    temporyCanvas: HTMLCanvasElement | null,
+    temporaryCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void,
     localStorageName: string | null = null
   ) {
@@ -54,7 +54,7 @@ export abstract class drawingHandler {
     if (canvasContext) this.setContext(canvasContext);
 
     this.extendedMouseArea = false;
-    this.setTemporyCanvas(temporyCanvas);
+    this.setTemporyCanvas(temporaryCanvas);
     this.setMode = setMode;
 
     this.resizingBorder = null;
@@ -75,7 +75,7 @@ export abstract class drawingHandler {
 
   setTemporyCanvas(canvas: HTMLCanvasElement | null) {
     if (!canvas) return;
-    this.ctxTempory = canvas.getContext(
+    this.ctxTemporary = canvas.getContext(
       "2d"
     ) as CanvasRenderingContext2D | null;
   }
@@ -85,9 +85,9 @@ export abstract class drawingHandler {
     this.ctxMouse = canvas.getContext("2d") as CanvasRenderingContext2D | null;
   }
 
-  clearTemporyCanvas(): void {
-    if (!this.ctxTempory) return;
-    clearCanvasByCtx(this.ctxTempory);
+  clearTemporaryCanvas(): void {
+    if (!this.ctxTemporary) return;
+    clearCanvasByCtx(this.ctxTemporary);
   }
   clearMouseCanvas(): void {
     if (!this.ctxMouse) return;
@@ -127,8 +127,8 @@ export abstract class drawingHandler {
     this.changeData(data);
   }
 
-  newElement(type: string, data?: AllParams) {
-    this.setType(type);
+  newElement(data: AllParams) {
+    this.setType(data.mode);
     if (data) this.changeData(data);
   }
 

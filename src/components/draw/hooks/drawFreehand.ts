@@ -38,11 +38,11 @@ export class drawFreehand extends drawingHandler {
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
-    temporyCanvas: HTMLCanvasElement | null,
+    temporaryCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void,
     storeName?: string | null
   ) {
-    super(canvas, canvasContext, temporyCanvas, setMode, storeName);
+    super(canvas, canvasContext, temporaryCanvas, setMode, storeName);
     this.typeHandler = DRAWING_MODES.DRAW;
     this.freeCurve = new CanvasFreeCurve();
     this.extendedMouseArea = false;
@@ -61,9 +61,9 @@ export class drawFreehand extends drawingHandler {
 
   changeData(data: AllParams): void {
     this.setDataGeneral(data.general);
-    if (this.ctxTempory === null) return;
-    this.ctxTempory.lineWidth = data.general.lineWidth * this.scale;
-    this.ctxTempory.strokeStyle = data.general.color;
+    if (this.ctxTemporary === null) return;
+    this.ctxTemporary.lineWidth = data.general.lineWidth * this.scale;
+    this.ctxTemporary.strokeStyle = data.general.color;
   }
 
   setDrawing(drawing: boolean) {
@@ -88,14 +88,14 @@ export class drawFreehand extends drawingHandler {
   refreshDrawing() {
     // console.log("refreshDrawing free curve");
     this.freeCurve.debounceDraw(
-      this.ctxTempory as CanvasRenderingContext2D,
+      this.ctxTemporary as CanvasRenderingContext2D,
       true
     );
   }
 
   hightLightDrawing() {
     this.freeCurve.hightLightDrawing(
-      this.ctxTempory as CanvasRenderingContext2D
+      this.ctxTemporary as CanvasRenderingContext2D
     );
   }
 
@@ -108,16 +108,16 @@ export class drawFreehand extends drawingHandler {
       return "move";
     }
 
-    const ctxTempory = this.ctxTempory;
-    const ctxMouse = this.ctxMouse ?? ctxTempory;
+    const ctxTemporary = this.ctxTemporary;
+    const ctxMouse = this.ctxMouse ?? ctxTemporary;
 
-    if (ctxMouse === null || ctxTempory === null) {
-      console.error("ctxTempory is null");
+    if (ctxMouse === null || ctxTemporary === null) {
+      console.error("ctxTemporary is null");
       return;
     }
 
     if (this.ctxMouse === null) {
-      this.clearTemporyCanvas();
+      this.clearTemporaryCanvas();
     } else {
       this.clearMouseCanvas();
     }
@@ -140,13 +140,13 @@ export class drawFreehand extends drawingHandler {
         } as drawingCircle);
         break;
       case DRAWING_MODES.ERASE:
-        ctxTempory.globalAlpha = 0.7;
+        ctxTemporary.globalAlpha = 0.7;
         hightLightMouseCursor(ctxMouse, mouseCoord, {
           ...mouseCircle,
           color: "pink",
           width: 50,
         });
-        ctxTempory.globalAlpha = 0.5;
+        ctxTemporary.globalAlpha = 0.5;
         hatchedCircle({
           context: ctxMouse,
           coordinate: mouseCoord,
@@ -175,7 +175,7 @@ export class drawFreehand extends drawingHandler {
 
     if (this.finishedDrawing) {
       return this.freeCurve.mouseOverPath(
-        this.ctxTempory,
+        this.ctxTemporary,
         event,
         this.getCoordinates() as Coordinate,
         this.resizingBorder
@@ -184,16 +184,16 @@ export class drawFreehand extends drawingHandler {
 
     if (this.isDrawing()) {
       if (this.getType() === DRAWING_MODES.DRAW) {
-        const ctxTempory = this.ctxTempory;
-        if (ctxTempory === null) {
-          console.error("ctxTempory is null");
+        const ctxTemporary = this.ctxTemporary;
+        if (ctxTemporary === null) {
+          console.error("ctxTemporary is null");
           return null;
         }
         if (this.freeCurve.delayAddPoint(this.coordinates as Coordinate)) {
-          ctxTempory.strokeStyle = this.general.color;
-          ctxTempory.lineWidth = this.general.lineWidth;
-          // this.clearTemporyCanvas();
-          this.freeCurve.debounceDraw(ctxTempory, false);
+          ctxTemporary.strokeStyle = this.general.color;
+          ctxTemporary.lineWidth = this.general.lineWidth;
+          // this.clearTemporaryCanvas();
+          this.freeCurve.debounceDraw(ctxTemporary, false);
         }
       } else if (this.context) {
         this.context.globalCompositeOperation = "destination-out";
@@ -227,14 +227,14 @@ export class drawFreehand extends drawingHandler {
 
     if (this.finishedDrawing && this.freeCurve) {
       const mouseOnRectangle = this.freeCurve.mouseDown(
-        this.ctxTempory,
+        this.ctxTemporary,
         this.getCoordinates() as Coordinate
       );
       switch (mouseOnRectangle) {
         case BORDER.ON_BUTTON:
           // path has been validated
           this.freeCurve.draw(this.context as CanvasRenderingContext2D, false);
-          this.clearTemporyCanvas();
+          this.clearTemporaryCanvas();
           this.finishedDrawing = false;
           this.setDrawing(false);
           this.saveCanvasPicture(null);
@@ -269,9 +269,9 @@ export class drawFreehand extends drawingHandler {
     }
 
     if (this.getType() === DRAWING_MODES.DRAW) {
-      const ctx = this.ctxTempory;
+      const ctx = this.ctxTemporary;
       if (ctx === null) {
-        console.error("ctxTempory is null");
+        console.error("ctxTemporary is null");
         return { toExtend: false } as returnMouseDown;
       }
 
@@ -306,7 +306,7 @@ export class drawFreehand extends drawingHandler {
 
         this.clearMouseCanvas();
         this.freeCurve.debounceDraw(
-          this.ctxTempory as CanvasRenderingContext2D,
+          this.ctxTemporary as CanvasRenderingContext2D,
           true
         );
       }
@@ -319,7 +319,7 @@ export class drawFreehand extends drawingHandler {
     if (this.finishedDrawing) {
       return;
     }
-    this.clearTemporyCanvas();
+    this.clearTemporaryCanvas();
     this.clearMouseCanvas();
 
     if (this.isDrawing()) {
@@ -331,7 +331,7 @@ export class drawFreehand extends drawingHandler {
   actionAbort() {
     this.finishedDrawing = false;
     this.freeCurve.clearPoints();
-    this.clearTemporyCanvas();
+    this.clearTemporaryCanvas();
     this.clearMouseCanvas();
     this.setDrawing(false);
     this.setResizingBorder(null);
@@ -340,7 +340,7 @@ export class drawFreehand extends drawingHandler {
 
   endAction() {
     this.setDrawing(false);
-    this.clearTemporyCanvas();
+    this.clearTemporaryCanvas();
     this.clearMouseCanvas();
     this.setResizingBorder(null);
   }

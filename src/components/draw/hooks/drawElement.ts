@@ -31,11 +31,11 @@ export class drawElement extends drawingHandler {
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
-    temporyCanvas: HTMLCanvasElement | null,
+    temporaryCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void,
     storeName?: string | null
   ) {
-    super(canvas, canvasContext, temporyCanvas, setMode, storeName);
+    super(canvas, canvasContext, temporaryCanvas, setMode, storeName);
 
     this.typeHandler = DRAWING_MODES.SQUARE;
 
@@ -48,13 +48,13 @@ export class drawElement extends drawingHandler {
     this.shape.setType(type);
   }
 
-  newElement(type: string, data?: AllParams): void {
+  newElement(data: AllParams): void {
     const prevType = this.getType();
     if (!isDrawingShape(prevType)) {
       this.readyForNewDrawing();
     }
 
-    super.newElement(type, data);
+    super.newElement(data);
   }
 
   setScale(scale: number): void {
@@ -66,6 +66,7 @@ export class drawElement extends drawingHandler {
    * @param {AllParams} initData - initial data
    */
   initData(data: AllParams) {
+    const previousType = this.getType();
     super.initData(data);
 
     if (!this.context) return;
@@ -78,7 +79,9 @@ export class drawElement extends drawingHandler {
     this.shape.setWithAllButtons(true);
     this.lockRatio = data.lockRatio;
 
-    this.readyForNewDrawing();
+    if (!isDrawingShape(previousType)) {
+      this.readyForNewDrawing();
+    }
   }
 
   /**
@@ -141,7 +144,7 @@ export class drawElement extends drawingHandler {
     if (value) {
       // Check if the element is not outside the canvas boundaries
       const size = this.shape.getDataSize();
-      const canvas = this.ctxTempory?.canvas;
+      const canvas = this.ctxTemporary?.canvas;
 
       if (canvas && size) {
         // refuse to fix the element if it is outside the canvas
@@ -201,12 +204,12 @@ export class drawElement extends drawingHandler {
    * Function to resize the square on the canvas
    */
   resizingSquare(witchBorder: string): void {
-    // this.clearTemporyCanvas();
+    // this.clearTemporaryCanvas();
 
-    if (!this.coordinates || !this.ctxTempory) return;
+    if (!this.coordinates || !this.ctxTemporary) return;
 
     this.shape.resizingArea(
-      this.ctxTempory,
+      this.ctxTemporary,
       this.coordinates,
       this.lockRatio,
       witchBorder
@@ -224,7 +227,7 @@ export class drawElement extends drawingHandler {
     this.shape.draw(this.context, false);
     this.saveCanvasPicture();
     this.shape.setDataId(""); // erase the id for next drawing
-    this.clearTemporyCanvas();
+    this.clearTemporaryCanvas();
     if (withOffset) {
       // add 20px to the size to avoid the shape to be one on the other
       const size = this.shape.getDataSize();
@@ -280,16 +283,17 @@ export class drawElement extends drawingHandler {
     return cursorType; // Default
   }
   /**
-   * Function to refresh the element on the tempory canvas
+   * Function to refresh the element on the temporary canvas
    */
   refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
-    if (opacity > 0 && this.ctxTempory) this.ctxTempory.globalAlpha = opacity;
-    this.shape.debounceDraw(this.ctxTempory, true, mouseOnShape);
+    if (opacity > 0 && this.ctxTemporary)
+      this.ctxTemporary.globalAlpha = opacity;
+    this.shape.debounceDraw(this.ctxTemporary, true, mouseOnShape);
     this.lastMouseOnShape = mouseOnShape;
   }
 
   hightLightDrawing() {
-    this.shape.hightLightDrawing(this.ctxTempory as CanvasRenderingContext2D);
+    this.shape.hightLightDrawing(this.ctxTemporary as CanvasRenderingContext2D);
   }
 
   /**
@@ -299,7 +303,7 @@ export class drawElement extends drawingHandler {
   followCursorOnElement(opacity: number) {
     let cursorType = "default";
 
-    if (!this.ctxTempory || !this.coordinates) return cursorType;
+    if (!this.ctxTemporary || !this.coordinates) return cursorType;
 
     const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
 
@@ -308,14 +312,14 @@ export class drawElement extends drawingHandler {
 
       if (isInside(mouseOnShape)) {
         // show real color when mouse is inside the square
-        this.ctxTempory.globalAlpha = opacity;
+        this.ctxTemporary.globalAlpha = opacity;
       }
       if (this.shape.getRotation() !== 0 && isBorder(mouseOnShape)) {
         cursorType = this.turnCursor(cursorType);
       }
     }
     if (mouseOnShape !== this.lastMouseOnShape) {
-      this.shape.debounceDraw(this.ctxTempory, true, mouseOnShape);
+      this.shape.debounceDraw(this.ctxTemporary, true, mouseOnShape);
 
       this.lastMouseOnShape = mouseOnShape;
     }
@@ -400,7 +404,7 @@ export class drawElement extends drawingHandler {
       return null;
     }
     if (!this.isFixed()) {
-      this.shape.debounceDraw(this.ctxTempory, true, BORDER.INSIDE);
+      this.shape.debounceDraw(this.ctxTemporary, true, BORDER.INSIDE);
 
       if (type === DRAWING_MODES.SELECT) {
         this.memorizeSelectedArea();
@@ -415,7 +419,7 @@ export class drawElement extends drawingHandler {
     this.setFixed(true);
     this.setResizingBorder(null);
 
-    if (this.ctxTempory === null) return;
+    if (this.ctxTemporary === null) return;
 
     if (
       isInsideSquare(
@@ -424,8 +428,8 @@ export class drawElement extends drawingHandler {
         this.shape.getRotation()
       )
     ) {
-      this.ctxTempory.globalAlpha = this.shape.getOpacity();
-      this.shape.debounceDraw(this.ctxTempory, true, BORDER.INSIDE);
+      this.ctxTemporary.globalAlpha = this.shape.getOpacity();
+      this.shape.debounceDraw(this.ctxTemporary, true, BORDER.INSIDE);
     }
   }
   /**
@@ -450,7 +454,7 @@ export class drawElement extends drawingHandler {
       return;
     }
     this.setResizingBorder(null);
-    this.clearTemporyCanvas();
+    this.clearTemporaryCanvas();
 
     this.eraseOffset();
     this.setFixed(true);
@@ -464,8 +468,8 @@ export class drawElement extends drawingHandler {
     const size = this.shape.getDataSize();
 
     // if the shape has text, adjust the size of the shape to fit the text
-    if (this.shape.getWithText() && this.ctxTempory) {
-      if (this.shape.setSizeForText(this.ctxTempory)) {
+    if (this.shape.getWithText() && this.ctxTemporary) {
+      if (this.shape.setSizeForText(this.ctxTemporary)) {
         return;
       }
     }

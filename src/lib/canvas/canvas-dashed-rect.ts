@@ -112,6 +112,7 @@ export const drawDashedRedRectangle = (
   overage: number = 0
 ) => {
   if (!bounds || !ctx) return;
+  // console.log("Dashed Red Rectangle", bounds, rotation, globalAlpha);
   const alpha = ctx.globalAlpha;
   ctx.globalAlpha = globalAlpha;
 

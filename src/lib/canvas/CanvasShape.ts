@@ -28,6 +28,16 @@ import { scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 import { changeBlack } from "./canvas-change-black";
 
+const roundSize = (size: Area): Area => {
+  return {
+    x: Math.round(size.x),
+    y: Math.round(size.y),
+    width: Math.round(size.width),
+    height: Math.round(size.height),
+    ratio: size.ratio,
+  } as Area;
+};
+
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
   private previousTransparency: number = 0;
@@ -79,7 +89,7 @@ export class CanvasShape extends CanvasDrawableObject {
       id: d.id,
       type: d.type,
       rotation: Number(d.rotation.toFixed(4)),
-      size: { ...d.size },
+      size: { ...roundSize(d.size) },
       general: { ...d.general },
       shape: { ...d.shape },
     };

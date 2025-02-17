@@ -15,11 +15,8 @@ interface Position {
 
 const LINE_OVERLAP = 30;
 
-const withContainer = false;
-
 export const useGroundSelectionLogic = (
   groundRef: React.RefObject<HTMLDivElement>,
-  containerRef: React.RefObject<HTMLDivElement>,
   onSelectionStart: () => void,
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
   setSelectedRect: (rect: Rectangle | null) => void,
@@ -94,33 +91,10 @@ export const useGroundSelectionLogic = (
   const moveContainer = (
     rect: { top: number; left: number; width?: number; height?: number } | null
   ) => {
-    if (!containerRef.current && withContainer) {
-      showContainerRef.current = false;
-      return;
-    }
-
     if (!rect) {
       showContainerRef.current = false;
-      if (containerRef.current) {
-        containerRef.current.style.display = "none";
-      }
       containerRectRef.current = null;
       return;
-    }
-
-    if (withContainer && containerRef.current) {
-      const style = containerRef.current.style;
-
-      style.left = `${rect.left}px`;
-      style.top = `${rect.top}px`;
-      if (rect.width !== undefined) {
-        style.width = `${rect.width}px`;
-      }
-
-      if (rect.height !== undefined) {
-        style.height = `${rect.height}px`;
-      }
-      style.display = "block";
     }
 
     showContainerRef.current = true;
@@ -146,19 +120,14 @@ export const useGroundSelectionLogic = (
 
   const getContainerRect: () => Rectangle | null = () => {
     let rect = null;
-    if (withContainer) {
-      if (!containerRef.current) return null;
 
-      rect = containerRef.current.getBoundingClientRect();
-    } else {
-      const offset = getGroundOffset();
-      if (containerRectRef.current) {
-        rect = {
-          ...containerRectRef.current,
-          left: containerRectRef.current.left - offset.x,
-          top: containerRectRef.current.top - offset.y,
-        };
-      }
+    const offset = getGroundOffset();
+    if (containerRectRef.current) {
+      rect = {
+        ...containerRectRef.current,
+        left: containerRectRef.current.left - offset.x,
+        top: containerRectRef.current.top - offset.y,
+      };
     }
 
     if (!rect) {
@@ -224,13 +193,7 @@ export const useGroundSelectionLogic = (
       ) {
         //  console.log("clic inside the container");
 
-        if (withContainer && containerRef.current) {
-          // Clic inside the container start moving the container
-          areaOffsetRef.current = {
-            left: containerRef.current.offsetLeft - clientX,
-            top: containerRef.current.offsetTop - clientY,
-          };
-        } else if (containerRectRef.current && groundRef.current) {
+        if (containerRectRef.current && groundRef.current) {
           // clic outside the container start moving the ground
           // const offset = getGroundOffset();
           areaOffsetRef.current = {

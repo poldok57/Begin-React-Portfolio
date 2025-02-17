@@ -47,7 +47,6 @@ export const ListTablesPlan = React.memo(
       if (activeTable === id) {
         setActiveTable(null);
         updateTable(id, { selected: false });
-        return;
       } else {
         setActiveTable(id);
         updateTable(id, { selected: true });
@@ -102,7 +101,9 @@ export const ListTablesPlan = React.memo(
             top: `${top}px`,
           }}
           scale={scale}
-          onClick={(e) => handleClick?.(e, table.id)}
+          onClick={
+            mode !== Mode.draw ? (e) => handleClick?.(e, table.id) : undefined
+          }
           isActive={isActive}
           mode={mode}
           showButton={showButton}

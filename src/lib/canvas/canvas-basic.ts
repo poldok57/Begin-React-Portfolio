@@ -76,6 +76,7 @@ export const hightLightMouseCursor = (
   element: MouseCircle
 ) => {
   ctx.beginPath();
+  if (element.globalAlpha) ctx.globalAlpha = element.globalAlpha;
 
   if (element.filled) {
     ctx.fillStyle = element.color;

@@ -1,25 +1,29 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Mode } from "../types";
 
 import { getCanvasSize } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { useZustandDesignStore } from "@/lib/stores/design";
-import { cn } from "@/lib/utils/cn";
+// import { cn } from "@/lib/utils/cn";
 import { useCanvas } from "@/components/draw/hooks/useCanvas";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 
 interface CanvasProps {
   backgroundCanvasRef: React.RefObject<HTMLCanvasElement>;
-  temporaryCanvasRef: React.RefObject<HTMLCanvasElement>;
+  temporaryCanvasRef: {
+    current: HTMLCanvasElement | null;
+  };
   mode: Mode | null;
 }
+
+// const WITH_CANVAS = false;
 
 export const Canvas: React.FC<CanvasProps> = ({
   backgroundCanvasRef,
   temporaryCanvasRef,
   mode = Mode.create,
 }) => {
-  const mouseCanvasRef = useRef<HTMLCanvasElement>(null);
+  // const mouseCanvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState<{
     width: number;
     height: number;
@@ -44,14 +48,24 @@ export const Canvas: React.FC<CanvasProps> = ({
       store.getState());
   }
 
-  const { simpleRefreshCanvas } = useCanvas({
+  const { simpleRefreshCanvas, tempCanvas } = useCanvas({
     canvasRef: backgroundCanvasRef,
-    canvasTemporyRef: temporaryCanvasRef,
-    canvasMouseRef: mouseCanvasRef,
     storeName,
     scale,
     defaultMode: DRAWING_MODES.PAUSE,
   });
+
+  useEffect(() => {
+    if (tempCanvas) {
+      temporaryCanvasRef.current = tempCanvas;
+      setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
+      if (mode === Mode.numbering) {
+        tempCanvas.style.zIndex = "15";
+      } else {
+        tempCanvas.style.zIndex = "0";
+      }
+    }
+  }, [tempCanvas, mode]);
 
   useEffect(() => {
     simpleRefreshCanvas(false, scale);
@@ -85,16 +99,9 @@ export const Canvas: React.FC<CanvasProps> = ({
 
         // console.log("canvasSize", newSize);
 
-        [backgroundCanvasRef.current, temporaryCanvasRef.current].forEach(
-          (canvas) => {
-            canvas.width = newSize.width;
-            canvas.height = newSize.height;
-          }
-        );
-        if (mouseCanvasRef.current) {
-          mouseCanvasRef.current.width = newSize.width;
-          mouseCanvasRef.current.height = newSize.height;
-        }
+        backgroundCanvasRef.current.width = newSize.width;
+        backgroundCanvasRef.current.height = newSize.height;
+
         if (setSelectedDesignElement) {
           setSelectedDesignElement(null);
         }
@@ -102,7 +109,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     },
-    [backgroundCanvasRef.current, temporaryCanvasRef.current, scale]
+    [backgroundCanvasRef.current, scale]
   );
 
   useEffect(() => {
@@ -140,7 +147,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       // Clean up the timer
       return () => clearTimeout(timer);
     }
-  }, [backgroundCanvasRef.current, temporaryCanvasRef.current, scale]);
+  }, [backgroundCanvasRef.current, scale]);
 
   return (
     <>
@@ -158,32 +165,6 @@ export const Canvas: React.FC<CanvasProps> = ({
         ref={backgroundCanvasRef}
         id="background-canvas"
         className="overflow-visible absolute top-0 left-0 min-w-full min-h-full border-r border-b border-gray-500 border-dashed pointer-events-none"
-      />
-      <canvas
-        ref={mouseCanvasRef}
-        id="mouse-canvas"
-        className={cn(
-          "overflow-visible absolute top-0 left-0 z-10 min-w-full min-h-full pointer-events-none",
-          {
-            hidden: mode !== Mode.draw,
-          }
-        )}
-      />
-      <canvas
-        ref={temporaryCanvasRef}
-        id="temporary-canvas"
-        className={cn(
-          "overflow-visible absolute top-0 left-0 min-w-full min-h-full",
-          {
-            // "z-[15]": mode === Mode.numbering,
-            "z-20": mode === Mode.draw || mode === Mode.numbering,
-            "pointer-events-auto": mode === Mode.numbering,
-            "pointer-events-none": mode !== Mode.draw,
-          }
-        )}
-        style={{
-          pointerEvents: mode === Mode.numbering ? "none" : undefined,
-        }}
       />
     </>
   );

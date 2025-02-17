@@ -30,30 +30,39 @@ const TEMPORTY_OPACITY = 0.6;
 
 interface DrawCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  canvasTemporyRef: React.RefObject<HTMLCanvasElement>;
-  canvasMouseRef: React.RefObject<HTMLCanvasElement>;
   storeName?: string | null;
   scale: number;
   defaultMode?: string;
 }
 
 // Draw on Canvas
+/**
+ * Custom hook for managing canvas drawing functionality
+ * @param {DrawCanvasProps} props - Canvas properties including:
+ *   - canvasRef: Reference to the main canvas element
+ *   - storeName: Optional name for the store
+ *   - scale: Scale factor for drawing
+ *   - defaultMode: Default drawing mode (defaults to DRAW)
+ * @returns {Object} Canvas state including:
+ *   - tempCanvas: Temporary canvas for in-progress drawing
+ *   - mouseCanvas: Canvas for mouse interactions
+ *   - simpleRefreshCanvas: Function to refresh canvas
+ */
 export const useCanvas = ({
   canvasRef,
-  canvasTemporyRef,
-  canvasMouseRef,
   storeName = null,
   scale,
   defaultMode = DRAWING_MODES.DRAW,
 }: DrawCanvasProps) => {
-  useRef(undefined);
+  const tempCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mouseCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseOnCtrlPanel = useRef(false);
 
   const { mode, setDrawingMode, needRefresh, getDrawingParams } =
     useDrawingContext();
 
   let currentParams = getDrawingParams();
-  // drawing handler
+  // Drawing handler references
   const drawingRef = useRef<drawingHandler | null>(null);
   const lineRef = useRef<drawLine | null>(null);
   const findRef = useRef<drawFindElement | null>(null);
@@ -62,6 +71,7 @@ export const useCanvas = ({
   const justReload = useRef(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const scaleRef = useRef(scale);
+  const lastModeRef = useRef(currentParams.mode);
 
   let deleteLastDesignElement = null;
   let refreshCanvas = null;
@@ -83,8 +93,63 @@ export const useCanvas = ({
   useEffect(() => {
     scaleRef.current = scale;
   }, [scale]);
+
+  // Create working canvases
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const container = canvasRef.current.parentElement;
+
+    // Get main canvas z-index
+    const mainCanvasZIndex = window.getComputedStyle(canvasRef.current).zIndex;
+    const baseZIndex =
+      mainCanvasZIndex === "auto" ? 0 : parseInt(mainCanvasZIndex);
+
+    // Create temporary canvas
+    const newTempCanvas = document.createElement("canvas");
+    newTempCanvas.style.position = "absolute";
+    newTempCanvas.style.left = "0";
+    newTempCanvas.style.top = "0";
+    newTempCanvas.style.zIndex = baseZIndex.toString();
+    newTempCanvas.className = "m-auto transparent";
+    container?.appendChild(newTempCanvas);
+    tempCanvasRef.current = newTempCanvas;
+
+    // Create mouse canvas
+    const newMouseCanvas = document.createElement("canvas");
+    newMouseCanvas.style.position = "absolute";
+    newMouseCanvas.style.left = "0";
+    newMouseCanvas.style.top = "0";
+    newMouseCanvas.style.zIndex = baseZIndex.toString();
+    newMouseCanvas.className = "m-auto transparent";
+    // Disable pointer events for mouse canvas
+    newMouseCanvas.style.pointerEvents = "none";
+    container?.appendChild(newMouseCanvas);
+    // setMouseCanvas(newMouseCanvas);
+    mouseCanvasRef.current = newMouseCanvas;
+
+    // Observe resizing
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        newTempCanvas.width = width;
+        newTempCanvas.height = height;
+        newMouseCanvas.width = width;
+        newMouseCanvas.height = height;
+      }
+    });
+
+    resizeObserver.observe(canvasRef.current);
+
+    return () => {
+      console.log("Canvas remove");
+      resizeObserver.disconnect();
+      newTempCanvas.remove();
+      newMouseCanvas.remove();
+    };
+  }, [canvasRef.current]);
+
   /**
-   * Function to get the last picture in the history for undo action
+   * Get the last picture in history for undo action
    */
   const previousPicture = (ctx: CanvasRenderingContext2D | null) => {
     if (ctx === null) {
@@ -111,7 +176,7 @@ export const useCanvas = ({
     ctx.globalAlpha = opacity ?? 1;
   };
   /**
-   * Function to set the context of the canvas
+   * Set the context of the canvas
    * @param {HTMLCanvasElement} canvas
    * @param {number} opacity
    */
@@ -133,11 +198,11 @@ export const useCanvas = ({
   };
 
   /**
-   * Function to clear the temporary canvas
+   * Clear the temporary canvas
    */
-  const clearTemporyCanvas = () => {
-    if (!canvasTemporyRef.current) return;
-    const ctx = canvasTemporyRef.current.getContext("2d");
+  const clearTemporaryCanvas = () => {
+    if (!tempCanvasRef.current) return;
+    const ctx = tempCanvasRef.current.getContext("2d");
 
     if (!ctx) return;
     clearCanvasByCtx(ctx);
@@ -150,9 +215,9 @@ export const useCanvas = ({
     withSelected: boolean = true,
     lScale: number = scale
   ) => {
-    clearTemporyCanvas();
-    if (canvasMouseRef.current) {
-      clearCanvas(canvasMouseRef.current);
+    clearTemporaryCanvas();
+    if (mouseCanvasRef.current) {
+      clearCanvas(mouseCanvasRef.current);
     }
     if (contextRef.current && refreshCanvas) {
       setContextConstants(contextRef.current);
@@ -161,7 +226,7 @@ export const useCanvas = ({
   };
 
   /**
-   * Function to get the coordinates of the mouse in the canvas
+   * Get the coordinates of the mouse in the canvas
    * @param {MouseEvent | TouchEvent} event
    * @param {number} scale
    * @returns {Coordinate} the coordinates of the mouse in the canvas
@@ -169,7 +234,7 @@ export const useCanvas = ({
   const getScaledCoordinatesInCanvas = (
     event: MouseEvent | TouchEvent
   ): Coordinate => {
-    if (canvasTemporyRef.current === null) return { x: 0, y: 0 };
+    if (tempCanvasRef.current === null) return { x: 0, y: 0 };
     const mode = currentParams.mode;
     // console.log("mode", mode);
     const lScale =
@@ -177,10 +242,10 @@ export const useCanvas = ({
         ? 1
         : scaleRef.current;
 
-    return getCoordinatesInCanvas(event, canvasTemporyRef.current, lScale);
+    return getCoordinatesInCanvas(event, tempCanvasRef.current, lScale);
   };
   /**
-   * select the drawing handler according to the mode
+   * Select the drawing handler according to the mode
    * @param {string} mode
    * @returns {DrawingHandler} the drawing handler
    */
@@ -196,7 +261,7 @@ export const useCanvas = ({
         lineRef.current = new drawLine(
           canvasRef.current,
           contextRef.current,
-          canvasTemporyRef.current,
+          tempCanvasRef.current,
           setDrawingMode,
           storeName
         );
@@ -207,7 +272,7 @@ export const useCanvas = ({
       drawingRef.current = new drawFreehand(
         canvasRef.current,
         contextRef.current,
-        canvasTemporyRef.current,
+        tempCanvasRef.current,
         setDrawingMode,
         storeName
       );
@@ -218,7 +283,7 @@ export const useCanvas = ({
         elementRef.current = new drawElement(
           canvasRef.current,
           contextRef.current,
-          canvasTemporyRef.current,
+          tempCanvasRef.current,
           setDrawingMode,
           storeName
         );
@@ -231,7 +296,7 @@ export const useCanvas = ({
         selectionRef.current = new drawSelection(
           canvasRef.current,
           contextRef.current,
-          canvasTemporyRef.current,
+          tempCanvasRef.current,
           setDrawingMode,
           storeName
         );
@@ -244,21 +309,21 @@ export const useCanvas = ({
         findRef.current = new drawFindElement(
           canvasRef.current,
           contextRef.current,
-          canvasTemporyRef.current,
+          tempCanvasRef.current,
           setDrawingMode,
           storeName
         );
+        newHandler = true;
       }
       drawingHdl = findRef.current;
     }
 
+    currentParams = getDrawingParams();
     if (newHandler && drawingHdl) {
-      currentParams = getDrawingParams();
-      // console.log("initData ->", currentParams);
+      drawingHdl.setMouseCanvas(mouseCanvasRef.current);
       drawingHdl.initData(currentParams);
-      drawingHdl.setMouseCanvas(canvasMouseRef.current);
     } else {
-      drawingHdl.newElement(mode, currentParams);
+      drawingHdl.newElement(currentParams);
     }
 
     drawingHdl.setScale(scaleRef.current);
@@ -292,11 +357,8 @@ export const useCanvas = ({
   };
 
   const handleMouseUpExtend = (event: MouseEvent) => {
-    // the event is inside the canvas, let event on the canvas to be handled
-    if (
-      !canvasTemporyRef.current ||
-      canvasTemporyRef.current.contains(event.target as Node)
-    ) {
+    if (!tempCanvasRef.current || !(event.target instanceof Node)) return;
+    if (tempCanvasRef.current.contains(event.target)) {
       return;
     }
     drawingRef.current?.actionMouseUp();
@@ -308,9 +370,13 @@ export const useCanvas = ({
    * @returns void
    */
   const handleMouseDownExtend = (event: MouseEvent) => {
-    if (!drawingRef.current || !canvasTemporyRef.current) return;
-    // the event is inside the canvas, let event on the canvas to be handled
-    if (canvasTemporyRef.current.contains(event.target as Node)) {
+    if (
+      !drawingRef.current ||
+      !tempCanvasRef.current ||
+      !(event.target instanceof Node)
+    )
+      return;
+    if (tempCanvasRef.current.contains(event.target)) {
       return;
     }
     // draw line can be extended outside the canvas
@@ -321,7 +387,7 @@ export const useCanvas = ({
 
     const coord = getCoordinatesInCanvas(
       event,
-      canvasTemporyRef.current,
+      tempCanvasRef.current,
       scaleRef.current
     );
 
@@ -332,16 +398,13 @@ export const useCanvas = ({
   };
 
   const handleMouseMoveExtend = (event: MouseEvent | TouchEvent) => {
-    // the event is inside the canvas, let event on the canvas to be handled
-    if (
-      !canvasTemporyRef.current ||
-      canvasTemporyRef.current.contains(event.target as Node)
-    ) {
+    if (!tempCanvasRef.current || !(event.target instanceof Node)) return;
+    if (tempCanvasRef.current.contains(event.target)) {
       return;
     }
     const coord = getCoordinatesInCanvas(
       event,
-      canvasTemporyRef.current,
+      tempCanvasRef.current,
       scaleRef.current
     );
     drawingRef.current?.actionMouseMove(event, coord);
@@ -366,8 +429,8 @@ export const useCanvas = ({
     document.removeEventListener("mouseup", handleMouseUpExtend);
   };
   /**
-   * Function to get the current parameters for drawing
-   * call then user change something in the drawing panel
+   * Get the current parameters for drawing
+   * Called when user changes something in the drawing panel
    */
   const drawingParamChanged = () => {
     currentParams = getDrawingParams();
@@ -391,7 +454,7 @@ export const useCanvas = ({
   };
 
   /**
-   * Function to change the drawing mode
+   * Change the drawing mode
    * @param {string} newMode - new drawing mode
    */
   const actionChangeMode = (newMode: string) => {
@@ -401,6 +464,18 @@ export const useCanvas = ({
       generalInitialisation();
       return;
     }
+
+    // Handle mouse events for PAUSE mode
+    if (tempCanvasRef.current) {
+      if (newMode === DRAWING_MODES.PAUSE) {
+        // Disable mouse events when paused
+        tempCanvasRef.current.style.pointerEvents = "none";
+      } else if (lastModeRef.current === DRAWING_MODES.PAUSE) {
+        // Re-enable mouse events when leaving pause mode
+        tempCanvasRef.current.style.pointerEvents = "auto";
+      }
+    }
+    lastModeRef.current = newMode;
 
     if (justReload.current) {
       justReload.current = false;
@@ -426,31 +501,23 @@ export const useCanvas = ({
     }
     stopExtendMouseEvent();
 
-    // set the tempory canvas
-    if (canvasTemporyRef.current) {
-      setContext(
-        canvasTemporyRef.current as HTMLCanvasElement,
-        null,
-        TEMPORTY_OPACITY
-      );
+    // set the temporary canvas
+    if (tempCanvasRef.current) {
+      setContext(tempCanvasRef.current, null, TEMPORTY_OPACITY);
       // set the mouse canvas
-      if (canvasMouseRef.current) {
+      if (mouseCanvasRef.current) {
         setContext(
-          canvasMouseRef.current as HTMLCanvasElement,
+          mouseCanvasRef.current,
           null,
           scaleRef.current,
           TEMPORTY_OPACITY
         );
       }
     }
-    // console.log("newMode", newMode, reload ? "reload" : "no reload");
-
     // set the new drawing mode
     drawingRef.current = selectDrawingHandler(newMode);
 
     if (reload && selectedDesignElement) {
-      // reload draw from history
-      // console.log("reload draw from history", selectedDesignElement);
       drawingRef.current.setDraw(selectedDesignElement);
       setTimeout(
         () => {
@@ -486,16 +553,16 @@ export const useCanvas = ({
   };
 
   /**
-   * Function to get the nearest position to the mouse inside the canvas
+   * Get the nearest position to the mouse inside the canvas
    * @param {Coordinate} position - position of the mouse
    * @returns {Coordinate} - nearest position
    */
   const nearestPosition = (position?: Coordinate) => {
-    if (!position || !canvasTemporyRef.current) {
+    if (!position || !tempCanvasRef.current) {
       return null;
     }
     // Check if position is inside canvas and adjust if needed
-    const canvas = canvasTemporyRef.current;
+    const canvas = tempCanvasRef.current;
     const bounds = canvas.getBoundingClientRect();
     const margin = 5;
 
@@ -532,7 +599,7 @@ export const useCanvas = ({
         drawingRef.current?.actionAbort();
         generalInitialisation();
         clearCanvasByCtx(contextRef.current);
-        clearTemporyCanvas();
+        clearTemporaryCanvas();
         break;
       case DRAWING_MODES.REFRESH:
         simpleRefreshCanvas(false, scaleRef.current);
@@ -547,7 +614,7 @@ export const useCanvas = ({
         mouseOnCtrlPanel.current = false;
         break;
       case DRAWING_MODES.UNDO:
-        clearTemporyCanvas();
+        clearTemporaryCanvas();
         previousPicture(contextRef.current);
         break;
       case DRAWING_MODES.ABORT:
@@ -648,8 +715,9 @@ export const useCanvas = ({
   };
 
   /**
-   * Function to start drawing on the canvas
-   * @param {Event} event
+   * Start drawing on the canvas
+   * @param {Event} event - Mouse or touch event
+   * @param {boolean} touchDevice - Whether event is from touch device
    */
   const actionMouseDown = (
     event: MouseEvent | TouchEvent,
@@ -711,24 +779,25 @@ export const useCanvas = ({
       setDrawingMode(mouseResult.changeMode);
       needRefresh();
     }
-    if (mouseResult?.pointer && canvasTemporyRef.current) {
-      canvasTemporyRef.current.style.cursor = mouseResult.pointer;
+    if (mouseResult?.pointer && tempCanvasRef.current) {
+      tempCanvasRef.current.style.cursor = mouseResult.pointer;
     }
   };
 
   /**
-   * erase canavasOver (temporary canvas) when mouse leave the canvas
+   * Erase temporary canvas when mouse leaves the canvas
    */
   const onMouseLeave = () => {
     drawingRef.current && drawingRef.current.actionMouseLeave();
   };
 
   useEffect(() => {
-    const canvasMouse = canvasTemporyRef.current;
-    if (!canvasMouse) {
+    const canvasWithEvent = tempCanvasRef.current;
+    if (!canvasWithEvent) {
       return;
     }
-    setContext(canvasMouse, null, scaleRef.current);
+
+    setContext(canvasWithEvent, null, scaleRef.current);
 
     const handleMouseUp = () => {
       drawingRef.current?.actionMouseUp();
@@ -739,13 +808,13 @@ export const useCanvas = ({
 
     const handleMouseMove = (event: MouseEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
-      if (!canvasTemporyRef.current || !drawingRef.current) return;
+      if (!tempCanvasRef.current || !drawingRef.current) return;
 
       const coord = getScaledCoordinatesInCanvas(event);
       const pointer = drawingRef.current?.actionMouseMove(event, coord);
 
       if (pointer) {
-        canvasMouse.style.cursor = pointer;
+        canvasWithEvent.style.cursor = pointer;
       }
     };
 
@@ -777,7 +846,7 @@ export const useCanvas = ({
 
     const handleTouchStart = (event: TouchEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
-      if (mouseIsInsideComponent(event, canvasTemporyRef.current)) {
+      if (mouseIsInsideComponent(event, tempCanvasRef.current)) {
         event.preventDefault();
       }
 
@@ -786,14 +855,14 @@ export const useCanvas = ({
 
     const handleTouchMove = (event: TouchEvent) => {
       if (mouseOnCtrlPanel.current === true) return;
-      if (!canvasTemporyRef.current) return;
+      if (!tempCanvasRef.current) return;
 
-      if (mouseIsInsideComponent(event, canvasTemporyRef.current)) {
+      if (mouseIsInsideComponent(event, tempCanvasRef.current)) {
         event.preventDefault();
       }
       const coord = getCoordinatesInCanvas(
         event,
-        canvasTemporyRef.current,
+        tempCanvasRef.current,
         scaleRef.current
       );
 
@@ -823,40 +892,45 @@ export const useCanvas = ({
       };
     })();
 
-    canvasMouse.style.pointerEvents = "auto";
+    // Enable pointer events when not in PAUSE mode
+    if (currentParams.mode === DRAWING_MODES.PAUSE) {
+      canvasWithEvent.style.pointerEvents = "none";
+    } else {
+      canvasWithEvent.style.pointerEvents = "auto";
+    }
 
-    canvasMouse.addEventListener("mousedown", handleMouseDown);
-    canvasMouse.addEventListener("mousemove", handleMouseMove);
-    canvasMouse.addEventListener("mouseup", handleMouseUp);
-    canvasMouse.addEventListener("mouseleave", onMouseLeave);
-    canvasMouse.addEventListener("dblclick", handleMouseDblClick);
+    canvasWithEvent.addEventListener("mousedown", handleMouseDown);
+    canvasWithEvent.addEventListener("mousemove", handleMouseMove);
+    canvasWithEvent.addEventListener("mouseup", handleMouseUp);
+    canvasWithEvent.addEventListener("mouseleave", onMouseLeave);
+    canvasWithEvent.addEventListener("dblclick", handleMouseDblClick);
     document.addEventListener("modeChanged", handleChangeMode);
 
-    canvasMouse.addEventListener("touchstart", handleTouchStart);
-    canvasMouse.addEventListener("touchmove", handleTouchMove);
-    canvasMouse.addEventListener("touchend", handleTouchEnd);
-    canvasMouse.addEventListener("touchcancel", handleTouchEnd);
-    canvasMouse.addEventListener("touchstart", handleDoubleTap);
+    canvasWithEvent.addEventListener("touchstart", handleTouchStart);
+    canvasWithEvent.addEventListener("touchmove", handleTouchMove);
+    canvasWithEvent.addEventListener("touchend", handleTouchEnd);
+    canvasWithEvent.addEventListener("touchcancel", handleTouchEnd);
+    canvasWithEvent.addEventListener("touchstart", handleDoubleTap);
 
     return () => {
       // mouse controls can be applied to the document
-      canvasMouse.removeEventListener("mousedown", handleMouseDown);
+      canvasWithEvent.removeEventListener("mousedown", handleMouseDown);
       document.removeEventListener("mousedown", handleMouseDown);
-      canvasMouse.removeEventListener("mousemove", handleMouseMove);
+      canvasWithEvent.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mousemove", handleMouseMove);
-      canvasMouse.removeEventListener("mouseup", handleMouseUp);
+      canvasWithEvent.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("mouseup", handleMouseUp);
-      canvasMouse.removeEventListener("mouseleave", onMouseLeave);
-      canvasMouse.removeEventListener("dblclick", handleMouseDblClick);
+      canvasWithEvent.removeEventListener("mouseleave", onMouseLeave);
+      canvasWithEvent.removeEventListener("dblclick", handleMouseDblClick);
       document.removeEventListener("modeChanged", handleChangeMode);
 
-      canvasMouse.removeEventListener("touchstart", handleTouchStart);
-      canvasMouse.removeEventListener("touchmove", handleTouchMove);
-      canvasMouse.removeEventListener("touchend", handleTouchEnd);
-      canvasMouse.removeEventListener("touchcancel", handleTouchEnd);
-      canvasMouse.removeEventListener("touchstart", handleDoubleTap);
+      canvasWithEvent.removeEventListener("touchstart", handleTouchStart);
+      canvasWithEvent.removeEventListener("touchmove", handleTouchMove);
+      canvasWithEvent.removeEventListener("touchend", handleTouchEnd);
+      canvasWithEvent.removeEventListener("touchcancel", handleTouchEnd);
+      canvasWithEvent.removeEventListener("touchstart", handleDoubleTap);
     };
-  }, [canvasTemporyRef.current]);
+  }, [tempCanvasRef.current]);
 
   useEffect(() => {
     actionChangeMode(mode);
@@ -867,11 +941,14 @@ export const useCanvas = ({
     if (drawingRef.current) {
       drawingRef.current.setScale(lScale);
     }
-    setContext(canvasMouseRef.current, null, lScale);
-    setContext(canvasTemporyRef.current, null, lScale);
+    setContext(mouseCanvasRef.current, null, lScale);
+    setContext(tempCanvasRef.current, null, lScale);
   }, [scaleRef.current]);
 
   return {
+    tempCanvas: tempCanvasRef.current,
+    mouseCanvas: mouseCanvasRef.current,
     simpleRefreshCanvas,
+    clearTemporaryCanvas,
   };
 };

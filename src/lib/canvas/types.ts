@@ -51,6 +51,7 @@ export interface MouseCircle {
   width: number;
   filled: boolean;
   lineWidth: number;
+  globalAlpha?: number | null;
 }
 
 export enum LineType {

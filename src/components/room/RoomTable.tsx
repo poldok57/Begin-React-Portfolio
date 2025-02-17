@@ -105,10 +105,12 @@ export const RoomTable: React.FC<RoomTableProps> = ({
     <div
       id={id}
       ref={ref}
-      className={cn("py-6 px-2 m-0 border-2 rounded-full cursor-pointer z-10", {
-        "border-dotted border-red-500 bg-gray-200/25": table.selected,
+      className={cn("py-6 px-2 m-0 border-2 rounded-full", {
+        "border-dotted border-red-500 bg-gray-200/25":
+          table.selected && mode !== Mode.draw,
         "bg-orange-300 opacity-65": table.selected && mode === Mode.numbering,
         "border-transparent": !table.selected,
+        "z-10 cursor-pointer": onClick !== undefined,
       })}
       style={style}
     >

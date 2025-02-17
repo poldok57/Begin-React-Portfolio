@@ -5,15 +5,19 @@ import {
   DRAWING_MODES,
   AllParams,
   ThingsToDraw,
+  mouseCircle,
 } from "../../../lib/canvas/canvas-defines";
 import { showAllDashedRectangles } from "@/lib/canvas/showDrawElement";
 import { isInsideSquare } from "@/lib/square-position";
+import { debounceThrottle } from "@/lib/utils/debounce";
+import { hightLightMouseCursor } from "@/lib/canvas/canvas-basic";
+import { scaledCoordinate } from "@/lib/utils/scaledSize";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
 export class drawFindElement extends drawingHandler {
-  private nbFound = 0;
+  protected nbFound: number;
   private designElements: ThingsToDraw[];
   private setSelectedDesignElement: (elementId: string) => void;
   private refreshCanvas: (
@@ -25,13 +29,13 @@ export class drawFindElement extends drawingHandler {
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
-    temporyCanvas: HTMLCanvasElement | null,
+    temporaryCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void,
     localStorageName?: string | null
   ) {
-    super(canvas, canvasContext, temporyCanvas, setMode, localStorageName);
+    super(canvas, canvasContext, temporaryCanvas, setMode, localStorageName);
     this.extendedMouseArea = false;
-
+    this.nbFound = 0;
     this.typeHandler = DRAWING_MODES.FIND;
 
     this.setSelectedDesignElement =
@@ -40,8 +44,6 @@ export class drawFindElement extends drawingHandler {
 
     this.designElements = this.designStore.getState().designElements;
   }
-
-  initData(_data: AllParams): void {}
 
   setType(type: string) {
     this.type = type;
@@ -61,11 +63,33 @@ export class drawFindElement extends drawingHandler {
   }
 
   refreshDrawing() {
-    this.clearTemporyCanvas();
+    this.clearTemporaryCanvas();
     this.refreshCanvas(this.context, true, this.scale);
   }
 
   hightLightDrawing() {}
+
+  showAllDashedRectangles = (
+    ctx: CanvasRenderingContext2D,
+    elements: ThingsToDraw[],
+    coord: Coordinate,
+    scale: number
+  ): void => {
+    this.nbFound = showAllDashedRectangles(ctx, elements, coord, scale);
+  };
+
+  debounceShowAllDashedRectangles = debounceThrottle(
+    (
+      ctx: CanvasRenderingContext2D,
+      elements: ThingsToDraw[],
+      coord: Coordinate,
+      scale: number
+    ) => {
+      this.showAllDashedRectangles(ctx, elements, coord, scale);
+    },
+    100,
+    200
+  );
 
   /**
    * Function who recieve the mouse move event
@@ -75,15 +99,23 @@ export class drawFindElement extends drawingHandler {
     coord: Coordinate
   ): string | null {
     if (this.getType() !== DRAWING_MODES.FIND) {
+      console.log("actionMouseMove type", this.getType());
       return null;
     }
 
-    if (!this.ctxTempory) return null;
+    if (!this.ctxTemporary) {
+      console.log("actionMouseMove No ctxTemporary");
+      return null;
+    }
 
     let cursor = "default";
 
-    const nb = showAllDashedRectangles(
-      this.ctxTempory,
+    // if (this.nbFound > 0) {
+    //   console.log("actionMouseMove", this.getType(), "nbFound", this.nbFound);
+    // }
+
+    this.debounceShowAllDashedRectangles(
+      this.ctxTemporary,
       this.designElements,
       {
         x: coord.x,
@@ -91,12 +123,22 @@ export class drawFindElement extends drawingHandler {
       },
       this.scale
     );
+    if (this.ctxMouse) {
+      this.clearMouseCanvas();
+      const mouseCoord = scaledCoordinate(coord, this.scale);
+      if (!mouseCoord) return null;
+      hightLightMouseCursor(this.ctxMouse, mouseCoord, {
+        ...mouseCircle,
+        color: "#aaaaff60",
+      });
 
-    if (nb !== this.nbFound) {
-      this.nbFound = nb;
-      if (nb > 0) {
-        cursor = "pointer";
-      }
+      // this.blueCircle(this.ctxMouse, coord, this.scale);
+    } else {
+      console.log("actionMouseMove No ctxMouse");
+    }
+
+    if (this.nbFound > 0) {
+      cursor = "pointer";
     }
     return cursor;
   }
@@ -147,13 +189,13 @@ export class drawFindElement extends drawingHandler {
 
   actionMouseLeave() {
     if (this.getType() === DRAWING_MODES.FIND) {
-      this.clearTemporyCanvas();
+      this.clearTemporaryCanvas();
     }
   }
 
   endAction() {
     if (this.getType() === DRAWING_MODES.FIND) {
-      this.clearTemporyCanvas();
+      this.clearTemporaryCanvas();
     }
   }
 }

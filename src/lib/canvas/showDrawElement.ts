@@ -66,6 +66,11 @@ export const showAllDashedRectangles = (
       // scale the size of the element
       const size = scaledSize(element.size, scale);
 
+      // console.log(
+      //   "drawDashedRectangle canvas size",
+      //   ctx.canvas.width,
+      //   ctx.canvas.height
+      // );
       drawDashedRectangle(ctx, size, first ? 0.5 : opacity, element.rotation);
       if (first) {
         let lg = 0;

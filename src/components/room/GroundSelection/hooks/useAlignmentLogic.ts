@@ -26,7 +26,7 @@ interface AlignmentLogic {
     vertical: AxisGroup[];
     horizontal: AxisGroup[];
   }>;
-  findElementsInContainer: (container: HTMLDivElement | null) => void;
+  findElementsInContainer: () => void;
   findAlignments: (mode: string | null) => {
     vertical: number;
     horizontal: number;
@@ -63,47 +63,43 @@ export const useAlignmentLogic = (
 
   const elementsInContainer = useRef<HTMLDivElement[]>([]);
 
-  const findElementsInContainer = useCallback(
-    (container: HTMLDivElement | null) => {
-      if (!groundRef.current) return;
-      // const containerRect = container.getBoundingClientRect();
-      const containerRect = getContainerRect();
-      if (!containerRect) return null;
+  const findElementsInContainer = useCallback(() => {
+    if (!groundRef.current) return;
+    // const containerRect = container.getBoundingClientRect();
+    const containerRect = getContainerRect();
+    if (!containerRect) return null;
 
-      // console.log("containerRect", containerRect);
+    // console.log("containerRect", containerRect);
 
-      const children = Array.from(groundRef.current.children);
+    const children = Array.from(groundRef.current.children);
 
-      const isInContainer = (rect: DOMRect) => {
-        const right =
-          containerRect.right ?? containerRect.left + containerRect.width;
-        const bottom =
-          containerRect.bottom ?? containerRect.top + containerRect.height;
-        const limitWidth = rect.width / 2 - MARGIN;
-        const limitHeight = rect.height / 2 - MARGIN;
+    const isInContainer = (rect: DOMRect) => {
+      const right =
+        containerRect.right ?? containerRect.left + containerRect.width;
+      const bottom =
+        containerRect.bottom ?? containerRect.top + containerRect.height;
+      const limitWidth = rect.width / 2 - MARGIN;
+      const limitHeight = rect.height / 2 - MARGIN;
 
-        // console.log("limits", limitWidth, limitHeight);
+      // console.log("limits", limitWidth, limitHeight);
 
-        return (
-          rect.left + limitWidth >= containerRect.left &&
-          rect.right - limitWidth <= right &&
-          rect.top + limitHeight >= containerRect.top &&
-          rect.bottom - limitHeight <= bottom
-        );
-      };
-
-      elementsInContainer.current = children.filter(
-        (child): child is HTMLDivElement => {
-          return (
-            child instanceof HTMLDivElement &&
-            child !== container &&
-            isInContainer(child.getBoundingClientRect())
-          );
-        }
+      return (
+        rect.left + limitWidth >= containerRect.left &&
+        rect.right - limitWidth <= right &&
+        rect.top + limitHeight >= containerRect.top &&
+        rect.bottom - limitHeight <= bottom
       );
-    },
-    [getContainerRect]
-  );
+    };
+
+    elementsInContainer.current = children.filter(
+      (child): child is HTMLDivElement => {
+        return (
+          child instanceof HTMLDivElement &&
+          isInContainer(child.getBoundingClientRect())
+        );
+      }
+    );
+  }, [getContainerRect]);
 
   const findAlignments = (
     mode: string | null = Mode.create

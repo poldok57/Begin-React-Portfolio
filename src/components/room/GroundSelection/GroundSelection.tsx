@@ -60,7 +60,6 @@ export const GroundSelection = React.forwardRef<
     } = useRoomContext();
 
     const groundRef = useRef<HTMLDivElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
     const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
     const temporaryCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -100,7 +99,7 @@ export const GroundSelection = React.forwardRef<
         return;
       }
 
-      findElementsInContainer(containerRef.current);
+      findElementsInContainer();
       numberOfAlignmentsRef.current = findAlignments(getMode());
       if (!numberOfAlignmentsRef.current) {
         setShowAlignmentLines(false);
@@ -127,7 +126,6 @@ export const GroundSelection = React.forwardRef<
       refreshContainer,
     } = useGroundSelectionLogic(
       groundRef,
-      containerRef,
       onSelectionStart,
       changeCoordinates,
       setSelectedRect,
@@ -206,9 +204,6 @@ export const GroundSelection = React.forwardRef<
           // console.log("cursor", cursor);
           temporaryCanvasRef.current.style.cursor = cursor;
           groundRef.current.style.cursor = cursor;
-          if (containerRef.current) {
-            containerRef.current.style.cursor = cursor;
-          }
         }
         // Only call handleMove if a mouse button is pressed
         if (inOverlap || e.buttons > 0) {
@@ -404,10 +399,6 @@ export const GroundSelection = React.forwardRef<
 
               {getMode() !== Mode.draw && (
                 <>
-                  {/* <SelectionContainer
-                    containerRef={containerRef}
-                    rotation={rotation}
-                  /> */}
                   {showAlignmentLines && rotation === 0 && (
                     <AlignmentButtons
                       offset={getGroundOffset()}

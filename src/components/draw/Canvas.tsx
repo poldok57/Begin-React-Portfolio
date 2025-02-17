@@ -19,8 +19,6 @@ export const Canvas: React.FC<CanvasProps> = ({
   storeName = null,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const canvasTemporyRef = useRef<HTMLCanvasElement>(null);
-  const canvasMouseRef = useRef<HTMLCanvasElement>(null);
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -45,20 +43,18 @@ export const Canvas: React.FC<CanvasProps> = ({
   const [background, setBackground] = useState(backgroundColor);
   const [refresh, setRefresh] = useState(0);
 
+  const { simpleRefreshCanvas } = useCanvas({
+    canvasRef,
+    storeName,
+    scale,
+  });
+
   const onCloseColorPicker = () => {
     setShowColorPicker(false);
     if (setBackgroundColor) {
       setBackgroundColor(background);
     }
   };
-
-  const { simpleRefreshCanvas } = useCanvas({
-    canvasRef,
-    canvasTemporyRef,
-    canvasMouseRef,
-    storeName,
-    scale,
-  });
 
   const changeScale = (scale: number) => {
     if (setScale) {
@@ -133,36 +129,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             width={width}
             height={height}
             ref={canvasRef}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-            }}
             className="m-auto rounded-md shadow-md border-spacing-3"
-          />
-          <canvas
-            width={width}
-            height={height}
-            ref={canvasMouseRef as React.RefObject<HTMLCanvasElement>}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              zIndex: 1,
-            }}
-            className="m-auto transparent"
-          />
-          <canvas
-            width={width}
-            height={height}
-            ref={canvasTemporyRef as React.RefObject<HTMLCanvasElement>}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              zIndex: 2,
-            }}
-            className="m-auto transparent"
           />
         </div>
       </div>
