@@ -138,6 +138,8 @@ export class MouseCircle {
   }
 
   public setPencilPointParams(params: PencilPointParams) {
+    this.withPencilPoint = true;
+
     if (
       this.pencilPointParams == null ||
       this.pencilPointParams.diameter !== params.diameter ||
@@ -147,7 +149,6 @@ export class MouseCircle {
       this.pencilPointParams = params;
       this.drawCirle();
     }
-    this.withPencilPoint = true;
   }
 
   public setWithPencilPoint(withPencilPoint: boolean) {

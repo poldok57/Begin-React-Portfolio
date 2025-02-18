@@ -25,6 +25,7 @@ import {
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
 import { MouseCircle } from "./MouseCircle";
 import { duplicateCanvas } from "@/lib/canvas/canvas-tools";
+// import { ResizeObserver } from "resize-observer";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -41,6 +42,7 @@ export class drawLine extends drawingHandler {
 
   private lineCanvas: HTMLCanvasElement | null = null;
   private lineCtx: CanvasRenderingContext2D | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -64,6 +66,20 @@ export class drawLine extends drawingHandler {
     });
 
     this.createCanvasLine(canvas);
+
+    // Observer le redimensionnement du canvas principal
+    this.resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (this.lineCanvas) {
+          this.lineCanvas.width = width;
+          this.lineCanvas.height = height;
+          this.clearLineCanvas();
+        }
+      }
+    });
+
+    this.resizeObserver.observe(canvas);
   }
 
   newElement(params: AllParams) {
@@ -628,12 +644,13 @@ export class drawLine extends drawingHandler {
   }
 
   actionMouseLeave() {
+    this.mouseCircle.hide();
+
     if (this.withPath && this.finishedDrawing) {
       this.path?.eraseAngleCoordFound();
       return this.followCursorOnFinisedPath(null) as string;
     }
     this.clearLineCanvas();
-    this.mouseCircle.hide();
   }
 
   /**
@@ -738,5 +755,14 @@ export class drawLine extends drawingHandler {
       this.path.eraseResizing();
       this.refreshDrawing(1);
     }
+  }
+
+  // Dont forget to clean the observer
+  destroy() {
+    this.resizeObserver?.disconnect();
+    this.mouseCircle.clear();
+    this.lineCanvas = null;
+    this.lineCtx = null;
+    this.path = null;
   }
 }

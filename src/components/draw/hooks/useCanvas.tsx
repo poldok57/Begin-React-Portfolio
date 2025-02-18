@@ -231,8 +231,8 @@ export const useCanvas = ({
           setDrawingMode,
           storeName
         );
+        newHandler = true;
       }
-      newHandler = true; // new initialization for color and width
       drawingHdl = lineRef.current;
     } else if (isDrawingFreehand(mode)) {
       drawingRef.current = new drawFreehand(

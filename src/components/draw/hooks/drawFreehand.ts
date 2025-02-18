@@ -60,12 +60,12 @@ export class drawFreehand extends drawingHandler {
     }
   }
 
-  private setMousePencilPointParams() {
+  private setMousePencilPointParams(general: ParamsGeneral) {
     if (this.getType() === DRAWING_MODES.DRAW) {
       this.mouseCircle.setPencilPointParams({
-        color: this.general.color,
-        diameter: this.general.lineWidth * this.scale,
-        globalAlpha: this.general.opacity,
+        color: general.color,
+        diameter: general.lineWidth * this.scale,
+        globalAlpha: general.opacity,
       });
     } else {
       this.mouseCircle.setPencilPointParams({
@@ -89,13 +89,13 @@ export class drawFreehand extends drawingHandler {
   setScale(scale: number): void {
     super.setScale(scale);
     this.freeCurve.setScale(scale);
-    this.setMousePencilPointParams();
+    this.setMousePencilPointParams(this.general);
   }
 
   setDataGeneral(dataGeneral: ParamsGeneral) {
     this.general = { ...dataGeneral };
     this.freeCurve.setParamsGeneral(dataGeneral);
-    this.setMousePencilPointParams();
+    this.setMousePencilPointParams(dataGeneral);
   }
 
   changeData(data: AllParams): void {
