@@ -1,25 +1,16 @@
-import { Coordinate } from "../../../lib/canvas/types";
-import {
-  basicLine,
-  drawingCircle,
-  drawPoint,
-  hatchedCircle,
-  hightLightMouseCursor,
-} from "../../../lib/canvas/canvas-basic";
+import { Coordinate } from "@/lib/canvas/types";
+import { basicLine } from "@/lib/canvas/canvas-basic";
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 
 import {
   DRAWING_MODES,
-  mouseCircle,
   AllParams,
   ParamsGeneral,
   CanvasPointsData,
-} from "../../../lib/canvas/canvas-defines";
+} from "@/lib/canvas/canvas-defines";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
-
-// import { throttle } from "@/lib/utils/throttle";
+import { MouseCircle } from "./MouseCircle";
 import { BORDER, isBorder } from "@/lib/mouse-position";
-import { scaledCoordinate } from "@/lib/utils/scaledSize";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -33,6 +24,7 @@ export class drawFreehand extends drawingHandler {
     lineWidth: 1,
     opacity: 1,
   };
+  private mouseCircle: MouseCircle;
   private modificationMode: boolean = false;
 
   constructor(
@@ -45,18 +37,65 @@ export class drawFreehand extends drawingHandler {
     super(canvas, canvasContext, temporaryCanvas, setMode, storeName);
     this.typeHandler = DRAWING_MODES.DRAW;
     this.freeCurve = new CanvasFreeCurve();
-    this.extendedMouseArea = false;
+    this.mouseCircle = new MouseCircle();
     this.setType(DRAWING_MODES.DRAW);
+    this.extendedMouseArea = false;
+  }
+
+  private setMouseCircleParams(type: string) {
+    if (type === DRAWING_MODES.DRAW) {
+      this.mouseCircle.setParams({
+        color: "#ffff00",
+        radius: 40,
+        filled: true,
+        globalAlpha: 0.28,
+      });
+    } else {
+      this.mouseCircle.setParams({
+        color: "#ffaaaa",
+        radius: 35,
+        filled: true,
+        globalAlpha: 0.4,
+      });
+    }
+  }
+
+  private setMousePencilPointParams() {
+    if (this.getType() === DRAWING_MODES.DRAW) {
+      this.mouseCircle.setPencilPointParams({
+        color: this.general.color,
+        diameter: this.general.lineWidth * this.scale,
+        globalAlpha: this.general.opacity,
+      });
+    } else {
+      this.mouseCircle.setPencilPointParams({
+        color: "#f0b0b0",
+        diameter: this.general.lineWidth * this.scale,
+        globalAlpha: 0.8,
+        hatched: true,
+      });
+    }
+  }
+
+  setType(type: string) {
+    const previousType = this.getType();
+    super.setType(type);
+    if (previousType !== type) {
+      this.mouseCircle.clear();
+    }
+    this.setMouseCircleParams(type);
   }
 
   setScale(scale: number): void {
     super.setScale(scale);
     this.freeCurve.setScale(scale);
+    this.setMousePencilPointParams();
   }
 
   setDataGeneral(dataGeneral: ParamsGeneral) {
     this.general = { ...dataGeneral };
     this.freeCurve.setParamsGeneral(dataGeneral);
+    this.setMousePencilPointParams();
   }
 
   changeData(data: AllParams): void {
@@ -103,59 +142,12 @@ export class drawFreehand extends drawingHandler {
    * Function follow the cursor on the canvas
    * @param {DRAWING_MODES} mode
    */
-  followCursor() {
+  followCursor(event: MouseEvent | TouchEvent) {
     if (this.finishedDrawing) {
       return "move";
     }
 
-    const ctxTemporary = this.ctxTemporary;
-    const ctxMouse = this.ctxMouse ?? ctxTemporary;
-
-    if (ctxMouse === null || ctxTemporary === null) {
-      console.error("ctxTemporary is null");
-      return;
-    }
-
-    if (this.ctxMouse === null) {
-      this.clearTemporaryCanvas();
-    } else {
-      this.clearMouseCanvas();
-    }
-
-    ctxMouse.globalAlpha = 0.4;
-    ctxMouse.lineWidth = this.general.lineWidth * this.scale;
-    ctxMouse.strokeStyle = this.general.color;
-
-    const coord = this.getCoordinates() as Coordinate;
-
-    const mouseCoord = scaledCoordinate(coord, this.scale);
-    if (!mouseCoord) return "none";
-
-    switch (this.getType()) {
-      case DRAWING_MODES.DRAW:
-        hightLightMouseCursor(ctxMouse, mouseCoord, mouseCircle);
-        drawPoint({
-          context: ctxMouse,
-          coordinate: mouseCoord,
-        } as drawingCircle);
-        break;
-      case DRAWING_MODES.ERASE:
-        ctxTemporary.globalAlpha = 0.7;
-        hightLightMouseCursor(ctxMouse, mouseCoord, {
-          ...mouseCircle,
-          color: "pink",
-          width: 50,
-        });
-        ctxTemporary.globalAlpha = 0.5;
-        hatchedCircle({
-          context: ctxMouse,
-          coordinate: mouseCoord,
-          color: "#eee",
-          borderColor: "#303030",
-        } as drawingCircle);
-        break;
-    }
-
+    this.mouseCircle.setPosition(event);
     return "none"; //  cursorType;
   }
 
@@ -192,6 +184,7 @@ export class drawFreehand extends drawingHandler {
         if (this.freeCurve.delayAddPoint(this.coordinates as Coordinate)) {
           ctxTemporary.strokeStyle = this.general.color;
           ctxTemporary.lineWidth = this.general.lineWidth;
+          ctxTemporary.lineCap = "round";
           // this.clearTemporaryCanvas();
           this.freeCurve.debounceDraw(ctxTemporary, false);
         }
@@ -206,7 +199,7 @@ export class drawFreehand extends drawingHandler {
         this.context.globalCompositeOperation = "source-over";
       }
     }
-    return this.followCursor() as string;
+    return this.followCursor(event) as string;
   }
 
   /**
@@ -304,7 +297,7 @@ export class drawFreehand extends drawingHandler {
         this.finishedDrawing = true;
         this.freeCurve.setFinished(true);
 
-        this.clearMouseCanvas();
+        this.mouseCircle.hide();
         this.freeCurve.debounceDraw(
           this.ctxTemporary as CanvasRenderingContext2D,
           true
@@ -319,8 +312,8 @@ export class drawFreehand extends drawingHandler {
     if (this.finishedDrawing) {
       return;
     }
+    this.mouseCircle.hide();
     this.clearTemporaryCanvas();
-    this.clearMouseCanvas();
 
     if (this.isDrawing()) {
       this.actionMouseUp();
@@ -332,16 +325,15 @@ export class drawFreehand extends drawingHandler {
     this.finishedDrawing = false;
     this.freeCurve.clearPoints();
     this.clearTemporaryCanvas();
-    this.clearMouseCanvas();
     this.setDrawing(false);
     this.setResizingBorder(null);
     return null;
   }
 
   endAction() {
+    this.mouseCircle.hide();
     this.setDrawing(false);
     this.clearTemporaryCanvas();
-    this.clearMouseCanvas();
     this.setResizingBorder(null);
   }
 

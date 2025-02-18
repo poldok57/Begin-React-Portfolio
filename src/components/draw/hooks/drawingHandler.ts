@@ -80,18 +80,9 @@ export abstract class drawingHandler {
     ) as CanvasRenderingContext2D | null;
   }
 
-  setMouseCanvas(canvas: HTMLCanvasElement | null) {
-    if (!canvas) return;
-    this.ctxMouse = canvas.getContext("2d") as CanvasRenderingContext2D | null;
-  }
-
   clearTemporaryCanvas(): void {
     if (!this.ctxTemporary) return;
     clearCanvasByCtx(this.ctxTemporary);
-  }
-  clearMouseCanvas(): void {
-    if (!this.ctxMouse) return;
-    clearCanvasByCtx(this.ctxMouse);
   }
 
   isExtendedMouseArea(): boolean {

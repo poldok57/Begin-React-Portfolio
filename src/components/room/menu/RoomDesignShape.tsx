@@ -35,7 +35,7 @@ export const RoomDesignShape: React.FC<RoomDesignShapeProps> = ({
     setShapeParams,
     needReloadControl,
   } = useDrawingContext();
-  const { ctxTemporary } = useRoomContext();
+  const { getCtxTemporary } = useRoomContext();
 
   const btnClassName = "px-2 py-1";
   const paramsShape = drawingParams.shape;
@@ -55,6 +55,7 @@ export const RoomDesignShape: React.FC<RoomDesignShapeProps> = ({
       event.currentTarget.getBoundingClientRect();
 
     // Determine if menu should appear on left or right based on canvas center
+    const ctxTemporary = getCtxTemporary();
     const canvasWidth = ctxTemporary?.canvas.width ?? window.innerWidth;
     const margin = 20;
     const positionX =

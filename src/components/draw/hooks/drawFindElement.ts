@@ -5,13 +5,11 @@ import {
   DRAWING_MODES,
   AllParams,
   ThingsToDraw,
-  mouseCircle,
 } from "../../../lib/canvas/canvas-defines";
 import { showAllDashedRectangles } from "@/lib/canvas/showDrawElement";
 import { isInsideSquare } from "@/lib/square-position";
 import { debounceThrottle } from "@/lib/utils/debounce";
-import { hightLightMouseCursor } from "@/lib/canvas/canvas-basic";
-import { scaledCoordinate } from "@/lib/utils/scaledSize";
+import { MouseCircle } from "./MouseCircle";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -20,6 +18,7 @@ export class drawFindElement extends drawingHandler {
   protected nbFound: number;
   private designElements: ThingsToDraw[];
   private setSelectedDesignElement: (elementId: string) => void;
+  private mouseCircle: MouseCircle;
   private refreshCanvas: (
     ctx: CanvasRenderingContext2D | null | undefined,
     withSelected?: boolean,
@@ -43,6 +42,13 @@ export class drawFindElement extends drawingHandler {
     this.refreshCanvas = this.designStore.getState().refreshCanvas;
 
     this.designElements = this.designStore.getState().designElements;
+    this.mouseCircle = new MouseCircle();
+    this.mouseCircle.setParams({
+      color: "#aaaaff",
+      radius: 40,
+      globalAlpha: 0.3,
+      filled: true,
+    });
   }
 
   setType(type: string) {
@@ -123,19 +129,7 @@ export class drawFindElement extends drawingHandler {
       },
       this.scale
     );
-    if (this.ctxMouse) {
-      this.clearMouseCanvas();
-      const mouseCoord = scaledCoordinate(coord, this.scale);
-      if (!mouseCoord) return null;
-      hightLightMouseCursor(this.ctxMouse, mouseCoord, {
-        ...mouseCircle,
-        color: "#aaaaff60",
-      });
-
-      // this.blueCircle(this.ctxMouse, coord, this.scale);
-    } else {
-      console.log("actionMouseMove No ctxMouse");
-    }
+    this.mouseCircle.setPosition(event);
 
     if (this.nbFound > 0) {
       cursor = "pointer";
@@ -190,12 +184,14 @@ export class drawFindElement extends drawingHandler {
   actionMouseLeave() {
     if (this.getType() === DRAWING_MODES.FIND) {
       this.clearTemporaryCanvas();
+      this.mouseCircle.hide();
     }
   }
 
   endAction() {
     if (this.getType() === DRAWING_MODES.FIND) {
       this.clearTemporaryCanvas();
+      this.mouseCircle.hide();
     }
   }
 }

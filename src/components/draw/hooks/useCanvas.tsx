@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { clearCanvas, clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { clearCanvasByCtx, duplicateCanvas } from "@/lib/canvas/canvas-tools";
 
 import {
   DRAWING_MODES,
@@ -45,7 +45,6 @@ interface DrawCanvasProps {
  *   - defaultMode: Default drawing mode (defaults to DRAW)
  * @returns {Object} Canvas state including:
  *   - tempCanvas: Temporary canvas for in-progress drawing
- *   - mouseCanvas: Canvas for mouse interactions
  *   - simpleRefreshCanvas: Function to refresh canvas
  */
 export const useCanvas = ({
@@ -55,7 +54,6 @@ export const useCanvas = ({
   defaultMode = DRAWING_MODES.DRAW,
 }: DrawCanvasProps) => {
   const tempCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const mouseCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseOnCtrlPanel = useRef(false);
 
   const { mode, setDrawingMode, needRefresh, getDrawingParams } =
@@ -97,35 +95,10 @@ export const useCanvas = ({
   // Create working canvases
   useEffect(() => {
     if (!canvasRef.current) return;
-    const container = canvasRef.current.parentElement;
-
-    // Get main canvas z-index
-    const mainCanvasZIndex = window.getComputedStyle(canvasRef.current).zIndex;
-    const baseZIndex =
-      mainCanvasZIndex === "auto" ? 0 : parseInt(mainCanvasZIndex);
 
     // Create temporary canvas
-    const newTempCanvas = document.createElement("canvas");
-    newTempCanvas.style.position = "absolute";
-    newTempCanvas.style.left = "0";
-    newTempCanvas.style.top = "0";
-    newTempCanvas.style.zIndex = baseZIndex.toString();
-    newTempCanvas.className = "m-auto transparent";
-    container?.appendChild(newTempCanvas);
+    const newTempCanvas = duplicateCanvas(canvasRef.current);
     tempCanvasRef.current = newTempCanvas;
-
-    // Create mouse canvas
-    const newMouseCanvas = document.createElement("canvas");
-    newMouseCanvas.style.position = "absolute";
-    newMouseCanvas.style.left = "0";
-    newMouseCanvas.style.top = "0";
-    newMouseCanvas.style.zIndex = baseZIndex.toString();
-    newMouseCanvas.className = "m-auto transparent";
-    // Disable pointer events for mouse canvas
-    newMouseCanvas.style.pointerEvents = "none";
-    container?.appendChild(newMouseCanvas);
-    // setMouseCanvas(newMouseCanvas);
-    mouseCanvasRef.current = newMouseCanvas;
 
     // Observe resizing
     const resizeObserver = new ResizeObserver((entries) => {
@@ -133,18 +106,14 @@ export const useCanvas = ({
         const { width, height } = entry.contentRect;
         newTempCanvas.width = width;
         newTempCanvas.height = height;
-        newMouseCanvas.width = width;
-        newMouseCanvas.height = height;
       }
     });
 
     resizeObserver.observe(canvasRef.current);
 
     return () => {
-      console.log("Canvas remove");
       resizeObserver.disconnect();
       newTempCanvas.remove();
-      newMouseCanvas.remove();
     };
   }, [canvasRef.current]);
 
@@ -216,9 +185,6 @@ export const useCanvas = ({
     lScale: number = scale
   ) => {
     clearTemporaryCanvas();
-    if (mouseCanvasRef.current) {
-      clearCanvas(mouseCanvasRef.current);
-    }
     if (contextRef.current && refreshCanvas) {
       setContextConstants(contextRef.current);
       refreshCanvas(contextRef.current, withSelected, lScale);
@@ -320,7 +286,6 @@ export const useCanvas = ({
 
     currentParams = getDrawingParams();
     if (newHandler && drawingHdl) {
-      drawingHdl.setMouseCanvas(mouseCanvasRef.current);
       drawingHdl.initData(currentParams);
     } else {
       drawingHdl.newElement(currentParams);
@@ -504,15 +469,6 @@ export const useCanvas = ({
     // set the temporary canvas
     if (tempCanvasRef.current) {
       setContext(tempCanvasRef.current, null, TEMPORTY_OPACITY);
-      // set the mouse canvas
-      if (mouseCanvasRef.current) {
-        setContext(
-          mouseCanvasRef.current,
-          null,
-          scaleRef.current,
-          TEMPORTY_OPACITY
-        );
-      }
     }
     // set the new drawing mode
     drawingRef.current = selectDrawingHandler(newMode);
@@ -941,13 +897,11 @@ export const useCanvas = ({
     if (drawingRef.current) {
       drawingRef.current.setScale(lScale);
     }
-    setContext(mouseCanvasRef.current, null, lScale);
     setContext(tempCanvasRef.current, null, lScale);
   }, [scaleRef.current]);
 
   return {
     tempCanvas: tempCanvasRef.current,
-    mouseCanvas: mouseCanvasRef.current,
     simpleRefreshCanvas,
     clearTemporaryCanvas,
   };

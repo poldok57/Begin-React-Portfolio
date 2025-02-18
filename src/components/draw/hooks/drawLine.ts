@@ -10,17 +10,12 @@ import {
   mousePointer,
 } from "@/lib/mouse-position";
 import { Coordinate, LinePath, LineType } from "@/lib/canvas/types";
-import {
-  drawingCircle,
-  drawPoint,
-  hightLightMouseCursor,
-} from "@/lib/canvas/canvas-basic";
 import { CanvasLine } from "@/lib/canvas/CanvasLine";
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 
 import {
   DRAWING_MODES,
-  mouseCircle,
+  // mouseCircle as mouseCircleType,
   ParamsGeneral,
   AllParams,
   isDrawingLine,
@@ -28,7 +23,8 @@ import {
   ParamsArrow,
 } from "@/lib/canvas/canvas-defines";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
-import { scaledCoordinate } from "@/lib/utils/scaledSize";
+import { MouseCircle } from "./MouseCircle";
+import { duplicateCanvas } from "@/lib/canvas/canvas-tools";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -41,6 +37,10 @@ export class drawLine extends drawingHandler {
   private finishedDrawingStep1: boolean = false;
   private toDelete: boolean = false;
   private modificationMode: boolean = false;
+  private mouseCircle: MouseCircle;
+
+  private lineCanvas: HTMLCanvasElement | null = null;
+  private lineCtx: CanvasRenderingContext2D | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -55,6 +55,58 @@ export class drawLine extends drawingHandler {
     this.line = new CanvasLine(canvas);
 
     this.setType(DRAWING_MODES.LINE);
+    this.mouseCircle = new MouseCircle();
+    this.mouseCircle.setParams({
+      color: "#ffff00",
+      radius: 40,
+      filled: true,
+      globalAlpha: 0.4,
+    });
+
+    this.createCanvasLine(canvas);
+  }
+
+  newElement(params: AllParams) {
+    this.createCanvasLine(this.mCanvas);
+    this.line.setCanvas(this.mCanvas);
+    super.newElement(params);
+  }
+
+  /**
+   * Create a canvas for temporary line
+   * @param mCanvas - the canvas to draw the line
+   */
+  createCanvasLine(mCanvas: HTMLCanvasElement | null) {
+    if (
+      (!this.lineCanvas ||
+        this.lineCanvas.width != mCanvas?.width ||
+        this.lineCanvas.height != mCanvas?.height) &&
+      mCanvas
+    ) {
+      this.lineCanvas = duplicateCanvas(mCanvas, false);
+      this.lineCtx = this.lineCanvas?.getContext("2d");
+      if (this.lineCtx) {
+        this.lineCtx.lineCap = "round";
+        this.lineCtx.globalAlpha = 0.4;
+        this.lineCtx.lineWidth = 5;
+        this.lineCtx.strokeStyle = "#808080";
+      }
+    }
+    this.clearLineCanvas();
+  }
+
+  /**
+   * Clear the canvas for temporary line
+   */
+  clearLineCanvas() {
+    if (this.lineCtx && this.lineCanvas) {
+      this.lineCtx.clearRect(
+        0,
+        0,
+        this.lineCanvas.width,
+        this.lineCanvas.height
+      );
+    }
   }
 
   setType(type: string) {
@@ -88,8 +140,15 @@ export class drawLine extends drawingHandler {
     return this.line.getCoordinates() as Coordinate;
   }
 
+  private setMousePencilPointParams(paramsGeneral: ParamsGeneral) {
+    this.mouseCircle.setPencilPointParams({
+      color: paramsGeneral.color,
+      diameter: paramsGeneral.lineWidth * this.scale,
+      globalAlpha: paramsGeneral.opacity,
+    });
+  }
+
   setDataParams(dataGeneral: ParamsGeneral, dataArrow: ParamsArrow) {
-    // console.log("setDataParam", this.getType(), dataGeneral, dataArrow);
     if (this.path && this.withPath && this.finishedDrawing) {
       if (this.finishedDrawingStep1) {
         this.finishedDrawingStep1 = false;
@@ -107,6 +166,7 @@ export class drawLine extends drawingHandler {
       this.ctxTemporary.lineWidth = dataGeneral.lineWidth * this.scale;
       this.ctxTemporary.strokeStyle = dataGeneral.color;
     }
+    this.setMousePencilPointParams(dataGeneral);
   }
 
   initData(data: AllParams) {
@@ -158,7 +218,9 @@ export class drawLine extends drawingHandler {
     this.finishedDrawing = true;
     this.finishedDrawingStep1 = true;
     this.modificationMode = true;
+    this.mouseCircle.hide();
   }
+
   getDraw(): CanvasPointsData | null {
     return this.path?.getData() as CanvasPointsData | null;
   }
@@ -193,36 +255,35 @@ export class drawLine extends drawingHandler {
   /**
    * Function follow the cursor on the canvas
    */
-  followCursor() {
-    const ctxMouse = this.ctxMouse ?? this.ctxTemporary;
+  followCursor(event: MouseEvent | TouchEvent) {
+    const ctxMouse = this.lineCtx ?? this.ctxTemporary;
     if (ctxMouse === null) {
       console.error("ctxTemporary is null");
       return;
     }
 
-    if (this.ctxMouse === null) {
+    if (this.lineCtx === null) {
       this.clearTemporaryCanvas();
       this.path?.draw(this.ctxTemporary, this.withPath);
     } else {
-      this.clearMouseCanvas();
+      this.clearLineCanvas();
     }
 
-    const coord = this.line.getCoordinates() as Coordinate;
+    // const coord = this.line.getCoordinates() as Coordinate;
 
-    const mouseCoord = scaledCoordinate(coord, this.scale);
-    if (!mouseCoord) return "none";
-    ctxMouse.globalAlpha = 0.4;
-
-    hightLightMouseCursor(ctxMouse, mouseCoord, mouseCircle);
+    // const mouseCoord = scaledCoordinate(coord, this.scale);
+    // if (!mouseCoord) return "none";
+    // ctxMouse.globalAlpha = 0.4;
 
     if (this.line.getStartCoordinates() == null) {
-      // first point of line show a point
-      drawPoint({
-        context: ctxMouse,
-        coordinate: mouseCoord,
-      } as drawingCircle);
+      this.mouseCircle.setWithPencilPoint(true);
+      this.mouseCircle.setPosition(event);
     } else {
+      this.mouseCircle.setWithPencilPoint(false);
+      this.mouseCircle.setPosition(event);
+
       this.line.show(ctxMouse, true);
+      // this.line.show(this.ctxTemporary, true);
 
       if (this.ctxTemporary) {
         this.line.showLinesHelpers(ctxMouse);
@@ -257,7 +318,7 @@ export class drawLine extends drawingHandler {
     if (this.withPath && this.finishedDrawing) {
       return this.followCursorOnFinisedPath(event) as string;
     }
-    return this.followCursor() as string;
+    return this.followCursor(event) as string;
   }
 
   showLineAndArc(withPath: boolean = true) {
@@ -280,7 +341,8 @@ export class drawLine extends drawingHandler {
           // we can close the path
           if (this.path.isPathClosed()) {
             this.actionEndPath(DRAWING_MODES.CLOSE_PATH);
-            this.clearMouseCanvas();
+            this.clearLineCanvas();
+            this.mouseCircle.hide();
             toExtend = false;
             break;
           }
@@ -290,7 +352,8 @@ export class drawLine extends drawingHandler {
           // if we are drawing an arrow and we have 2 points, we can finish the path
           if (type === DRAWING_MODES.ARROW && this.path.getItemsLength() >= 2) {
             this.path.setFinished(true);
-            this.clearMouseCanvas();
+            this.clearLineCanvas();
+            this.mouseCircle.hide();
             this.withPath = true;
             this.finishedDrawing = true;
             toExtend = false;
@@ -526,7 +589,7 @@ export class drawLine extends drawingHandler {
     if (this.getType() === DRAWING_MODES.ARC) {
       this.clicOnArcEnd(coord);
     }
-    this.followCursor();
+    this.followCursor(event);
     return {};
   }
 
@@ -569,7 +632,8 @@ export class drawLine extends drawingHandler {
       this.path?.eraseAngleCoordFound();
       return this.followCursorOnFinisedPath(null) as string;
     }
-    this.clearMouseCanvas();
+    this.clearLineCanvas();
+    this.mouseCircle.hide();
   }
 
   /**
@@ -579,7 +643,8 @@ export class drawLine extends drawingHandler {
     if (this.path) {
       // draw finised line
       this.clearTemporaryCanvas();
-      this.clearMouseCanvas();
+      this.clearLineCanvas();
+      this.mouseCircle.hide();
       this.path.draw(this.context, false);
       this.saveCanvasPicture(
         withCoordinates ? (this.line.getStartCoordinates() as Coordinate) : null
@@ -618,7 +683,8 @@ export class drawLine extends drawingHandler {
     }
 
     this.clearTemporaryCanvas();
-    this.clearMouseCanvas();
+    this.clearLineCanvas();
+    this.mouseCircle.hide();
     this.line.eraseEndCoordinates();
     return null;
   }
@@ -651,7 +717,8 @@ export class drawLine extends drawingHandler {
       this.line.eraseCoordinates();
     }
     this.clearTemporaryCanvas();
-    this.clearMouseCanvas();
+    this.clearLineCanvas();
+    this.mouseCircle.hide();
   }
 
   actionEndPath(eventAction: string) {

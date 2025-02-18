@@ -63,11 +63,26 @@ export const clearCanvas = (canvas: HTMLCanvasElement): void => {
   clearCanvasByCtx(canvas.getContext("2d"));
 };
 
-// /**
-//  * Function to clear the canvas
-//  * @param {HTMLCanvasElement} canvas
-//  */
-// export const clearCanvas = (canvas: HTMLCanvasElement) => {
-//   const context = canvas.getContext("2d");
-//   clearCanvasByCtx(context);
-// };
+export const duplicateCanvas = (
+  canvas: HTMLCanvasElement,
+  withMouseEvents: boolean = false
+): HTMLCanvasElement => {
+  const container = canvas.parentElement ?? document.body;
+
+  // Get main canvas z-index
+  const mainCanvasZIndex = window.getComputedStyle(canvas).zIndex;
+
+  // Create duplicate canvas
+  const newCanvas = document.createElement("canvas");
+  newCanvas.width = canvas.width;
+  newCanvas.height = canvas.height;
+
+  newCanvas.style.position = "absolute";
+  newCanvas.style.left = "0";
+  newCanvas.style.top = "0";
+  newCanvas.style.zIndex = mainCanvasZIndex;
+  newCanvas.className = "m-auto transparent";
+  newCanvas.style.pointerEvents = withMouseEvents ? "auto" : "none";
+  container?.appendChild(newCanvas);
+  return newCanvas;
+};

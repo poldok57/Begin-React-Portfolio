@@ -4,8 +4,9 @@ export type drawingCircle = {
   context: CanvasRenderingContext2D;
   coordinate: Coordinate | null;
   color: string | null;
-  borderColor: string | null;
   diameter: number;
+  borderColor?: string | null;
+  globalAlpha?: number;
 };
 
 /**
@@ -100,6 +101,7 @@ export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
   color = null,
   borderColor = null,
   diameter = 0,
+  globalAlpha = 0.6,
 }: drawingCircle) => {
   const lineWidth = context.lineWidth;
   if (diameter <= 0) diameter = lineWidth;
@@ -125,6 +127,7 @@ export const hatchedCircle: (drawingCircle: drawingCircle) => void = ({
   context.setLineDash([2, 2]);
 
   context.beginPath();
+  if (globalAlpha) context.globalAlpha = globalAlpha;
   basicCircle(context, coordinate, diameter);
   if (color) context.fillStyle = color; // Couleur de remplissage
   context.fill();
