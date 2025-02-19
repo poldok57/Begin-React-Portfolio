@@ -613,6 +613,7 @@ export class drawLine extends drawingHandler {
    * Function who recieve the touch end event
    */
   actionTouchEnd() {
+    this.path?.eraseAngleCoordFound();
     if (this.finishedDrawing) {
       this.setResizingBorder(null);
       return;

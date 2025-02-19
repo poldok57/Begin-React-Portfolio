@@ -479,7 +479,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       });
     }
 
-    const expectedMargin = isTouchDevice() ? 4 * MARGIN : 3 * MARGIN;
+    const expectedMargin = isTouchDevice() ? 6 * MARGIN : 3 * MARGIN;
     // upper right corner let place between the line and corner button
     const pRight = this.data.items[borderRight];
     if (pRight && "end" in pRight && pRight.end) {
