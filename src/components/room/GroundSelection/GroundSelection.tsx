@@ -159,26 +159,73 @@ export const GroundSelection = React.forwardRef<
       return false;
     };
 
+    /**
+     * Handle the start action for mouse and touch events
+     * @param e - The event
+     * @param clientX - The clientX
+     * @param clientY - The clientY
+     * @returns true if the action is handled, false otherwise
+     */
+    const handleStartAction = (
+      e: MouseEvent | TouchEvent,
+      clientX: number,
+      clientY: number
+    ) => {
+      // Verify if the click is on a line
+      const { inOverlap } = isInOverlapContainer(clientX, clientY);
+      if (inOverlap && clicOnLine(clientX, clientY)) {
+        e.preventDefault();
+        return true;
+      }
+
+      // clic outside the container start selecting new position of the container
+      if (handleStart(clientX, clientY)) {
+        e.preventDefault();
+        return true;
+      }
+      return false;
+    };
+
+    /**
+     * Handle the mouse down event
+     * @param e - The event
+     */
     const handleMouseDown = (e: MouseEvent) => {
       if (disableAction()) {
         return;
       }
 
       // Take into account window scroll to calculate mouse position
-      const clientX = e.clientX;
-      const clientY = e.clientY;
-
-      // Verify if the click is on a line
-      const { inOverlap } = isInOverlapContainer(clientX, clientY);
-      if (inOverlap && clicOnLine(clientX, clientY)) {
-        e.preventDefault();
+      if (handleStartAction(e, e.clientX, e.clientY)) {
         return;
       }
 
-      // clic outside the container start selecting new position of the container
-      if (handleStart(clientX, clientY)) {
-        e.preventDefault();
+      changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
+    };
+
+    /**
+     * Handle the touch start event
+     * @param e - The event
+     */
+    const handleTouchStart = (e: TouchEvent) => {
+      if (disableAction() || !groundRef.current) {
+        return;
       }
+      const touch = e.touches[0];
+
+      if (e.touches.length > 1) {
+        groundRef.current.style.touchAction = "auto";
+        return;
+      }
+      groundRef.current.style.touchAction = "none";
+
+      if (handleStartAction(e, touch.clientX, touch.clientY)) {
+        return;
+      }
+
+      changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
+
+      // event.preventDefault(); should not be used because it prevent click on buttons
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -220,12 +267,34 @@ export const GroundSelection = React.forwardRef<
       }
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      if (disableAction()) {
+        return;
+      }
+      const touch = e.touches[0];
+      if (e.touches.length > 1) {
+        return;
+      }
+      if (moveLine(touch.clientX, touch.clientY)) {
+        e.preventDefault();
+        return;
+      }
+      if (handleMove(touch.clientX, touch.clientY, getMode())) {
+        e.preventDefault();
+        return;
+      }
+    };
+
     const handleMouseUp = () => {
       if (disableAction()) {
         return;
       }
       stopMoveLine();
       handleEnd();
+    };
+
+    const handleTouchEnd = () => {
+      handleMouseUp();
     };
 
     useEffect(() => {
@@ -264,50 +333,6 @@ export const GroundSelection = React.forwardRef<
         return;
       }
 
-      const handleTouchStart = (e: TouchEvent) => {
-        console.log("handleTouchStart");
-        if (disableAction() || !groundRef.current) {
-          return;
-        }
-        const touch = e.touches[0];
-
-        if (e.touches.length > 1) {
-          groundRef.current.style.touchAction = "auto";
-          return;
-        }
-        groundRef.current.style.touchAction = "none";
-
-        if (
-          isInOverlapContainer(touch.clientX, touch.clientY) &&
-          clicOnLine(touch.clientX, touch.clientY)
-        ) {
-          e.preventDefault();
-          return;
-        }
-        if (!handleStart(touch.clientX, touch.clientY)) {
-          changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
-        }
-        // event.preventDefault(); should not be used because it prevent click on buttons
-      };
-
-      const handleTouchMove = (e: TouchEvent) => {
-        if (disableAction()) {
-          return;
-        }
-        const touch = e.touches[0];
-        if (e.touches.length > 1) {
-          return;
-        }
-        if (moveLine(touch.clientX, touch.clientY)) {
-          e.preventDefault();
-          return;
-        }
-        if (handleMove(touch.clientX, touch.clientY, getMode())) {
-          e.preventDefault();
-          return;
-        }
-      };
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (disableAction()) {
           return;
@@ -326,15 +351,12 @@ export const GroundSelection = React.forwardRef<
         }
       };
 
-      const handleTouchEnd = () => {
-        handleMouseUp();
-      };
-
       ground.addEventListener("mousedown", handleMouseDown);
       ground.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
 
       document.addEventListener("keydown", handleKeyDown);
+
       ground.addEventListener("touchstart", handleTouchStart);
       ground.addEventListener("touchmove", handleTouchMove, {
         passive: false,
