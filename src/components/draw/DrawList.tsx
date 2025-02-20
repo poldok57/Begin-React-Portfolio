@@ -117,6 +117,7 @@ export const DrawList = ({
                       <span
                         className="px-2 w-full text-sm truncate bg-gray-50 border cursor-pointer"
                         onClick={() => onSelectElement(element.id)}
+                        onTouchEnd={() => onSelectElement(element.id)}
                       >
                         {"text" in element &&
                         (("shape" in element && element?.shape?.withText) ||

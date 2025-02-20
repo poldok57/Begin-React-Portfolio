@@ -19,7 +19,7 @@ import { alertMessage } from "@/components/alert-messages/alertMessage";
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
 
-const [SQUARE_WIDTH, SQUARE_HEIGHT] = [120, 120];
+const [SQUARE_WIDTH, SQUARE_HEIGHT] = [200, 200];
 const MIN_ROTATION = 7.5;
 
 export class drawElement extends drawingHandler {

@@ -19,6 +19,7 @@ export const useDragAndDrop = ({
 
   const touchStartYRef = useRef<number | null>(null);
   const dragItemRef = useRef<HTMLSpanElement | null>(null);
+  const ghostElementRef = useRef<HTMLElement | null>(null);
 
   const recordTargetId = (element: HTMLLIElement) => {
     const targetId = element?.getAttribute("data-id");
@@ -49,6 +50,37 @@ export const useDragAndDrop = ({
       return true;
     }
     return false;
+  };
+
+  const createGhostElement = (element: HTMLElement, x: number, y: number) => {
+    const ghost = element.closest("li")?.cloneNode(true) as HTMLElement;
+    if (!ghost) return;
+
+    ghost.style.position = "fixed";
+    ghost.style.top = `${y}px`;
+    ghost.style.left = `${x}px`;
+    ghost.style.width = `${element.closest("li")?.offsetWidth}px`;
+    ghost.style.opacity = "0.6";
+    ghost.style.pointerEvents = "none";
+    ghost.style.zIndex = "1000";
+    ghost.style.transform = "translateY(-50%)";
+
+    document.body.appendChild(ghost);
+    ghostElementRef.current = ghost;
+  };
+
+  const moveGhostElement = (x: number, y: number) => {
+    if (ghostElementRef.current) {
+      ghostElementRef.current.style.top = `${y}px`;
+      ghostElementRef.current.style.left = `${x}px`;
+    }
+  };
+
+  const removeGhostElement = () => {
+    if (ghostElementRef.current) {
+      ghostElementRef.current.remove();
+      ghostElementRef.current = null;
+    }
   };
 
   useEffect(() => {
@@ -89,9 +121,13 @@ export const useDragAndDrop = ({
       touchEvent.preventDefault();
       setDraggedItem(elementId);
       touchStartYRef.current = touchEvent.touches[0].clientY;
-      if (dragItemRef.current) {
-        dragItemRef.current.style.opacity = "0.5";
-      }
+
+      // create ghost element
+      createGhostElement(
+        touchEvent.target as HTMLElement,
+        touchEvent.touches[0].clientX,
+        touchEvent.touches[0].clientY
+      );
     };
 
     const handleTouchMove = (e: Event) => {
@@ -101,7 +137,7 @@ export const useDragAndDrop = ({
       if (!draggedItem || touchStartYRef.current === null) return;
 
       const touch = touchEvent.touches[0];
-      const touchY = touch.clientY;
+      moveGhostElement(touch.clientX, touch.clientY);
 
       const elementUnderTouch = document.elementFromPoint(
         touch.clientX,
@@ -110,14 +146,12 @@ export const useDragAndDrop = ({
       const listItem = elementUnderTouch?.closest("li");
 
       if (recordTargetId(listItem as HTMLLIElement)) {
-        touchStartYRef.current = touchY;
+        touchStartYRef.current = touch.clientY;
       }
     };
 
     const handleTouchEnd = () => {
-      if (dragItemRef.current) {
-        dragItemRef.current.style.opacity = "1";
-      }
+      removeGhostElement();
       moveElement();
       setDraggedItem(null);
       touchStartYRef.current = null;

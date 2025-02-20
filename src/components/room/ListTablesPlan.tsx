@@ -19,7 +19,7 @@ export const ListTablesPlan = React.memo(
   ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
     // const [activeTable, setActiveTable] = useState<string | null>(null);
     const { scale, getScale, mode } = useRoomContext();
-    const { updateTable, deleteTable, activeTable, setActiveTable } =
+    const { updateTable, deleteTable, activeTable, setActiveTable, getTable } =
       useTableDataStore((state) => state);
 
     const handleMove = useCallback(
@@ -30,9 +30,52 @@ export const ListTablesPlan = React.memo(
           left: position.left / currentScale,
           top: position.top / currentScale,
         };
+
+        const movedTable = tables.find((table) => table.id === id);
+        if (!movedTable) return;
+
+        // Get table dimensions from HTML element
+        const tableElement = document.getElementById(id);
+        if (!tableElement) return;
+
+        const tableIntervalMin = {
+          width: tableElement.offsetWidth / (2 * currentScale),
+          height: tableElement.offsetHeight / (2 * currentScale),
+        };
+
+        // Adjust the position based on other tables
+        tables.forEach((otherTable) => {
+          if (otherTable.id === id) return;
+
+          const otherPos = otherTable.position;
+          const horizontalDistance = scalePosition.left - otherPos.left;
+          const verticalDistance = scalePosition.top - otherPos.top;
+          const absHorizontal = Math.abs(horizontalDistance);
+          const absVertical = Math.abs(verticalDistance);
+
+          // Determine the main axis of movement
+          const isHorizontalMain = absHorizontal > absVertical;
+
+          if (
+            absHorizontal < tableIntervalMin.width &&
+            absVertical < tableIntervalMin.height
+          ) {
+            if (isHorizontalMain) {
+              // Adjust horizontally only
+              const sign = horizontalDistance > 0 ? 1 : -1;
+              scalePosition.left =
+                otherPos.left + tableIntervalMin.width * sign;
+            } else {
+              // Adjust vertically only
+              const sign = verticalDistance > 0 ? 1 : -1;
+              scalePosition.top = otherPos.top + tableIntervalMin.height * sign;
+            }
+          }
+        });
+
         updateTable(id, { position: scalePosition });
       },
-      [updateTable, getScale]
+      [getScale, tables, scale]
     );
 
     const handleChangeSelected = useCallback(
@@ -43,11 +86,50 @@ export const ListTablesPlan = React.memo(
       [updateTable]
     );
 
+    const isSuperposed = (id: string) => {
+      const tableElement = document.getElementById(id);
+      if (!tableElement) return;
+      const tableIntervalMin = {
+        width: tableElement.offsetWidth / (2 * scale),
+        height: tableElement.offsetHeight / (2 * scale),
+      };
+      const selectedTable = getTable(id);
+      if (!selectedTable) return;
+      const tablePos = selectedTable.position;
+      const otherTables = tables.filter((table) => table.id !== id);
+      const isSuperposed = otherTables.some((table) => {
+        const otherPos = table.position;
+        const horizontalDistance = tablePos.left - otherPos.left;
+        const verticalDistance = tablePos.top - otherPos.top;
+        const absHorizontal = Math.abs(horizontalDistance);
+        const absVertical = Math.abs(verticalDistance);
+        return (
+          absHorizontal < tableIntervalMin.width &&
+          absVertical < tableIntervalMin.height
+        );
+      });
+      if (isSuperposed) {
+        // console.log("table is superposed to another table");
+        // Move the selected table up by the minimum distance
+        const newTop = tablePos.top - tableIntervalMin.height;
+        updateTable(id, {
+          position: {
+            left: tablePos.left,
+            top: newTop,
+          },
+        });
+        return;
+      }
+    };
+
     const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
       if (activeTable === id) {
         setActiveTable(null);
         updateTable(id, { selected: false });
       } else {
+        // when a table is selected, verify if is is superposed to another table
+        isSuperposed(id);
+
         setActiveTable(id);
         updateTable(id, { selected: true });
       }
