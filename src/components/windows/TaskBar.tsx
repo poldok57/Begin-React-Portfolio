@@ -47,33 +47,81 @@ const TaskbarTypeSelect: React.FC<TaskbarTypeSelectProps> = ({
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (!menuRef.current) {
+        return;
+      }
+      // Get the click/touch position
+      const clientX =
+        "touches" in event
+          ? event.touches[0].clientX
+          : (event as MouseEvent).clientX;
+      const clientY =
+        "touches" in event
+          ? event.touches[0].clientY
+          : (event as MouseEvent).clientY;
+
+      // Get menu bounds
+      const menuRect = menuRef.current.getBoundingClientRect();
+
+      // Check if click/touch is inside menu bounds
+      const isInside =
+        clientX >= menuRect.left &&
+        clientX <= menuRect.right &&
+        clientY >= menuRect.top &&
+        clientY <= menuRect.bottom;
+
+      // If click is inside menu, don't close it
+      if (isInside) {
+        return;
+      }
+
+      if (!menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, {
+      passive: true,
+    });
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [setMenuOpen]);
+
+  const handleSelectChange = (
+    e:
+      | React.ChangeEvent<HTMLSelectElement>
+      | React.TouchEvent<HTMLSelectElement>,
+    paramName: keyof TaskbarParams
+  ) => {
+    const target = e.currentTarget;
+
+    if (paramName === "layout") {
+      setParams(paramName, target.value as TaskbarType);
+    } else if (paramName === "position") {
+      setParams(paramName, target.value as TaskbarPosition);
+    }
+  };
 
   return (
     <div
       ref={menuRef}
       className={cn(
-        "absolute  bottom-full z-40 p-2 bg-gray-300 rounded-md border border-gray-500 shadow-lg text-nowrap w-fit",
+        "absolute bottom-full z-40 p-2 bg-gray-300 rounded-md border border-gray-500 shadow-lg text-nowrap w-fit pointer-events-auto",
         position === "left" ? "left-0" : "right-0"
       )}
     >
       <div className="mb-2">
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block z-50 text-sm font-medium text-gray-700">
           Taskbar Type
         </label>
         <select
           value={barParams.layout}
-          onChange={(e) => setParams("layout", e.target.value as TaskbarType)}
+          onChange={(e) => handleSelectChange(e, "layout")}
           className={selectBoxVariants()}
         >
           <option value="horizontal">Horizontal</option>
@@ -87,9 +135,7 @@ const TaskbarTypeSelect: React.FC<TaskbarTypeSelectProps> = ({
         </label>
         <select
           value={barParams.position}
-          onChange={(e) =>
-            setParams("position", e.target.value as TaskbarPosition)
-          }
+          onChange={(e) => handleSelectChange(e, "position")}
           className={selectBoxVariants()}
         >
           <option value="left">Left</option>

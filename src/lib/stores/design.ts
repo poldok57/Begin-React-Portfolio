@@ -63,17 +63,16 @@ const createDesignStore = (storageName: string) => {
       }
 
       const designElements = get().designElements;
+
       clearCanvasByCtx(ctx);
-      if (ctx) {
-        const selectedElementId = !withSelected
-          ? get().getSelectedDesignElement()?.id
-          : "-";
-        designElements.forEach((element) => {
-          if (element.id !== selectedElementId) {
-            showDrawElement(ctx, element, scale, false);
-          }
-        });
-      }
+      const selectedElementId = !withSelected
+        ? get().getSelectedDesignElement()?.id
+        : "-";
+      designElements.forEach((element) => {
+        if (element.id !== selectedElementId) {
+          showDrawElement(ctx, element, scale, false);
+        }
+      });
     },
     getDesignElement: (id: string) =>
       get().designElements.find(
@@ -159,10 +158,12 @@ const createDesignStore = (storageName: string) => {
           (designElement) => designElement.type !== type
         ),
       })),
-    setSelectedDesignElement: (id: string | null) =>
+    setSelectedDesignElement: (id: string | null) => {
+      // console.log("setSelectedDesignElement", id);
       set(() => ({
         selectedDesignElement: id,
-      })),
+      }));
+    },
     getSelectedDesignElement: () => {
       const selectedDesignElement = get().selectedDesignElement;
       if (selectedDesignElement) {

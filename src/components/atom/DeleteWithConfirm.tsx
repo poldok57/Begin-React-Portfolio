@@ -21,7 +21,9 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
 }) => {
   const refDetails = useRef<HTMLDetailsElement>(null);
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (
+    e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
     onConfirm?.();
     refDetails.current?.removeAttribute("open");
@@ -47,7 +49,11 @@ export const DeleteWithConfirm: React.FC<DeleteWithConfirmProps> = ({
             className="dropdown-content menu bg-base-100 rounded-box z-[1] w-fit p-1 text-nowrap shadow"
           >
             <li className="z-40 p-1 text-nowrap">
-              <button className={confirmClassName} onClick={handleClick}>
+              <button
+                className={confirmClassName}
+                onClick={handleClick}
+                onTouchStart={handleClick}
+              >
                 {confirmMessage}
               </button>
             </li>

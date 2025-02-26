@@ -36,7 +36,7 @@ const MIDDLE_BTN_RADIUS_TOUCH = 18;
 export const MARGIN_ON_BORDER = 6;
 let margin = MARGIN_ON_BORDER;
 
-export const setMargin = (newMargin: number): void => {
+export const setMarginOnBorder = (newMargin: number): void => {
   margin = newMargin;
 };
 

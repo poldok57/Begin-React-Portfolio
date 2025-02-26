@@ -22,7 +22,7 @@ import { CanvasShape } from "@/lib/canvas/CanvasShape";
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [200, 200];
 const MIN_ROTATION = 7.5;
 
-export class drawElement extends drawingHandler {
+export class drawShape extends drawingHandler {
   protected fixed: boolean = false;
 
   protected offset: Coordinate | null = null;

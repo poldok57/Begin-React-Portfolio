@@ -15,16 +15,20 @@ import {
 import { alertMessage } from "@/components/alert-messages/alertMessage";
 
 import { drawLine } from "./drawLine";
-import { drawElement } from "./drawElement";
+import { drawShape } from "./drawShape";
 import { drawSelection } from "./drawSelection";
 import { drawFreehand } from "./drawFreehand";
 import { drawFindElement } from "./drawFindElement";
 import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { getCoordinatesInCanvas } from "@/lib/canvas/canvas-tools";
-import { mouseIsInsideComponent } from "@/lib/mouse-position";
+import {
+  mouseIsInsideComponent,
+  setMarginOnBorder,
+} from "@/lib/mouse-position";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { Coordinate } from "@/lib/canvas/types";
 import { useDrawingContext } from "@/context/DrawingContext";
+import { isTouchDevice } from "@/lib/utils/device";
 
 const TEMPORTY_OPACITY = 0.6;
 
@@ -65,7 +69,7 @@ export const useCanvas = ({
   const lineRef = useRef<drawLine | null>(null);
   const findRef = useRef<drawFindElement | null>(null);
   const selectionRef = useRef<drawSelection | null>(null);
-  const elementRef = useRef<drawElement | null>(null);
+  const elementRef = useRef<drawShape | null>(null);
   const justReload = useRef(false);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const scaleRef = useRef(scale);
@@ -184,7 +188,6 @@ export const useCanvas = ({
     withSelected: boolean = true,
     lScale: number = scale
   ) => {
-    clearTemporaryCanvas();
     if (contextRef.current && refreshCanvas) {
       setContextConstants(contextRef.current);
       refreshCanvas(contextRef.current, withSelected, lScale);
@@ -246,7 +249,7 @@ export const useCanvas = ({
       drawingHdl = drawingRef.current;
     } else if (isDrawingShape(mode) || mode === DRAWING_MODES.TEXT) {
       if (elementRef.current === null) {
-        elementRef.current = new drawElement(
+        elementRef.current = new drawShape(
           canvasRef.current,
           contextRef.current,
           tempCanvasRef.current,
@@ -318,6 +321,10 @@ export const useCanvas = ({
 
     if (canvasRef.current && contextRef.current) {
       contextRef.current.globalCompositeOperation = "source-over";
+    }
+
+    if (isTouchDevice()) {
+      setMarginOnBorder(10);
     }
   };
 

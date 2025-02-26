@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Mode } from "../types";
 
 import { getCanvasSize } from "../scripts/canvas-size";
@@ -31,6 +31,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     width: 1000,
     height: 600,
   });
+  const lastScale = useRef<number>(0);
   const { setCtxTemporary, scale, getScale, storeName } = useRoomContext();
 
   /**
@@ -67,14 +68,11 @@ export const Canvas: React.FC<CanvasProps> = ({
     }
   }, [tempCanvas, mode]);
 
-  useEffect(() => {
-    simpleRefreshCanvas(false, scale);
-  }, [designElements, selectedDesignElement]);
   /**
    * Resize canvas
    */
   const resizeCanvas = useCallback(
-    (scale: number) => {
+    (scale: number, withSelected: boolean = true) => {
       const ground = backgroundCanvasRef.current
         ?.parentElement as HTMLDivElement;
       if (backgroundCanvasRef.current && temporaryCanvasRef.current && ground) {
@@ -102,21 +100,23 @@ export const Canvas: React.FC<CanvasProps> = ({
         backgroundCanvasRef.current.width = newSize.width;
         backgroundCanvasRef.current.height = newSize.height;
 
-        if (setSelectedDesignElement) {
-          setSelectedDesignElement(null);
+        if (lastScale.current !== scale) {
+          if (setSelectedDesignElement) {
+            setSelectedDesignElement(null);
+          }
+          lastScale.current = scale;
         }
-        simpleRefreshCanvas(true, scale);
+        simpleRefreshCanvas(withSelected, scale);
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     },
-    [backgroundCanvasRef.current, scale]
+    [backgroundCanvasRef.current, designElements, selectedDesignElement, scale]
   );
 
   useEffect(() => {
     const handleResize = () => {
       const scale = getScale();
-      resizeCanvas(scale);
-      simpleRefreshCanvas(true, scale);
+      resizeCanvas(scale, true);
     };
 
     window.addEventListener("resize", handleResize);
@@ -124,8 +124,9 @@ export const Canvas: React.FC<CanvasProps> = ({
   }, []);
 
   useEffect(() => {
-    resizeCanvas(scale);
-  }, [scale]);
+    // console.log("selected Element", selectedDesignElement, "scale:", scale);
+    resizeCanvas(scale, false);
+  }, [designElements, selectedDesignElement, scale]);
 
   useEffect(() => {
     // Check if the background canvas is not defined or has no width
@@ -141,7 +142,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const timer = setTimeout(() => {
         // Use a state update to trigger a re-render
         // console.log("temporised resizeCanvas");
-        resizeCanvas(scale);
+        resizeCanvas(scale, true);
       }, 300);
 
       // Clean up the timer

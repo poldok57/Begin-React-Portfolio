@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Rectangle } from "@/lib/canvas/types";
-import { changeToucheMessage } from "../scripts/canvas-size";
 import { useRoomContext } from "../RoomProvider";
 import { isTouchDevice } from "@/lib/utils/device";
 import { Canvas } from "./Canvas";
@@ -10,7 +9,7 @@ import { useAlignmentLogic } from "./hooks/useAlignmentLogic";
 import { useGroundSelectionLogic } from "./hooks/useGroundSelectionLogic";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { Mode, TypeListTables } from "../types";
-const TOUCH_MESSAGE_ID = "touch-message";
+import { ScrollButtons } from "./ScrollButtons";
 
 interface GroundSelectionProps {
   onSelectionStart: () => void;
@@ -51,6 +50,7 @@ export const GroundSelection = React.forwardRef<
     const {
       getMode,
       scale,
+      setScale,
       rotation,
       setSelectedRect,
       setRotation,
@@ -65,6 +65,7 @@ export const GroundSelection = React.forwardRef<
 
     const numberOfAlignmentsRef = useRef({ vertical: 0, horizontal: 0 });
     const [showAlignmentLines, setShowAlignmentLines] = useState(false);
+    const [isWorking, setIsWorking] = useState(false);
 
     const store = useZustandDesignStore(storeName);
 
@@ -171,8 +172,14 @@ export const GroundSelection = React.forwardRef<
       clientX: number,
       clientY: number
     ) => {
+      // Only set isWorking if the target is the canvas
+      if (e.target === groundRef.current) {
+        setIsWorking(true);
+      }
+
       // Verify if the click is on a line
       const { inOverlap } = isInOverlapContainer(clientX, clientY);
+
       if (inOverlap && clicOnLine(clientX, clientY)) {
         e.preventDefault();
         return true;
@@ -199,8 +206,6 @@ export const GroundSelection = React.forwardRef<
       if (handleStartAction(e, e.clientX, e.clientY)) {
         return;
       }
-
-      changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
     };
 
     /**
@@ -211,21 +216,19 @@ export const GroundSelection = React.forwardRef<
       if (disableAction() || !groundRef.current) {
         return;
       }
-      const touch = e.touches[0];
 
+      // Multi-touch is now handled in ScrollButtons component
       if (e.touches.length > 1) {
-        groundRef.current.style.touchAction = "auto";
         return;
       }
+
+      const touch = e.touches[0];
+
       groundRef.current.style.touchAction = "none";
 
       if (handleStartAction(e, touch.clientX, touch.clientY)) {
         return;
       }
-
-      changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
-
-      // event.preventDefault(); should not be used because it prevent click on buttons
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -271,10 +274,13 @@ export const GroundSelection = React.forwardRef<
       if (disableAction()) {
         return;
       }
-      const touch = e.touches[0];
+
+      // Multi-touch is now handled in ScrollButtons component
       if (e.touches.length > 1) {
         return;
       }
+
+      const touch = e.touches[0];
       if (moveLine(touch.clientX, touch.clientY)) {
         e.preventDefault();
         return;
@@ -286,9 +292,8 @@ export const GroundSelection = React.forwardRef<
     };
 
     const handleMouseUp = () => {
-      if (disableAction()) {
-        return;
-      }
+      if (disableAction()) return;
+      setIsWorking(false);
       stopMoveLine();
       handleEnd();
     };
@@ -374,21 +379,6 @@ export const GroundSelection = React.forwardRef<
       };
     }, []);
 
-    useEffect(() => {
-      if (isTouchDevice()) {
-        const handleResize = () => {
-          changeToucheMessage(groundRef.current, TOUCH_MESSAGE_ID);
-        };
-
-        handleResize(); // Initial check
-        window.addEventListener("resize", handleResize);
-
-        return () => {
-          window.removeEventListener("resize", handleResize);
-        };
-      }
-    }, []);
-
     // console.log("render GroundSelection");
     return (
       <>
@@ -403,16 +393,6 @@ export const GroundSelection = React.forwardRef<
         >
           {typeListMode !== TypeListTables.list && (
             <>
-              <div
-                id={TOUCH_MESSAGE_ID}
-                className="fixed right-2 bottom-2 p-2 text-white bg-gray-800 rounded md:block"
-                style={{
-                  display: "none",
-                  transition: "display 0.3s ease-in-out",
-                }}
-              >
-                Use 2 fingers to move the screen
-              </div>
               <Canvas
                 backgroundCanvasRef={backgroundCanvasRef}
                 temporaryCanvasRef={temporaryCanvasRef}
@@ -436,6 +416,13 @@ export const GroundSelection = React.forwardRef<
                   )}
                 </>
               )}
+              <ScrollButtons
+                containerRef={groundRef}
+                isWorking={isWorking}
+                scale={scale}
+                setScale={setScale}
+                isTouchDevice={isTouchDevice()}
+              />
             </>
           )}
           {children}

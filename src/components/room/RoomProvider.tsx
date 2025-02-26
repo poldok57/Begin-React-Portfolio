@@ -203,7 +203,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearTemporaryCanvas = (reason?: string) => {
     const ctx = getCtxTemporary();
     if (!ctx) {
-      console.log("ctxTemporary is null");
+      // console.log("ctxTemporary is null");
       return;
     }
 

@@ -8,7 +8,7 @@ import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
-import { drawElement } from "./drawElement";
+import { drawShape } from "./drawShape";
 import { alertMessage } from "../../alert-messages/alertMessage";
 import { cutOutArea, getUsedArea } from "@/lib/canvas/canvas-size";
 import {
@@ -21,7 +21,7 @@ const [SQUARE_WIDTH, SQUARE_HEIGHT] = [100, 100];
 const MAX_SIZE = 640;
 const MAX_PC = 0.9;
 
-export class drawSelection extends drawElement {
+export class drawSelection extends drawShape {
   protected data: ShapeDefinition = {
     size: { x: 0, y: 0, width: 0, height: 0 },
     type: DRAWING_MODES.SELECT,
