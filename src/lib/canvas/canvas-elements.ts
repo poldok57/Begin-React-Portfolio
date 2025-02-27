@@ -212,3 +212,16 @@ export const showCanvasImage = (
     ctx.restore();
   }
 };
+
+export const showDrawElement = async (
+  ctx: CanvasRenderingContext2D,
+  element: ThingsToDraw,
+  scale: number = 1,
+  selected: boolean = false
+): Promise<void> => {
+  const canvasShape = new CanvasShape();
+  await canvasShape.setData(element as ShapeDefinition);
+  canvasShape.setScale(scale);
+  canvasShape.setSelected(selected);
+  canvasShape.draw(ctx);
+};

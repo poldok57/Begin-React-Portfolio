@@ -81,7 +81,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     return { ...this.data };
   }
 
-  setData(data: CanvasPointsData, toEdit: boolean = false) {
+  async setData(data: CanvasPointsData, toEdit: boolean = false) {
     this.data = { ...data };
     if (toEdit) {
       this.data.size = { ...data.size };

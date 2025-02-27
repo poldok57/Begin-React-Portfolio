@@ -195,6 +195,7 @@ export interface ThingsToDraw {
   general: ParamsGeneral;
   path?: ParamsPath;
   erase?: boolean;
+  modified?: boolean;
 }
 
 export interface CanvasPointsData extends ThingsToDraw {

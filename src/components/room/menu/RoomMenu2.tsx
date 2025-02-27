@@ -13,8 +13,9 @@ import {
   showValidationFrame,
   addValidationValidAction,
 } from "../ValidationFrame";
-import { TypeListTables, Menu } from "../types";
-import { NotepadText } from "lucide-react";
+import { TypeListTables, Menu, Mode } from "../types";
+import { NotepadText, Undo } from "lucide-react";
+import { useHistoryStore } from "@/lib/stores/history";
 
 interface RoomMenu2Props {
   btnSize: number;
@@ -46,6 +47,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const refDetails = useRef<HTMLDetailsElement>(null);
   const { tables, updateTable, deleteSelectedTable, countSelectedTables } =
     useTableDataStore();
+  const { canUndo, getLastEntry, removeLastEntry } = useHistoryStore();
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
@@ -85,11 +87,21 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           break;
 
         case "a":
+        case "A":
           if (event.ctrlKey) {
             event.preventDefault();
             tables.forEach((table) => {
               updateTable(table.id, { selected: true });
             });
+          }
+          break;
+        case "z":
+        case "Z":
+          if (event.ctrlKey && typeListMode === TypeListTables.plan) {
+            event.preventDefault();
+            if (canUndo()) {
+              handleUndo();
+            }
           }
           break;
 
@@ -128,6 +140,22 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   useEffect(() => {
     setIsPlanMode(typeListMode === TypeListTables.plan);
   }, [typeListMode]);
+
+  const handleUndo = () => {
+    const lastEntry = getLastEntry();
+    if (!lastEntry) return;
+
+    lastEntry.tables.forEach((tableHistory) => {
+      updateTable(tableHistory.id, {
+        position: tableHistory.previousPosition,
+        ...(tableHistory.previousRotation !== undefined && {
+          rotation: tableHistory.previousRotation,
+        }),
+      });
+    });
+
+    removeLastEntry();
+  };
 
   return (
     <div className="flex items-center w-full align-middle bg-gray-100 min-h-12">
@@ -300,6 +328,18 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               </ul>
             </details>
           </li>
+          {mode === Mode.create && typeListMode === TypeListTables.plan && (
+            <li className="flex items-center">
+              <button
+                className="border-gray-300 shadow-md btn btn-square border-1"
+                onClick={handleUndo}
+                disabled={!canUndo()}
+                title="Undo last move"
+              >
+                <Undo size={btnSize + 2} />
+              </button>
+            </li>
+          )}
         </ul>
       </div>
       <div className="flex flex-row gap-3 items-center px-4 navbar-end">
@@ -336,6 +376,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           isTouch={isTouch}
           onChange={(value: number) => setScale(value)}
         />
+
         {mode}
       </div>
     </div>

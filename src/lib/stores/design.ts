@@ -3,6 +3,12 @@ import { persist } from "zustand/middleware";
 import { StateCreator } from "zustand";
 
 import {
+  storeImageInIndexedDB,
+  cleanupImageStorage,
+  getImageFromIndexedDB,
+} from "./indexedDBstore";
+
+import {
   ThingsToDraw,
   DRAW_TYPE,
   ShapeDefinition,
@@ -25,9 +31,9 @@ interface DesignState {
     ctx: CanvasRenderingContext2D | null | undefined,
     withSelected?: boolean,
     scale?: number | undefined | null
-  ) => void;
+  ) => Promise<void>;
   getDesignElement: (id: string) => ThingsToDraw | undefined;
-  addDesignElement: (designElement: ThingsToDraw) => string;
+  addDesignElement: (designElement: ThingsToDraw) => Promise<string>;
   deleteDesignElement: (id: string) => void;
   deleteLastDesignElement: () => void;
   deleteDesignElementByType: (
@@ -36,7 +42,7 @@ interface DesignState {
   updateDesignElement: (designElement: ThingsToDraw) => void;
   setSelectedDesignElement: (id: string | null) => void;
   getSelectedDesignElement: () => ThingsToDraw | null;
-  addOrUpdateDesignElement: (designElement: ThingsToDraw) => string;
+  addOrUpdateDesignElement: (designElement: ThingsToDraw) => Promise<string>;
   orderDesignElement: (currentIndex: number, targetIndex: number) => void;
   eraseDesignElement: () => void;
   setScale: (scale: number) => void;
@@ -51,7 +57,7 @@ const createDesignStore = (storageName: string) => {
     backgroundColor: "#ffffff",
     scale: 1,
     getAllDesignElements: () => get().designElements,
-    refreshCanvas: (
+    refreshCanvas: async (
       ctx: CanvasRenderingContext2D | null | undefined,
       withSelected: boolean = true,
       scale?: number | null
@@ -68,32 +74,55 @@ const createDesignStore = (storageName: string) => {
       const selectedElementId = !withSelected
         ? get().getSelectedDesignElement()?.id
         : "-";
-      designElements.forEach((element) => {
-        if (element.id !== selectedElementId) {
-          showDrawElement(ctx, element, scale, false);
-        }
-      });
+
+      // Use Promise.all to wait for all images to be loaded
+      await Promise.all(
+        designElements.map(async (element) => {
+          if (element.id !== selectedElementId) {
+            await showDrawElement(ctx, element, scale, false);
+          }
+        })
+      );
     },
     getDesignElement: (id: string) =>
       get().designElements.find(
         (designElement: ThingsToDraw) => designElement.id === id
       ),
-    addDesignElement: (designElement: ThingsToDraw) => {
+    addDesignElement: async (designElement: ThingsToDraw) => {
       const newDesignElement = {
         ...designElement,
         id: designElement.id || generateUniqueId("des"),
+        modified: true,
       };
-      // If element is an image, store its dataURL in localStorage
+
+      //    If the element is an image, store its dataURL in IndexedDB
       if (
         designElement.type === DRAW_TYPE.IMAGE &&
         (designElement as ShapeDefinition).dataURL
       ) {
         const imageKey = `img_${newDesignElement.id}`;
-        localStorage.setItem(
-          imageKey,
-          (designElement as ShapeDefinition).dataURL ?? ""
-        );
-        // Remove dataURL from the element to avoid storing it twice
+        const imageData = (designElement as ShapeDefinition).dataURL ?? "";
+
+        try {
+          // Essayer d'abord de stocker dans IndexedDB
+          await storeImageInIndexedDB(imageKey, imageData);
+        } catch (error) {
+          // Fallback sur localStorage en cas d'échec
+          console.warn(
+            `[STORAGE] Échec du stockage dans IndexedDB pour ${imageKey}`,
+            error
+          );
+          try {
+            localStorage.setItem(imageKey, imageData);
+          } catch (localStorageError) {
+            console.error(
+              `[STORAGE] Échec du stockage dans localStorage pour ${imageKey}`,
+              localStorageError
+            );
+          }
+        }
+
+        // Supprimer le dataURL de l'élément pour éviter de le stocker deux fois
         delete (newDesignElement as ShapeDefinition).dataURL;
       }
 
@@ -103,13 +132,14 @@ const createDesignStore = (storageName: string) => {
       return newDesignElement.id;
     },
     updateDesignElement: (designElement: ThingsToDraw) => {
+      designElement.modified = true;
       set((state: DesignState) => ({
         designElements: state.designElements.map((element) =>
           element.id === designElement.id ? designElement : element
         ),
       }));
     },
-    addOrUpdateDesignElement: (designElement: ThingsToDraw) => {
+    addOrUpdateDesignElement: async (designElement: ThingsToDraw) => {
       if (designElement.id) {
         const existingElement = get().getDesignElement(designElement.id);
         if (existingElement) {
@@ -117,17 +147,16 @@ const createDesignStore = (storageName: string) => {
           return designElement.id;
         }
       }
-      return get().addDesignElement(designElement);
+      return await get().addDesignElement(designElement);
     },
     deleteDesignElement: (id: string) =>
       set((state: DesignState) => {
         // Trouver l'élément avant de le supprimer pour vérifier son type
         const element = state.designElements.find((el) => el.id === id);
 
-        // Si c'est une image, nettoyer le localStorage
+        // Si c'est une image, nettoyer le stockage
         if (element?.type === DRAW_TYPE.IMAGE) {
-          const imageKey = `img_${id}`;
-          localStorage.removeItem(imageKey);
+          cleanupImageStorage(id);
         }
 
         return {
@@ -142,8 +171,7 @@ const createDesignStore = (storageName: string) => {
         const lastElement =
           state.designElements[state.designElements.length - 1];
         if (lastElement?.type === DRAW_TYPE.IMAGE) {
-          const imageKey = `img_${lastElement.id}`;
-          localStorage.removeItem(imageKey);
+          cleanupImageStorage(lastElement.id);
         }
 
         return {
@@ -159,7 +187,6 @@ const createDesignStore = (storageName: string) => {
         ),
       })),
     setSelectedDesignElement: (id: string | null) => {
-      // console.log("setSelectedDesignElement", id);
       set(() => ({
         selectedDesignElement: id,
       }));
@@ -194,11 +221,10 @@ const createDesignStore = (storageName: string) => {
     },
     eraseDesignElement: () => {
       set((state: DesignState) => {
-        // Nettoyer le localStorage pour toutes les images
+        // Nettoyer le stockage pour toutes les images
         state.designElements.forEach((element) => {
           if (element.type === DRAW_TYPE.IMAGE) {
-            const imageKey = `img_${element.id}`;
-            localStorage.removeItem(imageKey);
+            cleanupImageStorage(element.id);
           }
         });
 
@@ -241,9 +267,26 @@ const createDesignStore = (storageName: string) => {
  * @param id - The id of the image
  * @returns The image data URL or null if not found
  */
-export const getImageDataURL = (id: string) => {
+export const getImageDataURL = async (id: string): Promise<string | null> => {
   const imageKey = `img_${id}`;
-  return localStorage.getItem(imageKey) ?? null;
+
+  try {
+    // Essayer d'abord de récupérer depuis IndexedDB
+    const imageFromDB = await getImageFromIndexedDB(imageKey);
+    if (imageFromDB) {
+      return imageFromDB;
+    }
+  } catch (error) {
+    console.warn(
+      `[STORAGE] Erreur lors de la récupération depuis IndexedDB pour ${imageKey}`,
+      error
+    );
+  }
+
+  // Fallback sur localStorage
+  const localStorageImage = localStorage.getItem(imageKey);
+
+  return localStorageImage;
 };
 
 export const useDesignStore = createDesignStore(defaultDesignStoreName);
@@ -254,7 +297,6 @@ const storeInstances = new Map<string, ReturnType<typeof createDesignStore>>();
 
 // For classes (non-React)
 export const zustandDesignStore = (storeName: string | null) => {
-  // console.log("zustandDesignStore", storeName);
   const name = storeName ?? defaultDesignStoreName;
 
   // Get or create the store instance
@@ -268,7 +310,6 @@ export const zustandDesignStore = (storeName: string | null) => {
 // For React components
 export const useZustandDesignStore = (storeName: string | null) => {
   if (storeName === null) {
-    // console.log("storeName is null");
     return null;
   }
 

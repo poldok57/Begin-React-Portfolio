@@ -8,6 +8,7 @@ import React, {
 
 import { Rectangle } from "@/lib/canvas/types";
 import { Mode } from "@/components/room/types";
+// import { GROUND_ID } from "./RoomCreat";
 
 interface RoomContextProps {
   getCtxTemporary: () => CanvasRenderingContext2D | null;
@@ -144,29 +145,6 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     return null;
   }, []);
-
-  // const isInContainer = (rect: DOMRect): boolean => {
-  //   const currentRect = selectedRectRef.current;
-  //   if (!currentRect) {
-  //     return false;
-  //   }
-  //   const containerRect = {
-  //     left: currentRect.left,
-  //     top: currentRect.top,
-  //     right: currentRect.right ?? currentRect.left + currentRect.width,
-  //     bottom: currentRect.bottom ?? currentRect.top + currentRect.height,
-  //   };
-
-  //   const limitWidth = rect.width / 2 - 12;
-  //   const limitHeight = rect.height / 2;
-
-  //   return (
-  //     rect.left + limitWidth >= containerRect.left &&
-  //     rect.right - limitWidth <= containerRect.right &&
-  //     rect.top + limitHeight >= containerRect.top &&
-  //     rect.bottom - limitHeight <= containerRect.bottom
-  //   );
-  // };
 
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
 

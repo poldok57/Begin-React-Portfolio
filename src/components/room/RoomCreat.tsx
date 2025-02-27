@@ -18,6 +18,7 @@ import { DrawingProvider } from "@/context/DrawingContext";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { TypeListTables } from "./types";
+import { useHistoryStore } from "@/lib/stores/history";
 export const GROUND_ID = "back-ground";
 
 const DESIGN_STORE_NAME = "room-design-storge";
@@ -45,6 +46,7 @@ export interface ChangeCoordinatesParams {
   offset?: { left?: number; top?: number };
   rotation?: number;
   tableIds?: string[] | null;
+  uniqueId?: string | null;
 }
 
 export const RoomCreatTools = () => {
@@ -64,6 +66,8 @@ export const RoomCreatTools = () => {
 
   const { setDrawingMode } = useDrawingContext();
 
+  const { addEntry } = useHistoryStore();
+
   useEffect(() => {
     if (mode === null) {
       setMode(Mode.create);
@@ -78,8 +82,6 @@ export const RoomCreatTools = () => {
 
   const selectedArea = useRef<boolean>(false);
 
-  const roundToTwoDigits = (value: number) => Number(value.toFixed(2));
-
   const [typeListMode, setTypeListMode] = useState<TypeListTables>(
     TypeListTables.plan
   );
@@ -92,9 +94,12 @@ export const RoomCreatTools = () => {
     rotation?: number
   ) => {
     if (!position) {
+      if (!offset || (offset.left === 0 && offset.top === 0)) {
+        return false;
+      }
       const newPosition = {
-        left: roundToTwoDigits(table.position.left + (offset?.left ?? 0)),
-        top: roundToTwoDigits(table.position.top + (offset?.top ?? 0)),
+        left: Math.round(table.position.left + (offset?.left ?? 0)),
+        top: Math.round(table.position.top + (offset?.top ?? 0)),
       };
       const updateData: Partial<TableData> = {
         position: newPosition as Position,
@@ -104,7 +109,7 @@ export const RoomCreatTools = () => {
       }
       updateTable(table.id, updateData);
 
-      return;
+      return true;
     }
     const newPosition = {
       left: table.position.left,
@@ -121,7 +126,15 @@ export const RoomCreatTools = () => {
       newPosition.top = Math.round(position.top - (rect?.height ?? 0) / 2);
     }
 
+    if (
+      newPosition.left === table.position.left &&
+      newPosition.top === table.position.top
+    ) {
+      return false;
+    }
+
     updateTable(table.id, { position: newPosition as Position });
+    return true;
   };
 
   const changeCoordinates = ({
@@ -129,26 +142,64 @@ export const RoomCreatTools = () => {
     offset,
     rotation,
     tableIds,
+    uniqueId,
   }: ChangeCoordinatesParams) => {
-    if (!tableIds) {
-      // Find all selected tables
-      const selectedTables = getSelectedTables();
+    // If no table ID is specified, use the selected tables
+    const ids = tableIds || getSelectedTables().map((table) => table.id);
 
-      // Move all selected tables
-      selectedTables.forEach((table) => {
-        updateTablePosition(table, position, offset, rotation);
-      });
+    // console.log("changeCoordinates", position, offset, tableIds, uniqueId);
+    if (ids.length === 0) return;
 
-      return;
+    //    register the state before modification if uniqueId is new
+    const lastEntry = useHistoryStore.getState().getLastEntry();
+    const isNewAction = uniqueId && (!lastEntry || lastEntry.id !== uniqueId);
+    let tablesBeforeChange: {
+      id: string;
+      previousPosition: Position;
+      previousRotation?: number;
+    }[] = [];
+    if (isNewAction) {
+      // save the state before modification
+      tablesBeforeChange = ids
+        .map((id) => {
+          const table = getTable(id);
+          if (!table) return null;
+
+          return {
+            id,
+            previousPosition: { ...table.position },
+            previousRotation: table.rotation,
+          };
+        })
+        .filter(Boolean) as {
+        id: string;
+        previousPosition: Position;
+        previousRotation?: number;
+      }[];
     }
 
-    tableIds.forEach((id) => {
+    // Apply the changes
+    let nbTableUpdated = 0;
+    ids.forEach((id) => {
       const table = getTable(id);
-
       if (table) {
-        updateTablePosition(table, position, offset);
+        if (updateTablePosition(table, position, offset, rotation)) {
+          nbTableUpdated++;
+        } else {
+          tablesBeforeChange = tablesBeforeChange.filter(
+            (table) => table.id !== id
+          );
+        }
       }
     });
+
+    // add the entry if there is a uniqueId and the number of table updated is greater than 0 and the number of table before change is greater than 0
+    if (uniqueId && nbTableUpdated > 0 && tablesBeforeChange.length > 0) {
+      addEntry({
+        id: uniqueId,
+        tables: tablesBeforeChange,
+      });
+    }
   };
 
   const onZoneSelectedStart = () => {
@@ -260,6 +311,7 @@ export const RoomCreatTools = () => {
                   btnSize={btnSize}
                   editable={mode !== Mode.numbering}
                   onClick={onTableClick}
+                  changeCoordinates={changeCoordinates}
                 />
                 <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
               </>

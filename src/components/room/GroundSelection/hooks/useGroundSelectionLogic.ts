@@ -22,7 +22,8 @@ export const useGroundSelectionLogic = (
   setSelectedRect: (rect: Rectangle | null) => void,
   setShowAlignmentLines: (show: boolean) => void,
   drawAxe: () => void,
-  selectZone: (rect: Rectangle | null) => void
+  selectZone: (rect: Rectangle | null) => void,
+  uniqueIdRef: React.MutableRefObject<string | null>
 ) => {
   const startPos = useRef<Position | null>(null);
 
@@ -251,7 +252,7 @@ export const useGroundSelectionLogic = (
         top: clientY,
       };
 
-      changeCoordinates({ offset });
+      changeCoordinates({ offset, uniqueId: uniqueIdRef.current });
     },
     [getScale]
   );

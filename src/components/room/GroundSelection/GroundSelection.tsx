@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState } from "react";
 import { Rectangle } from "@/lib/canvas/types";
 import { useRoomContext } from "../RoomProvider";
 import { isTouchDevice } from "@/lib/utils/device";
+import { generateUniqueId } from "@/lib/utils/unique-id";
+
 import { Canvas } from "./Canvas";
 // import { SelectionContainer } from "./SelectionContainer";
 import { AlignmentButtons } from "./AlignmentButtons";
@@ -64,6 +66,7 @@ export const GroundSelection = React.forwardRef<
     const temporaryCanvasRef = useRef<HTMLCanvasElement>(null);
 
     const numberOfAlignmentsRef = useRef({ vertical: 0, horizontal: 0 });
+    const uniqueIdRef: React.MutableRefObject<string | null> = useRef(null);
     const [showAlignmentLines, setShowAlignmentLines] = useState(false);
     const [isWorking, setIsWorking] = useState(false);
 
@@ -132,7 +135,8 @@ export const GroundSelection = React.forwardRef<
       setSelectedRect,
       setShowAlignmentLines,
       drawAxe,
-      selectZone
+      selectZone,
+      uniqueIdRef
     );
 
     const {
@@ -150,7 +154,8 @@ export const GroundSelection = React.forwardRef<
       changeCoordinates,
       getGroundOffset,
       getContainerRect,
-      refreshContainer
+      refreshContainer,
+      uniqueIdRef
     );
 
     const disableAction = () => {
@@ -175,6 +180,8 @@ export const GroundSelection = React.forwardRef<
       // Only set isWorking if the target is the canvas
       if (e.target === groundRef.current) {
         setIsWorking(true);
+        uniqueIdRef.current = generateUniqueId("key");
+        // console.log("uniqueId", uniqueIdRef.current);
       }
 
       // Verify if the click is on a line
@@ -296,6 +303,7 @@ export const GroundSelection = React.forwardRef<
       setIsWorking(false);
       stopMoveLine();
       handleEnd();
+      uniqueIdRef.current = null;
     };
 
     const handleTouchEnd = () => {

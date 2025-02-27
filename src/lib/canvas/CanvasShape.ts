@@ -193,10 +193,10 @@ export class CanvasShape extends CanvasDrawableObject {
 
     if (this.data.type === DRAWING_MODES.IMAGE) {
       if (!data.dataURL) {
-        data.dataURL = getImageDataURL(data.id);
+        this.data.dataURL = await getImageDataURL(data.id);
       }
-      if (data.dataURL) {
-        await this.loadImage(data.id, data.dataURL);
+      if (this.data.dataURL) {
+        await this.loadImage(data.id, this.data.dataURL);
       }
     }
 

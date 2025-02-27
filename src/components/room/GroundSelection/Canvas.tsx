@@ -72,7 +72,7 @@ export const Canvas: React.FC<CanvasProps> = ({
    * Resize canvas
    */
   const resizeCanvas = useCallback(
-    (scale: number, withSelected: boolean = true) => {
+    async (scale: number, withSelected: boolean = true) => {
       const ground = backgroundCanvasRef.current
         ?.parentElement as HTMLDivElement;
       if (backgroundCanvasRef.current && temporaryCanvasRef.current && ground) {
@@ -106,7 +106,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           }
           lastScale.current = scale;
         }
-        simpleRefreshCanvas(withSelected, scale);
+        await simpleRefreshCanvas(withSelected, scale);
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     },

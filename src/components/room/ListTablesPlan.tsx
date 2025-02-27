@@ -6,6 +6,8 @@ import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
 import { useRoomContext } from "./RoomProvider";
 import { Mode } from "./types";
+import { ChangeCoordinatesParams } from "./RoomCreat";
+import { generateUniqueId } from "@/lib/utils/unique-id";
 const RoomTableWP = withMousePosition(RoomTable);
 
 interface ListTablesProps {
@@ -13,10 +15,17 @@ interface ListTablesProps {
   btnSize: number;
   editable?: boolean;
   onClick?: ((id: string) => void) | null;
+  changeCoordinates?: (params: ChangeCoordinatesParams) => void;
 }
 
 export const ListTablesPlan = React.memo(
-  ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
+  ({
+    tables,
+    btnSize,
+    editable = false,
+    onClick = null,
+    changeCoordinates,
+  }: ListTablesProps) => {
     // const [activeTable, setActiveTable] = useState<string | null>(null);
     const { scale, getScale, mode } = useRoomContext();
     const { updateTable, deleteTable, activeTable, setActiveTable, getTable } =
@@ -30,6 +39,8 @@ export const ListTablesPlan = React.memo(
           left: position.left / currentScale,
           top: position.top / currentScale,
         };
+
+        const withHistory = true;
 
         const movedTable = tables.find((table) => table.id === id);
         if (!movedTable) return;
@@ -73,9 +84,25 @@ export const ListTablesPlan = React.memo(
           }
         });
 
-        updateTable(id, { position: scalePosition });
+        if (withHistory) {
+          // changeCoordinates use center of the table to adjust position
+          changeCoordinates?.({
+            position: {
+              left:
+                scalePosition.left +
+                tableElement.offsetWidth / (2 * currentScale),
+              top:
+                scalePosition.top +
+                tableElement.offsetHeight / (2 * currentScale),
+            },
+            tableIds: [id],
+            uniqueId: generateUniqueId("mv"),
+          });
+        } else {
+          updateTable(id, { position: scalePosition });
+        }
       },
-      [getScale, tables, scale]
+      [getScale, tables, scale, changeCoordinates]
     );
 
     const handleChangeSelected = useCallback(

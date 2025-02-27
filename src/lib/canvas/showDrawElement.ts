@@ -17,7 +17,7 @@ import { Coordinate } from "./types";
 import { isInsideSquare } from "../square-position";
 import { scaledSize } from "../utils/scaledSize";
 
-export const showDrawElement = (
+export const showDrawElement = async (
   ctx: CanvasRenderingContext2D,
   element: ThingsToDraw,
   scale: number,
@@ -40,11 +40,9 @@ export const showDrawElement = (
       break;
   }
 
-  canvasObject.setData(element);
-  setTimeout(() => {
-    canvasObject.setScale(scale);
-    canvasObject.draw(ctx, withDetails);
-  }, 5);
+  await canvasObject.setData(element);
+  canvasObject.setScale(scale);
+  canvasObject.draw(ctx, withDetails);
 };
 
 export const showAllDashedRectangles = (

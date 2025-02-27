@@ -124,7 +124,7 @@ export const useCanvas = ({
   /**
    * Get the last picture in history for undo action
    */
-  const previousPicture = (ctx: CanvasRenderingContext2D | null) => {
+  const previousPicture = async (ctx: CanvasRenderingContext2D | null) => {
     if (ctx === null) {
       return;
     }
@@ -132,7 +132,7 @@ export const useCanvas = ({
       deleteLastDesignElement();
     }
     if (refreshCanvas) {
-      refreshCanvas(ctx, false, scaleRef.current);
+      await refreshCanvas(ctx, false, scaleRef.current);
     }
   };
 
@@ -184,13 +184,13 @@ export const useCanvas = ({
   /**
    * Simple refresh canvas
    */
-  const simpleRefreshCanvas = (
+  const simpleRefreshCanvas = async (
     withSelected: boolean = true,
     lScale: number = scale
   ) => {
     if (contextRef.current && refreshCanvas) {
       setContextConstants(contextRef.current);
-      refreshCanvas(contextRef.current, withSelected, lScale);
+      await refreshCanvas(contextRef.current, withSelected, lScale);
     }
   };
 
@@ -429,7 +429,7 @@ export const useCanvas = ({
    * Change the drawing mode
    * @param {string} newMode - new drawing mode
    */
-  const actionChangeMode = (newMode: string) => {
+  const actionChangeMode = async (newMode: string) => {
     currentParams = getDrawingParams();
 
     if (newMode === DRAWING_MODES.INIT) {
@@ -496,7 +496,7 @@ export const useCanvas = ({
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
       if (canvasRef.current && refreshCanvas) {
-        refreshCanvas(contextRef.current, false, scaleRef.current);
+        await refreshCanvas(contextRef.current, false, scaleRef.current);
       }
 
       mouseOnCtrlPanel.current = false;

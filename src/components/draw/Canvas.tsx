@@ -56,7 +56,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const changeScale = (scale: number) => {
+  const changeScale = async (scale: number) => {
     if (setScale) {
       setScale(scale);
     }
@@ -65,7 +65,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       setSelectedDesignElement(null);
     }
 
-    simpleRefreshCanvas(false, scale);
+    await simpleRefreshCanvas(false, scale);
   };
 
   return (

@@ -67,7 +67,7 @@ export abstract class CanvasDrawableObject {
 
   abstract getData(): ThingsToDraw | null;
 
-  abstract setData(data: ThingsToDraw, toEdit?: boolean): void;
+  abstract setData(data: ThingsToDraw, toEdit?: boolean): Promise<void>;
 
   setDataType(name: string) {
     this.data.type = name;

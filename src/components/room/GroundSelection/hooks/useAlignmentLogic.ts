@@ -5,6 +5,7 @@ import { useRoomContext } from "../../RoomProvider";
 import { Mode } from "../../types";
 import { Coordinate, Rectangle } from "@/lib/canvas/types";
 import { debounceThrottle } from "@/lib/utils/debounce";
+import { generateUniqueId } from "@/lib/utils/unique-id";
 
 interface AxisLine {
   type: "vertical" | "horizontal";
@@ -51,7 +52,8 @@ export const useAlignmentLogic = (
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
   getGroundOffset: () => Coordinate,
   getContainerRect: () => DOMRect | Rectangle | null,
-  refreshContainer: (ctx?: CanvasRenderingContext2D) => void
+  refreshContainer: (ctx?: CanvasRenderingContext2D) => void,
+  uniqueIdRef: React.MutableRefObject<string | null>
 ): AlignmentLogic => {
   const selectedAlignmentLine = useRef<AxisLine | null>(null);
   const alignmentGroups = useRef<{
@@ -62,6 +64,8 @@ export const useAlignmentLogic = (
   const { getRotation, getScale } = useRoomContext();
 
   const elementsInContainer = useRef<HTMLDivElement[]>([]);
+
+  const localUniqueId = useRef<string | null>(null);
 
   const findElementsInContainer = useCallback(() => {
     if (!groundRef.current) return;
@@ -247,6 +251,7 @@ export const useAlignmentLogic = (
       changeCoordinates({
         position: { left: (mouseX + offset.x) / getScale() },
         tableIds: elementIds,
+        uniqueId: uniqueIdRef.current ?? localUniqueId.current,
       });
       if (selectedAlignmentLine.current) {
         selectedAlignmentLine.current.position = mouseX;
@@ -265,6 +270,7 @@ export const useAlignmentLogic = (
       changeCoordinates({
         position: { top: (mouseY + offset.y) / getScale() },
         tableIds: elementIds,
+        uniqueId: uniqueIdRef.current ?? localUniqueId.current,
       });
 
       if (selectedAlignmentLine.current) {
@@ -439,6 +445,7 @@ export const useAlignmentLogic = (
         const newPos = firstAxis.position + index * equalSpace;
         const roundedNewPos = Math.round(newPos);
 
+        localUniqueId.current = generateUniqueId("btn");
         if (type === "vertical") {
           const originalIndex =
             alignmentGroups.current.vertical.indexOf(currentAxis);

@@ -5,11 +5,18 @@ import {
   DRAWING_MODES,
   AllParams,
   ThingsToDraw,
+  DRAW_TYPE,
 } from "../../../lib/canvas/canvas-defines";
 import { showAllDashedRectangles } from "@/lib/canvas/showDrawElement";
 import { isInsideSquare } from "@/lib/square-position";
 import { debounceThrottle } from "@/lib/utils/debounce";
 import { MouseCircle } from "./MouseCircle";
+
+import { CanvasDrawableObject } from "@/lib/canvas/CanvasDrawableObject";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
+import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
+import { CanvasShape } from "@/lib/canvas/CanvasShape";
+import { CanvasPath } from "@/lib/canvas/CanvasPath";
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -19,11 +26,9 @@ export class drawFindElement extends drawingHandler {
   private designElements: ThingsToDraw[];
   private setSelectedDesignElement: (elementId: string) => void;
   private mouseCircle: MouseCircle;
-  private refreshCanvas: (
-    ctx: CanvasRenderingContext2D | null | undefined,
-    withSelected?: boolean,
-    scale?: number | null
-  ) => void;
+  private getAllDesignElements: () => ThingsToDraw[];
+  private drawers: Map<string, CanvasDrawableObject> = new Map();
+  private modifiedElements: Set<string> = new Set();
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -39,9 +44,10 @@ export class drawFindElement extends drawingHandler {
 
     this.setSelectedDesignElement =
       this.designStore.getState().setSelectedDesignElement;
-    this.refreshCanvas = this.designStore.getState().refreshCanvas;
+    this.getAllDesignElements =
+      this.designStore.getState().getAllDesignElements;
 
-    this.designElements = this.designStore.getState().designElements;
+    this.designElements = this.getAllDesignElements();
     this.mouseCircle = new MouseCircle();
     this.mouseCircle.setParams({
       color: "#aaaaff",
@@ -54,7 +60,7 @@ export class drawFindElement extends drawingHandler {
   setType(type: string) {
     this.type = type;
     if (type === DRAWING_MODES.FIND) {
-      this.designElements = this.designStore.getState().designElements;
+      this.designElements = this.getAllDesignElements();
     }
   }
 
@@ -68,9 +74,79 @@ export class drawFindElement extends drawingHandler {
     return null;
   }
 
-  refreshDrawing() {
-    this.clearTemporaryCanvas();
-    this.refreshCanvas(this.context, true, this.scale);
+  /**
+   * Get the drawer for the given type
+   * @param type
+   * @returns
+   */
+  getDrawer(type: string): CanvasDrawableObject | undefined {
+    let canvasObject: CanvasDrawableObject;
+    switch (type) {
+      case DRAW_TYPE.DRAW:
+        canvasObject = new CanvasFreeCurve();
+        break;
+      case DRAW_TYPE.LINES_PATH:
+      case DRAW_TYPE.ARROW:
+        canvasObject = new CanvasPath(null);
+        break;
+      default:
+        canvasObject = new CanvasShape();
+        break;
+    }
+    return canvasObject;
+  }
+
+  async refreshDrawing() {
+    if (!this.context) return;
+
+    // Get the latest list of elements
+    this.designElements = this.getAllDesignElements();
+
+    // For each element, create or get a drawer
+    for (const element of this.designElements) {
+      let drawer = this.drawers.get(element.id);
+
+      // If it's the first display or if the element has been modified
+      if (!drawer) {
+        drawer = this.getDrawer(element.type);
+        if (drawer) {
+          this.drawers.set(element.id, drawer);
+        }
+        element.modified = true;
+      }
+    }
+
+    // load elements if modified
+    await Promise.all(
+      this.designElements.map(async (element) => {
+        if (element.modified) {
+          const drawer = this.drawers.get(element.id);
+          if (drawer) {
+            await drawer.setData(element);
+          }
+        }
+      })
+    );
+
+    // Clear the canvas
+    clearCanvasByCtx(this.context);
+    // draw elements
+    Array.from(this.drawers.values()).forEach((drawer) => {
+      drawer.draw(this.context);
+    });
+
+    // Clean drawers that are no longer used
+    const currentIds = new Set(this.designElements.map((e) => e.id));
+    Array.from(this.drawers.keys()).forEach((id) => {
+      if (!currentIds.has(id)) {
+        this.drawers.delete(id);
+      }
+    });
+
+    // Cleear the flag "modifed" for elements in the store
+    this.designStore.getState().designElements.forEach((element) => {
+      element.modified = undefined;
+    });
   }
 
   hightLightDrawing() {}
@@ -116,10 +192,6 @@ export class drawFindElement extends drawingHandler {
 
     let cursor = "default";
 
-    // if (this.nbFound > 0) {
-    //   console.log("actionMouseMove", this.getType(), "nbFound", this.nbFound);
-    // }
-
     this.debounceShowAllDashedRectangles(
       this.ctxTemporary,
       this.designElements,
@@ -162,7 +234,6 @@ export class drawFindElement extends drawingHandler {
           element.rotation
         )
       ) {
-        // console.log("Find Element actionMouseDown", element.type, element.id);
         this.setSelectedDesignElement(element.id);
 
         return {
