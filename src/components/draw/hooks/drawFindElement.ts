@@ -96,8 +96,15 @@ export class drawFindElement extends drawingHandler {
     return canvasObject;
   }
 
-  async refreshDrawing() {
+  async refreshCanvas(withSelected: boolean = true, scale?: number) {
     if (!this.context) return;
+
+    if (scale === undefined || scale === null) {
+      scale = this.scale;
+    }
+    const selectedElementId = withSelected
+      ? "-"
+      : this.designStore.getState().getSelectedDesignElement()?.id;
 
     // Get the latest list of elements
     this.designElements = this.getAllDesignElements();
@@ -114,26 +121,10 @@ export class drawFindElement extends drawingHandler {
         }
         element.modified = true;
       }
+      if (element.modified && drawer) {
+        await drawer.setData(element);
+      }
     }
-
-    // load elements if modified
-    await Promise.all(
-      this.designElements.map(async (element) => {
-        if (element.modified) {
-          const drawer = this.drawers.get(element.id);
-          if (drawer) {
-            await drawer.setData(element);
-          }
-        }
-      })
-    );
-
-    // Clear the canvas
-    clearCanvasByCtx(this.context);
-    // draw elements
-    Array.from(this.drawers.values()).forEach((drawer) => {
-      drawer.draw(this.context);
-    });
 
     // Clean drawers that are no longer used
     const currentIds = new Set(this.designElements.map((e) => e.id));
@@ -143,10 +134,27 @@ export class drawFindElement extends drawingHandler {
       }
     });
 
-    // Cleear the flag "modifed" for elements in the store
+    // Clear the canvas
+    clearCanvasByCtx(this.context);
+    // draw elements
+    // For each element, create or get a drawer
+    for (const element of this.designElements) {
+      const drawer = this.drawers.get(element.id);
+
+      if (element.id !== selectedElementId && drawer) {
+        drawer.setScale(scale);
+        drawer.draw(this.context, false, null);
+      }
+    }
+
+    // Clear the flag "modifed" for elements in the store
     this.designStore.getState().designElements.forEach((element) => {
       element.modified = undefined;
     });
+  }
+
+  async refreshDrawing() {
+    await this.refreshCanvas(true, this.scale);
   }
 
   hightLightDrawing() {}

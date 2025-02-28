@@ -14,8 +14,6 @@ import {
   ShapeDefinition,
 } from "../canvas/canvas-defines";
 import { generateUniqueId } from "../utils/unique-id";
-import { showDrawElement } from "../canvas/showDrawElement";
-import { clearCanvasByCtx } from "../canvas/canvas-tools";
 import { createLocalStoragePersist } from "./persist";
 
 const defaultDesignStoreName = "design-data-storage";
@@ -27,11 +25,7 @@ interface DesignState {
   backgroundColor: string;
   scale: number;
   getAllDesignElements: () => ThingsToDraw[];
-  refreshCanvas: (
-    ctx: CanvasRenderingContext2D | null | undefined,
-    withSelected?: boolean,
-    scale?: number | undefined | null
-  ) => Promise<void>;
+
   getDesignElement: (id: string) => ThingsToDraw | undefined;
   addDesignElement: (designElement: ThingsToDraw) => Promise<string>;
   deleteDesignElement: (id: string) => void;
@@ -57,33 +51,6 @@ const createDesignStore = (storageName: string) => {
     backgroundColor: "#ffffff",
     scale: 1,
     getAllDesignElements: () => get().designElements,
-    refreshCanvas: async (
-      ctx: CanvasRenderingContext2D | null | undefined,
-      withSelected: boolean = true,
-      scale?: number | null
-    ) => {
-      if (!ctx || !ctx.canvas) return;
-
-      if (scale === undefined || scale === null) {
-        scale = get().scale;
-      }
-
-      const designElements = get().designElements;
-
-      clearCanvasByCtx(ctx);
-      const selectedElementId = !withSelected
-        ? get().getSelectedDesignElement()?.id
-        : "-";
-
-      // Use Promise.all to wait for all images to be loaded
-      await Promise.all(
-        designElements.map(async (element) => {
-          if (element.id !== selectedElementId) {
-            await showDrawElement(ctx, element, scale, false);
-          }
-        })
-      );
-    },
     getDesignElement: (id: string) =>
       get().designElements.find(
         (designElement: ThingsToDraw) => designElement.id === id

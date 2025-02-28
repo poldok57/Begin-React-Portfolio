@@ -1,5 +1,6 @@
 import { Area } from "./types";
-import { SHAPE_TYPE } from "./canvas-defines";
+import { SHAPE_TYPE, ShapeDefinition, ThingsToDraw } from "./canvas-defines";
+import { CanvasShape } from "./CanvasShape";
 
 type drawingProps = {
   ctx: CanvasRenderingContext2D;
@@ -217,11 +218,10 @@ export const showDrawElement = async (
   ctx: CanvasRenderingContext2D,
   element: ThingsToDraw,
   scale: number = 1,
-  selected: boolean = false
+  withDetails: boolean = true
 ): Promise<void> => {
   const canvasShape = new CanvasShape();
   await canvasShape.setData(element as ShapeDefinition);
   canvasShape.setScale(scale);
-  canvasShape.setSelected(selected);
-  canvasShape.draw(ctx);
+  canvasShape.draw(ctx, false, withDetails ? "border" : null);
 };

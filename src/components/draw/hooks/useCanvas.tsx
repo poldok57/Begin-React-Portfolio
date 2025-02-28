@@ -76,7 +76,6 @@ export const useCanvas = ({
   const lastModeRef = useRef(currentParams.mode);
 
   let deleteLastDesignElement = null;
-  let refreshCanvas = null;
   let getSelectedDesignElement = null;
   let setSelectedDesignElement = null;
   let deleteDesignElement = null;
@@ -85,7 +84,6 @@ export const useCanvas = ({
   if (store) {
     ({
       deleteLastDesignElement,
-      refreshCanvas,
       getSelectedDesignElement,
       setSelectedDesignElement,
       deleteDesignElement,
@@ -131,8 +129,8 @@ export const useCanvas = ({
     if (deleteLastDesignElement) {
       deleteLastDesignElement();
     }
-    if (refreshCanvas) {
-      await refreshCanvas(ctx, false, scaleRef.current);
+    if (findRef.current) {
+      await findRef.current.refreshCanvas(true, scaleRef.current);
     }
   };
 
@@ -188,9 +186,15 @@ export const useCanvas = ({
     withSelected: boolean = true,
     lScale: number = scale
   ) => {
-    if (contextRef.current && refreshCanvas) {
+    if (contextRef.current) {
       setContextConstants(contextRef.current);
-      await refreshCanvas(contextRef.current, withSelected, lScale);
+
+      if (!findRef.current) {
+        selectDrawingHandler(DRAWING_MODES.FIND);
+      }
+      if (findRef.current) {
+        await findRef.current.refreshCanvas(withSelected, lScale);
+      }
     }
   };
 
@@ -495,8 +499,8 @@ export const useCanvas = ({
         },
         newMode === DRAWING_MODES.IMAGE ? 5 : 0
       );
-      if (canvasRef.current && refreshCanvas) {
-        await refreshCanvas(contextRef.current, false, scaleRef.current);
+      if (findRef.current) {
+        await findRef.current.refreshCanvas(false, scaleRef.current);
       }
 
       mouseOnCtrlPanel.current = false;
