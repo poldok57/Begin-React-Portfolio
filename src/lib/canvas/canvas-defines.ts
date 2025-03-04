@@ -11,6 +11,7 @@ const DRAWING_ACTIONS = {
   STOP_PATH: "stopPath",
   REFRESH: "refresh",
   POSITION: "position",
+  RECORD: "record",
 };
 
 const IMAGE_ACTIONS = {

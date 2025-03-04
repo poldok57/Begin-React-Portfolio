@@ -17,7 +17,7 @@ import {
 import { inputRangeVariants } from "../../../styles/input-variants";
 import { cn } from "@/lib/utils/cn";
 import { MdRadioButtonUnchecked } from "react-icons/md";
-import { useRoomContext } from "../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 interface RoomDesignShapeProps {
   isTouch?: boolean;
   buttonShapeSize?: number;
@@ -35,7 +35,7 @@ export const RoomDesignShape: React.FC<RoomDesignShapeProps> = ({
     setShapeParams,
     needReloadControl,
   } = useDrawingContext();
-  const { getCtxTemporary } = useRoomContext();
+  const { getCtxTemporary } = useRoomStore();
 
   const btnClassName = "px-2 py-1";
   const paramsShape = drawingParams.shape;

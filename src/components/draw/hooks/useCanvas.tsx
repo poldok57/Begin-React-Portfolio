@@ -12,6 +12,8 @@ import {
   ThingsToDraw,
 } from "@/lib/canvas/canvas-defines";
 
+import { DesignState } from "@/lib/stores/design";
+
 import { alertMessage } from "@/components/alert-messages/alertMessage";
 
 import { drawLine } from "./drawLine";
@@ -74,20 +76,15 @@ export const useCanvas = ({
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
   const scaleRef = useRef(scale);
   const lastModeRef = useRef(currentParams.mode);
+  const namedStoreRef = useRef<DesignState | null>(null);
+  const storeNameRef = useRef<string | null>(null);
 
-  let deleteLastDesignElement = null;
-  let getSelectedDesignElement = null;
-  let setSelectedDesignElement = null;
-  let deleteDesignElement = null;
+  if (storeNameRef.current !== storeName) {
+    storeNameRef.current = storeName;
+    findRef.current = null;
 
-  const store = useZustandDesignStore(storeName);
-  if (store) {
-    ({
-      deleteLastDesignElement,
-      getSelectedDesignElement,
-      setSelectedDesignElement,
-      deleteDesignElement,
-    } = store.getState());
+    console.log("useCanvas storeName", storeName);
+    namedStoreRef.current = useZustandDesignStore(storeName).getState();
   }
 
   useEffect(() => {
@@ -97,6 +94,12 @@ export const useCanvas = ({
   // Create working canvases
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    if (contextRef.current === null) {
+      contextRef.current = canvasRef.current.getContext("2d", {
+        willReadFrequently: true,
+      });
+    }
 
     // Create temporary canvas
     const newTempCanvas = duplicateCanvas(canvasRef.current);
@@ -126,8 +129,8 @@ export const useCanvas = ({
     if (ctx === null) {
       return;
     }
-    if (deleteLastDesignElement) {
-      deleteLastDesignElement();
+    if (namedStoreRef.current) {
+      namedStoreRef.current.deleteLastDesignElement();
     }
     if (findRef.current) {
       await findRef.current.refreshCanvas(true, scaleRef.current);
@@ -235,8 +238,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           tempCanvasRef.current,
-          setDrawingMode,
-          storeName
+          setDrawingMode
         );
         newHandler = true;
       }
@@ -246,8 +248,7 @@ export const useCanvas = ({
         canvasRef.current,
         contextRef.current,
         tempCanvasRef.current,
-        setDrawingMode,
-        storeName
+        setDrawingMode
       );
       newHandler = true;
       drawingHdl = drawingRef.current;
@@ -257,8 +258,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           tempCanvasRef.current,
-          setDrawingMode,
-          storeName
+          setDrawingMode
         );
         newHandler = true;
       }
@@ -270,8 +270,7 @@ export const useCanvas = ({
           canvasRef.current,
           contextRef.current,
           tempCanvasRef.current,
-          setDrawingMode,
-          storeName
+          setDrawingMode
         );
         newHandler = true;
       }
@@ -303,23 +302,33 @@ export const useCanvas = ({
     return drawingHdl;
   };
 
+  /**
+   * Record the design element in the store
+   */
+  const recordDesignElement = async () => {
+    if (namedStoreRef.current) {
+      const element = drawingRef.current?.getLastDraw();
+      if (element) {
+        await namedStoreRef.current.addOrUpdateDesignElement(element);
+      }
+    }
+  };
+
+  const setSelectedDesignElement = (elementId: string | null) => {
+    if (namedStoreRef.current) {
+      namedStoreRef.current.setSelectedDesignElement(elementId);
+    }
+  };
+
   const generalInitialisation = () => {
     // Initialize canvas
     currentParams = getDrawingParams();
     setDrawingMode(defaultMode);
 
-    if (setSelectedDesignElement) {
-      setSelectedDesignElement(null);
-    }
+    setSelectedDesignElement(null);
 
     lineRef.current = null;
     elementRef.current = null;
-
-    if (contextRef.current === null && canvasRef.current) {
-      contextRef.current = canvasRef.current.getContext("2d", {
-        willReadFrequently: true,
-      });
-    }
 
     if (selectionRef.current !== null) selectionRef.current.eraseSelectedArea();
 
@@ -459,17 +468,15 @@ export const useCanvas = ({
     }
 
     const reload = newMode === DRAWING_MODES.RELOAD;
+    let selectedDesignElement = null;
+    if (reload && namedStoreRef.current) {
+      selectedDesignElement = namedStoreRef.current.getSelectedDesignElement();
 
-    const selectedDesignElement: ThingsToDraw | null = reload
-      ? getSelectedDesignElement
-        ? getSelectedDesignElement()
-        : null
-      : null;
-
-    if (reload && selectedDesignElement) {
-      newMode = selectedDesignElement.type;
+      if (selectedDesignElement) {
+        newMode = selectedDesignElement.type;
+      }
+      currentParams.mode = newMode;
     }
-    currentParams.mode = newMode;
 
     // end previous action then changing mode
     if (drawingRef.current) {
@@ -586,12 +593,17 @@ export const useCanvas = ({
         break;
       case DRAWING_MODES.ABORT:
         const mode = drawingRef.current.actionAbort();
-        if (mode) {
+        if (mode === DRAWING_MODES.RECORD) {
+          recordDesignElement();
+        } else if (mode) {
           setDrawingMode(mode);
         }
         break;
       case DRAWING_MODES.VALID:
-        drawingRef.current.actionValid();
+        if (drawingRef.current) {
+          drawingRef.current.actionValid();
+          recordDesignElement();
+        }
         break;
       case DRAWING_MODES.SAVE:
         if (selectionRef.current === null) {
@@ -632,7 +644,9 @@ export const useCanvas = ({
           return;
         }
         alertMessage("Delete the selection");
-        selectionRef.current.deleteSelection();
+        if (selectionRef.current.deleteSelection()) {
+          recordDesignElement();
+        }
         break;
       case DRAWING_MODES.CUT:
         if (selectionRef.current === null) {
@@ -640,7 +654,9 @@ export const useCanvas = ({
           return;
         }
         alertMessage("Cut the selection");
-        selectionRef.current.cutSelection();
+        if (selectionRef.current.cutSelection()) {
+          recordDesignElement();
+        }
         break;
       case DRAWING_MODES.IMAGE_RADIUS:
         if (selectionRef.current !== null) {
@@ -719,23 +735,27 @@ export const useCanvas = ({
       mouseResult = drawingRef.current?.actionMouseDown(event, coord);
     }
 
+    if (mouseResult?.reccord) {
+      recordDesignElement();
+    }
+
     if (mouseResult?.toExtend) {
       extendMouseEvent();
     } else {
       stopExtendMouseEvent();
     }
 
-    if (mouseResult?.deleteId && deleteDesignElement) {
-      deleteDesignElement(mouseResult.deleteId);
+    if (mouseResult?.deleteId) {
+      if (namedStoreRef.current) {
+        namedStoreRef.current.deleteDesignElement(mouseResult.deleteId);
+      }
     }
 
     if (mouseResult?.toReset) {
       drawingRef.current?.endAction();
       // restart with basic drawing mode
       setDrawingMode(DRAWING_MODES.FIND);
-      if (setSelectedDesignElement) {
-        setSelectedDesignElement(null);
-      }
+      setSelectedDesignElement(null);
 
       drawingRef.current = selectDrawingHandler(DRAWING_MODES.FIND);
       drawingRef.current?.setType(DRAWING_MODES.FIND);

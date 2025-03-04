@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Mode } from "../types";
 
 import { getCanvasSize } from "../scripts/canvas-size";
-import { useRoomContext } from "../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { useZustandDesignStore } from "@/lib/stores/design";
 // import { cn } from "@/lib/utils/cn";
 import { useCanvas } from "@/components/draw/hooks/useCanvas";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
+import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 interface CanvasProps {
   backgroundCanvasRef: React.RefObject<HTMLCanvasElement>;
@@ -32,26 +33,18 @@ export const Canvas: React.FC<CanvasProps> = ({
     height: 600,
   });
   const lastScale = useRef<number>(0);
-  const { setCtxTemporary, scale, getScale, storeName } = useRoomContext();
+  const { setCtxTemporary, scale, getScale, designStoreName } = useRoomStore();
 
   /**
    * Zustand design local storage
    */
-  // console.log("storeName", storeName);
-
-  let setSelectedDesignElement = null;
-  let designElements = null;
-  let selectedDesignElement = null;
-
-  const store = useZustandDesignStore(storeName);
-  if (store) {
-    ({ designElements, selectedDesignElement, setSelectedDesignElement } =
-      store.getState());
-  }
+  const store = useZustandDesignStore(designStoreName);
+  const { designElements, selectedDesignElement, setSelectedDesignElement } =
+    store.getState();
 
   const { simpleRefreshCanvas, tempCanvas } = useCanvas({
     canvasRef: backgroundCanvasRef,
-    storeName,
+    storeName: designStoreName,
     scale,
     defaultMode: DRAWING_MODES.PAUSE,
   });
@@ -110,7 +103,13 @@ export const Canvas: React.FC<CanvasProps> = ({
         setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
       }
     },
-    [backgroundCanvasRef.current, designElements, selectedDesignElement, scale]
+    [
+      backgroundCanvasRef.current,
+      designElements,
+      selectedDesignElement,
+      designStoreName,
+      scale,
+    ]
   );
 
   useEffect(() => {
@@ -123,8 +122,17 @@ export const Canvas: React.FC<CanvasProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Refresh the canvas when the store changes
   useEffect(() => {
-    // console.log("selected Element", selectedDesignElement, "scale:", scale);
+    const scale = getScale();
+    if (backgroundCanvasRef.current) {
+      clearCanvasByCtx(backgroundCanvasRef.current.getContext("2d"));
+    }
+    // Force refresh of useCanvas
+    resizeCanvas(scale, true);
+  }, [designStoreName]);
+
+  useEffect(() => {
     resizeCanvas(scale, false);
   }, [designElements, selectedDesignElement, scale]);
 

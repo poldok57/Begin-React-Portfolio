@@ -31,10 +31,9 @@ export class drawFreehand extends drawingHandler {
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporaryCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void,
-    storeName?: string | null
+    setMode: (mode: string) => void
   ) {
-    super(canvas, canvasContext, temporaryCanvas, setMode, storeName);
+    super(canvas, canvasContext, temporaryCanvas, setMode);
     this.typeHandler = DRAWING_MODES.DRAW;
     this.freeCurve = new CanvasFreeCurve();
     this.mouseCircle = new MouseCircle();
@@ -230,7 +229,7 @@ export class drawFreehand extends drawingHandler {
           this.clearTemporaryCanvas();
           this.finishedDrawing = false;
           this.setDrawing(false);
-          this.saveCanvasPicture(null);
+          this.saveCanvasPicture();
           this.freeCurve.clearPoints();
 
           event.stopPropagation();
@@ -238,6 +237,7 @@ export class drawFreehand extends drawingHandler {
             changeMode: this.modificationMode
               ? DRAWING_MODES.FIND
               : DRAWING_MODES.DRAW,
+            reccord: true,
           };
         case BORDER.ON_BUTTON_DELETE: {
           const deleteId = this.freeCurve.getDataId();
@@ -278,13 +278,17 @@ export class drawFreehand extends drawingHandler {
     return { toExtend: false, pointer: "none" } as returnMouseDown;
   }
 
-  validCurve() {
+  actionValid() {
     if (this.getType() === DRAWING_MODES.DRAW) {
-      this.freeCurve.setFinished(true);
-      this.freeCurve.draw(this.context as CanvasRenderingContext2D);
-      this.freeCurve.clearPoints();
+      this.freeCurve.draw(this.context as CanvasRenderingContext2D, false);
+      this.clearTemporaryCanvas();
+      this.finishedDrawing = false;
+      this.setDrawing(false);
       this.saveCanvasPicture();
+      this.freeCurve.clearPoints();
+      return true;
     }
+    return false;
   }
   /**
    * Function to stop drawing on the canvas

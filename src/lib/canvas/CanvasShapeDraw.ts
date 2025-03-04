@@ -36,6 +36,7 @@ type drawingProps = {
   type?: string;
   virtualCanvas?: HTMLCanvasElement | null;
   blackWhite?: boolean;
+  isDrawingBorder?: boolean;
 };
 
 export class CanvasShapeDraw {
@@ -96,7 +97,7 @@ export class CanvasShapeDraw {
    */
   getShapeSize = (square: Area, lWidth: number = 0) => {
     let { x, y, width, height } = square;
-
+    // console.log("getShapeSize", square, lWidth);
     if (lWidth > 0) {
       width -= lWidth;
       height -= lWidth;
@@ -114,12 +115,22 @@ export class CanvasShapeDraw {
    * @param {number} lineWidth - width of the line
    * @param {number} radius - radius of the square
    */
-  drawSquare = ({ ctx, squareSize, lineWidth, radius }: drawingProps) => {
+  drawSquare = ({
+    ctx,
+    squareSize,
+    lineWidth,
+    radius,
+    isDrawingBorder = false,
+  }: drawingProps) => {
     const newArea = this.getShapeSize(squareSize, lineWidth);
 
-    ctx.beginPath();
+    if (!isDrawingBorder && lineWidth && lineWidth > 0 && radius) {
+      radius = Math.max(0, radius - lineWidth / 2);
+    }
 
     if (!radius || radius < 1) {
+      ctx.beginPath();
+
       ctx.lineJoin = "miter";
       const { x, y, width, height } = newArea;
       ctx.rect(x, y, width, height);
@@ -138,10 +149,14 @@ export class CanvasShapeDraw {
     lineWidth,
     radius = 0,
     type: shapeType,
+    isDrawingBorder = false,
   }: drawingProps) => {
     const { x, y, width, height } = this.getShapeSize(squareSize, lineWidth);
     if (!shapeType) shapeType = SHAPE_TYPE.TWO_RADIUS;
 
+    if (!isDrawingBorder && lineWidth && lineWidth > 0 && radius) {
+      radius = Math.max(0, radius - lineWidth / 2);
+    }
     if (!radius || radius < 1) {
       ctx.lineJoin = "miter";
     }
@@ -215,6 +230,7 @@ export class CanvasShapeDraw {
       lineWidth: bWidth,
       radius: radiusB,
       type: shapeType,
+      isDrawingBorder: true,
     } as drawingProps);
 
     ctx.stroke();

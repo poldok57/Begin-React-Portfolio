@@ -1,7 +1,7 @@
 import { useRef, useCallback } from "react";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
 import { MARGIN } from "../../scripts/table-numbers";
-import { useRoomContext } from "../../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { Mode } from "../../types";
 import { Coordinate, Rectangle } from "@/lib/canvas/types";
 import { debounceThrottle } from "@/lib/utils/debounce";
@@ -61,7 +61,7 @@ export const useAlignmentLogic = (
     horizontal: AxisGroup[];
   }>({ vertical: [], horizontal: [] });
 
-  const { getRotation, getScale } = useRoomContext();
+  const { getRotation, getScale } = useRoomStore();
 
   const elementsInContainer = useRef<HTMLDivElement[]>([]);
 
@@ -243,6 +243,7 @@ export const useAlignmentLogic = (
 
   const moveVerticalLine = (index: number, mouseX: number) => {
     if (index < 0) return;
+    // console.log("moveVerticalLine", index, mouseX);
     const group = alignmentGroups.current.vertical[index];
     if (group) {
       const offset = getGroundOffset();

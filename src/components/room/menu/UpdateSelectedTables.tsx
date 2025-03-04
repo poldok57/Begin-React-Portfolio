@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Settings, X, PowerOff } from "lucide-react";
 import { TableSettings } from "../types";
-import { useTableDataStore } from "../stores/tables";
+import { useZustandTableStore } from "../../../lib/stores/tables";
 import { Button } from "@/components/atom/Button";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 
@@ -16,7 +16,7 @@ import { RotationButtons } from "../control/RotationButtons";
 import { ResizeButtons } from "../control/ResizeButtons";
 import { DeleteSelectedTables } from "../control/DeleteSelectedTables";
 import { RotationSquad } from "../control/RotationSquad";
-import { useRoomContext } from "../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { Mode, TableType, Menu } from "../types";
 
 import { withMousePosition } from "../../windows/withMousePosition";
@@ -26,19 +26,22 @@ interface UpdateSelectedTablesMenuProps {
   btnSize: number;
   isTouch: boolean;
   setActiveMenu: (menu: Menu | null) => void;
+  tablesStoreName: string;
 }
 
 const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
   btnSize,
   isTouch,
+  tablesStoreName,
 }) => {
+  const namedStore = useZustandTableStore(tablesStoreName);
   const {
     tables,
     rotationSelectedTable,
     sizeSelectedTable,
     deleteSelectedTable,
     updateSelectedTables,
-  } = useTableDataStore();
+  } = namedStore((state) => state);
 
   const [selectedTablesCount, setSelectedTablesCount] = useState(0);
   const [editSettings, setEditSettings] = useState<TableSettings | null>(null);
@@ -154,7 +157,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
   setActiveMenu,
   disabled = false,
 }) => {
-  const { setMode } = useRoomContext();
+  const { setMode, tablesStoreName } = useRoomStore();
 
   return (
     <>
@@ -184,6 +187,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
           titleHidden={false}
           titleBackground={"#99ee66"}
           draggable={true}
+          tablesStoreName={tablesStoreName}
         />
       )}
     </>

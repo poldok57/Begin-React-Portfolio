@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Button } from "@/components/atom/Button";
-import { useTableDataStore } from "../stores/tables";
-import { useRoomContext } from "../RoomProvider";
+import { useZustandTableStore } from "../../../lib/stores/tables";
+import { useRoomStore } from "@/lib/stores/room";
 import { Mode, Menu } from "../types";
 import { TableNumbersProcess } from "./TableNumbersProcess";
 import { withMousePosition } from "../../windows/withMousePosition";
@@ -27,9 +27,16 @@ const TableNumbers = ({
   disabled = false,
 }: TableNumbersProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const { resetSelectedTables } = useTableDataStore();
-  const { setMode, clearSelectedTableIds, clearTemporaryCanvas } =
-    useRoomContext();
+  const {
+    setMode,
+    clearSelectedTableIds,
+    clearTemporaryCanvas,
+    tablesStoreName,
+  } = useRoomStore();
+
+  const namedStore = useZustandTableStore(tablesStoreName);
+
+  const { resetSelectedTables } = namedStore((state) => state);
 
   const startNumbering = () => {
     clearSelectedTableIds();

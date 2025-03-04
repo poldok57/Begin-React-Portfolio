@@ -29,6 +29,8 @@ export enum Menu {
   tableNumbers = "tableNumbers",
   roomDesign = "roomDesign",
   scale = "scale",
+  groupCreat = "groupCreat",
+  place = "place",
 }
 
 export enum Mode {
@@ -77,7 +79,7 @@ export interface TableProps extends Table, TableColors, TableSettings {
 export interface TableData extends Table {
   id: string;
   groupId?: string | null;
-  selected: boolean;
+  selected?: boolean;
   position: Position;
   offset?: Position;
   settings?: TableSettings | null;
@@ -92,6 +94,14 @@ export interface GroupTable {
   settings?: TableSettings;
 }
 
+export interface PlaceRoom {
+  id: string;
+  name: string;
+  title?: string;
+  startDate?: Date;
+  endDate?: Date;
+  isActive?: boolean;
+}
 export interface DesignElement {
   id: string;
   type: DesignType;

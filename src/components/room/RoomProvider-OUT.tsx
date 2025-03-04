@@ -10,6 +10,9 @@ import { Rectangle } from "@/lib/canvas/types";
 import { Mode } from "@/components/room/types";
 // import { GROUND_ID } from "./RoomCreat";
 
+const DESIGN_STORE_NAME = "room-design-storage";
+const TABLES_STORE_NAME = "room-tables-storage";
+
 interface RoomContextProps {
   getCtxTemporary: () => CanvasRenderingContext2D | null;
   setCtxTemporary: (ctx: CanvasRenderingContext2D | null) => void;
@@ -21,7 +24,6 @@ interface RoomContextProps {
   setRotation: (rotation: number) => void;
   getRotation: () => number;
   getElementRect: (id: string) => Rectangle | null;
-  // isInContainer: (rect: DOMRect) => boolean;
   selectedRect: Rectangle | null;
   setSelectedRect: (rect: Rectangle | null) => void;
   getSelectedRect: (scaleSize?: boolean) => Rectangle | null;
@@ -33,8 +35,12 @@ interface RoomContextProps {
   removeSelectedTableId: (id: string) => void;
   clearSelectedTableIds: () => void;
   needRefresh: () => void;
-  storeName: string | null;
-  setStoreName: (storeName: string | null) => void;
+  designStoreName: string;
+  tablesStoreName: string;
+  setStoreName: (storeName?: string | null) => {
+    designStoreName: string;
+    tablesStoreName: string;
+  };
   maxRowsPerColumn: number;
   setMaxRowsPerColumn: (maxRowsPerColumn: number) => void;
 }
@@ -46,7 +52,10 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const ctxTemporaryRef = useRef<CanvasRenderingContext2D | null>(null);
-  const [storeName, setStoreName] = useState<string | null>(null);
+  const [designStoreName, setDesignStoreName] =
+    useState<string>(DESIGN_STORE_NAME);
+  const [tablesStoreName, setTablesStoreName] =
+    useState<string>(TABLES_STORE_NAME);
   const [, setToRefresh] = useState<number>(0);
   const [scale, setStateScale] = useState<number>(1);
   const scaleRef = useRef<number>(1);
@@ -192,6 +201,17 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const setStoreName = useCallback((storeName?: string | null) => {
+    const designStoreName =
+      DESIGN_STORE_NAME + (storeName ? "_" + storeName : "");
+    const tablesStoreName =
+      TABLES_STORE_NAME + (storeName ? "_" + storeName : "");
+    setDesignStoreName(designStoreName);
+    setTablesStoreName(tablesStoreName);
+
+    return { designStoreName, tablesStoreName };
+  }, []);
+
   return (
     <RoomContext.Provider
       value={{
@@ -218,7 +238,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({
         removeSelectedTableId,
         clearSelectedTableIds,
         needRefresh,
-        storeName,
+        designStoreName,
+        tablesStoreName,
         setStoreName,
         maxRowsPerColumn,
         setMaxRowsPerColumn,

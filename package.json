@@ -13,6 +13,7 @@
     "bad-words": "^3.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^1.2.1",
+    "date-fns": "^4.1.0",
     "gif.js": "^0.2.0",
     "immer": "^10.1.1",
     "lucide-react": "^0.416.0",

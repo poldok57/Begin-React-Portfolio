@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect } from "react";
 import { RectPosition as Position } from "@/lib/canvas/types";
 import { TableData } from "./types";
-import { useTableDataStore } from "./stores/tables";
+import { useZustandTableStore } from "../../lib/stores/tables";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
-import { useRoomContext } from "./RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { Mode } from "./types";
-import { ChangeCoordinatesParams } from "./RoomCreat";
 import { generateUniqueId } from "@/lib/utils/unique-id";
+import { useTablePositioning } from "./GroundSelection/hooks/useTablePositioning";
+
 const RoomTableWP = withMousePosition(RoomTable);
 
 interface ListTablesProps {
@@ -15,21 +16,25 @@ interface ListTablesProps {
   btnSize: number;
   editable?: boolean;
   onClick?: ((id: string) => void) | null;
-  changeCoordinates?: (params: ChangeCoordinatesParams) => void;
 }
 
 export const ListTablesPlan = React.memo(
-  ({
-    tables,
-    btnSize,
-    editable = false,
-    onClick = null,
-    changeCoordinates,
-  }: ListTablesProps) => {
+  ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
     // const [activeTable, setActiveTable] = useState<string | null>(null);
-    const { scale, getScale, mode } = useRoomContext();
-    const { updateTable, deleteTable, activeTable, setActiveTable, getTable } =
-      useTableDataStore((state) => state);
+    const { scale, getScale, mode, tablesStoreName } = useRoomStore();
+
+    const tableStore = useZustandTableStore(tablesStoreName);
+
+    const {
+      updateTable,
+      deleteTable,
+      activeTable,
+      setActiveTable,
+      getTable,
+      selectOneTable,
+    } = tableStore.getState();
+
+    const { changeCoordinates } = useTablePositioning();
 
     const handleMove = useCallback(
       (id: string, position: Position) => {
@@ -102,7 +107,7 @@ export const ListTablesPlan = React.memo(
           updateTable(id, { position: scalePosition });
         }
       },
-      [getScale, tables, scale, changeCoordinates]
+      [getScale, tables, scale, changeCoordinates, updateTable, tablesStoreName]
     );
 
     const handleChangeSelected = useCallback(
@@ -152,7 +157,7 @@ export const ListTablesPlan = React.memo(
     const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
       if (activeTable === id) {
         setActiveTable(null);
-        updateTable(id, { selected: false });
+        updateTable(id, { selected: undefined });
       } else {
         // when a table is selected, verify if is is superposed to another table
         isSuperposed(id);
@@ -217,6 +222,8 @@ export const ListTablesPlan = React.memo(
           mode={mode}
           showButton={showButton}
           setActiveTable={setActiveTable}
+          updateTable={updateTable}
+          selectOneTable={selectOneTable}
         />
       );
     });

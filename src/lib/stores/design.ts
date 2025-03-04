@@ -18,7 +18,7 @@ import { createLocalStoragePersist } from "./persist";
 
 const defaultDesignStoreName = "design-data-storage";
 
-interface DesignState {
+export interface DesignState {
   designElements: ThingsToDraw[];
   selectedDesignElement: string | null;
   getDesignElementLength: () => number;
@@ -257,7 +257,6 @@ export const getImageDataURL = async (id: string): Promise<string | null> => {
 };
 
 export const useDesignStore = createDesignStore(defaultDesignStoreName);
-export const useRoomDesignStore = createDesignStore("room-design-storage");
 
 // Create a Map to store the instances of the stores
 const storeInstances = new Map<string, ReturnType<typeof createDesignStore>>();
@@ -277,9 +276,8 @@ export const zustandDesignStore = (storeName: string | null) => {
 // For React components
 export const useZustandDesignStore = (storeName: string | null) => {
   if (storeName === null) {
-    return null;
+    storeName = defaultDesignStoreName;
   }
 
-  const store = zustandDesignStore(storeName);
-  return store;
+  return zustandDesignStore(storeName);
 };

@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { GroupTable, TableColors, TableSettings, TableType } from "./types";
-import { ShowTable, getTableComponent } from "./ShowTable";
+import { GroupTable, TableColors, TableSettings, TableType } from "../types";
+import { ShowTable, getTableComponent } from "../ShowTable";
 import { isTouchDevice } from "@/lib/utils/device";
-import { useGroupStore } from "./stores/groups";
-import { useTableDataStore } from "./stores/tables";
+import { useGroupStore } from "@/lib/stores/groups";
+import { useRoomStore } from "@/lib/stores/room";
+import { useZustandTableStore } from "@/lib/stores/tables";
 import { Palette, ArrowBigUpDash, Trash2, Pencil } from "lucide-react";
-import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
-import { ModifyColor } from "./ModifyColor";
+import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
+import { ModifyColor } from "../ModifyColor";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 const DEFAULT_COLORS = {
   borderColor: "#333333",
@@ -25,7 +26,6 @@ export const GroupCreat = ({
   onSelect?: (groupId: string | null) => void;
 }) => {
   const { addGroup, updateGroup, deleteGroup, groups } = useGroupStore();
-  const { updateSelectedTables, countSelectedTables } = useTableDataStore();
   const [currentId, setCurrentId] = useState<string | null>(groupId ?? null);
   const [title, setTitle] = useState("");
   const [colors, setColors] = useState<TableColors>(DEFAULT_COLORS);
@@ -38,6 +38,11 @@ export const GroupCreat = ({
   const isTouch = isTouchDevice();
   const btnSize = isTouch ? 20 : 16;
   const [tableType, setTableType] = useState<TableType>(TableType.poker);
+  const { tablesStoreName } = useRoomStore();
+  const namedStore = useZustandTableStore(tablesStoreName);
+  const { updateSelectedTables, countSelectedTables } = namedStore(
+    (state) => state
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -135,7 +140,7 @@ export const GroupCreat = ({
 
   return (
     <div
-      className={clsx("shadow-xl bg-base-100", {
+      className={cn("shadow-xl bg-base-100", {
         "w-96 card": editing,
         "w-80 rounded-lg": !editing,
       })}
@@ -280,7 +285,13 @@ export const GroupCreat = ({
                     />
                   </>
                 )}
-                <div className="justify-between items-center card-actions">
+                <div
+                  className={cn(
+                    "items-center card-actions",
+                    { "justify-between": currentId },
+                    { "justify-center": !currentId }
+                  )}
+                >
                   {currentId && (
                     <DeleteWithConfirm
                       confirmClassName="p-2 m-1 btn btn-sm"

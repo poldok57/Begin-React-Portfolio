@@ -7,7 +7,7 @@ import {
   ThingsToDraw,
   DRAW_TYPE,
 } from "../../../lib/canvas/canvas-defines";
-import { showAllDashedRectangles } from "@/lib/canvas/showDrawElement";
+import { showAllDashedRectangles } from "@/lib/canvas/showDashedRectangles";
 import { isInsideSquare } from "@/lib/square-position";
 import { debounceThrottle } from "@/lib/utils/debounce";
 import { MouseCircle } from "./MouseCircle";
@@ -17,7 +17,7 @@ import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 import { CanvasFreeCurve } from "@/lib/canvas/CanvasFreeCurve";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
-
+import { zustandDesignStore } from "@/lib/stores/design";
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
@@ -29,18 +29,22 @@ export class drawFindElement extends drawingHandler {
   private getAllDesignElements: () => ThingsToDraw[];
   private drawers: Map<string, CanvasDrawableObject> = new Map();
   private modifiedElements: Set<string> = new Set();
+  protected localStorageName: string | null = null;
+  protected designStore: ReturnType<typeof zustandDesignStore>;
 
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporaryCanvas: HTMLCanvasElement | null,
     setMode: (mode: string) => void,
-    localStorageName?: string | null
+    localStorageName: string | null
   ) {
     super(canvas, canvasContext, temporaryCanvas, setMode, localStorageName);
     this.extendedMouseArea = false;
     this.nbFound = 0;
     this.typeHandler = DRAWING_MODES.FIND;
+
+    this.designStore = zustandDesignStore(localStorageName);
 
     this.setSelectedDesignElement =
       this.designStore.getState().setSelectedDesignElement;
@@ -189,12 +193,10 @@ export class drawFindElement extends drawingHandler {
     coord: Coordinate
   ): string | null {
     if (this.getType() !== DRAWING_MODES.FIND) {
-      console.log("actionMouseMove type", this.getType());
       return null;
     }
 
     if (!this.ctxTemporary) {
-      console.log("actionMouseMove No ctxTemporary");
       return null;
     }
 

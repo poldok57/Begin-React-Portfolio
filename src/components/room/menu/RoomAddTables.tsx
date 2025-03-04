@@ -1,11 +1,10 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "../SelectionItems";
-import { useTableDataStore } from "../stores/tables";
 import { TableType } from "../types";
 import { RectangleHorizontal } from "lucide-react";
 import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
-import { useRoomContext } from "../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { Menu, Mode } from "../types";
 import { SelectTableType } from "../SelectTableType";
 import {
@@ -15,14 +14,13 @@ import {
 } from "../scripts/room-add-tables";
 import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
+import { useZustandTableStore } from "@/lib/stores/tables";
 interface RoomAddTablesMenuProps {
-  addSelectedRect: (rect: Rectangle) => void;
-  setActiveMenu: (menu: Menu | null) => void;
+  handleClose: () => void;
 }
 
 const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
-  addSelectedRect,
-  setActiveMenu,
+  handleClose,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [selectedItems, setSelectedItems] = useState<{
@@ -33,10 +31,14 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     TableType.poker
   );
 
-  const { tables, addTable, updateSelectedTables } = useTableDataStore(
+  const { getSelectedRect, scale, tablesStoreName, setPreSelection } =
+    useRoomStore();
+
+  const namedStore = useZustandTableStore(tablesStoreName);
+
+  const { tables, addTable, updateSelectedTables } = namedStore(
     (state) => state
   );
-  const { getSelectedRect, scale } = useRoomContext();
 
   const resetSelectedTables = () => {
     updateSelectedTables({ selected: false });
@@ -92,8 +94,8 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
         tableNumber++;
       }
     }
-    addSelectedRect(selectedRect);
-    setActiveMenu(null);
+    setPreSelection(selectedRect);
+    handleClose();
   };
   return (
     <div ref={ref} className={menuRoomVariants({ width: 64 })}>
@@ -108,7 +110,7 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
       </div>
       <div className="mb-4">
         <SelectionItems
-          handleClose={() => setActiveMenu(null)}
+          handleClose={handleClose}
           setSelectedItems={setSelectedItems}
           selectedItems={selectedItems}
           addTables={handleAddTables}
@@ -121,7 +123,7 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
         />
       </div>
       <div className="flex justify-end space-x-2">
-        <Button onClick={() => setActiveMenu(null)} className="bg-warning">
+        <Button onClick={handleClose} className="bg-warning">
           Cancel
         </Button>
         <Button onClick={handleAddTables} className="bg-primary">
@@ -135,7 +137,6 @@ const RoomAddTablesMenuWP = withMousePosition(RoomAddTablesMenu);
 
 interface RoomAddTablesProps {
   className: string;
-  addSelectedRect: (rect: Rectangle) => void;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
   disabled?: boolean;
@@ -143,12 +144,11 @@ interface RoomAddTablesProps {
 
 export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
   className,
-  addSelectedRect,
   activeMenu,
   setActiveMenu,
   disabled = false,
 }) => {
-  const { setMode } = useRoomContext();
+  const { setMode } = useRoomStore();
 
   return (
     <>
@@ -168,9 +168,8 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
 
       {activeMenu === Menu.addTable && (
         <RoomAddTablesMenuWP
-          addSelectedRect={addSelectedRect}
-          setActiveMenu={setActiveMenu}
           onClose={() => setActiveMenu(null)}
+          handleClose={() => setActiveMenu(null)}
           className="absolute z-30 translate-y-24"
           withToggleLock={false}
           withTitleBar={true}

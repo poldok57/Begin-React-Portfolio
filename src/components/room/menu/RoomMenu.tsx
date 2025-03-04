@@ -5,16 +5,15 @@ import { RoomDesign } from "./RoomDesign";
 import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
-import { useRoomContext } from "@/components/room/RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { DesignType, Menu } from "@/components/room/types";
 import { TableNumbers } from "./TableNumbers";
-import { useTableDataStore } from "@/components/room/stores/tables";
 
 import {
   showValidationFrame,
   addValidationValidAction,
 } from "../ValidationFrame";
-
+import { useZustandTableStore } from "@/lib/stores/tables";
 interface RoomMenuProps {
   btnSize: number;
   recordDesign: (
@@ -23,23 +22,27 @@ interface RoomMenuProps {
     name: string,
     opacity: number
   ) => void;
-  addSelectedRect: (rect: Rectangle) => void;
   resetSelectedTables: () => void;
 }
 
 export const RoomMenu: React.FC<RoomMenuProps> = ({
   btnSize,
-  addSelectedRect,
   resetSelectedTables,
 }) => {
   const isTouch = isTouchDevice();
   const ref = useRef<HTMLDivElement>(null);
-  const { scale, setScale, clearSelectedTableIds, getSelectedRect } =
-    useRoomContext();
+  const {
+    scale,
+    setScale,
+    clearSelectedTableIds,
+    getSelectedRect,
+    tablesStoreName,
+  } = useRoomStore();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
+  const namedStore = useZustandTableStore(tablesStoreName);
   const { tables, updateTable, deleteSelectedTable, countSelectedTables } =
-    useTableDataStore();
+    namedStore((state) => state);
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
@@ -123,7 +126,6 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
     >
       <RoomAddTables
         className="w-full"
-        addSelectedRect={addSelectedRect}
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}
       />

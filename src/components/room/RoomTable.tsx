@@ -1,10 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
-
+import { GroupCreat } from "./menu/GroupCreat";
 import { TableData, TableSettings, TableColors, TableType } from "./types";
-import { useGroupStore } from "./stores/groups";
-import { useTableDataStore } from "./stores/tables";
-import { Trash2, PowerOff, Settings, X, PencilOff } from "lucide-react";
+import { useGroupStore } from "@/lib/stores/groups";
+import { Trash2, PowerOff, Power, Settings, X, PencilOff } from "lucide-react";
 import { ShowTable, getTableComponent } from "./ShowTable";
 import {
   Dialog,
@@ -30,6 +29,8 @@ interface RoomTableProps {
   showButton: boolean;
   mode?: Mode | null;
   setActiveTable: (id: string | null) => void;
+  updateTable: (id: string, updatedTable: Partial<TableData>) => void;
+  selectOneTable: (id: string) => void;
 }
 
 export const RoomTable: React.FC<RoomTableProps> = ({
@@ -44,14 +45,14 @@ export const RoomTable: React.FC<RoomTableProps> = ({
   showButton,
   mode = Mode.create,
   setActiveTable,
+  updateTable,
+  selectOneTable,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const group = useGroupStore((state) => state.groups).find(
     (g) => g.id === table.groupId
   );
   const isTouch = isTouchDevice();
-
-  const { updateTable } = useTableDataStore();
 
   const colors: TableColors = {
     ...(group ? group.colors : {}),
@@ -86,6 +87,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
 
   const setTableType = (type: TableType) => {
     updateTable(table.id, { type: type });
+  };
+
+  const setGroup = (groupId: string | null) => {
+    updateTable(table.id, { groupId: groupId });
   };
 
   useEffect(() => {
@@ -140,7 +145,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
           <div className="flex absolute left-0 -top-5 z-40 w-full">
             {table.groupId && (
               <button
-                className="absolute -right-2 btn btn-circle btn-sm"
+                className="absolute -right-2 bg-red-500 btn btn-circle btn-sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   updateTable(table.id, { groupId: null });
@@ -149,6 +154,22 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               >
                 <PowerOff size={btnSize} />
               </button>
+            )}
+            {!table.groupId && (
+              <Dialog blur={true}>
+                <DialogOpen>
+                  <button
+                    className="absolute -right-2 bg-green-500 btn btn-circle btn-sm"
+                    onClick={() => selectOneTable(table.id)}
+                  >
+                    <Power size={btnSize} />
+                  </button>
+                </DialogOpen>
+
+                <DialogContent position="modal">
+                  <GroupCreat onSelect={(groupId) => setGroup(groupId)} />
+                </DialogContent>
+              </Dialog>
             )}
             {withButtonStop && (
               <button
@@ -204,7 +225,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               onConfirm={() => onDelete(table.id)}
               confirmMessage="Delete this table?"
               confirmClassName="p-0 w-36 btn btn-warning"
-              className="absolute -right-3 btn btn-circle btn-sm"
+              className="absolute -right-3 btn btn-circle btn-sm bg-warning"
             >
               <Trash2 size={btnSize} />
             </DeleteWithConfirm>

@@ -18,6 +18,7 @@ export type returnMouseDown = {
   deleteId?: string;
   changeMode?: string;
   pointer?: string | null;
+  reccord?: boolean;
 };
 
 export abstract class drawingHandler {
@@ -39,16 +40,13 @@ export abstract class drawingHandler {
 
   protected resizingBorder: string | null = null;
 
-  protected addDesignElement: (draw: ThingsToDraw) => void;
-  protected localStorageName: string | null = null;
-  protected designStore: ReturnType<typeof zustandDesignStore>;
+  private lastDraw: ThingsToDraw | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporaryCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void,
-    localStorageName: string | null = null
+    setMode: (mode: string) => void
   ) {
     if (canvas) this.setCanvas(canvas);
     if (canvasContext) this.setContext(canvasContext);
@@ -58,12 +56,6 @@ export abstract class drawingHandler {
     this.setMode = setMode;
 
     this.resizingBorder = null;
-    this.localStorageName = localStorageName;
-
-    this.designStore = zustandDesignStore(this.localStorageName);
-
-    const { addOrUpdateDesignElement } = this.designStore.getState();
-    this.addDesignElement = addOrUpdateDesignElement;
   }
 
   setCanvas(canvas: HTMLCanvasElement) {
@@ -134,10 +126,12 @@ export abstract class drawingHandler {
   /**
    * Function to save the picture in the history
    */
-  saveCanvasPicture(_coordinate: Coordinate | null = null) {
-    const draw: ThingsToDraw | CanvasPointsData | ShapeDefinition | null =
-      this.getDraw();
-    if (draw) this.addDesignElement(draw);
+  saveCanvasPicture() {
+    this.lastDraw = this.getDraw();
+  }
+
+  getLastDraw() {
+    return this.lastDraw;
   }
 
   abstract setDraw(draw: ThingsToDraw): void;
@@ -148,7 +142,9 @@ export abstract class drawingHandler {
   actionAbort(): string | null {
     return null;
   }
-  actionValid(): void {}
+  actionValid(): boolean {
+    return true;
+  }
 
   actionMouseDblClick(): void {}
 

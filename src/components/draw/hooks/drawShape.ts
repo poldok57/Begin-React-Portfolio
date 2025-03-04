@@ -32,10 +32,9 @@ export class drawShape extends drawingHandler {
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporaryCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void,
-    storeName?: string | null
+    setMode: (mode: string) => void
   ) {
-    super(canvas, canvasContext, temporaryCanvas, setMode, storeName);
+    super(canvas, canvasContext, temporaryCanvas, setMode);
 
     this.typeHandler = DRAWING_MODES.SQUARE;
 
@@ -358,6 +357,7 @@ export class drawShape extends drawingHandler {
           retunData.pointer = "pointer";
           this.validDrawedElement(true);
           retunData.toReset = true;
+          retunData.reccord = true;
           break;
         case BORDER.ON_BUTTON_DELETE:
           retunData.deleteId = this.shape.getDataId();
@@ -443,6 +443,7 @@ export class drawShape extends drawingHandler {
   actionValid() {
     this.validDrawedElement(true);
     this.setMode(DRAWING_MODES.FIND);
+    return true;
   }
 
   /**

@@ -2,7 +2,7 @@ import { useRef, useCallback } from "react";
 import { Rectangle } from "@/lib/canvas/types";
 import { coordinateIsInsideRect } from "@/lib/mouse-position";
 import { ChangeCoordinatesParams } from "../../RoomCreat";
-import { useRoomContext } from "../../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { Mode } from "../../types";
 import { Coordinate } from "@/lib/canvas/types";
 import { debounceThrottle, debounce } from "@/lib/utils/debounce";
@@ -34,7 +34,7 @@ export const useGroundSelectionLogic = (
   const containerRectRef = useRef<Rectangle | null>(null);
 
   const { getScale, getRotation, getCtxTemporary, clearTemporaryCanvas } =
-    useRoomContext();
+    useRoomStore();
 
   const getGroundOffset: () => Coordinate = useCallback(() => {
     if (!groundRef.current) return { x: 0, y: 0 };

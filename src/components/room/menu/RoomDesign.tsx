@@ -7,7 +7,7 @@ import {
 import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
 
 // import { getContrastColor } from "../colors/colors";
-import { useRoomContext } from "../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { Mode, Menu } from "../types";
 import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
@@ -63,7 +63,8 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
   });
   const selectedElementRef = useRef<string | null>(null);
 
-  const { needRefresh, storeName } = useRoomContext();
+  const { needRefresh, designStoreName } = useRoomStore();
+  console.log("designStoreName", designStoreName);
   const [showList, setShowList] = useState(false);
 
   const {
@@ -80,18 +81,14 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
 
   const paramsGeneral = drawingParams.general;
 
-  const store = useZustandDesignStore(storeName);
+  const store = useZustandDesignStore(designStoreName);
 
-  const backgroundColor = store ? store.getState().backgroundColor : null;
-  const displayElementsLength = store
-    ? store.getState().getDesignElementLength()
-    : 0;
-  const selectedDesignElement = store
-    ? store.getState().selectedDesignElement
-    : null;
-  const getSelectedDesignElement = store
-    ? store.getState().getSelectedDesignElement
-    : null;
+  const { backgroundColor, getDesignElementLength, selectedDesignElement } =
+    store.getState();
+
+  const displayElementsLength = getDesignElementLength();
+
+  const getSelectedDesignElement = store.getState().getSelectedDesignElement;
 
   const setBackgroundColor = store ? store.getState().setBackgroundColor : null;
   const [background, setBackground] = useState(backgroundColor ?? "#aabbff");
@@ -387,7 +384,7 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
             {showList && (
               <DrawList
                 className="flex flex-col gap-1 px-0 py-2 w-56 text-sm"
-                storeName={storeName}
+                storeName={designStoreName}
               />
             )}
           </div>
@@ -415,7 +412,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
   setActiveMenu,
   disabled = false,
 }) => {
-  const { setMode } = useRoomContext();
+  const { setMode } = useRoomStore();
   const { handleChangeMode } = useDrawingContext();
   const [isOpen, setIsOpen] = useState(false);
 

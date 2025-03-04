@@ -34,10 +34,9 @@ export class drawSelection extends drawShape {
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
     temporaryCanvas: HTMLCanvasElement | null,
-    setMode: (mode: string) => void,
-    storeName?: string | null
+    setMode: (mode: string) => void
   ) {
-    super(canvas, canvasContext, temporaryCanvas, setMode, storeName);
+    super(canvas, canvasContext, temporaryCanvas, setMode);
 
     this.typeHandler = DRAWING_MODES.SELECT;
   }
@@ -178,25 +177,27 @@ export class drawSelection extends drawShape {
    */
   deleteSelection() {
     const area = this.getSelectedArea();
-    if (area === null) return;
+    if (area === null) return false;
     this.context?.clearRect(area.x, area.y, area.width, area.height);
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.SELECT);
     this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
+    return true;
   }
   /**
    * Function to cut the selected zone in the canvas
    */
   cutSelection() {
     const area = this.getSelectedArea();
-    if (area === null || this.mCanvas === null) return;
+    if (area === null || this.mCanvas === null) return false;
     this.shape.setCanvasImage(copyInVirtualCanvas(this.mCanvas, area));
     this.context?.clearRect(area.x, area.y, area.width, area.height);
     this.saveCanvasPicture();
     this.setType(DRAWING_MODES.IMAGE);
     this.shape.setRotation(0);
     this.refreshDrawing(1, BORDER.INSIDE);
+    return true;
   }
 
   /**

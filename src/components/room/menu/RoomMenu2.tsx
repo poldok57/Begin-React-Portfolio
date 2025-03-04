@@ -5,10 +5,11 @@ import { RoomDesign } from "./RoomDesign";
 import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
-import { useRoomContext } from "../RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
 import { TableNumbers } from "./TableNumbers";
 
-import { useTableDataStore } from "../stores/tables";
+import { useZustandTableStore } from "@/lib/stores/tables";
+import type { TableDataState } from "@/lib/stores/tables";
 import {
   showValidationFrame,
   addValidationValidAction,
@@ -16,17 +17,17 @@ import {
 import { TypeListTables, Menu, Mode } from "../types";
 import { NotepadText, Undo } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history";
+import { GroupMenu } from "./GroupMenu";
+import { PlaceMenu } from "./PlaceMenu";
 
 interface RoomMenu2Props {
   btnSize: number;
-  addSelectedRect: (rect: Rectangle) => void;
   typeListMode: TypeListTables;
   setTypeListMode: (type: TypeListTables) => void;
 }
 
 export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   btnSize,
-  addSelectedRect,
   typeListMode,
   setTypeListMode,
 }) => {
@@ -40,13 +41,16 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     getSelectedRect,
     maxRowsPerColumn,
     setMaxRowsPerColumn,
-  } = useRoomContext();
+    tablesStoreName,
+  } = useRoomStore();
   const activeMenuRef = useRef<Menu | null>(null);
   const [activeMenu, setStateActiveMenu] = useState<Menu | null>(null);
   const [isPlanMode, setIsPlanMode] = useState(true);
   const refDetails = useRef<HTMLDetailsElement>(null);
-  const { tables, updateTable, deleteSelectedTable, countSelectedTables } =
-    useTableDataStore();
+
+  const storeNameRef = useRef(tablesStoreName);
+  const namedStoreRef = useRef<TableDataState | null>(null);
+
   const { canUndo, getLastEntry, removeLastEntry } = useHistoryStore();
   const setActiveMenu = (menu: Menu | null) => {
     setStateActiveMenu(menu);
@@ -57,6 +61,13 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     setTypeListMode(type);
     refDetails.current?.removeAttribute("open");
   };
+
+  useEffect(() => {
+    if (storeNameRef.current !== tablesStoreName) {
+      storeNameRef.current = tablesStoreName;
+      namedStoreRef.current = useZustandTableStore(tablesStoreName).getState();
+    }
+  }, [tablesStoreName]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -90,8 +101,8 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
         case "A":
           if (event.ctrlKey) {
             event.preventDefault();
-            tables.forEach((table) => {
-              updateTable(table.id, { selected: true });
+            namedStoreRef.current?.tables.forEach((table) => {
+              namedStoreRef.current?.updateTable(table.id, { selected: true });
             });
           }
           break;
@@ -110,7 +121,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           if (!containerSelect) {
             break;
           }
-          const count = countSelectedTables();
+          const count = namedStoreRef.current?.countSelectedTables();
           if (count === 0) {
             break;
           }
@@ -123,7 +134,13 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             text
           );
 
-          addValidationValidAction(deleteSelectedTable);
+          if (namedStoreRef.current) {
+            addValidationValidAction(
+              namedStoreRef.current.deleteSelectedTable.bind(
+                namedStoreRef.current
+              )
+            );
+          }
 
           event.preventDefault();
           break;
@@ -146,7 +163,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     if (!lastEntry) return;
 
     lastEntry.tables.forEach((tableHistory) => {
-      updateTable(tableHistory.id, {
+      namedStoreRef.current?.updateTable(tableHistory.id, {
         position: tableHistory.previousPosition,
         ...(tableHistory.previousRotation !== undefined && {
           rotation: tableHistory.previousRotation,
@@ -171,9 +188,24 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             {isPlanMode && (
               <>
                 <li>
+                  <PlaceMenu
+                    className="flex flex-col p-1 w-full rounded-lg"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    disabled={false}
+                  />
+                </li>
+                <li>
+                  <GroupMenu
+                    className="flex flex-col p-1 w-full rounded-lg"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    disabled={false}
+                  />
+                </li>
+                <li>
                   <RoomAddTables
                     className="flex flex-col p-1 w-full rounded-lg"
-                    addSelectedRect={addSelectedRect}
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
                   />
@@ -249,12 +281,27 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
       </div>
       <div className="hidden navbar-center lg:flex">
         <ul className="items-center px-1 menu menu-horizontal">
+          <li className="flex items-center">
+            <PlaceMenu
+              className="px-2"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              disabled={false}
+            />
+          </li>
+          <li className="flex items-center">
+            <GroupMenu
+              className="px-2"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
+              disabled={false}
+            />
+          </li>
           {typeListMode === TypeListTables.plan && (
             <>
               <li className="flex items-center">
                 <RoomAddTables
                   className="px-2"
-                  addSelectedRect={addSelectedRect}
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}
                   disabled={!isPlanMode}

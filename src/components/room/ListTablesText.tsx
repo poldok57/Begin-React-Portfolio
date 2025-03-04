@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useTableDataStore } from "./stores/tables";
-import { useGroupStore } from "./stores/groups";
+import { useGroupStore } from "@/lib/stores/groups";
 import { TableData } from "./types";
-import { GroupCreat } from "./GroupCreat";
-import { Dialog, DialogOpen, DialogContent } from "../atom/Dialog";
+import { GroupCreat } from "./menu/GroupCreat";
+import { Dialog, DialogOpen, DialogContent } from "@/components/atom/Dialog";
 import { Power, PowerOff, Trash2 } from "lucide-react";
 import { Button } from "../atom/Button";
 import { cn } from "@/lib/utils/cn";
 import { isTouchDevice } from "@/lib/utils/device";
-import { useRoomContext } from "./RoomProvider";
+import { useRoomStore } from "@/lib/stores/room";
+import { useZustandTableStore } from "@/lib/stores/tables";
 
 const DEFAULT = {
   textColor: "black",
@@ -71,9 +71,14 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
   btnSize,
 }: ListTablesTournamentProps) => {
   const { getGroup } = useGroupStore();
-  const { updateTable, resetSelectedTables, deleteSelectedTable } =
-    useTableDataStore();
-  const { scale, maxRowsPerColumn } = useRoomContext();
+
+  const { scale, maxRowsPerColumn, tablesStoreName } = useRoomStore();
+
+  const namedStore = useZustandTableStore(tablesStoreName);
+
+  const { updateTable, resetSelectedTables, deleteSelectedTable } = namedStore(
+    (state) => state
+  );
 
   const [fontSize, setFontSize] = useState("0.5rem");
   const [titleFontSize, setTitleFontSize] = useState("1rem");
@@ -258,7 +263,9 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
 };
 
 export const ListTablesText = () => {
-  const { tables } = useTableDataStore();
+  const { tablesStoreName } = useRoomStore();
+  const namedStore = useZustandTableStore(tablesStoreName);
+  const { tables } = namedStore((state) => state);
   const btnSize = isTouchDevice() ? 20 : 16;
 
   // Fonction pour grouper les tables par tournoi

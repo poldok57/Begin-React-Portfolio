@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { useTableDataStore } from "../stores/tables";
-import { useRoomContext } from "../RoomProvider";
+import { useZustandTableStore } from "../../../lib/stores/tables";
+import { useRoomStore } from "@/lib/stores/room";
 import { drawArrow } from "@/lib/canvas/canvas-arrow";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { Rectangle } from "@/lib/canvas/types";
@@ -40,20 +40,21 @@ export enum NumberingMode {
 interface TableNumbersProcessProps {}
 export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
   const {
+    selectedTableIds,
+    clearSelectedTableIds,
+    getCtxTemporary,
+    clearTemporaryCanvas,
+    tablesStoreName,
+  } = useRoomStore();
+  const namedStore = useZustandTableStore(tablesStoreName);
+  const {
     tables,
     getTable,
     updateTable,
     updateSelectedTables,
     resetSelectedTables,
     countSelectedTables,
-  } = useTableDataStore();
-  const {
-    selectedTableIds,
-    clearSelectedTableIds,
-    getCtxTemporary,
-    clearTemporaryCanvas,
-  } = useRoomContext();
-
+  } = namedStore((state) => state);
   // Déplacer l'état tableCurrentNumber ici
   const [tableCurrentNumber, setStateTableCurrentNumber] =
     useState<string>("1");
