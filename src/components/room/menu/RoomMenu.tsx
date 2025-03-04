@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { RoomAddTables } from "./RoomAddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
-import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomStore } from "@/lib/stores/room";

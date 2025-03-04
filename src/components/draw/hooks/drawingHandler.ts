@@ -5,12 +5,9 @@ import {
   DRAWING_MODES,
   ThingsToDraw,
   AllParams,
-  CanvasPointsData,
-  ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
 
 // import { useDesignStore, zustandDesignStore } from "@/lib/stores/design";
-import { zustandDesignStore } from "@/lib/stores/design";
 
 export type returnMouseDown = {
   toExtend?: boolean;

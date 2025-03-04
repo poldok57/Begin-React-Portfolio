@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Settings, X, PowerOff } from "lucide-react";
 import { TableSettings } from "../types";
-import { useZustandTableStore } from "../../../lib/stores/tables";
+import {
+  TableDataState,
+  useZustandTableStore,
+  zustandTableStore,
+} from "../../../lib/stores/tables";
 import { Button } from "@/components/atom/Button";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 
@@ -17,7 +21,7 @@ import { ResizeButtons } from "../control/ResizeButtons";
 import { DeleteSelectedTables } from "../control/DeleteSelectedTables";
 import { RotationSquad } from "../control/RotationSquad";
 import { useRoomStore } from "@/lib/stores/room";
-import { Mode, TableType, Menu } from "../types";
+import { Mode, TableType, Menu, TableData } from "../types";
 
 import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
@@ -34,14 +38,24 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
   isTouch,
   tablesStoreName,
 }) => {
-  const namedStore = useZustandTableStore(tablesStoreName);
-  const {
-    tables,
-    rotationSelectedTable,
-    sizeSelectedTable,
-    deleteSelectedTable,
-    updateSelectedTables,
-  } = namedStore((state) => state);
+  const storeNameRef = useRef(tablesStoreName);
+  const namedStoreRef = useRef<TableDataState | null>(
+    zustandTableStore(storeNameRef.current).getState()
+  );
+
+  useEffect(() => {
+    namedStoreRef.current = zustandTableStore(storeNameRef.current).getState();
+  }, [tablesStoreName]);
+
+  const updateSelectedTables = (update: Partial<TableData>) => {
+    namedStoreRef.current?.updateSelectedTables(update);
+  };
+  const rotationSelectedTable = (angle: number) => {
+    namedStoreRef.current?.rotationSelectedTable(angle);
+  };
+  const sizeSelectedTable = (size: number) => {
+    namedStoreRef.current?.sizeSelectedTable(size);
+  };
 
   const [selectedTablesCount, setSelectedTablesCount] = useState(0);
   const [editSettings, setEditSettings] = useState<TableSettings | null>(null);
@@ -62,14 +76,16 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
 
   const handleDeleteSelectedTable = () => {
     if (selectedTablesCount > 0) {
-      deleteSelectedTable();
+      namedStoreRef.current?.deleteSelectedTable();
     }
   };
 
   useEffect(() => {
-    const selectedTables = tables.filter((table) => table.selected);
-    setSelectedTablesCount(selectedTables.length);
-  }, [tables]);
+    const selectedTables = namedStoreRef.current?.tables.filter(
+      (table) => table.selected
+    );
+    setSelectedTablesCount(selectedTables?.length || 0);
+  }, [namedStoreRef.current?.tables]);
 
   return (
     <div className={menuRoomVariants({ width: 44 })}>

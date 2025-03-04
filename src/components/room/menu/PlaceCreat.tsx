@@ -6,7 +6,7 @@ import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
 import { useState } from "react";
 import { useRoomStore } from "@/lib/stores/room";
-import { Menu } from "../types";
+
 interface PlaceCreatProps {
   className?: string;
   handleClose: () => void;

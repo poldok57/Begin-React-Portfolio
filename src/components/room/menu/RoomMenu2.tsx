@@ -2,13 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { RoomAddTables } from "./RoomAddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
-import { Rectangle } from "@/lib/canvas/types";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomStore } from "@/lib/stores/room";
 import { TableNumbers } from "./TableNumbers";
 
-import { useZustandTableStore } from "@/lib/stores/tables";
+import { zustandTableStore } from "@/lib/stores/tables";
 import type { TableDataState } from "@/lib/stores/tables";
 import {
   showValidationFrame,
@@ -48,7 +47,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const [isPlanMode, setIsPlanMode] = useState(true);
   const refDetails = useRef<HTMLDetailsElement>(null);
 
-  const storeNameRef = useRef(tablesStoreName);
   const namedStoreRef = useRef<TableDataState | null>(null);
 
   const { canUndo, getLastEntry, removeLastEntry } = useHistoryStore();
@@ -63,10 +61,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   };
 
   useEffect(() => {
-    if (storeNameRef.current !== tablesStoreName) {
-      storeNameRef.current = tablesStoreName;
-      namedStoreRef.current = useZustandTableStore(tablesStoreName).getState();
-    }
+    namedStoreRef.current = zustandTableStore(tablesStoreName).getState();
   }, [tablesStoreName]);
 
   useEffect(() => {

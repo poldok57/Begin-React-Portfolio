@@ -9,10 +9,9 @@ import {
   isDrawingShape,
   isDrawingSelect,
   EventDetail,
-  ThingsToDraw,
 } from "@/lib/canvas/canvas-defines";
 
-import { DesignState } from "@/lib/stores/design";
+import { DesignState, zustandDesignStore } from "@/lib/stores/design";
 
 import { alertMessage } from "@/components/alert-messages/alertMessage";
 
@@ -27,7 +26,6 @@ import {
   mouseIsInsideComponent,
   setMarginOnBorder,
 } from "@/lib/mouse-position";
-import { useZustandDesignStore } from "@/lib/stores/design";
 import { Coordinate } from "@/lib/canvas/types";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { isTouchDevice } from "@/lib/utils/device";
@@ -84,7 +82,7 @@ export const useCanvas = ({
     findRef.current = null;
 
     console.log("useCanvas storeName", storeName);
-    namedStoreRef.current = useZustandDesignStore(storeName).getState();
+    namedStoreRef.current = zustandDesignStore(storeName).getState();
   }
 
   useEffect(() => {

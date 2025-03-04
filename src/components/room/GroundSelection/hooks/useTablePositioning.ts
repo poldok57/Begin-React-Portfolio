@@ -166,7 +166,7 @@ export const useTablePositioning = () => {
     const bottom = rect.bottom ?? rect.top + rect.height;
 
     namedStoreRef.current?.resetSelectedTables();
-    const freshTables = namedStoreRef.current?.tables ?? [];
+    const freshTables = namedStoreRef.current?.getAllTables() ?? [];
 
     const updatedTables = freshTables.map((table) => {
       const tableElement = document.getElementById(table.id);

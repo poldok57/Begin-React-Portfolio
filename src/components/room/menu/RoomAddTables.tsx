@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "../SelectionItems";
 import { TableType } from "../types";
@@ -14,7 +14,7 @@ import {
 } from "../scripts/room-add-tables";
 import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
-import { useZustandTableStore } from "@/lib/stores/tables";
+import { TableDataState, zustandTableStore } from "@/lib/stores/tables";
 interface RoomAddTablesMenuProps {
   handleClose: () => void;
 }
@@ -34,14 +34,17 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
   const { getSelectedRect, scale, tablesStoreName, setPreSelection } =
     useRoomStore();
 
-  const namedStore = useZustandTableStore(tablesStoreName);
-
-  const { tables, addTable, updateSelectedTables } = namedStore(
-    (state) => state
+  const storeNameRef = useRef(tablesStoreName);
+  const namedStoreRef = useRef<TableDataState | null>(
+    zustandTableStore(storeNameRef.current).getState()
   );
 
+  useEffect(() => {
+    namedStoreRef.current = zustandTableStore(storeNameRef.current).getState();
+  }, [tablesStoreName]);
+
   const resetSelectedTables = () => {
-    updateSelectedTables({ selected: false });
+    namedStoreRef.current?.updateSelectedTables({ selected: false });
   };
 
   const handleAddTable = (
@@ -71,7 +74,7 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
       tableNumber: `tmp${tableNumber}`,
       tableText: `Table ${tableNumber}`,
     };
-    addTable(newTable);
+    namedStoreRef.current?.addTable(newTable);
   };
 
   const handleAddTables = () => {
@@ -87,7 +90,10 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     });
     resetSelectedTables();
 
-    let tableNumber = tables.length + 1;
+    if (!namedStoreRef.current || !namedStoreRef.current.tables) {
+      return;
+    }
+    let tableNumber = namedStoreRef.current?.tables.length + 1;
     for (let y = 0; y < selectedItems.height; y++) {
       for (let x = 0; x < selectedItems.width; x++) {
         handleAddTable(x, y, tableNumber, selectedRect);
