@@ -240,15 +240,7 @@ export class CanvasShape extends CanvasDrawableObject {
   setDataGeneral(data: ParamsGeneral): void {
     this.data.general = { ...data };
   }
-  changeRotation(rotation: number): void {
-    this.data.rotation = (this.data.rotation + rotation + 360) % 360;
-  }
-  setRotation(rotation: number): void {
-    this.data.rotation = rotation;
-  }
-  getRotation() {
-    return this.data.rotation;
-  }
+
   setDataBorder(data: ParamsGeneral) {
     this.data.border = { ...data };
   }

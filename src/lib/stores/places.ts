@@ -5,18 +5,23 @@ import { generateUniqueId } from "../utils/unique-id";
 
 interface PlaceStore {
   places: PlaceRoom[];
+  currentPlaceId: string | null;
   addPlace: (place: PlaceRoom) => void;
   updatePlace: (id: string, place: Partial<PlaceRoom>) => void;
   addOrUpdatePlace: (place: PlaceRoom) => void;
   deletePlace: (id: string) => void;
   getPlace: (id: string) => PlaceRoom | undefined;
   clearPlaces: () => void;
+  setCurrentPlaceId: (id: string) => void;
+  getCurrentPlaceId: () => string | null;
+  getCurrentPlace: () => PlaceRoom | undefined;
 }
 
 export const usePlaceStore = create<PlaceStore>()(
   persist(
     (set, get) => ({
       places: [],
+      currentPlaceId: null,
 
       addPlace: (place) => {
         place.id = generateUniqueId("p", true);
@@ -52,6 +57,20 @@ export const usePlaceStore = create<PlaceStore>()(
 
       clearPlaces: () => {
         set({ places: [] });
+      },
+
+      setCurrentPlaceId: (id) => {
+        set({ currentPlaceId: id });
+      },
+
+      getCurrentPlaceId: () => {
+        return get().currentPlaceId;
+      },
+
+      getCurrentPlace: () => {
+        const currentPlaceId = get().currentPlaceId;
+        if (!currentPlaceId) return undefined;
+        return get().getPlace(currentPlaceId);
       },
     }),
     {

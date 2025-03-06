@@ -258,6 +258,14 @@ export class drawFindElement extends drawingHandler {
   }
 
   /**
+   * Function to move all the elements
+   */
+  moveAllElements(offset: Coordinate) {
+    this.designStore.getState().moveAllDesignElements(offset);
+    this.refreshCanvas(true, this.scale);
+  }
+
+  /**
    * Function to stop drawing on the canvas
    */
   actionMouseUp() {}

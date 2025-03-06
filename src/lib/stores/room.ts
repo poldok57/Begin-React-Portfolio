@@ -53,10 +53,7 @@ interface RoomState {
   // Store names
   designStoreName: string;
   tablesStoreName: string;
-  setStoreName: (storeName?: string | null) => {
-    designStoreName: string;
-    tablesStoreName: string;
-  };
+  setStoreName: (storeName?: string | null) => void;
 
   // Layout
   maxRowsPerColumn: number;
@@ -164,7 +161,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
 
     set({ designStoreName, tablesStoreName });
 
-    return { designStoreName, tablesStoreName };
+    // return { designStoreName, tablesStoreName };
   },
 
   // Layout

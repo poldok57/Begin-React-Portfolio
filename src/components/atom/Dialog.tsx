@@ -7,7 +7,7 @@ import React, {
   cloneElement,
   RefObject,
 } from "react";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 
 type DialogContextType = {
   blur: boolean | null;
@@ -138,7 +138,7 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
   const { blur, dialogRef } = useDialogContext();
 
   const handleClick = (e: MouseEvent) => {
-    console.log("DialogTrigger handleClick");
+    // console.log("DialogTrigger handleClick");
     switch (type) {
       case "close":
         if (onClick) {
@@ -193,7 +193,7 @@ export const DialogTrigger: React.FC<DialogTriggerProps> = ({
 
   return (
     <div
-      className={className || "cursor-pointer"}
+      className={cn(className, "cursor-pointer")}
       onClick={(e) => handleClick(e as unknown as MouseEvent)}
     >
       {children}
@@ -259,18 +259,17 @@ export const DialogContent: React.FC<DialogContentProps> = ({
       if (event.key === "Escape") {
         if (dialogRef.current) {
           dialogRef.current.close();
-          console.log("Escape & close");
+          // console.log("Escape & close");
         }
       }
     };
 
     const handleClickOutside = (e: MouseEvent) => {
-      console.log("handleClickOutside");
       const element: HTMLElement | null = ref.current;
       if (element && !element.contains(e.target as Node)) {
         if (dialogRef.current) {
           dialogRef.current.close();
-          console.log("clic & close");
+          // console.log("clic & close");
         }
       }
     };
@@ -316,18 +315,18 @@ export const DialogContent: React.FC<DialogContentProps> = ({
 
       <dialog
         ref={dialogRef}
-        className={clsx(
-          "shadow-xl animate-in fade-in-50",
+        className={cn(
+          "shadow-xl z-50",
           {
-            "relative -translate-y-full": position === "over",
-            relative: position === "under",
+            "relative -translate-y-full -translate-x-2/3": position === "over",
+            "relative translate-y-5 -translate-x-2/3": position === "under",
             modal: blur,
           },
           className
         )}
       >
         {className ? (
-          <div ref={ref} className="card">
+          <div ref={ref} className="bg-transparent card">
             {children}
           </div>
         ) : (
@@ -349,5 +348,5 @@ export const DialogFooter: React.FC<DialogFooterProps> = ({
   className = null,
   children,
 }) => {
-  return <div className={clsx("card-actions", className)}>{children}</div>;
+  return <div className={cn("card-actions", className)}>{children}</div>;
 };

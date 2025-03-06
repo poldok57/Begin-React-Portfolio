@@ -18,8 +18,13 @@ import {
   isOnButton,
   isBorder,
   mousePointer,
+  middleButtonPosition,
 } from "../mouse-position";
-import { drawCornerButton, drawCornerButtonDelete } from "./canvas-buttons";
+import {
+  drawCornerButton,
+  drawCornerButtonDelete,
+  drawTurningButtons,
+} from "./canvas-buttons";
 import { CanvasDrawableObject, DEBOUNCE_TIME } from "./CanvasDrawableObject";
 import { showCanvasImage } from "./canvas-elements";
 import { scaledSize } from "../utils/scaledSize";
@@ -71,6 +76,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       },
       items: [],
     };
+    if (!isTouchDevice()) {
+      this.withTurningButtons = true;
+    }
   }
 
   getData(): CanvasPointsData | null {
@@ -533,7 +541,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @param ctx - The canvas context
    * @param mouseOnRectangle - The mouse on rectangle
    */
-  drawCornerButtons(
+  drawActionButtons(
     ctx: CanvasRenderingContext2D | null,
     mouseOnRectangle: string | null
   ) {
@@ -577,6 +585,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         opacity,
         mouseOnRectangle === BORDER.ON_BUTTON_DELETE
       );
+    }
+    if (this.withTurningButtons) {
+      this.btnMiddlePos = middleButtonPosition(size);
+      if (this.btnMiddlePos) {
+        drawTurningButtons(ctx, size, mouseOnRectangle);
+      }
     }
   }
 
@@ -743,10 +757,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @param offset - The offset to move the path
    */
   move(offset: Coordinate) {
-    if (this.data.size) {
-      this.data.size.x += offset.x;
-      this.data.size.y += offset.y;
-    }
+    super.move(offset);
     this.angleFound = -1;
     this.coordFound = -1;
   }
@@ -835,8 +846,15 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         mouseOnRectangle === BORDER.ON_BUTTON ||
         mouseOnRectangle === BORDER.ON_BUTTON_DELETE
       ) {
-        this.drawCornerButtons(ctx, mouseOnRectangle);
+        this.drawActionButtons(ctx, mouseOnRectangle);
         cursorType = "pointer";
+      } else if (
+        this.withTurningButtons &&
+        (mouseOnRectangle === BORDER.ON_BUTTON_LEFT ||
+          mouseOnRectangle === BORDER.ON_BUTTON_RIGHT)
+      ) {
+        cursorType = "pointer";
+        this.drawActionButtons(ctx, mouseOnRectangle);
       } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
         clearCanvasByCtx(ctx);
         this.draw(ctx, true);
@@ -902,7 +920,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     // console.log("scale", this.scale, "type", this.data.type, "draw", size);
     if (this.canvasImage) {
       // draw the canvasImage with the reduced size
-      showCanvasImage(ctx, size, this.canvasImage);
+      showCanvasImage(ctx, size, this.canvasImage, this.data.rotation);
     }
 
     if (
@@ -918,11 +936,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.drawAddingInfos(ctx);
     }
     // console.log("draw    --------->", size);
-    drawDashedRectangle(ctx, size, 0.3);
+    drawDashedRectangle(ctx, size, 0.3, this.data.rotation);
 
     if (this.isFinished) {
-      this.drawCornerButtons(ctx, null);
-      // drawDashedRedRectangle(ctx, size, 0.8, 0);
+      this.drawActionButtons(ctx, null);
     }
 
     return true;

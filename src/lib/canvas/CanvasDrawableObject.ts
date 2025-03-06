@@ -92,6 +92,27 @@ export abstract class CanvasDrawableObject {
     return { ...this.data.size };
   }
 
+  changeRotation(rotation: number): void {
+    this.data.rotation = (this.data.rotation + rotation + 360) % 360;
+  }
+  setRotation(rotation: number): void {
+    this.data.rotation = rotation;
+  }
+  getRotation() {
+    return this.data.rotation;
+  }
+
+  /**
+   * Change the position of the path
+   * @param offset - The offset to move the path
+   */
+  move(offset: Coordinate) {
+    if (this.data.size) {
+      this.data.size.x += offset.x;
+      this.data.size.y += offset.y;
+    }
+  }
+
   resizingArea(
     ctx: CanvasRenderingContext2D,
     coordinates: Coordinate,

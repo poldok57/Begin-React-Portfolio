@@ -75,17 +75,14 @@ export const DrawingProvider: React.FC<{ children: React.ReactNode }> = ({
     addEventAction(mode);
   };
 
-  const handleChangeMode = (
-    newMode: string,
-    position?: { x: number; y: number }
-  ) => {
+  const handleChangeMode = (newMode: string, position?: Coordinate) => {
     setDrawingMode(newMode);
     if (position) {
       setTimeout(() => {
         addEventDetail({
           mode: DRAWING_MODES.ACTION,
           action: DRAWING_MODES.POSITION,
-          position,
+          coordinate: position,
         });
       }, 50);
     }

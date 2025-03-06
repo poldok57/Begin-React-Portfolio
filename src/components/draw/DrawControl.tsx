@@ -26,13 +26,27 @@ import { MutableRefObject } from "react";
 import { useZustandDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 import { DeleteWithConfirm } from "../atom/DeleteWithConfirm";
-import { Search, MoveUpRight, Pencil, CaseSensitive } from "lucide-react";
+import { Search, MoveUpRight, Pencil, CaseSensitive, X } from "lucide-react";
 import { TbTimeline } from "react-icons/tb";
-import { Save } from "lucide-react";
+import {
+  Save,
+  Move,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { useControlKeyboard } from "./hooks/useControlKeyboard";
+import {
+  DialogClose,
+  DialogContent,
+  DialogOpen,
+  DialogToggle,
+} from "../atom/Dialog";
+import { Dialog } from "../atom/Dialog";
 interface DrawControlProps {
   storeName?: string | null;
   buttonIconSize?: number;
@@ -77,6 +91,32 @@ export const DrawControl: React.FC<DrawControlProps> = ({
       filename,
       format,
       ...(name ? { name } : {}),
+    });
+  };
+  const addEventMove = (action: "left" | "right" | "up" | "down") => {
+    const coordinate = {
+      x: 0,
+      y: 0,
+    };
+    const STEP = 10;
+    switch (action) {
+      case "left":
+        coordinate.x = -STEP;
+        break;
+      case "right":
+        coordinate.x = STEP;
+        break;
+      case "up":
+        coordinate.y = -STEP;
+        break;
+      case "down":
+        coordinate.y = STEP;
+    }
+
+    addEventDetail({
+      mode: DRAWING_MODES.ACTION,
+      action: DRAWING_MODES.MOVE,
+      coordinate,
     });
   };
 
@@ -143,7 +183,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
         }
         className="flex flex-col gap-1 p-1 min-w-[590px] max-w-[650px] rounded-md border-2 shadow-xl border-secondary bg-background"
       >
-        <div className="flex flex-row gap-4">
+        <div className="flex overflow-visible relative flex-row gap-4 h-12">
           <Button
             className="px-4"
             selected={mode == DRAWING_MODES.DRAW}
@@ -198,7 +238,7 @@ export const DrawControl: React.FC<DrawControlProps> = ({
           >
             <PiSelectionPlusLight size={buttonShapeSize} />
           </Button>
-          {(isDrawingShape(mode) || isDrawingSelect(mode)) && (
+          {isDrawingShape(mode) || isDrawingSelect(mode) ? (
             <label
               htmlFor="toggle-ratio"
               className="flex flex-col justify-center items-center text-sm text-nowrap"
@@ -213,8 +253,57 @@ export const DrawControl: React.FC<DrawControlProps> = ({
                 }}
               />
             </label>
+          ) : (
+            <Dialog blur={false}>
+              <DialogOpen>
+                <Button className="px-2" title="Move drawing">
+                  <Move size={buttonShapeSize} />
+                </Button>
+              </DialogOpen>
+              <DialogContent position="under" className="z-50bg-transparent">
+                <div className="flex flex-col bg-gray-100 rounded-lg border-2 border-gray-500">
+                  <DialogClose>
+                    <button className="absolute top-0 right-0 bg-red-400 btn btn-circle btn-sm">
+                      <X size={buttonShapeSize} />
+                    </button>
+                  </DialogClose>
+                  <div className="flex flex-col gap-0 items-center p-1">
+                    <button
+                      className="bg-white btn btn-circle btn-sm"
+                      onClick={() => addEventMove("up")}
+                      title="Move up"
+                    >
+                      <ArrowUp size={buttonShapeSize} />
+                    </button>
+                    <div className="flex gap-4">
+                      <button
+                        className="bg-white btn btn-circle btn-sm"
+                        onClick={() => addEventMove("left")}
+                        title="Move left"
+                      >
+                        <ArrowLeft size={buttonShapeSize} />
+                      </button>
+                      <button
+                        className="bg-white btn btn-circle btn-sm"
+                        onClick={() => addEventMove("right")}
+                        title="Move right"
+                      >
+                        <ArrowRight size={buttonShapeSize} />
+                      </button>
+                    </div>
+                    <button
+                      className="bg-white btn btn-circle btn-sm"
+                      onClick={() => addEventMove("down")}
+                      title="Move down"
+                    >
+                      <ArrowDown size={buttonShapeSize} />
+                    </button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
-          <div className="flex justify-end items-center w-full">
+          <div className="flex absolute right-1 items-center h-full">
             <button
               onClick={() => handleChangeMode(DRAWING_MODES.FIND)}
               className={cn(

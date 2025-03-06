@@ -5,6 +5,7 @@ import { RoomDesign } from "./RoomDesign";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomStore } from "@/lib/stores/room";
+import { usePlaceStore } from "@/lib/stores/places";
 import { TableNumbers } from "./TableNumbers";
 
 import { zustandTableStore } from "@/lib/stores/tables";
@@ -54,6 +55,12 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     setStateActiveMenu(menu);
     activeMenuRef.current = menu;
   };
+
+  const { getCurrentPlace } = usePlaceStore();
+
+  const currentPlace = getCurrentPlace();
+  const placeName = currentPlace?.name ?? "Room creator";
+  const placeTitle = currentPlace?.title ?? "";
 
   const handleSelectTypeList = (type: TypeListTables) => {
     setTypeListMode(type);
@@ -272,7 +279,13 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             </li>
           </ul>
         </div>
-        <a className="text-xl btn btn-ghost">Room creator</a>
+        <a
+          className="text-xl btn btn-ghost"
+          onClick={() => setActiveMenu(Menu.place)}
+        >
+          {placeName}
+        </a>
+        <p className="text-sm btn btn-ghost">{placeTitle}</p>
       </div>
       <div className="hidden navbar-center lg:flex">
         <ul className="items-center px-1 menu menu-horizontal">
@@ -284,7 +297,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               disabled={false}
             />
           </li>
-          <li className="flex items-center">
+          <li className="flex items-center pr-1 border-r-2 border-gray-400">
             <GroupMenu
               className="px-2"
               activeMenu={activeMenu}
@@ -294,7 +307,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           </li>
           {typeListMode === TypeListTables.plan && (
             <>
-              <li className="flex items-center">
+              <li className="flex items-center pl-1">
                 <RoomAddTables
                   className="px-2"
                   activeMenu={activeMenu}
@@ -311,7 +324,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                   isTouch={isTouch}
                 />
               </li>
-              <li className="flex items-center">
+              <li className="flex items-center pr-1">
                 <TableNumbers
                   className="px-2"
                   activeMenu={activeMenu}
@@ -322,7 +335,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           )}
           {typeListMode !== TypeListTables.list && (
             <>
-              <li className="flex items-center">
+              <li className="flex items-center pl-1 border-l-2 border-gray-400">
                 <RoomDesign
                   className="px-2"
                   activeMenu={activeMenu}

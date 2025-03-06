@@ -197,12 +197,12 @@ export const useTablePositioning = () => {
         namedStoreRef.current?.updateTable(table.id, { selected: true });
       });
     }
-    console.log(
-      "updatedTables",
-      selectedTables.length,
-      "/",
-      updatedTables.length
-    );
+    // console.log(
+    //   "updatedTables",
+    //   selectedTables.length,
+    //   "/",
+    //   updatedTables.length
+    // );
   };
 
   return {

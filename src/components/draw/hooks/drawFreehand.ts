@@ -27,6 +27,8 @@ export class drawFreehand extends drawingHandler {
   private mouseCircle: MouseCircle;
   private modificationMode: boolean = false;
 
+  private MIN_ROTATION = 15;
+
   constructor(
     canvas: HTMLCanvasElement,
     canvasContext: CanvasRenderingContext2D | null,
@@ -249,8 +251,16 @@ export class drawFreehand extends drawingHandler {
               deleteId,
             };
           }
-          break;
         }
+        case BORDER.ON_BUTTON_LEFT:
+        case BORDER.ON_BUTTON_RIGHT:
+          const rotation =
+            mouseOnRectangle === BORDER.ON_BUTTON_RIGHT
+              ? this.MIN_ROTATION
+              : -this.MIN_ROTATION;
+          this.freeCurve.changeRotation(rotation);
+          this.refreshDrawing();
+          break;
         default:
           if (mouseOnRectangle && isBorder(mouseOnRectangle)) {
             this.setResizingBorder(mouseOnRectangle);

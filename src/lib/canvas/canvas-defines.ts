@@ -12,6 +12,7 @@ const DRAWING_ACTIONS = {
   REFRESH: "refresh",
   POSITION: "position",
   RECORD: "record",
+  MOVE: "move",
 };
 
 const IMAGE_ACTIONS = {
@@ -124,7 +125,7 @@ export type EventModeAction = {
   theme?: string;
   format?: string;
   value?: string | number | boolean;
-  position?: Coordinate;
+  coordinate?: Coordinate;
 };
 
 export interface EventDetail extends Event {

@@ -51,6 +51,12 @@ export const GroundSelection = React.forwardRef<
   const { changeCoordinates, onSelectionStart, onSelectionEnd } =
     useTablePositioning();
 
+  const [, setToRefresh] = useState(Number);
+
+  const needRefreshCanvas = () => {
+    setToRefresh((prev) => prev + 1);
+  };
+
   const store = useZustandDesignStore(designStoreName);
 
   let backgroundColor = store.getState().backgroundColor;
@@ -328,9 +334,8 @@ export const GroundSelection = React.forwardRef<
   }, [preSelection]);
 
   /**
-     * Touch events
-
-     */
+   * Touch events
+   */
   useEffect(() => {
     const ground = groundRef.current;
     if (!ground) {
@@ -420,6 +425,7 @@ export const GroundSelection = React.forwardRef<
               scale={scale}
               setScale={setScale}
               isTouchDevice={isTouchDevice()}
+              needRefreshCanvas={needRefreshCanvas}
             />
           </>
         )}

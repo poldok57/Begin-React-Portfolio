@@ -16,7 +16,8 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
   className,
   handleClose,
 }) => {
-  const { places, addPlace, addOrUpdatePlace, deletePlace } = usePlaceStore();
+  const { places, addPlace, addOrUpdatePlace, deletePlace, setCurrentPlaceId } =
+    usePlaceStore();
   const [editingPlace, setEditingPlace] = useState<PlaceRoom | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Partial<PlaceRoom>>({
@@ -85,6 +86,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
 
   const handleSelectPlace = (placeId: string) => {
     setStoreName(placeId);
+    setCurrentPlaceId(placeId);
     handleClose();
   };
 

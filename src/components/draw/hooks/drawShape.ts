@@ -179,7 +179,7 @@ export class drawShape extends drawingHandler {
 
   /**
    * Function to calculate the offset of the shape
-
+   * distance between the border of the shape and the mouse position
    */
   calculOffset() {
     if (!this.coordinates) return;

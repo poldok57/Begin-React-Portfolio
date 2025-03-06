@@ -15,6 +15,7 @@ import {
 } from "../canvas/canvas-defines";
 import { generateUniqueId } from "../utils/unique-id";
 import { createLocalStoragePersist } from "./persist";
+import { Coordinate } from "../canvas/types";
 
 const defaultDesignStoreName = "design-data-storage";
 
@@ -42,6 +43,7 @@ export interface DesignState {
   setScale: (scale: number) => void;
   // getScale: () => number;
   setBackgroundColor: (backgroundColor: string) => void;
+  moveAllDesignElements: (offset: Coordinate) => void;
 }
 
 const createDesignStore = (storageName: string) => {
@@ -213,6 +215,22 @@ const createDesignStore = (storageName: string) => {
       }));
     },
     getDesignElementLength: () => get().designElements.length,
+    moveAllDesignElements: (offset: Coordinate) => {
+      set((state) => {
+        const updatedElements = state.designElements.map((element) => ({
+          ...element,
+          size: {
+            ...element.size,
+            x: element.size.x + offset.x,
+            y: element.size.y + offset.y,
+          },
+          modified: true,
+        }));
+        return {
+          designElements: updatedElements,
+        };
+      });
+    },
   });
 
   return create<DesignState>()(
@@ -275,9 +293,5 @@ export const zustandDesignStore = (storeName: string | null) => {
 
 // For React components
 export const useZustandDesignStore = (storeName: string | null) => {
-  if (storeName === null) {
-    storeName = defaultDesignStoreName;
-  }
-
   return zustandDesignStore(storeName);
 };

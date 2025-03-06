@@ -5,6 +5,7 @@ import { produce } from "immer";
 import { StateCreator } from "zustand";
 import { generateUniqueId } from "../utils/unique-id";
 import { createLocalStoragePersist } from "@/lib/stores/persist";
+import { Coordinate } from "../canvas/types";
 // import { DesignType } from "../types";
 
 const defaultTableStoreName = "table-data-storage";
@@ -26,6 +27,7 @@ export interface TableDataState {
   deleteTable: (id: string) => void;
   deleteSelectedTable: () => void;
   getAllTables: () => TableData[];
+  moveAllTables: (offset: Coordinate) => void;
 }
 
 interface TableDataWithIndex extends TableData {
@@ -127,6 +129,22 @@ const createTableStore = (storageName: string) => {
       set((state) => ({
         tables: state.tables.filter((table) => !table.selected),
       })),
+    moveAllTables: (offset: Coordinate) => {
+      set((state) => {
+        const updatedTables = state.tables.map((table) => ({
+          ...table,
+          position: {
+            ...table.position,
+            left: table.position.left + offset.x,
+            top: table.position.top + offset.y,
+          },
+        }));
+
+        return {
+          tables: updatedTables,
+        };
+      });
+    },
   });
 
   return create<TableDataState>()(
@@ -157,7 +175,6 @@ export const zustandTableStore = (storeName: string | null) => {
 
   // Get or create the store instance
   if (!storeInstances.has(name)) {
-    console.log("createTableStore", name);
     storeInstances.set(name, createTableStore(name));
   }
 
@@ -166,9 +183,5 @@ export const zustandTableStore = (storeName: string | null) => {
 
 // For React components
 export const useZustandTableStore = (storeName: string | null) => {
-  if (storeName === null) {
-    storeName = defaultTableStoreName;
-  }
-
   return zustandTableStore(storeName);
 };

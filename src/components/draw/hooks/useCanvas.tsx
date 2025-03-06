@@ -81,7 +81,6 @@ export const useCanvas = ({
     storeNameRef.current = storeName;
     findRef.current = null;
 
-    console.log("useCanvas storeName", storeName);
     namedStoreRef.current = zustandDesignStore(storeName).getState();
   }
 
@@ -678,7 +677,7 @@ export const useCanvas = ({
         }
         break;
       case DRAWING_MODES.POSITION:
-        const position = nearestPosition(event.detail.position);
+        const position = nearestPosition(event.detail.coordinate);
         if (position) {
           if (drawingRef.current) {
             const type = drawingRef.current.getType();
@@ -687,6 +686,12 @@ export const useCanvas = ({
               drawingRef.current.actionMouseMove(null, position);
             }
           }
+        }
+        break;
+      case DRAWING_MODES.MOVE:
+        const offset = event.detail.coordinate;
+        if (findRef.current && offset) {
+          findRef.current.moveAllElements(offset);
         }
         break;
 
@@ -700,7 +705,7 @@ export const useCanvas = ({
    * @param {Event} event - Mouse or touch event
    * @param {boolean} touchDevice - Whether event is from touch device
    */
-  const actionMouseDown = (
+  const actionMouseDown = async (
     event: MouseEvent | TouchEvent,
     touchDevice: boolean = false
   ) => {
@@ -734,7 +739,8 @@ export const useCanvas = ({
     }
 
     if (mouseResult?.reccord) {
-      recordDesignElement();
+      // need to wait for the recordDesignElement to be done
+      await recordDesignElement();
     }
 
     if (mouseResult?.toExtend) {
@@ -760,7 +766,6 @@ export const useCanvas = ({
       drawingRef.current?.setScale(scale);
     }
     if (mouseResult?.changeMode) {
-      // console.log("changeMode", mouseResult.changeMode);
       setDrawingMode(mouseResult.changeMode);
       needRefresh();
     }
@@ -787,8 +792,8 @@ export const useCanvas = ({
     const handleMouseUp = () => {
       drawingRef.current?.actionMouseUp();
     };
-    const handleMouseDown = (event: MouseEvent) => {
-      actionMouseDown(event);
+    const handleMouseDown = async (event: MouseEvent) => {
+      await actionMouseDown(event);
     };
 
     const handleMouseMove = (event: MouseEvent) => {
@@ -829,13 +834,13 @@ export const useCanvas = ({
       }
     };
 
-    const handleTouchStart = (event: TouchEvent) => {
+    const handleTouchStart = async (event: TouchEvent) => {
       if (mouseOnCtrlPanel.current === true) return; // mouse is on the control panel
       if (mouseIsInsideComponent(event, tempCanvasRef.current)) {
         event.preventDefault();
       }
 
-      actionMouseDown(event, true);
+      await actionMouseDown(event, true);
     };
 
     const handleTouchMove = (event: TouchEvent) => {

@@ -167,8 +167,9 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
           }}
           selected={activeMenu === Menu.addTable}
           disabled={disabled}
+          title="Add tables"
         >
-          Add tables
+          Add
         </Button>
       </div>
 

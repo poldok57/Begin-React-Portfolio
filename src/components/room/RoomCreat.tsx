@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useZustandTableStore } from "../../lib/stores/tables";
+import {
+  useZustandTableStore,
+  zustandTableStore,
+} from "../../lib/stores/tables";
 import { isTouchDevice } from "@/lib/utils/device";
 import { addEscapeKeyListener } from "@/lib/utils/keyboard";
 import { RoomMenu2 } from "./menu/RoomMenu2";
@@ -13,6 +16,7 @@ import { useDrawingContext } from "@/context/DrawingContext";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { TypeListTables } from "./types";
 import { useRoomStore } from "@/lib/stores/room";
+import { usePlaceStore } from "@/lib/stores/places";
 export const GROUND_ID = "back-ground";
 
 export const getGroundOffset = () => {
@@ -45,11 +49,22 @@ export const RoomCreatTools = () => {
     addSelectedTableId,
     removeSelectedTableId,
     setPreSelection,
+    setStoreName,
   } = useRoomStore();
 
   const namedStore = useZustandTableStore(tablesStoreName);
   const tables = namedStore((state) => state.tables);
   const namedStoreRef = useRef(namedStore.getState());
+  const { getCurrentPlaceId } = usePlaceStore();
+
+  // set the store name for the last place id
+  // Use useEffect to avoid infinite loop
+  useEffect(() => {
+    const placeId = getCurrentPlaceId();
+    if (placeId) {
+      setStoreName(placeId);
+    }
+  }, [getCurrentPlaceId]);
 
   const { setDrawingMode } = useDrawingContext();
 
@@ -58,7 +73,7 @@ export const RoomCreatTools = () => {
     if (namedStoreRef.current) {
       namedStoreRef.current.resetSelectedTables();
     }
-    namedStoreRef.current = namedStore.getState();
+    namedStoreRef.current = zustandTableStore(tablesStoreName).getState();
   }, [tablesStoreName]);
 
   useEffect(() => {
@@ -143,8 +158,10 @@ export const RoomCreatTools = () => {
 };
 
 // Wrap the component with ScaleProvider
-export const RoomCreat = () => (
-  <DrawingProvider>
-    <RoomCreatTools />
-  </DrawingProvider>
-);
+export const RoomCreat = () => {
+  return (
+    <DrawingProvider>
+      <RoomCreatTools />
+    </DrawingProvider>
+  );
+};

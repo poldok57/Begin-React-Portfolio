@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { GroupTable } from "../types";
+import { GroupTable } from "@/components/room/types";
 
 interface GroupState {
   groups: GroupTable[];

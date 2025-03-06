@@ -54,8 +54,9 @@ const TableNumbers = ({
           onClick={() => startNumbering()}
           className={className}
           disabled={disabled}
+          title="Table numbering"
         >
-          table numbering
+          Numbering
         </Button>
       </div>
       {activeMenu === Menu.tableNumbers && (

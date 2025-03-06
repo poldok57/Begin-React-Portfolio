@@ -25,7 +25,8 @@ import {
 import { CanvasPath } from "@/lib/canvas/CanvasPath";
 import { MouseCircle } from "./MouseCircle";
 import { duplicateCanvas } from "@/lib/canvas/canvas-tools";
-// import { ResizeObserver } from "resize-observer";
+
+const MIN_ROTATION = 15;
 
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
@@ -487,6 +488,19 @@ export class drawLine extends drawingHandler {
             toReset: true,
             deleteId: this.path.getDataId(),
           };
+        case BORDER.ON_BUTTON_LEFT:
+        case BORDER.ON_BUTTON_RIGHT:
+          const rotation =
+            mouseOnButton === BORDER.ON_BUTTON_RIGHT
+              ? MIN_ROTATION
+              : -MIN_ROTATION;
+          this.path.changeRotation(rotation);
+          this.refreshDrawing(0, mouseOnButton);
+          return {
+            toReset: false,
+            pointer: "pointer",
+          } as returnMouseDown;
+
         default:
           if (mouseOnButton && isBorder(mouseOnButton)) {
             //  if we are on a border, we can resize the area
@@ -497,10 +511,10 @@ export class drawLine extends drawingHandler {
             pointer: mousePointer(mouseOnButton ?? ""),
           } as returnMouseDown;
       }
-      return {
-        toReset: false,
-        pointer: "none",
-      } as returnMouseDown;
+      // return {
+      //   toReset: false,
+      //   pointer: "none",
+      // } as returnMouseDown;
     }
 
     // if we are drawing an arc and we click on the end of the arc, we can modify the arc

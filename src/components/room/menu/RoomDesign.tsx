@@ -64,7 +64,6 @@ const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
   const selectedElementRef = useRef<string | null>(null);
 
   const { needRefresh, designStoreName } = useRoomStore();
-  console.log("designStoreName", designStoreName);
   const [showList, setShowList] = useState(false);
 
   const {
@@ -436,6 +435,7 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
           className={className}
           disabled={disabled}
           selected={activeMenu === Menu.roomDesign}
+          title="Room design"
         >
           Room design
         </Button>

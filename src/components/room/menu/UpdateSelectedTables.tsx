@@ -186,8 +186,9 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
           }}
           className={className}
           selected={activeMenu === Menu.updateTable}
+          title="Table modifications"
         >
-          Table modifications
+          Modifications
         </Button>
       </div>
       {activeMenu === Menu.updateTable && (

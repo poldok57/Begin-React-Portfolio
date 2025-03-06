@@ -66,7 +66,6 @@ export interface TableSettings {
   heightRatio?: number;
   concaveRatio?: number;
   textRatio?: number;
-  // textPosition?: number;
   opacity?: number;
 }
 
