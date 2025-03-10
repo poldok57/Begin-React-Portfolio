@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Settings, X, PowerOff } from "lucide-react";
 import { TableSettings } from "../types";
-import {
-  TableDataState,
-  useZustandTableStore,
-  zustandTableStore,
-} from "../../../lib/stores/tables";
+import { TableDataState, zustandTableStore } from "../../../lib/stores/tables";
 import { Button } from "@/components/atom/Button";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 

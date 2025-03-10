@@ -2,14 +2,16 @@ import { useRef, useCallback } from "react";
 import { useRoomStore } from "@/lib/stores/room";
 import { useZustandTableStore } from "@/lib/stores/tables";
 import { useHistoryStore } from "@/lib/stores/history";
-import {
-  Coordinate,
-  Rectangle,
-  RectPosition as Position,
-} from "@/lib/canvas/types";
+import { Coordinate, Rectangle } from "@/lib/canvas/types";
 import { Mode, TableData } from "@/components/room/types";
-import { generateUniqueId } from "@/lib/utils/unique-id";
+
 import { TableDataState } from "@/lib/stores/tables";
+
+// Définir le type Position s'il n'est pas déjà importé
+interface Position {
+  left: number;
+  top: number;
+}
 
 const MARGIN = 10;
 
@@ -166,9 +168,10 @@ export const useTablePositioning = () => {
    * @param editable - Whether the table is editable
    * @returns void
    */
-
   const handleMove = useCallback(
-    (id: string, position: Position) => {
+    (id: string, position: Position, editable: boolean = true) => {
+      if (!editable) return;
+
       const currentScale = getScale();
       const scalePosition = {
         x: position.left / currentScale,
@@ -176,85 +179,34 @@ export const useTablePositioning = () => {
       };
 
       const withHistory = true;
-      const adjustNeeded = true;
 
-      // console.log(
-      //   "move table",
-      //   id,
-      //   position,
-      //   withHistory ? "with history" : "",
-      //   adjustNeeded ? "adjust needed" : "",
-      //   "align:" + alignBy
-      // );
-
+      // Récupérer la table déplacée
       const movedTable = namedStoreRef.current?.getTable(id);
       if (!movedTable) return;
 
-      // Get table dimensions from HTML element
-      const tableElement = document.getElementById(id);
-      if (!tableElement) return;
-
-      const halfSize = {
-        width: tableElement.offsetWidth / (2 * currentScale),
-        height: tableElement.offsetHeight / (2 * currentScale),
-      };
-
-      const tableIntervalMin = {
-        width: tableElement.offsetWidth / (2 * currentScale),
-        height: tableElement.offsetHeight / (2 * currentScale),
-      };
-
-      if (adjustNeeded) {
-        // Adjust the position based on other tables
-        const tables = namedStoreRef.current?.getAllTables() ?? [];
-        tables.forEach((otherTable) => {
-          if (otherTable.id === id) return;
-
-          const otherPos = otherTable.center;
-          const horizontalDistance = scalePosition.x - otherPos.x;
-          const verticalDistance = scalePosition.y - otherPos.y;
-          const absHorizontal = Math.abs(horizontalDistance);
-          const absVertical = Math.abs(verticalDistance);
-
-          // Determine the main axis of movement
-          const isHorizontalMain = absHorizontal > absVertical;
-
-          if (
-            absHorizontal < tableIntervalMin.width &&
-            absVertical < tableIntervalMin.height
-          ) {
-            if (isHorizontalMain) {
-              // Adjust horizontally only
-              const sign = horizontalDistance > 0 ? 1 : -1;
-              scalePosition.x = otherPos.x + tableIntervalMin.width * sign;
-            } else {
-              // Adjust vertically only
-              const sign = verticalDistance > 0 ? 1 : -1;
-              scalePosition.y = otherPos.y + tableIntervalMin.height * sign;
-            }
-          }
-        });
-      }
-
-      if (withHistory) {
-        // changeCoordinates use center of the table to adjust position
-        if (alignBy === "topLeft") {
-          scalePosition.x = scalePosition.x + halfSize.width;
-          scalePosition.y = scalePosition.y + halfSize.height;
-        }
-        changeCoordinates?.({
+      // Mettre à jour la position de la table
+      if (alignBy === "topLeft") {
+        changeCoordinates({
           position: {
             left: scalePosition.x,
             top: scalePosition.y,
           },
+          uniqueId: withHistory ? id : null,
           tableIds: [id],
-          uniqueId: generateUniqueId("mv"),
         });
       } else {
-        namedStoreRef.current?.updateTable(id, { center: scalePosition });
+        // Mise à jour directe du centre
+        changeCoordinates({
+          position: {
+            left: scalePosition.x,
+            top: scalePosition.y,
+          },
+          uniqueId: withHistory ? id : null,
+          tableIds: [id],
+        });
       }
     },
-    [getScale, changeCoordinates, tablesStoreName]
+    [getScale, alignBy, changeCoordinates]
   );
 
   const onSelectionStart = () => {
@@ -305,43 +257,12 @@ export const useTablePositioning = () => {
         namedStoreRef.current?.updateTable(table.id, { selected: true });
       });
     }
-  };
-
-  const isSuperposed = (id: string) => {
-    const tableElement = document.getElementById(id);
-    if (!tableElement) return;
-    const scale = getScale();
-    const tableIntervalMin = {
-      width: tableElement.offsetWidth / (2 * scale),
-      height: tableElement.offsetHeight / (2 * scale),
-    };
-    const selectedTable = namedStoreRef.current?.getTable(id);
-    if (!selectedTable) return;
-    const tablePos = selectedTable.center;
-    const otherTables = namedStoreRef.current?.getAllTables() ?? [];
-    const isSuperposed = otherTables.some((table) => {
-      const otherPos: Coordinate = table.center;
-      const horizontalDistance = tablePos.x - otherPos.x;
-      const verticalDistance = tablePos.y - otherPos.y;
-      const absHorizontal = Math.abs(horizontalDistance);
-      const absVertical = Math.abs(verticalDistance);
-      return (
-        absHorizontal < tableIntervalMin.width &&
-        absVertical < tableIntervalMin.height
-      );
-    });
-    if (isSuperposed) {
-      // console.log("table is superposed to another table");
-      // Move the selected table up by the minimum distance
-      const newTop = tablePos.y - tableIntervalMin.height;
-      namedStoreRef.current?.updateTable(id, {
-        center: {
-          x: tablePos.x,
-          y: newTop,
-        },
-      });
-      return;
-    }
+    // console.log(
+    //   "updatedTables",
+    //   selectedTables.length,
+    //   "/",
+    //   updatedTables.length
+    // );
   };
 
   return {
@@ -349,6 +270,6 @@ export const useTablePositioning = () => {
     onSelectionStart,
     onSelectionEnd,
     handleMove,
-    isSuperposed,
+    updateTablePosition,
   };
 };

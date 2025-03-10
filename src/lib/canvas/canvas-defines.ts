@@ -1,4 +1,4 @@
-import { Size, Area, Coordinate, LinePath, MouseCircle } from "./types";
+import { Size, Coordinate, LinePath, MouseCircle } from "./types";
 
 const DRAWING_ACTIONS = {
   UNDO: "undo",

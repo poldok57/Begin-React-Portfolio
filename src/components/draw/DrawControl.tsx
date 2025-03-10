@@ -40,12 +40,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { useControlKeyboard } from "./hooks/useControlKeyboard";
-import {
-  DialogClose,
-  DialogContent,
-  DialogOpen,
-  DialogToggle,
-} from "../atom/Dialog";
+import { DialogClose, DialogContent, DialogOpen } from "../atom/Dialog";
 import { Dialog } from "../atom/Dialog";
 interface DrawControlProps {
   storeName?: string | null;
