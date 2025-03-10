@@ -46,6 +46,14 @@ const MemorizedSymetricTable = React.memo(
       type !== TableType.other
         ? Math.round(radiusY + cornerRadius)
         : 2 * (radiusY + strokeWidth);
+
+    const textY =
+      type === TableType.other
+        ? "50%"
+        : rotation > 130 && rotation < 230
+        ? "70%"
+        : "60%";
+
     const cashierWidth = Math.round(
       Math.min(Math.max(concaveLarge, size * 0.2), radius / 2)
     );
@@ -247,7 +255,7 @@ const MemorizedSymetricTable = React.memo(
         >
           <text
             x="50%"
-            y={rotation > 130 && rotation < 230 ? "70%" : "60%"}
+            y={textY}
             fontSize={textSize}
             fill={numberColor}
             dominantBaseline="middle"
