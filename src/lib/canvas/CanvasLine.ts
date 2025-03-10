@@ -227,9 +227,11 @@ export class CanvasLine implements LinePath {
     }
     if (!context) return false;
 
-    const current = scaledCoordinate(this.coordinates, this.scale);
-    const start = scaledCoordinate(this.getStartCoordinates(), this.scale);
-    const end = scaledCoordinate(this.getEndCoordinates(), this.scale);
+    const current = this.coordinates
+      ? scaledCoordinate(this.coordinates, this.scale)
+      : null;
+    const start = this.start ? scaledCoordinate(this.start, this.scale) : null;
+    const end = this.end ? scaledCoordinate(this.end, this.scale) : null;
 
     if (current && start && !end) {
       // draw preview line
@@ -276,9 +278,11 @@ export class CanvasLine implements LinePath {
     }
     if (!context) return false;
 
-    const start = scaledCoordinate(this.start, this.scale);
-    const end = scaledCoordinate(this.end, this.scale);
-    const coordonate = scaledCoordinate(this.coordinates, this.scale);
+    const start = this.start ? scaledCoordinate(this.start, this.scale) : null;
+    const end = this.end ? scaledCoordinate(this.end, this.scale) : null;
+    const coordonate = this.coordinates
+      ? scaledCoordinate(this.coordinates, this.scale)
+      : null;
 
     if (start && coordonate) {
       drawArrow({
@@ -342,8 +346,8 @@ export class CanvasLine implements LinePath {
   showLinesHelpers(ctx: CanvasRenderingContext2D, withLine: boolean = false) {
     const crossWidth = Math.min(ctx.lineWidth * 2, 30);
 
-    const start = scaledCoordinate(this.start, this.scale);
-    const end = scaledCoordinate(this.end, this.scale);
+    const start = this.start ? scaledCoordinate(this.start, this.scale) : null;
+    const end = this.end ? scaledCoordinate(this.end, this.scale) : null;
     if (start) {
       crossLine(ctx, start, crossWidth);
     }
