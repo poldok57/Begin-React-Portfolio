@@ -17,6 +17,7 @@ import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { TypeListTables } from "./types";
 import { useRoomStore } from "@/lib/stores/room";
 import { usePlaceStore } from "@/lib/stores/places";
+import { PlaceCreat } from "./menu/PlaceCreat";
 export const GROUND_ID = "back-ground";
 
 export const getGroundOffset = () => {
@@ -56,6 +57,7 @@ export const RoomCreatTools = () => {
   const tables = namedStore((state) => state.tables);
   const namedStoreRef = useRef(namedStore.getState());
   const { getCurrentPlaceId } = usePlaceStore();
+  const placeId = getCurrentPlaceId();
 
   // set the store name for the last place id
   // Use useEffect to avoid infinite loop
@@ -131,27 +133,33 @@ export const RoomCreatTools = () => {
         className="flex w-full bg-background"
         style={{ height: "calc(100vh - 140px)" }}
       >
-        <div className="flex flex-row w-full">
-          <GroundSelection
-            ref={groundRef}
-            id={GROUND_ID}
-            typeListMode={typeListMode}
-          >
-            {typeListMode === "plan" ? (
-              <>
-                <ListTablesPlan
-                  tables={tables}
-                  btnSize={btnSize}
-                  editable={mode !== Mode.numbering}
-                  onClick={onTableClick}
-                />
-              </>
-            ) : typeListMode === "list" ? (
-              <ListTablesText />
-            ) : null}
-          </GroundSelection>
-          <ValidationFrame btnSize={btnSize} />-{" "}
-        </div>
+        {placeId === null ? (
+          <div className="flex justify-center items-center w-full">
+            <PlaceCreat className="max-w-md" handleClose={() => {}} />
+          </div>
+        ) : (
+          <div className="flex flex-row w-full">
+            <GroundSelection
+              ref={groundRef}
+              id={GROUND_ID}
+              typeListMode={typeListMode}
+            >
+              {typeListMode === "plan" ? (
+                <>
+                  <ListTablesPlan
+                    tables={tables}
+                    btnSize={btnSize}
+                    editable={mode !== Mode.numbering}
+                    onClick={onTableClick}
+                  />
+                </>
+              ) : typeListMode === "list" ? (
+                <ListTablesText />
+              ) : null}
+            </GroundSelection>
+            <ValidationFrame btnSize={btnSize} />
+          </div>
+        )}
       </div>
     </>
   );

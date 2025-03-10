@@ -128,6 +128,9 @@ export const Canvas: React.FC<CanvasProps> = ({
     if (backgroundCanvasRef.current) {
       clearCanvasByCtx(backgroundCanvasRef.current.getContext("2d"));
     }
+    // clear the selected table
+    setSelectedDesignElement(null);
+
     // Force refresh of useCanvas
     resizeCanvas(scale, true);
   }, [designStoreName]);

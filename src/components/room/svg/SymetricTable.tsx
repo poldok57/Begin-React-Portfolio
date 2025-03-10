@@ -27,7 +27,7 @@ const MemorizedSymetricTable = React.memo(
     const textSize = size * textRatio;
     const subTextSize = textSize * 0.25;
 
-    // Dimensions de la table
+    // Table dimensions
     const radius = parseFloat(((size - strokeWidth) / 2).toFixed(2));
     const radiusY = parseFloat((radius * (0.3 + 2 * heightRatio)).toFixed(2));
     const cornerRadius = Math.round(size * 0.2 * heightRatio);
@@ -42,7 +42,10 @@ const MemorizedSymetricTable = React.memo(
     const concaveSide = Math.round(
       (longSide - concaveLarge) / 2 - concaveRadius
     );
-    const bottomTable = Math.round(radiusY + cornerRadius);
+    const bottomTable =
+      type !== TableType.other
+        ? Math.round(radiusY + cornerRadius)
+        : 2 * (radiusY + strokeWidth);
     const cashierWidth = Math.round(
       Math.min(Math.max(concaveLarge, size * 0.2), radius / 2)
     );
@@ -197,6 +200,33 @@ const MemorizedSymetricTable = React.memo(
             />
           </>
         )}
+        {type === TableType.other && (
+          <>
+            <path
+              d={
+                `
+                  M ${strokeWidth / 2},${bottomTable / 2} ` +
+                `a ${radius},${radiusY} 0 0,1 ${2 * radius},0` +
+                `a ${radius},${radiusY} 0 0,1 ${-2 * radius},0` +
+                `z`
+              }
+              fill={fillColor}
+              stroke={borderColor}
+              strokeWidth={strokeWidth}
+              strokeDasharray="5,5"
+              opacity={0.2}
+            />
+            <circle
+              cx={size / 2}
+              cy={bottomTable / 2}
+              r={size * concaveRatio * 2}
+              fill={borderColor}
+              stroke="#d0d4d4"
+              strokeWidth="2"
+              opacity={opacity}
+            />
+          </>
+        )}
         {/* vertical symmetry line 
         <line
           x1={size / 2}
@@ -207,8 +237,8 @@ const MemorizedSymetricTable = React.memo(
           strokeWidth="1"
           strokeDasharray="20,5,4,3"
           opacity={0.5}
-        />
-        */}
+        /> */}
+
         {/* Table number */}
         <g
           transform={`rotate(${-rotation}, ${size / 2}, ${

@@ -45,6 +45,7 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     getCtxTemporary,
     clearTemporaryCanvas,
     tablesStoreName,
+    alignBy,
   } = useRoomStore();
   const namedStore = useZustandTableStore(tablesStoreName);
   const {
@@ -332,10 +333,16 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
         let fourthTable = getElementById(fourthTableId);
 
         if (firstTable && secondTable) {
-          const startX = firstTable.left + firstTable.width / 2;
-          const startY = firstTable.top + firstTable.height / 2;
-          const endX = secondTable.left + secondTable.width / 2;
-          const endY = secondTable.top + secondTable.height / 2;
+          let startX = firstTable.left;
+          let startY = firstTable.top;
+          let endX = secondTable.left;
+          let endY = secondTable.top;
+          if (alignBy === "topLeft") {
+            startX += firstTable.width / 2;
+            startY += firstTable.height / 2;
+            endX += secondTable.width / 2;
+            endY += secondTable.height / 2;
+          }
 
           drawArrow({
             ctx: ctx,
@@ -348,10 +355,16 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
           });
         }
         if (firstTable && secondTable && thirdTable) {
-          const startX = firstTable.left + firstTable.width / 2;
-          const startY = firstTable.top + firstTable.height / 2;
-          const endX = thirdTable.left + thirdTable.width / 2;
-          const endY = thirdTable.top + thirdTable.height / 2;
+          let startX = firstTable.left;
+          let startY = firstTable.top;
+          let endX = thirdTable.left;
+          let endY = thirdTable.top;
+          if (alignBy === "topLeft") {
+            startX += firstTable.width / 2;
+            startY += firstTable.height / 2;
+            endX += thirdTable.width / 2;
+            endY += thirdTable.height / 2;
+          }
 
           if (secondTableId !== thirdTableId) {
             drawArrow({

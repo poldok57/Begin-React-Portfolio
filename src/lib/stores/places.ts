@@ -12,7 +12,7 @@ interface PlaceStore {
   deletePlace: (id: string) => void;
   getPlace: (id: string) => PlaceRoom | undefined;
   clearPlaces: () => void;
-  setCurrentPlaceId: (id: string) => void;
+  setCurrentPlaceId: (id: string | null) => void;
   getCurrentPlaceId: () => string | null;
   getCurrentPlace: () => PlaceRoom | undefined;
 }

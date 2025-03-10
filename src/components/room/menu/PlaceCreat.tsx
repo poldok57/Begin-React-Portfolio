@@ -1,10 +1,10 @@
 import { usePlaceStore } from "@/lib/stores/places";
 import { PlaceRoom } from "@/components/room/types";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Archive, RotateCcw } from "lucide-react";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRoomStore } from "@/lib/stores/room";
 
 interface PlaceCreatProps {
@@ -26,6 +26,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
   } = usePlaceStore();
   const [editingPlace, setEditingPlace] = useState<PlaceRoom | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [isArchiveMode, setIsArchiveMode] = useState(false);
   const [formData, setFormData] = useState<Partial<PlaceRoom>>({
     name: "",
     title: "",
@@ -34,6 +35,41 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
     isActive: true,
   });
   const { setStoreName } = useRoomStore();
+
+  // Function to check if an event has passed
+  const isEventPassed = (place: PlaceRoom): boolean => {
+    if (!place.endDate) return false;
+    // Add 7 hours to the current date to avoid archiving events that end after midnight
+    const today = new Date();
+    today.setHours(today.getHours() + 7);
+    return new Date(place.endDate) < today;
+  };
+
+  const totalPlaces = places.length;
+
+  // Filter and sort places according to the criteria
+  const sortedPlaces = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Filter according to the mode (archive or normal)
+    const filteredPlaces = isArchiveMode
+      ? places.filter((place) => isEventPassed(place))
+      : places.filter((place) => !isEventPassed(place));
+
+    // Separate places with and without start date
+    const withStartDate = filteredPlaces.filter((place) => place.startDate);
+    const withoutStartDate = filteredPlaces.filter((place) => !place.startDate);
+
+    // Sort places with start date chronologically
+    const sortedWithStartDate = withStartDate.sort((a, b) => {
+      if (!a.startDate || !b.startDate) return 0;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+
+    // Combine the two lists (first the ones with date, then the permanent ones)
+    return [...sortedWithStartDate, ...withoutStartDate];
+  }, [places, isArchiveMode]);
 
   const handleAddPlace = () => {
     setEditingPlace(null);
@@ -101,6 +137,10 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
     return format(new Date(date), "dd/MM/yyyy");
   };
 
+  const toggleArchiveMode = () => {
+    setIsArchiveMode(!isArchiveMode);
+  };
+
   return (
     <div
       className={cn("p-4 rounded-lg shadow-xl bg-base-100 min-w-72", className)}
@@ -113,6 +153,31 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
           </button>
         )}
       </div>
+
+      {/* Button to toggle between normal and archive mode */}
+      {sortedPlaces.length < totalPlaces && (
+        <div className="mb-4">
+          <button
+            className={cn(
+              "w-full btn btn-sm",
+              isArchiveMode ? "btn-warning" : "btn-outline"
+            )}
+            onClick={toggleArchiveMode}
+          >
+            {isArchiveMode ? (
+              <>
+                <RotateCcw size={16} className="mr-2" />
+                Back to active rooms
+              </>
+            ) : (
+              <>
+                <Archive size={16} className="mr-2" />
+                See the archives
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {(showForm || !places.length) && (
         <form onSubmit={handleSubmit} className="mb-4 space-y-4">
@@ -224,14 +289,20 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
         </form>
       )}
 
+      {sortedPlaces.length === 0 && !showForm && (
+        <div className="py-4 text-center text-gray-500">
+          {isArchiveMode ? "No archived rooms found" : "No active rooms found"}
+        </div>
+      )}
+
       <div className="space-y-4">
-        {places.map((place) => (
+        {sortedPlaces.map((place) => (
           <div
             key={place.id}
             className={cn(
               "flex justify-between items-center p-3 rounded-lg bg-base-200",
               {
-                "bg-primary/10 border-2 border-primary":
+                "bg-primary/10 border-2 border-primary shadow-md ring-2 ring-primary/30 ring-offset-1":
                   place.id === currentPlaceId,
               }
             )}
@@ -264,7 +335,12 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
               </button>
 
               <DeleteWithConfirm
-                onConfirm={() => deletePlace(place.id)}
+                onConfirm={() => {
+                  deletePlace(place.id);
+                  if (place.id === currentPlaceId) {
+                    setCurrentPlaceId(null);
+                  }
+                }}
                 confirmMessage="Delete this room ?"
                 className="btn btn-sm btn-ghost text-error text-nowrap"
               >
@@ -275,7 +351,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
         ))}
       </div>
 
-      {!showForm && places.length > 0 && (
+      {!showForm && places.length > 0 && !isArchiveMode && (
         <button
           className="p-2 mt-4 w-full btn btn-primary"
           onClick={handleAddPlace}

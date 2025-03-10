@@ -457,21 +457,22 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
 
       {/* Zoom buttons */}
       <button
-        className="fixed right-6 bottom-6 z-50 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500"
+        className="fixed right-8 bottom-8 z-50 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500"
         onTouchStart={(e) => handleZoom(e, true)}
         onClick={(e) => handleZoom(e, true)}
       >
         <ZoomIn className="text-white" />
       </button>
       <button
-        className="fixed bottom-6 right-20 z-50 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500"
+        className="fixed bottom-8 right-24 z-50 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500"
         onTouchStart={(e) => handleZoom(e, false)}
         onClick={(e) => handleZoom(e, false)}
       >
         <ZoomOut className="text-white" />
       </button>
+
       {/* Buttons for moving all elements */}
-      <div className="flex fixed right-6 bottom-32 z-50 flex-col items-center p-1 bg-cyan-300 bg-opacity-30 rounded-xl border-2 border-cyan-500">
+      <div className="flex fixed right-8 bottom-24 z-50 flex-col items-center p-1 bg-cyan-300 bg-opacity-30 rounded-xl border-2 border-cyan-500">
         {/* Up button */}
         <button
           className="items-center p-1 mb-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"

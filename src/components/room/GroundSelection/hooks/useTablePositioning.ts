@@ -318,7 +318,9 @@ export const useTablePositioning = () => {
     const selectedTable = namedStoreRef.current?.getTable(id);
     if (!selectedTable) return;
     const tablePos = selectedTable.center;
-    const otherTables = namedStoreRef.current?.getAllTables() ?? [];
+    const otherTables = (namedStoreRef.current?.getAllTables() ?? []).filter(
+      (table) => table.id !== id
+    );
     const isSuperposed = otherTables.some((table) => {
       const otherPos: Coordinate = table.center;
       const horizontalDistance = tablePos.x - otherPos.x;

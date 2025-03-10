@@ -32,8 +32,8 @@ export const SelectTableType: React.FC<SelectTableTypeProps> = ({
       <option value={TableType.craps}>Craps</option>
       <option value={TableType.roulette}>Roulette Right</option>
       <option value={TableType.rouletteL}>Roulette Left</option>
-      {/* <option value={TableType.slot}>Slot</option>
-      <option value={TableType.other}>Other</option> */}
+      {/* <option value={TableType.slot}>Slot</option>*/}
+      <option value={TableType.other}>Other</option>
     </StyledSelect>
   );
 };
