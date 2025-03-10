@@ -1,4 +1,4 @@
-import { Rectangle, Coordinate, Area } from "./canvas/types";
+import { Rectangle, Coordinate, Area, Size } from "./canvas/types";
 import {
   BORDER,
   mouseIsOnBorderRect,
@@ -8,15 +8,12 @@ import {
 
 export const rotateMouseCoord = (
   coord: Coordinate,
-  rect: Rectangle | Area,
+  center: Coordinate,
   angle: number
 ) => {
-  const x = "left" in rect ? rect.left : rect.x;
-  const y = "top" in rect ? rect.top : rect.y;
-
   // Calculate the center of the rectangle
-  const centerX = x + rect.width / 2;
-  const centerY = y + rect.height / 2;
+  const centerX = center.x;
+  const centerY = center.y;
 
   // Transform the coordinates of the point to cancel the rotation
   const angleRad = (angle * Math.PI) / 180;
@@ -43,42 +40,38 @@ export const rotateMouseCoord = (
  */
 export const isInsideSquare = (
   coord: Coordinate | null,
-  size: Area | null,
+  center: Coordinate,
+  size: Size,
   angle: number = 0
 ) => {
   if (!coord || !size) return false;
-  if (angle === 0) {
-    // Si pas de rotation, calcul simple
-    return (
-      coord.x >= size.x &&
-      coord.x <= size.x + size.width &&
-      coord.y >= size.y &&
-      coord.y <= size.y + size.height
-    );
+  if (angle !== 0 && angle !== 180) {
+    coord = rotateMouseCoord(coord, center, angle);
   }
-
-  const rotatedCoord = rotateMouseCoord(coord, size, angle);
-
-  // Vérifier si le point transformé est dans le rectangle non-rotaté
   return (
-    rotatedCoord.x >= size.x &&
-    rotatedCoord.x <= size.x + size.width &&
-    rotatedCoord.y >= size.y &&
-    rotatedCoord.y <= size.y + size.height
+    Math.abs(coord.x - center.x) <= size.width / 2 &&
+    Math.abs(coord.y - center.y) <= size.height / 2
   );
 };
 
 export const mouseIsOnBorderSquare = (
   coord: Coordinate,
-  rect: Rectangle,
+  center: Coordinate,
+  size: Size,
   angle: number
 ): string | null => {
   // If no rotation, use the existing function
+  const rect = {
+    left: center.x - size.width / 2,
+    top: center.y - size.height / 2,
+    width: size.width,
+    height: size.height,
+  } as Rectangle;
   if (angle === 0) {
     return mouseIsOnBorderRect(coord, rect);
   }
 
-  const rotatedCoord = rotateMouseCoord(coord, rect, angle);
+  const rotatedCoord = rotateMouseCoord(coord, center, angle);
 
   // Use mouseIsOnBorderRect with the transformed coordinates
   return mouseIsOnBorderRect(rotatedCoord, rect);
@@ -98,32 +91,25 @@ export const getSquarePosition = (coord: Coordinate, offset: Coordinate) => {
 
 export const isOnSquareBorder = ({
   coordinate,
-  area,
+  center,
+  size,
   withResize = true,
   rotation = 0,
 }: {
   coordinate: Coordinate;
-  area: Area;
+  center: Coordinate;
+  size: Size;
   withResize?: boolean;
   rotation?: number;
 }) => {
-  const rect = {
-    left: area.x,
-    top: area.y,
-    right: area.x + area.width,
-    bottom: area.y + area.height,
-    width: area.width,
-    height: area.height,
-  } as Rectangle;
-
-  if (!isInsideSquare(coordinate, area, rotation)) return null;
+  if (!isInsideSquare(coordinate, center, size, rotation)) return null;
 
   if (!withResize) {
     // for text mode, no need to resize
     return BORDER.INSIDE;
   }
 
-  return mouseIsOnBorderSquare(coordinate, rect, rotation);
+  return mouseIsOnBorderSquare(coordinate, center, size, rotation);
 };
 
 export const resizeSquare = (
@@ -134,7 +120,11 @@ export const resizeSquare = (
 ) => {
   // if rotation calculate mouse position
   if (rotation !== 0) {
-    const rotatedCoord = rotateMouseCoord(coordinate, area, rotation);
+    const center = {
+      x: area.x + area.width / 2,
+      y: area.y + area.height / 2,
+    };
+    const rotatedCoord = rotateMouseCoord(coordinate, center, rotation);
     coordinate = rotatedCoord;
   }
   const newArea: Area = { ...coordinate } as Area;

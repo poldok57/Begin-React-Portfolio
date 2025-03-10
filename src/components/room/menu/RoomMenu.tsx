@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { RoomAddTables } from "./RoomAddTables";
+import { AddTables } from "./AddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
 import { RangeInput } from "@/components/atom/RangeInput";
@@ -123,7 +123,7 @@ export const RoomMenu: React.FC<RoomMenuProps> = ({
       className="flex inset-1 z-10 flex-col gap-2 p-2 mx-2 w-56 rounded-xl border-2 bg-base-200 border-base-300"
       onMouseOver={(e) => e.stopPropagation()}
     >
-      <RoomAddTables
+      <AddTables
         className="w-full"
         activeMenu={activeMenu}
         setActiveMenu={setActiveMenu}

@@ -44,6 +44,7 @@ export interface DesignState {
   // getScale: () => number;
   setBackgroundColor: (backgroundColor: string) => void;
   moveAllDesignElements: (offset: Coordinate) => void;
+  moveDesignElement: (id: string, center: Coordinate, rotation: number) => void;
 }
 
 const createDesignStore = (storageName: string) => {
@@ -219,13 +220,24 @@ const createDesignStore = (storageName: string) => {
       set((state) => {
         const updatedElements = state.designElements.map((element) => ({
           ...element,
-          size: {
-            ...element.size,
-            x: element.size.x + offset.x,
-            y: element.size.y + offset.y,
+          center: {
+            x: element.center.x + offset.x,
+            y: element.center.y + offset.y,
           },
           modified: true,
         }));
+        return {
+          designElements: updatedElements,
+        };
+      });
+    },
+    moveDesignElement: (id: string, center: Coordinate, rotation: number) => {
+      set((state) => {
+        const updatedElements = state.designElements.map((element) =>
+          element.id === id
+            ? { ...element, center, rotation, modified: true }
+            : element
+        );
         return {
           designElements: updatedElements,
         };

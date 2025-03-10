@@ -58,6 +58,9 @@ interface RoomState {
   // Layout
   maxRowsPerColumn: number;
   setMaxRowsPerColumn: (maxRowsPerColumn: number) => void;
+
+  // temporary information
+  alignBy: "center" | "topLeft";
 }
 
 export const useRoomStore = create<RoomState>((set, get) => ({
@@ -75,6 +78,8 @@ export const useRoomStore = create<RoomState>((set, get) => ({
     }
   },
 
+  // temporary information
+  alignBy: "center",
   // Scale and rotation
   scale: 1,
   setScale: (scale) => set({ scale }),

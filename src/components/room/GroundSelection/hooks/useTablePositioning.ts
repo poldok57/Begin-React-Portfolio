@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useRoomStore } from "@/lib/stores/room";
 import { useZustandTableStore } from "@/lib/stores/tables";
 import { useHistoryStore } from "@/lib/stores/history";
-import { RectPosition as Position, Rectangle } from "@/lib/canvas/types";
+import { Coordinate, Rectangle } from "@/lib/canvas/types";
 import { Mode, TableData } from "@/components/room/types";
 
 import { TableDataState } from "@/lib/stores/tables";
@@ -18,7 +18,7 @@ export interface ChangeCoordinatesParams {
 }
 
 export const useTablePositioning = () => {
-  const { tablesStoreName, getElementRect, getMode } = useRoomStore();
+  const { tablesStoreName, getElementRect, getMode, alignBy } = useRoomStore();
   const namedStore = useZustandTableStore(tablesStoreName);
   const { addEntry } = useHistoryStore();
 
@@ -41,33 +41,39 @@ export const useTablePositioning = () => {
     offset?: { left?: number; top?: number },
     rotation?: number
   ) => {
-    let left = table.position.left;
-    let top = table.position.top;
+    let x = table.center.x;
+    let y = table.center.y;
     if (position) {
-      // get element rect with real size without scale
-      const rect = getElementRect(table.id);
-      // convert axis position to border position
-      if (position.left !== undefined) {
-        // Log pour comparer offsetWidth et Rect.width
-        left = Math.round(position.left - (rect?.width ?? 0) / 2);
-      }
-      if (position.top !== undefined) {
-        top = Math.round(position.top - (rect?.height ?? 0) / 2);
+      if (alignBy === "topLeft") {
+        // get element rect with real size without scale
+        const rect = getElementRect(table.id);
+        // convert axis position to border position
+        if (position.left !== undefined) {
+          // Log pour comparer offsetWidth et Rect.width
+          x = Math.round(position.left - (rect?.width ?? 0) / 2);
+        }
+        if (position.top !== undefined) {
+          y = Math.round(position.top - (rect?.height ?? 0) / 2);
+        }
+      } else {
+        x = Math.round(position?.left ?? x);
+        y = Math.round(position?.top ?? y);
       }
     } else {
+      // position table by translation
       if (!offset || (offset.left === 0 && offset.top === 0)) {
         return false;
       }
-      left = Math.round(left + (offset?.left ?? 0));
-      top = Math.round(top + (offset?.top ?? 0));
+      x = Math.round(x + (offset?.left ?? 0));
+      y = Math.round(y + (offset?.top ?? 0));
     }
 
-    if (left === table.position.left && top === table.position.top) {
+    if (x === table.center.x && y === table.center.y) {
       return false;
     }
 
     const updateData: Partial<TableData> = {
-      position: { left, top } as Position,
+      center: { x, y },
     };
     if (rotation !== undefined) {
       updateData.rotation = rotation;
@@ -102,7 +108,7 @@ export const useTablePositioning = () => {
     const isNewAction = uniqueId && (!lastEntry || lastEntry.id !== uniqueId);
     let tablesBeforeChange: {
       id: string;
-      previousPosition: Position;
+      previousPosition: Coordinate;
       previousRotation?: number;
     }[] = [];
     if (isNewAction) {
@@ -114,13 +120,13 @@ export const useTablePositioning = () => {
 
           return {
             id,
-            previousPosition: { ...table.position },
+            previousPosition: { ...table.center },
             previousRotation: table.rotation,
           };
         })
         .filter(Boolean) as {
         id: string;
-        previousPosition: Position;
+        previousPosition: Coordinate;
         previousRotation?: number;
       }[];
     }

@@ -16,8 +16,14 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
   className,
   handleClose,
 }) => {
-  const { places, addPlace, addOrUpdatePlace, deletePlace, setCurrentPlaceId } =
-    usePlaceStore();
+  const {
+    places,
+    addPlace,
+    addOrUpdatePlace,
+    deletePlace,
+    setCurrentPlaceId,
+    currentPlaceId,
+  } = usePlaceStore();
   const [editingPlace, setEditingPlace] = useState<PlaceRoom | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Partial<PlaceRoom>>({
@@ -222,7 +228,13 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
         {places.map((place) => (
           <div
             key={place.id}
-            className="flex justify-between items-center p-3 rounded-lg bg-base-200"
+            className={cn(
+              "flex justify-between items-center p-3 rounded-lg bg-base-200",
+              {
+                "bg-primary/10 border-2 border-primary":
+                  place.id === currentPlaceId,
+              }
+            )}
           >
             <div className="flex-1" onClick={() => handleSelectPlace(place.id)}>
               <h3 className="font-semibold text-nowrap">{place.name}</h3>

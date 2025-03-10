@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import { RectPosition } from "@/lib/canvas/types";
+import { Coordinate } from "@/lib/canvas/types";
 
 interface HistoryEntry {
   id: string;
   timestamp: number;
   tables: {
     id: string;
-    previousPosition: RectPosition;
+    previousPosition: Coordinate;
     previousRotation?: number;
   }[];
 }

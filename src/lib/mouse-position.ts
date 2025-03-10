@@ -3,9 +3,9 @@ import {
   Rectangle,
   Coordinate,
   RectPosition,
-  RectangleArgs,
   ButtonArgs,
   MiddleButton,
+  Size,
 } from "./canvas/types";
 import { isTouchDevice } from "./utils/device";
 
@@ -197,7 +197,8 @@ export const mousePointer = (mouseOnBorder: string): string => {
 };
 
 export const topRightPosition = (
-  rect: RectangleArgs,
+  center: Coordinate,
+  size: Size,
   maxWidth: number = 0,
   maxHeight: number = 0,
   rotation: number = 0,
@@ -205,10 +206,9 @@ export const topRightPosition = (
 ): ButtonArgs => {
   const badgeRadius = isTouchDevice() ? BADGE_RADIUS_TOUCH : BADGE_RADIUS;
 
-  const x = rect.x ?? rect.left!;
-  const y = Math.min(rect.y ?? rect.top!, maxHeight - 2 * badgeRadius);
-  const w = rect.width ?? rect.right! - rect.left!;
-  const h = rect.height ?? rect.bottom! - rect.top!;
+  const x = center.x - size.width / 2;
+  const y = Math.min(center.y - size.height / 2, maxHeight - 2 * badgeRadius);
+  const w = size.width;
 
   // base position of the badge
   const badge: ButtonArgs = {
@@ -234,12 +234,10 @@ export const topRightPosition = (
 
   if (rotation !== 0) {
     // Calculate the center of the rectangle
-    const rectCenterX = x + w / 2;
-    const rectCenterY = y + h / 2;
 
     // Calculate the distance and angle between the center of the rectangle and the badge
-    const dx = badge.centerX - rectCenterX;
-    const dy = badge.centerY - rectCenterY;
+    const dx = badge.centerX - center.x;
+    const dy = badge.centerY - center.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     const initialAngle = Math.atan2(dy, dx);
 
@@ -247,8 +245,8 @@ export const topRightPosition = (
     const newAngle = initialAngle + (rotation * Math.PI) / 180;
 
     // Calculate the new coordinates of the center of the badge
-    badge.centerX = rectCenterX + distance * Math.cos(newAngle);
-    badge.centerY = rectCenterY + distance * Math.sin(newAngle);
+    badge.centerX = center.x + distance * Math.cos(newAngle);
+    badge.centerY = center.y + distance * Math.sin(newAngle);
 
     // Update the other coordinates of the badge
     if (maxWidth) {
@@ -267,24 +265,23 @@ export const topRightPosition = (
 };
 
 export const topRightPositionOver = (
-  rect: RectangleArgs,
+  center: Coordinate,
+  size: Size,
   maxWidth: number = 0,
   maxHeight: number = 0,
   rotation: number = 0
 ): ButtonArgs => {
-  const newRect = { ...rect };
   let overhang = BADGE_RADIUS * 2 + 10;
   if (isTouchDevice()) {
     overhang = BADGE_RADIUS_TOUCH * 2 + 12;
   }
-  if (newRect.top !== undefined) {
-    newRect.top -= overhang;
-  }
-  if (newRect.y !== undefined) {
-    newRect.y -= overhang;
-  }
+  const newSize: Size = {
+    width: size.width,
+    height: size.height + overhang * 2,
+  };
   return topRightPosition(
-    newRect,
+    center,
+    newSize,
     maxWidth,
     maxHeight - overhang,
     rotation,
@@ -292,21 +289,17 @@ export const topRightPositionOver = (
   );
 };
 
-export const middleButtonPosition = (rect: RectangleArgs) => {
-  const x = rect.x ?? rect.left!;
-  const y = rect.y ?? rect.top!;
-  const w = rect.width ?? rect.right! - rect.left!;
-  const h = rect.height ?? rect.bottom! - rect.top!;
+export const middleButtonPosition = (center: Coordinate, size: Size) => {
   const btnRadius = isTouchDevice()
     ? MIDDLE_BTN_RADIUS_TOUCH
     : MIDDLE_BTN_RADIUS;
   const middleButton: MiddleButton = {
-    left: x + w / 2 - btnRadius * 2,
-    right: x + w / 2 + btnRadius * 2,
-    middle: x + w / 2,
-    top: y + Math.max(h / 2 - btnRadius, 30),
-    axeX1: x + w / 2 - 1 - btnRadius,
-    axeX2: x + w / 2 + 1 + btnRadius,
+    left: center.x - btnRadius * 2,
+    right: center.x + btnRadius * 2,
+    middle: center.x,
+    top: size.height < 60 ? center.y + 30 - size.height / 2 : center.y,
+    axeX1: center.x - 1 - btnRadius,
+    axeX2: center.x + 1 + btnRadius,
     radius: btnRadius,
     axeY: 0,
   } as MiddleButton;

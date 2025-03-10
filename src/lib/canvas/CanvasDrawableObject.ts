@@ -7,7 +7,7 @@
 import { isOnSquareBorder } from "../square-position";
 import { BORDER } from "../mouse-position";
 import { coordinateIsInsideRect } from "../mouse-position";
-import { scaledSize } from "../utils/scaledSize";
+import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 import { DRAWING_MODES, ThingsToDraw } from "./canvas-defines";
 import { resizingElement } from "./canvas-resize";
@@ -24,13 +24,15 @@ export abstract class CanvasDrawableObject {
   protected btnValidPos: ButtonArgs | null = null;
   protected btnDeletePos: ButtonArgs | null = null;
   protected btnMiddlePos: MiddleButton | null = null;
+  private area: Area | null = null;
 
   constructor() {
     this.data = {
       id: "",
       type: "",
       rotation: 0,
-      size: { x: 0, y: 0, width: 0, height: 0 },
+      center: { x: 0, y: 0 },
+      size: { width: 0, height: 0 },
       general: {
         color: "#000",
         lineWidth: 1,
@@ -67,7 +69,17 @@ export abstract class CanvasDrawableObject {
 
   abstract getData(): ThingsToDraw | null;
 
-  abstract setData(data: ThingsToDraw, toEdit?: boolean): Promise<void>;
+  setData(data: ThingsToDraw, _toEdit?: boolean): Promise<void> {
+    this.data = { ...data };
+    // console.log("data", data, "center", data.center);
+    this.area = {
+      x: data.center.x - data.size.width / 2,
+      y: data.center.y - data.size.height / 2,
+      width: data.size.width,
+      height: data.size.height,
+    };
+    return Promise.resolve();
+  }
 
   setDataType(name: string) {
     this.data.type = name;
@@ -84,12 +96,61 @@ export abstract class CanvasDrawableObject {
     this.scale = scale;
   }
 
-  setDataSize(data: Area | Coordinate | Size): void {
-    this.data.size = { ...this.data.size, ...data };
+  setDataSize(size: Size): void {
+    this.data.size = { ...size };
+    this.area = null;
   }
 
-  getDataSize(): Area {
-    return { ...this.data.size };
+  private coordinateToArea(ratio?: number): void {
+    this.area = {
+      x: this.data.center.x - this.data.size.width / 2,
+      y: this.data.center.y - this.data.size.height / 2,
+      width: this.data.size.width,
+      height: this.data.size.height,
+    };
+    if (ratio) {
+      this.area.ratio = ratio;
+    }
+  }
+  setArea(area: Area): void {
+    const ratio = area.ratio;
+    this.area = { ...area, ratio };
+    this.data.size = {
+      width: area.width,
+      height: area.height,
+    };
+    this.data.center = {
+      x: this.area.x + this.area.width / 2,
+      y: this.area.y + this.area.height / 2,
+    };
+  }
+
+  getArea(): Area {
+    if (this.area === null) {
+      this.coordinateToArea();
+    }
+    return { ...this.area } as Area;
+  }
+
+  setRatio(ratio: number): void {
+    if (this.area) {
+      this.area.ratio = ratio;
+    } else {
+      this.coordinateToArea(ratio);
+    }
+  }
+
+  getDataSize(): Size {
+    return this.data.size;
+  }
+
+  getDataCenter(): Coordinate {
+    return this.data.center;
+  }
+
+  setDataCenter(center: Coordinate): void {
+    this.data.center = center;
+    this.area = null;
   }
 
   changeRotation(rotation: number): void {
@@ -107,10 +168,9 @@ export abstract class CanvasDrawableObject {
    * @param offset - The offset to move the path
    */
   move(offset: Coordinate) {
-    if (this.data.size) {
-      this.data.size.x += offset.x;
-      this.data.size.y += offset.y;
-    }
+    this.data.center.x += offset.x;
+    this.data.center.y += offset.y;
+    this.area = null;
   }
 
   resizingArea(
@@ -119,25 +179,26 @@ export abstract class CanvasDrawableObject {
     lockRatio: boolean,
     witchBorder: string
   ): Area | null {
-    const newCoord = resizingElement(
+    const newArea = resizingElement(
       ctx,
-      this.data.size,
+      this.getArea(),
       coordinates,
       lockRatio,
       witchBorder,
       this.data.rotation
     );
 
-    if (newCoord) {
-      this.setDataSize(newCoord);
+    if (newArea) {
+      this.setArea(newArea);
       this.debounceDraw(ctx, true, witchBorder);
     }
-    return newCoord;
+    return newArea;
   }
 
   hightLightDrawing(ctx: CanvasRenderingContext2D | null): void {
     const size = scaledSize(this.data.size, this.scale);
-    drawDashedRedRectangle(ctx, size, 0.8, 0);
+    const center = scaledCoordinate(this.data.center, this.scale);
+    drawDashedRedRectangle(ctx, center, size, 0.8, this.data.rotation);
   }
 
   /**
@@ -186,7 +247,8 @@ export abstract class CanvasDrawableObject {
 
     return isOnSquareBorder({
       coordinate: coordinate,
-      area: this.data.size,
+      center: this.data.center,
+      size: this.data.size,
       withResize: this.data.type !== DRAWING_MODES.TEXT,
       rotation: this.data.rotation ?? 0,
     });

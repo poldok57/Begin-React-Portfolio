@@ -28,6 +28,7 @@ export interface TableDataState {
   deleteSelectedTable: () => void;
   getAllTables: () => TableData[];
   moveAllTables: (offset: Coordinate) => void;
+  moveTable: (id: string, center: Coordinate, rotation: number) => void;
 }
 
 interface TableDataWithIndex extends TableData {
@@ -133,15 +134,26 @@ const createTableStore = (storageName: string) => {
       set((state) => {
         const updatedTables = state.tables.map((table) => ({
           ...table,
-          position: {
-            ...table.position,
-            left: table.position.left + offset.x,
-            top: table.position.top + offset.y,
+          center: {
+            x: table.center.x + offset.x,
+            y: table.center.y + offset.y,
           },
         }));
 
         return {
           tables: updatedTables,
+        };
+      });
+    },
+    moveTable: (id, center, rotation) => {
+      set((state) => {
+        const table = state.tables.find((table) => table.id === id);
+        if (table) {
+          table.center = center;
+          table.rotation = rotation;
+        }
+        return {
+          tables: state.tables,
         };
       });
     },

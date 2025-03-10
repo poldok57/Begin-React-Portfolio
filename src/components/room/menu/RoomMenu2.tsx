@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { RoomAddTables } from "./RoomAddTables";
+import { AddTables } from "./AddTables";
 import { UpdateSelectedTables } from "./UpdateSelectedTables";
 import { RoomDesign } from "./RoomDesign";
 import { RangeInput } from "@/components/atom/RangeInput";
@@ -38,7 +38,9 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     scale,
     setScale,
     clearSelectedTableIds,
+    clearTemporaryCanvas,
     getSelectedRect,
+    setSelectedRect,
     maxRowsPerColumn,
     setMaxRowsPerColumn,
     tablesStoreName,
@@ -65,6 +67,14 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const handleSelectTypeList = (type: TypeListTables) => {
     setTypeListMode(type);
     refDetails.current?.removeAttribute("open");
+  };
+
+  const handleDeleteSelectedTables = () => {
+    clearTemporaryCanvas();
+    clearSelectedTableIds();
+    namedStoreRef.current?.deleteSelectedTable();
+    namedStoreRef.current?.setActiveTable(null);
+    setSelectedRect(null);
   };
 
   useEffect(() => {
@@ -97,6 +107,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           }
           setActiveMenu(null);
           clearSelectedTableIds();
+          namedStoreRef.current?.setActiveTable(null);
           break;
 
         case "a":
@@ -137,11 +148,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           );
 
           if (namedStoreRef.current) {
-            addValidationValidAction(
-              namedStoreRef.current.deleteSelectedTable.bind(
-                namedStoreRef.current
-              )
-            );
+            addValidationValidAction(handleDeleteSelectedTables);
           }
 
           event.preventDefault();
@@ -166,7 +173,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
 
     lastEntry.tables.forEach((tableHistory) => {
       namedStoreRef.current?.updateTable(tableHistory.id, {
-        position: tableHistory.previousPosition,
+        center: tableHistory.previousPosition,
         ...(tableHistory.previousRotation !== undefined && {
           rotation: tableHistory.previousRotation,
         }),
@@ -206,7 +213,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                   />
                 </li>
                 <li>
-                  <RoomAddTables
+                  <AddTables
                     className="flex flex-col p-1 w-full rounded-lg"
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
@@ -308,7 +315,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
           {typeListMode === TypeListTables.plan && (
             <>
               <li className="flex items-center pl-1">
-                <RoomAddTables
+                <AddTables
                   className="px-2"
                   activeMenu={activeMenu}
                   setActiveMenu={setActiveMenu}

@@ -5,9 +5,9 @@ import {
   drawDashedRedRectangle,
 } from "./canvas-dashed-rect";
 import { debounce } from "../utils/debounce";
-import { Coordinate } from "./types";
+import { Coordinate, Size } from "./types";
 import { isInsideSquare } from "../square-position";
-import { scaledSize } from "../utils/scaledSize";
+import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
 
 export const showAllDashedRectangles = (
   ctx: CanvasRenderingContext2D,
@@ -23,24 +23,25 @@ export const showAllDashedRectangles = (
   for (let i = elements.length - 1; i >= 0; i--) {
     const element = elements[i];
     // Check if coord is inside element size
-    if (isInsideSquare(coord, element.size, element.rotation)) {
+    if (isInsideSquare(coord, element.center, element.size, element.rotation)) {
       // First found element (last in z-order) gets 50% opacity
       // scale the size of the element
-      const size = scaledSize(element.size, scale);
-
-      // console.log(
-      //   "drawDashedRectangle canvas size",
-      //   ctx.canvas.width,
-      //   ctx.canvas.height
-      // );
-      drawDashedRectangle(ctx, size, first ? 0.5 : opacity, element.rotation);
+      const size: Size = scaledSize(element.size, scale);
+      const center = scaledCoordinate(element.center, scale);
+      drawDashedRectangle(
+        ctx,
+        center,
+        size,
+        first ? 0.5 : opacity,
+        element.rotation
+      );
       if (first) {
         let lg = 0;
         if ("border" in element) {
           const border = element.border as ParamsGeneral;
           lg = border.lineWidth + (border.interval || 0);
         }
-        drawDashedRedRectangle(ctx, size, 0.5, element.rotation, lg);
+        drawDashedRedRectangle(ctx, center, size, 0.5, element.rotation, lg);
       }
       first = false;
       nbFound++;

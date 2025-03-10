@@ -1,4 +1,4 @@
-import { Area, Coordinate, LinePath, MouseCircle } from "./types";
+import { Size, Area, Coordinate, LinePath, MouseCircle } from "./types";
 
 const DRAWING_ACTIONS = {
   UNDO: "undo",
@@ -191,9 +191,9 @@ export type GroupParams = {
 export interface ThingsToDraw {
   id: string;
   type: string;
+  center: Coordinate;
+  size: Size;
   rotation: number;
-
-  size: Area;
   general: ParamsGeneral;
   path?: ParamsPath;
   erase?: boolean;

@@ -145,12 +145,12 @@ export const RoomCreatTools = () => {
                   editable={mode !== Mode.numbering}
                   onClick={onTableClick}
                 />
-                <ValidationFrame btnSize={btnSize} isTouch={isTouchDevice()} />
               </>
             ) : typeListMode === "list" ? (
               <ListTablesText />
             ) : null}
           </GroundSelection>
+          <ValidationFrame btnSize={btnSize} />-{" "}
         </div>
       </div>
     </>

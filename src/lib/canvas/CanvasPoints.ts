@@ -27,7 +27,7 @@ import {
 } from "./canvas-buttons";
 import { CanvasDrawableObject, DEBOUNCE_TIME } from "./CanvasDrawableObject";
 import { showCanvasImage } from "./canvas-elements";
-import { scaledSize } from "../utils/scaledSize";
+import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
 import { drawArrow } from "./canvas-arrow";
 import { isTouchDevice } from "../utils/device";
 import { clearCanvasByCtx } from "./canvas-tools";
@@ -57,6 +57,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected trueSize: boolean = true;
   protected arrowArea: Area | null = null;
 
+  private canModifyOnRotation: boolean = false;
+
   constructor() {
     super();
     this.angleFound = -1;
@@ -68,7 +70,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       id: "",
       type: "",
       rotation: 0,
-      size: { x: 0, y: 0, width: 0, height: 0 },
+      center: { x: 0, y: 0 },
+      size: { width: 0, height: 0 },
       general: {
         color: "#000",
         lineWidth: 1,
@@ -90,9 +93,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   }
 
   async setData(data: CanvasPointsData, toEdit: boolean = false) {
-    this.data = { ...data };
+    super.setData(data);
+
     if (toEdit) {
-      this.data.size = { ...data.size };
       if (this.data.type !== DRAWING_MODES.DRAW) {
         this.data.items = data.items.map((item) => ({ ...(item as LinePath) }));
       }
@@ -106,7 +109,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (this.isPathClosed()) {
       this.isClosed = true;
     }
-    this.realSize = this.getArea();
+    this.realSize = this.calculateArea();
     this.isFinished = true;
 
     this.arrowArea = null;
@@ -160,9 +163,11 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
     this.canvasImage = null;
     this.realSize = null;
-    this.data.size = {
+    this.data.center = {
       x: coord.x - widthLine,
       y: coord.y - widthLine,
+    };
+    this.data.size = {
       width: 2 * widthLine,
       height: 2 * widthLine,
     };
@@ -175,37 +180,34 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   }
 
   addPointInArea(coord: Coordinate, control: Coordinate | null = null) {
-    if (!this.data.size) {
-      return;
-    }
-
     if (this.data.type === DRAWING_MODES.ARROW) {
       return;
     }
 
     const lineWidth = this.maxLineWidth / 2 + 1;
-    const previousSize = { ...this.data.size };
-    const size = this.data.size;
-    const width = Math.max(size.width, coord.x + lineWidth, control?.x ?? 0);
-    const height = Math.max(size.height, coord.y + lineWidth, control?.y ?? 0);
+    const previousSize = this.getArea();
+    const area = this.getArea();
+    const width = Math.max(area.width, coord.x + lineWidth, control?.x ?? 0);
+    const height = Math.max(area.height, coord.y + lineWidth, control?.y ?? 0);
 
-    size.x = size.x + Math.min(0, coord.x - lineWidth, control?.x ?? Infinity);
-    size.y = size.y + Math.min(0, coord.y - lineWidth, control?.y ?? Infinity);
+    area.x = area.x + Math.min(0, coord.x - lineWidth, control?.x ?? Infinity);
+    area.y = area.y + Math.min(0, coord.y - lineWidth, control?.y ?? Infinity);
 
     // if elarge at right or bottom
-    size.width = width;
-    size.height = height;
+    area.width = width;
+    area.height = height;
 
     // if elarge
-    if (previousSize.x !== size.x || previousSize.y !== size.y) {
+    if (previousSize.x !== area.x || previousSize.y !== area.y) {
       this.hasChanged.position = true;
       const offset = {
-        x: previousSize.x - size.x,
-        y: previousSize.y - size.y,
+        x: previousSize.x - area.x,
+        y: previousSize.y - area.y,
       };
-      size.width += offset.x;
-      size.height += offset.y;
+      area.width += offset.x;
+      area.height += offset.y;
       this.calculateRelativePositions(offset);
+      this.setArea(area);
     }
   }
 
@@ -236,8 +238,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       return false;
     }
     // relative to the area
-    newPoint.x -= this.data.size.x;
-    newPoint.y -= this.data.size.y;
+    const area = this.getArea();
+    newPoint.x -= area.x;
+    newPoint.y -= area.y;
 
     if (prevPoint && newPoint) {
       // distance^2 < MIN_DISTANCE^2
@@ -263,8 +266,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       let control: Coordinate | null = null;
       if ("coordinates" in item && item.coordinates) {
         control = item.coordinates;
-        control.x -= this.data.size.x;
-        control.y -= this.data.size.y;
+        control.x -= area.x;
+        control.y -= area.y;
       }
 
       // Add the item to the data
@@ -318,8 +321,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     } else {
       lastCoord = { ...(lastItem as Coordinate) };
     }
-    lastCoord.x += this.data.size.x;
-    lastCoord.y += this.data.size.y;
+    const area = this.getArea();
+    lastCoord.x += area.x;
+    lastCoord.y += area.y;
     return lastCoord;
   }
 
@@ -350,7 +354,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (this.data.items.length > 0) {
       this.data.items.pop();
       // Recalculate the rectangle after removing the last line
-      this.data.size = this.getArea();
+      const newArea = this.calculateArea();
+      this.setArea(newArea);
+
       this.angleFound = -1;
       this.coordFound = -1;
       this.hasChanged.draw = true;
@@ -362,7 +368,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   setFinished(isFinished: boolean) {
     this.isFinished = isFinished;
-    this.data.size = this.getArea();
+    const newArea = this.calculateArea();
+    this.setArea(newArea);
   }
 
   getItemsLength() {
@@ -437,7 +444,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @param insidePoint - The point inside the area
    * @returns The area of the points
    */
-  protected getArea(): Area {
+  protected calculateArea(): Area {
     let left = Infinity;
     let top = Infinity;
     let right = 0;
@@ -446,7 +453,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     let borderRight = 0;
     let borderTop = 0;
     let maxLineWidth = this.data.general.lineWidth;
-    const previousSize = { ...this.data.size };
+    const previousSize = this.getArea();
 
     // Find the maximum line width
     this.data.items.forEach((line) => {
@@ -504,8 +511,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       }
     }
     // new size
-    const x = Math.round(this.data.size.x + left);
-    const y = Math.round(this.data.size.y + top);
+    const area = this.getArea();
+    const x = Math.round(area.x + left);
+    const y = Math.round(area.y + top);
     const width = Math.round(right - left);
     const height = Math.round(bottom - top);
 
@@ -533,7 +541,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    */
   eraseResizing() {
     this.trueSize = true;
-    this.data.size = this.getArea();
+    const newArea = this.calculateArea();
+    this.setArea(newArea);
   }
 
   /**
@@ -545,13 +554,14 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     ctx: CanvasRenderingContext2D | null,
     mouseOnRectangle: string | null
   ) {
-    if (!ctx || !this.data.size) {
+    if (!ctx) {
       return;
     }
     // scale the size of the path
     const size = scaledSize(this.data.size, this.scale);
-
+    const center = scaledCoordinate(this.data.center, this.scale);
     this.btnValidPos = topRightPosition(
+      center,
       size,
       ctx.canvas.width,
       ctx.canvas.height
@@ -570,6 +580,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       this.lastButtonOpacity = opacity;
     }
     this.btnDeletePos = topRightPositionOver(
+      center,
       size,
       ctx.canvas.width,
       ctx.canvas.height
@@ -587,9 +598,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       );
     }
     if (this.withTurningButtons) {
-      this.btnMiddlePos = middleButtonPosition(size);
+      this.btnMiddlePos = middleButtonPosition(center, size);
       if (this.btnMiddlePos) {
-        drawTurningButtons(ctx, size, mouseOnRectangle);
+        drawTurningButtons(ctx, center, size, mouseOnRectangle);
       }
     }
   }
@@ -600,14 +611,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @returns true if the coordinate is in the area, false otherwise
    */
   isInArea(coord: Coordinate): boolean {
-    if (!this.data.size || !coord) {
+    if (!coord) {
       return false;
     }
     return (
-      coord.x >= this.data.size.x &&
-      coord.x <= this.data.size.x + this.data.size.width &&
-      coord.y >= this.data.size.y &&
-      coord.y <= this.data.size.y + this.data.size.height
+      Math.abs(coord.x - this.data.center.x) < this.data.size.width &&
+      Math.abs(coord.y - this.data.center.y) < this.data.size.height
     );
   }
 
@@ -623,10 +632,14 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!this.trueSize) {
       return false;
     }
+    if (this.data.rotation !== 0 && !this.canModifyOnRotation) {
+      return false;
+    }
 
+    const area = this.getArea();
     const coord = {
-      x: coordonate.x - this.data.size.x,
-      y: coordonate.y - this.data.size.y,
+      x: coordonate.x - area.x,
+      y: coordonate.y - area.y,
     };
 
     if (this.angleFound >= 0 || this.coordFound >= 0) {
@@ -673,14 +686,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     mousePosition: Coordinate
   ): string | null {
     this.lastMousePosition = mousePosition;
-    if (this.data.size) {
-      const mouseOnRectangle = this.handleMouseOnElement(mousePosition);
-      if (!mouseOnRectangle) {
-        return null;
-      }
-      if (isOnButton(mouseOnRectangle) || isBorder(mouseOnRectangle)) {
-        return mouseOnRectangle;
-      }
+    const mouseOnRectangle = this.handleMouseOnElement(mousePosition);
+    if (!mouseOnRectangle) {
+      return null;
+    }
+    if (isOnButton(mouseOnRectangle) || isBorder(mouseOnRectangle)) {
+      return mouseOnRectangle;
     }
     return null;
   }
@@ -691,9 +702,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
    * @returns true if the position has changed, false otherwise
    */
   changeAnglePosition(coord: Coordinate) {
+    const area = this.getArea();
     const newCoord = {
-      x: Math.round(coord.x - this.data.size.x),
-      y: Math.round(coord.y - this.data.size.y),
+      x: Math.round(coord.x - area.x),
+      y: Math.round(coord.y - area.y),
     };
 
     if (this.angleFound === 0) {
@@ -734,7 +746,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
   deboucedMoveAngle = debounceThrottle(
     (ctx: CanvasRenderingContext2D | null) => {
-      this.data.size = this.getArea();
+      const newArea = this.calculateArea();
+      this.setArea(newArea);
+
       clearCanvasByCtx(ctx);
       this.draw(ctx, true);
     },
@@ -798,7 +812,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         resizingBorder
       );
       if (newArea) {
-        this.setDataSize(newArea);
+        this.setArea(newArea);
         clearCanvasByCtx(ctx);
         this.draw(ctx, true);
       }
@@ -877,15 +891,19 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       return false;
     }
     this.trueSize = false;
+    const area = this.getArea();
+    const size = scaledSize(area, this.scale);
+    const center = scaledCoordinate(this.data.center, this.scale);
     if (
       this.realSize &&
-      this.realSize.width === this.data.size.width &&
-      this.realSize.height === this.data.size.height
+      this.realSize.width === area.width &&
+      this.realSize.height === area.height
     ) {
       this.trueSize = true;
     }
     if (this.hasChanged.position) {
-      this.data.size = this.getArea();
+      const newArea = this.calculateArea();
+      this.setArea(newArea);
     }
     // draw the path in a temporyCanvas
     if (this.hasChanged.draw || !this.canvasImage) {
@@ -893,17 +911,17 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         this.canvasImage = document.createElement("canvas");
       }
       if (!this.realSize || !this.isFinished) {
-        this.realSize = { ...this.data.size };
+        this.realSize = area;
         this.trueSize = true;
       }
 
       this.canvasImage.width = this.realSize.width;
       this.canvasImage.height = this.realSize.height;
-      // console.log("draw", this.data.size);
+      // console.log("draw", area);
 
       const ctxTemp = this.canvasImage.getContext("2d");
       if (ctxTemp) {
-        // console.log("draw realSize", this.realSize, "data:", this.data.size);
+        // console.log("draw realSize", this.realSize, "data:", area);
         ctxTemp.clearRect(0, 0, this.realSize.width, this.realSize.height);
         ctxTemp.lineCap = ctx.lineCap;
         ctxTemp.lineJoin = ctx.lineJoin;
@@ -915,28 +933,27 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
 
     // scale the size of the path
-    const size = scaledSize(this.data.size, this.scale);
+    const scaledArea = scaledSize(area, this.scale) as Area;
 
     // console.log("scale", this.scale, "type", this.data.type, "draw", size);
     if (this.canvasImage) {
       // draw the canvasImage with the reduced size
-      showCanvasImage(ctx, size, this.canvasImage, this.data.rotation);
+      showCanvasImage(ctx, scaledArea, this.canvasImage, this.data.rotation);
     }
 
-    if (
-      !withDashedRectangle ||
-      this.data.items.length <= 1 ||
-      !this.data.size
-    ) {
+    if (!withDashedRectangle || this.data.items.length <= 1) {
       return false;
     }
 
-    if (this.trueSize) {
+    if (
+      this.trueSize &&
+      (this.data.rotation === 0 || this.canModifyOnRotation)
+    ) {
       // adding infos on the canvas, if there is no resize
       this.drawAddingInfos(ctx);
     }
     // console.log("draw    --------->", size);
-    drawDashedRectangle(ctx, size, 0.3, this.data.rotation);
+    drawDashedRectangle(ctx, center, size, 0.3, this.data.rotation);
 
     if (this.isFinished) {
       this.drawActionButtons(ctx, null);

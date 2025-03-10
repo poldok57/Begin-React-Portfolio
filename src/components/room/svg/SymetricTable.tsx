@@ -28,29 +28,31 @@ const MemorizedSymetricTable = React.memo(
     const subTextSize = textSize * 0.25;
 
     // Dimensions de la table
-    const radius = (size - strokeWidth) / 2;
-    const radiusY = radius * (0.3 + 2 * heightRatio);
-    const cornerRadius = size * 0.2 * heightRatio;
+    const radius = parseFloat(((size - strokeWidth) / 2).toFixed(2));
+    const radiusY = parseFloat((radius * (0.3 + 2 * heightRatio)).toFixed(2));
+    const cornerRadius = Math.round(size * 0.2 * heightRatio);
 
-    const longSide = size - strokeWidth - 2 * +cornerRadius;
-    const concaveRadius = size * concaveRatio; // rayon des quarts de cercle concaves pour le croupier
+    const longSide = Math.round(size - strokeWidth - 2 * +cornerRadius);
+    const concaveRadius = Math.round(size * concaveRatio); // rayon des quarts de cercle concaves pour le croupier
 
-    const concaveRadiusY = (concaveRadius * 2) / 3;
-    const concaveLarge = Math.max(
-      longSide * 0.6 - concaveRadius * 3.5,
-      size * 0.1
+    const concaveRadiusY = Math.round((concaveRadius * 2) / 3);
+    const concaveLarge = Math.round(
+      Math.max(longSide * 0.6 - concaveRadius * 3.5, size * 0.1)
     );
-    const concaveSide = (longSide - concaveLarge) / 2 - concaveRadius;
-    const bottomTable = radiusY + cornerRadius;
-    const cashierWidth = Math.min(
-      Math.max(concaveLarge, size * 0.2),
-      radius / 2
+    const concaveSide = Math.round(
+      (longSide - concaveLarge) / 2 - concaveRadius
     );
-    const cashierHeight = cashierWidth * 0.4;
+    const bottomTable = Math.round(radiusY + cornerRadius);
+    const cashierWidth = Math.round(
+      Math.min(Math.max(concaveLarge, size * 0.2), radius / 2)
+    );
+    const cashierHeight = Math.round(cashierWidth * 0.4);
 
-    const heightCraps = radiusY - cornerRadius;
-    const heightCarpetCraps = heightCraps - strokeWidth - concaveRadiusY;
-    const widthCarpetCraps = radius - cashierWidth * 0.8;
+    const heightCraps = Math.round(radiusY - cornerRadius);
+    const heightCarpetCraps = Math.round(
+      heightCraps - strokeWidth - concaveRadiusY
+    );
+    const widthCarpetCraps = Math.round(radius - cashierWidth * 0.8);
 
     const textRef = useRef<SVGTextElement>(null);
     const [adjustedFontSize, setAdjustedFontSize] = useState(subTextSize);

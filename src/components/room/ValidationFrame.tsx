@@ -9,6 +9,7 @@ export const VALIDATION_ID = {
 };
 
 import { RectPosition, Rectangle } from "@/lib/canvas/types";
+import { isTouchDevice } from "@/lib/utils/device";
 
 let validationCancelAction: null | (() => void) = null;
 let validationValidAction: null | (() => void) = null;
@@ -60,13 +61,12 @@ export const hideValidationFrame = () => {
 
 export const ValidationFrame = ({
   btnSize = 20,
-  isTouch = false,
   children,
 }: {
   btnSize: number;
-  isTouch: boolean;
   children?: React.ReactNode;
 }) => {
+  const isTouch = isTouchDevice();
   // Function to hide the frame when clicking outside of it
   const onClickOutside = (event: MouseEvent) => {
     const frame = document.getElementById(VALIDATION_ID.FRAME);
@@ -84,6 +84,7 @@ export const ValidationFrame = ({
 
   const handleValid = () => {
     if (validationValidAction) {
+      console.log("Validation action");
       validationValidAction();
     }
     hideValidationFrame();

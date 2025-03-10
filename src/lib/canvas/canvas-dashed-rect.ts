@@ -2,10 +2,10 @@
  * Part of the canvas module that contains the functions to draw a dashed rectangle on the canvas
  */
 import { drawRoundedRect } from "./canvas-elements";
-import { Area, Rectangle } from "./types";
+import { Area, Coordinate, Size } from "./types";
 
-const INTERVAL = 5;
-export const OVERAGE = Math.round(INTERVAL * 1.6);
+const DASHED_INTERVAL = 5;
+export const OVERAGE = Math.round(DASHED_INTERVAL * 1.6);
 export const OVERAGE2 = OVERAGE + 1;
 
 /**
@@ -16,46 +16,35 @@ export const OVERAGE2 = OVERAGE + 1;
 
 export const drawDashedRectangle = (
   ctx: CanvasRenderingContext2D | null,
-  bounds: Area | Rectangle | null,
+  center: Coordinate,
+  size: Size,
   globalAlpha: number = 0.8,
   rotation: number = 0
 ) => {
-  if (!bounds || !ctx) return;
+  if (!ctx) return;
   const alpha = ctx.globalAlpha;
   ctx.globalAlpha = globalAlpha;
 
-  let { width, height } = bounds;
-  let x = 0,
-    y = 0;
-  if ("left" in bounds && "top" in bounds) {
-    x = bounds.left;
-    y = bounds.top;
-  } else {
-    x = bounds.x;
-    y = bounds.y;
-  }
+  let { width, height } = size;
+  let x = center.x - width / 2;
+  let y = center.y - height / 2;
 
   // Save the context before rotation
   if (rotation !== 0) {
     ctx.save();
 
     // Move the origin point to the center of the element
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
-    ctx.translate(centerX, centerY);
+    ctx.translate(center.x, center.y);
 
     // Apply rotation
     ctx.rotate((rotation * Math.PI) / 180);
-
-    // Reset the origin point for drawing
-    x = -width / 2;
-    y = -height / 2;
+    ctx.translate(-center.x, -center.y);
   }
 
   ctx.beginPath();
   ctx.strokeStyle = "#201010";
   ctx.lineWidth = 0.5;
-  ctx.setLineDash([INTERVAL, (INTERVAL * 2) / 3]);
+  ctx.setLineDash([DASHED_INTERVAL, (DASHED_INTERVAL * 2) / 3]);
 
   // Draw the semi-transparent rectangle
   ctx.fillStyle = "rgba(40, 40, 40, 0.20)";
@@ -106,40 +95,32 @@ export const drawDashedRectangle = (
  */
 export const drawDashedRedRectangle = (
   ctx: CanvasRenderingContext2D | null,
-  bounds: Area | Rectangle | null,
+  center: Coordinate,
+  size: Size,
   globalAlpha: number = 1,
   rotation: number = 0,
   overage: number = 0
 ) => {
-  if (!bounds || !ctx) return;
+  if (!ctx) return;
   // console.log("Dashed Red Rectangle", bounds, rotation, globalAlpha);
   const alpha = ctx.globalAlpha;
   ctx.globalAlpha = globalAlpha;
 
-  const { width, height } = bounds;
-  let x = 0,
-    y = 0;
-  if ("left" in bounds && "top" in bounds) {
-    x = bounds.left;
-    y = bounds.top;
-  } else {
-    x = bounds.x;
-    y = bounds.y;
-  }
+  const { width, height } = size;
+  const x = center.x - width / 2;
+  const y = center.y - height / 2;
 
+  // Save the context before rotation
   // Save the context before rotation
   if (rotation !== 0) {
     ctx.save();
 
     // Move the origin point to the center of the element
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
-    ctx.translate(centerX, centerY);
+    ctx.translate(center.x, center.y);
 
     // Apply rotation
     ctx.rotate((rotation * Math.PI) / 180);
-    x = -width / 2;
-    y = -height / 2;
+    ctx.translate(-center.x, -center.y);
   }
 
   // ctx.beginPath();

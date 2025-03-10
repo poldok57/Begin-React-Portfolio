@@ -115,160 +115,136 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
       const tables = tablesStore.getAllTables();
       const designs = designStore.getAllDesignElements();
 
-      // Si aucun élément, ne rien faire
+      // if no element, do nothing
       if (tables.length === 0 && designs.length === 0) {
         return;
       }
 
-      // Calculer les limites actuelles de tous les éléments (tables + designs)
+      // calculate the current limits of all elements (tables + designs)
       let minX = Infinity;
       let maxX = -Infinity;
       let minY = Infinity;
       let maxY = -Infinity;
 
-      // Analyser les tables
+      // analyze the tables
       tables.forEach((table) => {
-        const { left, top } = table.position;
+        const { center } = table;
         const size = table.size ?? 200;
+        const halfSize = size / 2;
 
-        // Ajuster les limites
-        minX = Math.min(minX, left);
-        maxX = Math.max(maxX, left + size);
-        minY = Math.min(minY, top);
-        maxY = Math.max(maxY, top + size);
+        // adjust the limits based on the center and the size
+        minX = Math.min(minX, center.x - halfSize);
+        maxX = Math.max(maxX, center.x + halfSize);
+        minY = Math.min(minY, center.y - halfSize);
+        maxY = Math.max(maxY, center.y + halfSize);
       });
 
-      // Analyser les designs
+      // analyze the designs
       designs.forEach((design) => {
-        const { x, y, width, height } = design.size;
-        const currentRotation = design.rotation ?? 0;
+        const { center, size, rotation = 0 } = design;
+        const { width, height } = size;
 
-        // Tenir compte de la rotation pour calculer les dimensions réelles
-        const effectiveWidth = currentRotation % 180 === 0 ? width : height;
-        const effectiveHeight = currentRotation % 180 === 0 ? height : width;
+        // determine the effective dimensions based on the rotation
+        const isRotated = rotation % 180 !== 0;
+        const halfWidth = (isRotated ? height : width) / 2;
+        const halfHeight = (isRotated ? width : height) / 2;
 
-        // Ajuster les limites
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x + effectiveWidth);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y + effectiveHeight);
+        // adjust the limits based on the center and the dimensions
+        minX = Math.min(minX, center.x - halfWidth);
+        maxX = Math.max(maxX, center.x + halfWidth);
+        minY = Math.min(minY, center.y - halfHeight);
+        maxY = Math.max(maxY, center.y + halfHeight);
       });
 
-      // Calculer les dimensions actuelles
+      // calculate the current dimensions
       const currentWidth = maxX - minX;
       const currentHeight = maxY - minY;
 
-      // Calculer le centre de la page
+      // calculate the center of the page
       const centerX = minX + currentWidth / 2;
       const centerY = minY + currentHeight / 2;
 
-      // Angle de rotation (90° ou -90°)
-      const rotationAngle = direction === "right" ? 90 : -90;
+      // keep the margins of the elements, and calculate the new center of the page
+      let newCenterX = minX + currentHeight / 2;
+      let newCenterY = minY + currentWidth / 2;
 
-      // Mettre à jour les tables
+      // if centerX is greater the window width, move the centerX in the center of the page
+      if (centerX * scale > window.innerWidth || centerX < 0) {
+        newCenterX = window.innerWidth / 2;
+        console.log(
+          " move the centerX in the center of the page: ",
+          newCenterX
+        );
+      }
+
+      // if centerY is greater the window height, move the centerY in the center of the page
+      if (centerY * scale > window.innerHeight || centerY < 0) {
+        newCenterY = window.innerHeight / 2;
+        console.log(
+          " move the centerY in the center of the page: ",
+          newCenterY
+        );
+      }
+
+      // rotation angle (90° or -90°)
+      const rotationAngle = direction === "right" ? 90 : -90;
+      const radians = (rotationAngle * Math.PI) / 180;
+      const cosAngle = Math.cos(radians);
+      const sinAngle = Math.sin(radians);
+
+      // update the tables
       tables.forEach((table) => {
-        const { left, top } = table.position;
-        const size = table.size ?? 200;
+        const { center } = table;
         const currentRotation = table.rotation ?? 0;
 
-        // Pour les tables, calculer le centre de la table
-        const tableCenterX = left + size / 2;
-        const tableCenterY = top + size / 2;
+        // calculate the coordinates relative to the center of the page
+        const relX = center.x - centerX;
+        const relY = center.y - centerY;
 
-        // Calculer les coordonnées relatives au centre de la page
-        const relX = tableCenterX - centerX;
-        const relY = tableCenterY - centerY;
+        // apply the rotation using the rotation matrix
+        // [cos θ, -sin θ]
+        // [sin θ,  cos θ]
+        const newRelX = relX * cosAngle - relY * sinAngle;
+        const newRelY = relX * sinAngle + relY * cosAngle;
 
-        // Appliquer la rotation au centre de la table
-        let newCenterX, newCenterY;
-
-        if (direction === "right") {
-          // Rotation 90° dans le sens horaire: (x, y) -> (-y, x)
-          newCenterX = centerX - relY;
-          newCenterY = centerY + relX;
-        } else {
-          // Rotation 90° dans le sens antihoraire: (x, y) -> (y, -x)
-          newCenterX = centerX + relY;
-          newCenterY = centerY - relX;
-        }
-
-        // Convertir le centre de la table en position du coin supérieur gauche
-        const newLeft = newCenterX - size / 2;
-        const newTop = newCenterY - size / 2;
-
-        // Mettre à jour la table
-        tablesStore.updateTable(table.id, {
-          position: {
-            left: Math.round(newLeft),
-            top: Math.round(newTop),
+        // update the table
+        tablesStore.moveTable(
+          table.id,
+          {
+            // calculate the new absolute coordinates
+            x: Math.round(newCenterX + newRelX),
+            y: Math.round(newCenterY + newRelY),
           },
-          rotation: (currentRotation + rotationAngle + 360) % 360,
-        });
+          (currentRotation + rotationAngle + 360) % 360
+        );
       });
 
-      // Mettre à jour les designs
+      // update the designs
       designs.forEach((design) => {
-        const { x, y, width, height } = design.size;
+        const { center } = design;
         const currentRotation = design.rotation ?? 0;
 
-        // Déterminer les dimensions effectives actuelles en fonction de la rotation
-        const isCurrentlyRotated = currentRotation % 180 !== 0;
-        // const effectiveWidth = isCurrentlyRotated ? height : width;
-        // const effectiveHeight = isCurrentlyRotated ? width : height;
-        const effectiveWidth = width;
-        const effectiveHeight = height;
+        // calculate the coordinates relative to the center of the page
+        const relX = center.x - centerX;
+        const relY = center.y - centerY;
 
-        // Calculer le centre actuel de l'élément
-        const designCenterX = x + effectiveWidth / 2;
-        const designCenterY = y + effectiveHeight / 2;
+        // apply the rotation using the rotation matrix
+        const newRelX = relX * cosAngle - relY * sinAngle;
+        const newRelY = relX * sinAngle + relY * cosAngle;
 
-        // Calculer les coordonnées relatives au centre de la page
-        const relX = designCenterX - centerX;
-        const relY = designCenterY - centerY;
-
-        // Appliquer la rotation au centre du design
-        let newCenterX, newCenterY;
-
-        if (direction === "right") {
-          // Rotation 90° dans le sens horaire: (x, y) -> (-y, x)
-          newCenterX = centerX - relY;
-          newCenterY = centerY + relX;
-        } else {
-          // Rotation 90° dans le sens antihoraire: (x, y) -> (y, -x)
-          newCenterX = centerX + relY;
-          newCenterY = centerY - relX;
-        }
-
-        // Déterminer les nouvelles dimensions effectives après rotation
-        // La rotation de 90° ou -90° inverse toujours largeur et hauteur
-        // const newEffectiveWidth = effectiveHeight;
-        // const newEffectiveHeight = effectiveWidth;
-
-        // // Calculer la nouvelle position du coin supérieur gauche
-        // const newX = newCenterX - newEffectiveWidth / 2;
-        // const newY = newCenterY - newEffectiveHeight / 2;
-        // Calculer la nouvelle position du coin supérieur gauche THEORIQUE
-        const newX = newCenterX - width / 2;
-        const newY = newCenterY - height / 2;
-
-        // Calculer la nouvelle rotation
-        const newRotation = (currentRotation + rotationAngle + 360) % 360;
-
-        // Mettre à jour le design
-        const updatedDesign = {
-          ...design,
-          size: {
-            ...design.size,
-            x: Math.round(newX),
-            y: Math.round(newY),
+        // update the design
+        designStore.moveDesignElement(
+          design.id,
+          {
+            // calculate the new absolute coordinates
+            x: Math.round(newCenterX + newRelX),
+            y: Math.round(newCenterY + newRelY),
           },
-          rotation: newRotation,
-        };
-
-        designStore.updateDesignElement(updatedDesign);
+          (currentRotation + rotationAngle + 360) % 360
+        );
       });
 
-      // Forcer un rafraîchissement du canvas
+      // force canvas refresh
       needRefreshCanvas();
     },
     [needRefreshCanvas]

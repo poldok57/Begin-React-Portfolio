@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { RectPosition as Position } from "@/lib/canvas/types";
+import { Coordinate, RectPosition as Position } from "@/lib/canvas/types";
 import { TableData } from "./types";
 import { useZustandTableStore } from "../../lib/stores/tables";
 import { withMousePosition } from "@/components/windows/withMousePosition";
@@ -21,7 +21,7 @@ interface ListTablesProps {
 export const ListTablesPlan = React.memo(
   ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
     // const [activeTable, setActiveTable] = useState<string | null>(null);
-    const { scale, getScale, mode, tablesStoreName } = useRoomStore();
+    const { scale, getScale, mode, tablesStoreName, alignBy } = useRoomStore();
 
     const tableStore = useZustandTableStore(tablesStoreName);
 
@@ -41,11 +41,21 @@ export const ListTablesPlan = React.memo(
         if (!editable) return;
         const currentScale = getScale();
         const scalePosition = {
-          left: position.left / currentScale,
-          top: position.top / currentScale,
+          x: position.left / currentScale,
+          y: position.top / currentScale,
         };
 
         const withHistory = true;
+        const adjustNeeded = true;
+
+        // console.log(
+        //   "move table",
+        //   id,
+        //   position,
+        //   withHistory ? "with history" : "",
+        //   adjustNeeded ? "adjust needed" : "",
+        //   "align:" + alignBy
+        // );
 
         const movedTable = tables.find((table) => table.id === id);
         if (!movedTable) return;
@@ -54,57 +64,63 @@ export const ListTablesPlan = React.memo(
         const tableElement = document.getElementById(id);
         if (!tableElement) return;
 
+        const halfSize = {
+          width: tableElement.offsetWidth / (2 * currentScale),
+          height: tableElement.offsetHeight / (2 * currentScale),
+        };
+
         const tableIntervalMin = {
           width: tableElement.offsetWidth / (2 * currentScale),
           height: tableElement.offsetHeight / (2 * currentScale),
         };
 
-        // Adjust the position based on other tables
-        tables.forEach((otherTable) => {
-          if (otherTable.id === id) return;
+        if (adjustNeeded) {
+          // Adjust the position based on other tables
+          tables.forEach((otherTable) => {
+            if (otherTable.id === id) return;
 
-          const otherPos = otherTable.position;
-          const horizontalDistance = scalePosition.left - otherPos.left;
-          const verticalDistance = scalePosition.top - otherPos.top;
-          const absHorizontal = Math.abs(horizontalDistance);
-          const absVertical = Math.abs(verticalDistance);
+            const otherPos = otherTable.center;
+            const horizontalDistance = scalePosition.x - otherPos.x;
+            const verticalDistance = scalePosition.y - otherPos.y;
+            const absHorizontal = Math.abs(horizontalDistance);
+            const absVertical = Math.abs(verticalDistance);
 
-          // Determine the main axis of movement
-          const isHorizontalMain = absHorizontal > absVertical;
+            // Determine the main axis of movement
+            const isHorizontalMain = absHorizontal > absVertical;
 
-          if (
-            absHorizontal < tableIntervalMin.width &&
-            absVertical < tableIntervalMin.height
-          ) {
-            if (isHorizontalMain) {
-              // Adjust horizontally only
-              const sign = horizontalDistance > 0 ? 1 : -1;
-              scalePosition.left =
-                otherPos.left + tableIntervalMin.width * sign;
-            } else {
-              // Adjust vertically only
-              const sign = verticalDistance > 0 ? 1 : -1;
-              scalePosition.top = otherPos.top + tableIntervalMin.height * sign;
+            if (
+              absHorizontal < tableIntervalMin.width &&
+              absVertical < tableIntervalMin.height
+            ) {
+              if (isHorizontalMain) {
+                // Adjust horizontally only
+                const sign = horizontalDistance > 0 ? 1 : -1;
+                scalePosition.x = otherPos.x + tableIntervalMin.width * sign;
+              } else {
+                // Adjust vertically only
+                const sign = verticalDistance > 0 ? 1 : -1;
+                scalePosition.y = otherPos.y + tableIntervalMin.height * sign;
+              }
             }
-          }
-        });
+          });
+        }
 
         if (withHistory) {
           // changeCoordinates use center of the table to adjust position
+          if (alignBy === "topLeft") {
+            scalePosition.x = scalePosition.x + halfSize.width;
+            scalePosition.y = scalePosition.y + halfSize.height;
+          }
           changeCoordinates?.({
             position: {
-              left:
-                scalePosition.left +
-                tableElement.offsetWidth / (2 * currentScale),
-              top:
-                scalePosition.top +
-                tableElement.offsetHeight / (2 * currentScale),
+              left: scalePosition.x,
+              top: scalePosition.y,
             },
             tableIds: [id],
             uniqueId: generateUniqueId("mv"),
           });
         } else {
-          updateTable(id, { position: scalePosition });
+          updateTable(id, { center: scalePosition });
         }
       },
       [getScale, tables, scale, changeCoordinates, updateTable, tablesStoreName]
@@ -127,12 +143,12 @@ export const ListTablesPlan = React.memo(
       };
       const selectedTable = getTable(id);
       if (!selectedTable) return;
-      const tablePos = selectedTable.position;
+      const tablePos = selectedTable.center;
       const otherTables = tables.filter((table) => table.id !== id);
       const isSuperposed = otherTables.some((table) => {
-        const otherPos = table.position;
-        const horizontalDistance = tablePos.left - otherPos.left;
-        const verticalDistance = tablePos.top - otherPos.top;
+        const otherPos: Coordinate = table.center;
+        const horizontalDistance = tablePos.x - otherPos.x;
+        const verticalDistance = tablePos.y - otherPos.y;
         const absHorizontal = Math.abs(horizontalDistance);
         const absVertical = Math.abs(verticalDistance);
         return (
@@ -143,11 +159,11 @@ export const ListTablesPlan = React.memo(
       if (isSuperposed) {
         // console.log("table is superposed to another table");
         // Move the selected table up by the minimum distance
-        const newTop = tablePos.top - tableIntervalMin.height;
+        const newTop = tablePos.y - tableIntervalMin.height;
         updateTable(id, {
-          position: {
-            left: tablePos.left,
-            top: newTop,
+          center: {
+            x: tablePos.x,
+            y: newTop,
           },
         });
         return;
@@ -187,8 +203,8 @@ export const ListTablesPlan = React.memo(
     }, [tables, updateTable]);
 
     return tables.map((table: TableData) => {
-      const left = table.position.left * scale;
-      const top = table.position.top * scale;
+      const left = (table.center?.x ?? 10) * scale;
+      const top = (table.center?.y ?? 10) * scale;
       const isActive = table.id === activeTable;
       const showButton = mode === Mode.create && isActive;
 
@@ -213,6 +229,8 @@ export const ListTablesPlan = React.memo(
             position: "absolute",
             left: `${left}px`,
             top: `${top}px`,
+            transform:
+              alignBy === "center" ? "translate(-50%, -50%)" : undefined,
           }}
           scale={scale}
           onClick={

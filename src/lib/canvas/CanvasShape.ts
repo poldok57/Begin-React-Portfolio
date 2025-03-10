@@ -24,19 +24,9 @@ import {
   getTopCornerColors,
 } from "./image-transparency";
 import { getImageDataURL } from "@/lib/stores/design";
-import { scaledSize } from "../utils/scaledSize";
+import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 import { changeBlack } from "./canvas-change-black";
-
-const roundSize = (size: Area): Area => {
-  return {
-    x: Math.round(size.x),
-    y: Math.round(size.y),
-    width: Math.round(size.width),
-    height: Math.round(size.height),
-    ratio: size.ratio,
-  } as Area;
-};
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
@@ -49,7 +39,8 @@ export class CanvasShape extends CanvasDrawableObject {
       id: "",
       type: "",
       rotation: 0,
-      size: { x: 0, y: 0, width: 0, height: 0 },
+      center: { x: 0, y: 0 },
+      size: { width: 0, height: 0 },
       general: {
         color: "#000",
         lineWidth: 1,
@@ -89,9 +80,10 @@ export class CanvasShape extends CanvasDrawableObject {
       id: d.id,
       type: d.type,
       rotation: Number(d.rotation.toFixed(4)),
-      size: { ...roundSize(d.size) },
       general: { ...d.general },
       shape: { ...d.shape },
+      size: this.getDataSize(),
+      center: this.getDataCenter(),
     };
 
     if (d.shape?.withText && !isDrawingShape(d.type)) {
@@ -176,7 +168,7 @@ export class CanvasShape extends CanvasDrawableObject {
   }
 
   async setData(data: ShapeDefinition) {
-    this.data = { ...data };
+    super.setData(data);
     // console.log("setData", data);
     if (!data.shape?.withBorder && data.border) {
       console.log(data.type, "withBorder error", data.border);
@@ -227,16 +219,12 @@ export class CanvasShape extends CanvasDrawableObject {
   setSizeForText(ctx: CanvasRenderingContext2D): boolean {
     if (this.drawer && this.data.text) {
       const textSize = this.drawer.textSize(ctx, this.data.text);
-      this.data.size.width = textSize.width;
-      this.data.size.height = textSize.height;
+      this.setDataSize(textSize);
       return true;
     }
     return false;
   }
 
-  getDataSize(): Area {
-    return { ...this.data.size };
-  }
   setDataGeneral(data: ParamsGeneral): void {
     this.data.general = { ...data };
   }
@@ -269,7 +257,8 @@ export class CanvasShape extends CanvasDrawableObject {
     if (this.data.text) {
       this.data.text.rotation = 0;
     }
-    this.data.size.ratio = 0;
+
+    this.setRatio(0);
     this.withTurningButtons = true;
   }
   /**
@@ -338,7 +327,7 @@ export class CanvasShape extends CanvasDrawableObject {
    * Function to set if the middle button should be shown
    */
   calculateWithTurningButtons(type: string | null = null): void {
-    const sSize = this.getDataSize();
+    const sSize = this.getArea();
     if (type === null) type = this.getType();
 
     // don't show the middle button if the shape is a circle without text
@@ -452,10 +441,12 @@ export class CanvasShape extends CanvasDrawableObject {
 
   hightLightDrawing(ctx: CanvasRenderingContext2D | null) {
     const size = scaledSize(this.data.size, this.scale);
+    const center = scaledCoordinate(this.data.center, this.scale);
+
     let large = 0;
     if (this.data.shape?.withBorder && this.data.border) {
       large = this.data.border.lineWidth / 2 + (this.data.border.interval || 0);
     }
-    drawDashedRedRectangle(ctx, size, 0.8, this.data.rotation, large);
+    drawDashedRedRectangle(ctx, center, size, 0.8, this.data.rotation, large);
   }
 }

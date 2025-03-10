@@ -28,35 +28,48 @@ const MemorizedRouletteTable = React.memo(
     const subTextSize = textSize * 0.25;
 
     // Dimensions de la table
-    const length = (size - strokeWidth) / 2;
-    const width = length * (0.3 + 2 * heightRatio);
-    const cornerRadius = size * 0.2 * heightRatio;
+    const length = Math.round((size - strokeWidth) / 2);
+    const width = Math.round(length * (0.3 + 2 * heightRatio));
+    const cornerRadius = Math.round(size * 0.2 * heightRatio);
 
-    const longSide = size - strokeWidth - 2 * +cornerRadius;
-    const concaveRadius = size * concaveRatio; // rayon des quarts de cercle concaves pour le croupier
+    const longSide = Math.round(size - strokeWidth - 2 * +cornerRadius);
+    const concaveRadius = Math.round(size * concaveRatio); // rayon des quarts de cercle concaves pour le croupier
 
-    const concaveRadiusY = (concaveRadius * 3) / 4;
-    const concaveLarge = Math.max(
-      longSide * 0.6 - concaveRadius * 3.5,
-      size * 0.1
+    const concaveRadiusY = Math.round((concaveRadius * 3) / 4);
+    const concaveLarge = Math.round(
+      Math.max(longSide * 0.6 - concaveRadius * 3.5, size * 0.1)
     );
-    const concaveSide = (longSide - concaveLarge) / 2 - concaveRadius;
-    const bottomTable = width + cornerRadius;
+    const concaveSide = Math.round(
+      (longSide - concaveLarge) / 2 - concaveRadius
+    );
+    const bottomTable = Math.round(width + cornerRadius);
 
-    const widthTable = width - cornerRadius;
+    const widthTable = Math.round(width - cornerRadius);
 
-    const cylinderRadius = size * 0.14;
-    const cylinderX = size * 0.03 + strokeWidth + cylinderRadius;
-    const cylinderY = (bottomTable - concaveRadiusY) / 2;
+    const cylinderRadius = parseFloat((size * 0.14).toFixed(2));
+    const cylinderX = Math.round(size * 0.03 + strokeWidth + cylinderRadius);
+    const cylinderY = Math.round((bottomTable - concaveRadiusY) / 2);
 
-    const widthCarpet = size * 0.2;
-    const lengthCarpet = size * 0.9 - strokeWidth - cylinderRadius - cylinderX;
-    const carpetX = size * 0.05 + strokeWidth / 2;
-    const carpetAxisY = (bottomTable - concaveRadiusY) / 2;
+    const widthCarpet = Math.round(size * 0.2);
+    const lengthCarpet = Math.round(
+      size * 0.9 - strokeWidth - cylinderRadius - cylinderX
+    );
+    const carpetX = Math.round(size * 0.05 + strokeWidth / 2);
+    const carpetAxisY = Math.round((bottomTable - concaveRadiusY) / 2);
 
     const textRef = useRef<SVGTextElement>(null);
     const [adjustedFontSize, setAdjustedFontSize] = useState(subTextSize);
     const [animationkey, setAnimationKey] = useState(flashDuration > 0 ? 1 : 0);
+
+    const direction = type === TableType.roulette ? 1 : -1;
+    const arcDirection = type === TableType.roulette ? 1 : 0;
+    const cylinderPosX =
+      type === TableType.roulette ? size - cylinderX : cylinderX;
+    const startX =
+      type === TableType.roulette
+        ? cornerRadius + strokeWidth / 2
+        : size - (cornerRadius + strokeWidth / 2);
+    const carpetPosX = type === TableType.roulette ? carpetX : size - carpetX;
 
     useAnimation({
       flashDuration,
@@ -88,110 +101,64 @@ const MemorizedRouletteTable = React.memo(
         $animationkey={animationkey}
         style={style}
       >
-        {type === TableType.roulette && (
-          <>
-            <path
-              d={
-                `
-          M ${cornerRadius + strokeWidth / 2},${bottomTable - concaveRadiusY} 
-          a ${cornerRadius},${cornerRadius} 0 0,1 ${-cornerRadius},${-cornerRadius}` +
-                `v ${-widthTable + concaveRadiusY}` +
-                `a ${cornerRadius},${cornerRadius} 0 0,1 ${cornerRadius},${-cornerRadius}` +
-                `h ${longSide}` +
-                `a ${cornerRadius},${cornerRadius} 0 0,1 ${cornerRadius},${cornerRadius}` +
-                `v ${widthTable}` +
-                `a ${cornerRadius},${cornerRadius} 0 0,1 ${-cornerRadius},${cornerRadius}` +
-                `h ${-concaveSide}` +
-                `a ${concaveRadius},${concaveRadiusY} 0 0,0 ${-concaveRadius},${-concaveRadiusY}` +
-                `z`
-              }
-              fill={fillColor}
-              stroke={borderColor}
-              strokeWidth={strokeWidth}
-              strokeLinejoin="round"
-            />
-            {/* Carpet for roulette game */}
-            <circle
-              cx={size - cylinderX}
-              cy={cylinderY}
-              r={cylinderRadius}
-              fill={borderColor}
-              stroke="#d0d4d4"
-              strokeWidth="2"
-              opacity={opacity}
-            />
-
-            <path
-              d={
-                `M ${carpetX},${carpetAxisY - widthCarpet / 2} ` +
-                `h ${lengthCarpet} ` +
-                `l ${widthCarpet * 0.2},${widthCarpet / 2} ` +
-                `l ${-widthCarpet * 0.2},${widthCarpet / 2} ` +
-                `h ${-lengthCarpet} ` +
-                `z`
-              }
-              fill={borderColor}
-              stroke="#d0d4d4"
-              strokeWidth="2"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              opacity={opacity}
-            />
-          </>
-        )}
-        {type === TableType.rouletteL && (
-          <>
-            <path
-              d={
-                `
-          M ${size - (cornerRadius + strokeWidth / 2)},${
-                  bottomTable - concaveRadiusY
-                } 
-          a ${cornerRadius},${cornerRadius} 0 0,0 ${cornerRadius},${-cornerRadius}` +
-                `v ${-widthTable + concaveRadiusY}` +
-                `a ${cornerRadius},${cornerRadius} 0 0,0 ${-cornerRadius},${-cornerRadius}` +
-                `h ${-longSide}` +
-                `a ${cornerRadius},${cornerRadius} 0 0,0 ${-cornerRadius},${cornerRadius}` +
-                `v ${widthTable}` +
-                `a ${cornerRadius},${cornerRadius} 0 0,0 ${cornerRadius},${cornerRadius}` +
-                `h ${concaveSide}` +
-                `a ${concaveRadius},${concaveRadiusY} 0 0,1 ${concaveRadius},${-concaveRadiusY}` +
-                `z`
-              }
-              fill={fillColor}
-              stroke={borderColor}
-              strokeWidth={strokeWidth}
-              strokeLinejoin="round"
-            />
-            {/* Carpet for roulette game */}
-            <circle
-              cx={cylinderX}
-              cy={cylinderY}
-              r={cylinderRadius}
-              fill={borderColor}
-              stroke="#d0d4d4"
-              strokeWidth="2"
-              opacity={opacity}
-            />
-
-            <path
-              d={
-                `M ${size - carpetX},${carpetAxisY - widthCarpet / 2} ` +
-                `h ${-lengthCarpet} ` +
-                `l ${-widthCarpet * 0.2},${widthCarpet / 2} ` +
-                `l ${widthCarpet * 0.2},${widthCarpet / 2} ` +
-                `h ${lengthCarpet} ` +
-                `z`
-              }
-              fill={borderColor}
-              stroke="#d0d4d4"
-              strokeWidth="2"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              opacity={opacity}
-            />
-          </>
-        )}
+        {/* Table shape */}
+        <path
+          d={
+            `
+          M ${startX},${bottomTable - concaveRadiusY} 
+          a ${cornerRadius},${cornerRadius} 0 0,${arcDirection} ${
+              -direction * cornerRadius
+            },${-cornerRadius}` +
+            `v ${-widthTable + concaveRadiusY}` +
+            `a ${cornerRadius},${cornerRadius} 0 0,${arcDirection} ${
+              direction * cornerRadius
+            },${-cornerRadius}` +
+            `h ${direction * longSide}` +
+            `a ${cornerRadius},${cornerRadius} 0 0,${arcDirection} ${
+              direction * cornerRadius
+            },${cornerRadius}` +
+            `v ${widthTable}` +
+            `a ${cornerRadius},${cornerRadius} 0 0,${arcDirection} ${
+              -direction * cornerRadius
+            },${cornerRadius}` +
+            `h ${-direction * concaveSide}` +
+            `a ${concaveRadius},${concaveRadiusY} 0 0,${1 - arcDirection} ${
+              -direction * concaveRadius
+            },${-concaveRadiusY}` +
+            `z`
+          }
+          fill={fillColor}
+          stroke={borderColor}
+          strokeWidth={strokeWidth}
+          strokeLinejoin="round"
+        />
+        {/* Cylinder */}
+        <circle
+          cx={cylinderPosX}
+          cy={cylinderY}
+          r={cylinderRadius}
+          fill={borderColor}
+          stroke="#d0d4d4"
+          strokeWidth="2"
+          opacity={opacity}
+        />
+        {/* Carpet for roulette game */}
+        <path
+          d={
+            `M ${carpetPosX},${carpetAxisY - widthCarpet / 2} ` +
+            `h ${direction * lengthCarpet} ` +
+            `l ${direction * widthCarpet * 0.2},${widthCarpet / 2} ` +
+            `l ${-direction * widthCarpet * 0.2},${widthCarpet / 2} ` +
+            `h ${-direction * lengthCarpet} ` +
+            `z`
+          }
+          fill={borderColor}
+          stroke="#d0d4d4"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity={opacity}
+        />
 
         {/* vertical symmetry line  */}
         {/* <line

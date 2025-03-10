@@ -69,9 +69,11 @@ export class drawShape extends drawingHandler {
     super.initData(data);
 
     if (!this.context) return;
+    this.shape.setDataCenter({
+      x: this.context.canvas.width / 2,
+      y: this.context.canvas.height / 2,
+    });
     this.shape.setDataSize({
-      x: this.context.canvas.width / 2 - SQUARE_WIDTH / 2,
-      y: this.context.canvas.height / 2 - SQUARE_HEIGHT / 2,
       width: data.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_WIDTH,
       height: data.mode === DRAWING_MODES.TEXT ? 0 : SQUARE_HEIGHT,
     });
@@ -125,12 +127,18 @@ export class drawShape extends drawingHandler {
   setCoordinates(coord: Coordinate) {
     this.coordinates = coord;
     if (this.coordinates && this.offset && !this.fixed) {
-      const pos: Coordinate = {
-        x: this.coordinates.x + this.offset.x,
-        y: this.coordinates.y + this.offset.y,
+      const center: Coordinate = {
+        x:
+          this.coordinates.x +
+          this.offset.x +
+          this.shape.getDataSize().width / 2,
+        y:
+          this.coordinates.y +
+          this.offset.y +
+          this.shape.getDataSize().height / 2,
       };
 
-      this.shape.setDataSize(pos);
+      this.shape.setDataCenter(center);
     }
     return this.coordinates;
   }
@@ -142,7 +150,7 @@ export class drawShape extends drawingHandler {
   setFixed(value: boolean) {
     if (value) {
       // Check if the element is not outside the canvas boundaries
-      const size = this.shape.getDataSize();
+      const size = this.shape.getArea();
       const canvas = this.ctxTemporary?.canvas;
 
       if (canvas && size) {
@@ -173,7 +181,7 @@ export class drawShape extends drawingHandler {
 
   readyForNewDrawing() {
     this.fixed = false;
-    const size = this.shape.getDataSize();
+    const size = this.shape.getArea();
     this.offset = { x: -size.width / 2, y: -10 };
   }
 
@@ -183,7 +191,7 @@ export class drawShape extends drawingHandler {
    */
   calculOffset() {
     if (!this.coordinates) return;
-    const size: Area = this.shape.getDataSize();
+    const size: Area = this.shape.getArea();
 
     this.offset = {
       x: Math.round(size.x - this.coordinates.x),
@@ -218,7 +226,7 @@ export class drawShape extends drawingHandler {
   /**
    * Function to draw an element on the MAIN canvas
    */
-  validDrawedElement(withOffset: boolean = false) {
+  validDrawedElement() {
     if (!this.context) {
       console.error("context is null");
       return;
@@ -227,14 +235,6 @@ export class drawShape extends drawingHandler {
     this.saveCanvasPicture();
     this.shape.setDataId(""); // erase the id for next drawing
     this.clearTemporaryCanvas();
-    if (withOffset) {
-      // add 20px to the size to avoid the shape to be one on the other
-      const size = this.shape.getDataSize();
-      this.shape.setDataSize({
-        ...size,
-        ...{ x: size.x + 20, y: size.y + 20 },
-      });
-    }
   }
 
   /**
@@ -355,7 +355,7 @@ export class drawShape extends drawingHandler {
           break;
         case BORDER.ON_BUTTON:
           retunData.pointer = "pointer";
-          this.validDrawedElement(true);
+          this.validDrawedElement();
           retunData.toReset = true;
           retunData.reccord = true;
           break;
@@ -424,6 +424,7 @@ export class drawShape extends drawingHandler {
     if (
       isInsideSquare(
         this.coordinates,
+        this.shape.getDataCenter(),
         this.shape.getDataSize(),
         this.shape.getRotation()
       )
@@ -441,7 +442,7 @@ export class drawShape extends drawingHandler {
    * Function to validate the action on the canvas (Enter key pressed)
    */
   actionValid() {
-    this.validDrawedElement(true);
+    this.validDrawedElement();
     this.setMode(DRAWING_MODES.FIND);
     return true;
   }
@@ -466,7 +467,7 @@ export class drawShape extends drawingHandler {
    * Function to adjust the size of the shape
    */
   adjustSize() {
-    const size = this.shape.getDataSize();
+    const size = this.shape.getArea();
 
     // if the shape has text, adjust the size of the shape to fit the text
     if (this.shape.getWithText() && this.ctxTemporary) {
@@ -478,15 +479,17 @@ export class drawShape extends drawingHandler {
     const diagonal = Math.sqrt(
       Math.pow(size.width, 2) + Math.pow(size.height, 2)
     );
-    const newSize = diagonal / Math.sqrt(2);
+    const newSize = Math.round(diagonal / Math.sqrt(2));
 
     const centerX = size.x + size.width / 2;
     const centerY = size.y + size.height / 2;
 
     // center the square at same place
+    this.shape.setDataCenter({
+      x: centerX,
+      y: centerY,
+    });
     this.shape.setDataSize({
-      x: centerX - newSize / 2,
-      y: centerY - newSize / 2,
       width: newSize,
       height: newSize,
     });

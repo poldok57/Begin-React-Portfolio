@@ -39,7 +39,7 @@ export class drawFindElement extends drawingHandler {
     setMode: (mode: string) => void,
     localStorageName: string | null
   ) {
-    super(canvas, canvasContext, temporaryCanvas, setMode, localStorageName);
+    super(canvas, canvasContext, temporaryCanvas, setMode);
     this.extendedMouseArea = false;
     this.nbFound = 0;
     this.typeHandler = DRAWING_MODES.FIND;
@@ -76,6 +76,10 @@ export class drawFindElement extends drawingHandler {
 
   getDraw(): null {
     return null;
+  }
+
+  initData(data: AllParams) {
+    super.initData(data);
   }
 
   /**
@@ -238,8 +242,10 @@ export class drawFindElement extends drawingHandler {
     for (let i = designElements.length - 1; i >= 0; i--) {
       const element = designElements[i];
       if (
+        element.size &&
         isInsideSquare(
           { x: coord.x, y: coord.y },
+          element.center,
           element.size,
           element.rotation
         )

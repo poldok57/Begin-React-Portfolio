@@ -26,19 +26,24 @@ const MemorizedPokerTable = React.memo(
     const subTextSize = textSize * 0.25;
 
     // Dimensions de la table
-    const radius = size * heightRatio - strokeWidth / 2;
-    const longSide = size - strokeWidth - 2 * radius;
-    const concaveRadius = size * concaveRatio; // rayon des quarts de cercle concaves pour le croupier
-
-    const concaveRadiusY = (concaveRadius * 2) / 3;
-    const concaveLarge = Math.max(longSide - concaveRadius * 3.5, size * 0.1);
-    const concaveSide = (longSide - concaveLarge) / 2 - concaveRadius;
-
-    const cashierWidth = Math.min(
-      Math.max(longSide - concaveRadius * 3, size * 0.2),
-      radius
+    const radius = parseFloat(
+      (size * heightRatio - strokeWidth / 2).toFixed(2)
     );
-    const cashierHeight = cashierWidth * 0.5;
+    const longSide = parseFloat((size - strokeWidth - 2 * radius).toFixed(2));
+    const concaveRadius = parseFloat((size * concaveRatio).toFixed(2)); // rayon des quarts de cercle concaves pour le croupier
+
+    const concaveRadiusY = Math.round((concaveRadius * 2) / 3);
+    const concaveLarge = Math.round(
+      Math.max(longSide - concaveRadius * 3.5, size * 0.1)
+    );
+    const concaveSide = Math.round(
+      (longSide - concaveLarge) / 2 - concaveRadius
+    );
+
+    const cashierWidth = Math.round(
+      Math.min(Math.max(longSide - concaveRadius * 3, size * 0.2), radius)
+    );
+    const cashierHeight = Math.round(cashierWidth * 0.5);
     const textRef = useRef<SVGTextElement>(null);
     const [adjustedFontSize, setAdjustedFontSize] = useState(subTextSize);
     const [animationkey, setAnimationKey] = useState(flashDuration > 0 ? 1 : 0);

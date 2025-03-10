@@ -38,20 +38,20 @@ export const RotationSquad: React.FC<RotationSquadProps> = ({ btnSize }) => {
         if (!rect) return;
         const halfWidth = rect.width / 2;
         const halfHeight = rect.height / 2;
-        const tableCenterX = table.position.left + halfWidth;
-        const tableCenterY = table.position.top + halfHeight;
+        const tableCenterX = table.center.x + halfWidth;
+        const tableCenterY = table.center.y + halfHeight;
         const dx = tableCenterX - centerX;
         const dy = tableCenterY - centerY;
 
-        const position = {
-          left: Math.round(centerX + (dx * cos - dy * sin) - halfWidth),
-          top: Math.round(centerY + (dx * sin + dy * cos) - halfHeight),
+        const center = {
+          x: Math.round(centerX + (dx * cos - dy * sin) - halfWidth),
+          y: Math.round(centerY + (dx * sin + dy * cos) - halfHeight),
         };
 
-        // console.log(table.position, "=>", position);
+        // console.log(table position , "=>", center);
 
         updateTable(table.id, {
-          position,
+          center,
           rotation: (table.rotation || 0) + angle,
         });
       });

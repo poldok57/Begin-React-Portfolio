@@ -276,21 +276,24 @@ export class CanvasPath extends CanvasPoints {
 
     ctx.lineWidth = 1;
     ctx.globalAlpha = 0.5;
-    // Dessiner des croix à chaque point correspondant à l'argument coordinate des éléments PathLine
+    // Draw crosses at each point corresponding to the coordinate argument of PathLine elements
+
+    const area = this.getArea();
+
     this.data.items.forEach((item) => {
       if ("end" in item) {
         const line = item as LinePath;
         if (line.end) {
           const coord = {
-            x: (line.end.x + this.data.size.x) * this.scale,
-            y: (line.end.y + this.data.size.y) * this.scale,
+            x: (line.end.x + area.x) * this.scale,
+            y: (line.end.y + area.y) * this.scale,
           };
           crossLine(ctx, coord, 10, "blue"); // Utilisation d'une largeur de 10 pour la croix
         }
         if (line.coordinates && line.type === LineType.CURVE) {
           const coord = {
-            x: (line.coordinates.x + this.data.size.x) * this.scale,
-            y: (line.coordinates.y + this.data.size.y) * this.scale,
+            x: (line.coordinates.x + area.x) * this.scale,
+            y: (line.coordinates.y + area.y) * this.scale,
           };
           crossLine(ctx, coord, 10, "red", "X");
         }
@@ -407,9 +410,13 @@ export class CanvasPath extends CanvasPoints {
     if (!this.isPathClosed()) {
       // console.log("point not close from first item");
       const first = this.getFirstItem();
+      if (!first) {
+        return;
+      }
+      const area = this.getArea();
       const newLine: LinePath = {
         type: LineType.LINE,
-        end: { x: first.x + this.data.size.x, y: first.y + this.data.size.y },
+        end: { x: first.x + area.x, y: first.y + area.y },
       };
       this.addItem(newLine);
       return;

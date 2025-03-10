@@ -30,6 +30,7 @@ export const GroundSelection = React.forwardRef<
     setScale,
     rotation,
     setSelectedRect,
+    getSelectedRect,
     setRotation,
     getRotation,
     designStoreName,
@@ -67,6 +68,13 @@ export const GroundSelection = React.forwardRef<
     moveContainer(null);
     setSelectedRect(null);
   }, [designStoreName]);
+
+  useEffect(() => {
+    // if the selection is null, we need to hide the alignment lines
+    if (getSelectedRect() === null) {
+      setShowAlignmentLines(false);
+    }
+  }, [getSelectedRect]);
 
   React.useImperativeHandle(ref, () => groundRef.current as HTMLDivElement);
 
@@ -406,17 +414,21 @@ export const GroundSelection = React.forwardRef<
 
             {getMode() === Mode.create && (
               <>
-                {showAlignmentLines && rotation === 0 && (
-                  <AlignmentButtons
-                    offset={getGroundOffset()}
-                    showVerticalBtn={numberOfAlignmentsRef.current.vertical > 2}
-                    showHorizontalBtn={
-                      numberOfAlignmentsRef.current.horizontal > 2
-                    }
-                    equalizeSpaces={equalizeSpaces}
-                    getContainerRect={getContainerRect}
-                  />
-                )}
+                {showAlignmentLines &&
+                  rotation === 0 &&
+                  getSelectedRect() !== null && (
+                    <AlignmentButtons
+                      offset={getGroundOffset()}
+                      showVerticalBtn={
+                        numberOfAlignmentsRef.current.vertical > 2
+                      }
+                      showHorizontalBtn={
+                        numberOfAlignmentsRef.current.horizontal > 2
+                      }
+                      equalizeSpaces={equalizeSpaces}
+                      getContainerRect={getContainerRect}
+                    />
+                  )}
               </>
             )}
             <ScrollButtons

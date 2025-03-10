@@ -23,7 +23,8 @@ const MAX_PC = 0.9;
 
 export class drawSelection extends drawShape {
   protected data: ShapeDefinition = {
-    size: { x: 0, y: 0, width: 0, height: 0 },
+    center: { x: 0, y: 0 },
+    size: { width: 0, height: 0 },
     type: DRAWING_MODES.SELECT,
   } as ShapeDefinition;
   private selectedArea: Area | null = null;
@@ -95,12 +96,12 @@ export class drawSelection extends drawShape {
    */
   memorizeSelectedArea(area: Area | null = null) {
     if (area) {
-      this.shape.setDataSize(area);
+      this.shape.setArea(area);
 
       this.setFixed(true);
       this.setType(DRAWING_MODES.SELECT);
     } else {
-      area = this.shape.getDataSize();
+      area = this.shape.getArea();
     }
     this.selectedArea = area;
     this.originalSize = { ...area };
@@ -307,8 +308,8 @@ export class drawSelection extends drawShape {
       );
 
       const area: Area = calculateSize(img as Size, maxSize);
-      area.ratio = Number(ratio.toFixed(3));
-      this.shape.setDataSize(area);
+      this.shape.setRatio(Number(ratio.toFixed(3)));
+      this.shape.setArea(area);
       this.shape.setRotation(0);
       this.originalSize = { ...area };
 
@@ -336,7 +337,7 @@ export class drawSelection extends drawShape {
         return;
       }
     }
-    const size = this.shape.getDataSize();
+    const size = this.shape.getArea();
     const originalRatio = this.originalSize.width / this.originalSize.height;
     const currentRatio = size.width / size.height;
     // current center
@@ -344,13 +345,14 @@ export class drawSelection extends drawShape {
     const centreY = size.y + size.height / 2;
     if (currentRatio === originalRatio) {
       this.shape.setRotation(0);
-      // return to the original size
+      this.shape.setDataCenter({
+        x: centreX,
+        y: centreY,
+      });
       this.shape.setDataSize({
-        x: centreX - this.originalSize.width / 2,
-        y: centreY - this.originalSize.height / 2,
         width: this.originalSize.width,
         height: this.originalSize.height,
-      } as Area);
+      });
       this.refreshDrawing(1, BORDER.INSIDE);
 
       return;
@@ -367,12 +369,14 @@ export class drawSelection extends drawShape {
     const newWidth = newHeight * originalRatio;
 
     // update the dimensions keeping the center
+    this.shape.setDataCenter({
+      x: centreX,
+      y: centreY,
+    });
     this.shape.setDataSize({
-      x: centreX - newWidth / 2,
-      y: centreY - newHeight / 2,
       width: newWidth,
       height: newHeight,
-    } as Area);
+    });
     this.refreshDrawing(0, BORDER.INSIDE);
   };
 }

@@ -1,4 +1,8 @@
-import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
+import {
+  Rectangle,
+  RectPosition as Position,
+  Coordinate,
+} from "@/lib/canvas/types";
 import { getGroundOffset } from "../RoomCreat";
 
 export const DEFAULT_TABLE_SIZE = 100;
@@ -7,10 +11,10 @@ export const positionTable = (
   offset: Position,
   x: number,
   y: number
-): Position => {
+): Coordinate => {
   return {
-    left: offset.left + DEFAULT_TABLE_SIZE * (0.5 + 1.5 * x),
-    top: offset.top + DEFAULT_TABLE_SIZE * (0.5 + y),
+    x: offset.left + DEFAULT_TABLE_SIZE * (0.5 + 1.5 * x),
+    y: offset.top + DEFAULT_TABLE_SIZE * (0.5 + y),
   };
 };
 
@@ -50,10 +54,10 @@ export const calculateSelectedRect = ({
     selectedItems.width,
     selectedItems.height
   );
-  const left = start.left - DEFAULT_TABLE_SIZE / 4;
-  const top = start.top - DEFAULT_TABLE_SIZE / 4;
-  const width = end.left - start.left + DEFAULT_TABLE_SIZE / 2;
-  const height = end.top - start.top + DEFAULT_TABLE_SIZE / 2;
+  const left = start.x - DEFAULT_TABLE_SIZE / 4;
+  const top = start.y - DEFAULT_TABLE_SIZE / 4;
+  const width = end.x - start.x + DEFAULT_TABLE_SIZE / 2;
+  const height = end.y - start.y + DEFAULT_TABLE_SIZE / 2;
 
   if (selectedRect === null) {
     selectedRect = {

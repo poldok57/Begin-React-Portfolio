@@ -4,7 +4,7 @@ import { CanvasShape } from "./CanvasShape";
 
 type drawingProps = {
   ctx: CanvasRenderingContext2D;
-  squareSize: Area;
+  area: Area;
   lineWidth?: number;
   radius?: number;
   type?: string;
@@ -124,12 +124,12 @@ export const drawShadowRectangle = (
 /**
  * Function to show a square on the canvas
  * @param {CanvasRenderingContext2D} ctx
- * @param {object} squareSize: Area - {x, y, width, height}
+ * @param {object} area: Area - {x, y, width, height}
  * @param {ImageData} data - image data to show on the canvas
  */
 export const drawImage = ({
   ctx,
-  squareSize,
+  area,
   radius = 0,
   virtualCanvas,
 }: drawingProps) => {
@@ -143,11 +143,11 @@ export const drawImage = ({
   }
   if (radius > 0) {
     ctx.beginPath();
-    drawRoundedRect(ctx, squareSize, radius);
+    drawRoundedRect(ctx, area, radius);
     ctx.clip();
   }
 
-  const { x, y, width, height } = squareSize;
+  const { x, y, width, height } = area;
   ctx.drawImage(
     virtualCanvas,
     0,
@@ -207,7 +207,7 @@ export const showCanvasImage = (
     rotateElement(ctx, size, rotation);
   }
 
-  drawImage({ ctx, squareSize: size, virtualCanvas: canvasImage });
+  drawImage({ ctx, area: size, virtualCanvas: canvasImage });
 
   if (rotation) {
     ctx.restore();

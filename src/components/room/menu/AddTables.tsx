@@ -1,9 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "../SelectionItems";
-import { TableType } from "../types";
+import { TableData, TableType } from "../types";
 import { RectangleHorizontal } from "lucide-react";
-import { Rectangle, RectPosition as Position } from "@/lib/canvas/types";
+import {
+  Rectangle,
+  RectPosition as Position,
+  Coordinate,
+} from "@/lib/canvas/types";
 import { useRoomStore } from "@/lib/stores/room";
 import { Menu, Mode } from "../types";
 import { SelectTableType } from "../SelectTableType";
@@ -15,13 +19,11 @@ import {
 import { withMousePosition } from "../../windows/withMousePosition";
 import { menuRoomVariants } from "@/styles/menu-variants";
 import { TableDataState, zustandTableStore } from "@/lib/stores/tables";
-interface RoomAddTablesMenuProps {
+interface AddTablesMenuProps {
   handleClose: () => void;
 }
 
-const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
-  handleClose,
-}) => {
+const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [selectedItems, setSelectedItems] = useState<{
     width: number;
@@ -31,7 +33,7 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     TableType.poker
   );
 
-  const { getSelectedRect, scale, tablesStoreName, setPreSelection } =
+  const { getSelectedRect, scale, tablesStoreName, setPreSelection, alignBy } =
     useRoomStore();
 
   const storeNameRef = useRef(tablesStoreName);
@@ -57,10 +59,15 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
       left: selectedRect.left,
       top: selectedRect.top,
     };
-    const position: Position = positionTable(offsetStart, x, y);
+    if (alignBy === "center") {
+      offsetStart.left += DEFAULT_TABLE_SIZE / 2;
+      offsetStart.top += DEFAULT_TABLE_SIZE / 2;
+    }
+
+    const center: Coordinate = positionTable(offsetStart, x, y);
     const offset: Position = {
-      left: Math.round((position.left - selectedRect.left) * scale),
-      top: Math.round((position.top - selectedRect.top) * scale),
+      left: Math.round((center.x - selectedRect.left) * scale),
+      top: Math.round((center.y - selectedRect.top) * scale),
     };
 
     const newTable = {
@@ -68,12 +75,12 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
       type: selectedTableType,
       selected: true,
       size: DEFAULT_TABLE_SIZE,
-      position,
+      center,
       offset,
       rotation: 0,
       tableNumber: `tmp${tableNumber}`,
       tableText: `Table ${tableNumber}`,
-    };
+    } as TableData;
     namedStoreRef.current?.addTable(newTable);
   };
 
@@ -139,16 +146,16 @@ const RoomAddTablesMenu: React.FC<RoomAddTablesMenuProps> = ({
     </div>
   );
 };
-const RoomAddTablesMenuWP = withMousePosition(RoomAddTablesMenu);
+const AddTablesMenuWP = withMousePosition(AddTablesMenu);
 
-interface RoomAddTablesProps {
+interface AddTablesProps {
   className: string;
   activeMenu: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
   disabled?: boolean;
 }
 
-export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
+export const AddTables: React.FC<AddTablesProps> = ({
   className,
   activeMenu,
   setActiveMenu,
@@ -174,7 +181,7 @@ export const RoomAddTables: React.FC<RoomAddTablesProps> = ({
       </div>
 
       {activeMenu === Menu.addTable && (
-        <RoomAddTablesMenuWP
+        <AddTablesMenuWP
           onClose={() => setActiveMenu(null)}
           handleClose={() => setActiveMenu(null)}
           className="absolute z-30 translate-y-24"

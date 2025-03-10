@@ -2,7 +2,7 @@
  * Part of the canvas module that contains the functions to draw buttons on the canvas
  */
 import { BORDER, middleButtonPosition } from "../mouse-position";
-import { Area, Coordinate } from "./types";
+import { Coordinate, Size } from "./types";
 import { basicCircle } from "./canvas-basic";
 const CIRCLE_COLOR = "#e0e0e0"; // color of the circle around control buttons
 
@@ -183,10 +183,11 @@ export function drawCircularArrow(
 
 export const drawTurningButtons = (
   ctx: CanvasRenderingContext2D,
-  squareSize: Area,
+  center: Coordinate,
+  size: Size,
   border: string | null
 ) => {
-  const middleButton = middleButtonPosition(squareSize);
+  const middleButton = middleButtonPosition(center, size);
   // right buttons , turn shape in horary direction
   drawCircularArrow(
     ctx,
