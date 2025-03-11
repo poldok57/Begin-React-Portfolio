@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 
 export const menuRoomVariants = cva(
-  "z-40 p-2 bg-white rounded-md shadow-sm select-none",
+  "z-40 p-1 bg-white rounded-md shadow-sm select-none",
   {
     variants: {
       width: {

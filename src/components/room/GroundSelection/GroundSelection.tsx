@@ -165,7 +165,8 @@ export const GroundSelection = React.forwardRef<
   );
 
   const disableAction = () => {
-    if (getMode() === Mode.draw) {
+    const mode = getMode();
+    if (mode === Mode.draw || mode === Mode.show) {
       return true;
     }
     return false;
@@ -431,14 +432,16 @@ export const GroundSelection = React.forwardRef<
                   )}
               </>
             )}
-            <ScrollButtons
-              containerRef={groundRef}
-              isWorking={isWorking}
-              scale={scale}
-              setScale={setScale}
-              isTouchDevice={isTouchDevice()}
-              needRefreshCanvas={needRefreshCanvas}
-            />
+            {getMode() !== Mode.show && (
+              <ScrollButtons
+                containerRef={groundRef}
+                isWorking={isWorking}
+                scale={scale}
+                setScale={setScale}
+                isTouchDevice={isTouchDevice()}
+                needRefreshCanvas={needRefreshCanvas}
+              />
+            )}
           </>
         )}
         {children}

@@ -163,16 +163,18 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   return (
     <>
-      <div className="flex sticky top-1 right-1 justify-end w-full">
-        <div className="flex top-1 right-1 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-65">
-          <span className="text-sm font-semibold">
-            Scale : {scale.toFixed(2)}
-          </span>
-          <span className="text-sm font-semibold text-gray-500">
-            Size : {canvasSize.width} x {canvasSize.height}
-          </span>
+      {mode !== Mode.show && (
+        <div className="flex sticky top-1 right-1 justify-end w-full">
+          <div className="flex top-1 right-1 flex-col px-2 py-1 bg-gray-200 rounded border border-gray-300 opacity-65">
+            <span className="text-sm font-semibold">
+              Scale : {scale.toFixed(2)}
+            </span>
+            <span className="text-sm font-semibold text-gray-500">
+              Size : {canvasSize.width} x {canvasSize.height}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
       <canvas
         ref={backgroundCanvasRef}
         id="background-canvas"

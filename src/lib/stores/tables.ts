@@ -195,5 +195,6 @@ export const zustandTableStore = (storeName: string | null) => {
 
 // For React components
 export const useZustandTableStore = (storeName: string | null) => {
+  // Retourne le store Zustand qui peut être utilisé avec .subscribe() ou .getState()
   return zustandTableStore(storeName);
 };

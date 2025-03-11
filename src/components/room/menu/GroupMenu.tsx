@@ -28,7 +28,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({
           className={className}
           onClick={() => {
             setActiveMenu(Menu.groupCreat);
-            setMode(Mode.create);
+            setMode(Mode.settings);
           }}
           selected={activeMenu === Menu.groupCreat}
           disabled={disabled}
@@ -40,7 +40,10 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({
       {activeMenu === Menu.groupCreat && (
         <GroupCreatWP
           // setActiveMenu={setActiveMenu}
-          onClose={() => setActiveMenu(null)}
+          onClose={() => {
+            setActiveMenu(null);
+            setMode(Mode.create);
+          }}
           className="absolute z-30 translate-y-24 w-fit"
           withToggleLock={false}
           withTitleBar={true}

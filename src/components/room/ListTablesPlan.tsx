@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { TableData } from "./types";
 import { useZustandTableStore } from "@/lib/stores/tables";
 import { withMousePosition } from "@/components/windows/withMousePosition";
@@ -10,26 +10,53 @@ import { useTablePositioning } from "./GroundSelection/hooks/useTablePositioning
 const RoomTableWP = withMousePosition(RoomTable);
 
 interface ListTablesProps {
-  tables: TableData[];
   btnSize: number;
   editable?: boolean;
   onClick?: ((id: string) => void) | null;
 }
 
 export const ListTablesPlan = React.memo(
-  ({ tables, btnSize, editable = false, onClick = null }: ListTablesProps) => {
+  ({ btnSize, editable = false, onClick = null }: ListTablesProps) => {
     // const [activeTable, setActiveTable] = useState<string | null>(null);
     const { scale, mode, tablesStoreName, alignBy } = useRoomStore();
+    const [, setNeedRefresh] = useState(0);
 
+    // Référence pour suivre le changement de tablesStoreName
+    const prevStoreNameRef = useRef<string | null>(tablesStoreName);
+
+    // Obtenir le store correspondant à la clé actuelle
     const tableStore = useZustandTableStore(tablesStoreName);
 
+    // Forcer le rafraîchissement du composant lorsque le store change
+    const [storeState, setStoreState] = useState(tableStore.getState());
+
+    useEffect(() => {
+      // Vérifier si la clé du store a changé
+      if (prevStoreNameRef.current !== tablesStoreName) {
+        // Mettre à jour la référence
+        prevStoreNameRef.current = tablesStoreName;
+        // Mettre à jour l'état avec le nouveau store
+        setStoreState(tableStore.getState());
+      }
+
+      // S'abonner aux changements du store
+      const unsubscribe = tableStore.subscribe((state) => {
+        setStoreState(state);
+      });
+
+      // Se désabonner lors du démontage du composant ou lorsque la clé change
+      return () => unsubscribe();
+    }, [tableStore, tablesStoreName]);
+
+    // Utiliser les valeurs du state actuel
     const {
+      tables,
+      activeTable,
       updateTable,
       deleteTable,
-      activeTable,
       setActiveTable,
       selectOneTable,
-    } = tableStore.getState();
+    } = storeState;
 
     const { handleMove, isSuperposed } = useTablePositioning();
 
@@ -38,7 +65,7 @@ export const ListTablesPlan = React.memo(
         if (!editable) return;
         updateTable(id, { selected });
       },
-      [updateTable]
+      [updateTable, editable]
     );
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
@@ -71,7 +98,13 @@ export const ListTablesPlan = React.memo(
       return () => {
         window.removeEventListener("keydown", handleKeyDown);
       };
-    }, [tables, updateTable]);
+    }, [setActiveTable]);
+
+    useEffect(() => {
+      if (tables.length === 0) {
+        setNeedRefresh((current) => current + 1);
+      }
+    }, [tables]);
 
     return tables.map((table: TableData) => {
       const left = (table.center?.x ?? 10) * scale;

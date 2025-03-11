@@ -39,6 +39,9 @@ interface RoomState {
   mode: Mode | null;
   setMode: (mode: Mode) => void;
   getMode: () => Mode | null;
+  defaultMode: Mode;
+  setDefaultMode: (mode: Mode) => void;
+  getDefaultMode: () => Mode;
 
   // Selected tables
   selectedTableIds: string[];
@@ -130,6 +133,10 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   mode: null,
   setMode: (mode) => set({ mode }),
   getMode: () => get().mode,
+
+  defaultMode: Mode.show,
+  setDefaultMode: (mode) => set({ defaultMode: mode }),
+  getDefaultMode: () => get().defaultMode,
 
   // Selected tables
   selectedTableIds: [],

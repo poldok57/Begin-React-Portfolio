@@ -29,6 +29,7 @@ const TableNumbers = ({
   const ref = useRef<HTMLDivElement>(null);
   const {
     setMode,
+    defaultMode,
     clearSelectedTableIds,
     clearTemporaryCanvas,
     tablesStoreName,
@@ -62,7 +63,10 @@ const TableNumbers = ({
       {activeMenu === Menu.tableNumbers && (
         <TableNumbersProcessWP
           className="absolute z-30 translate-y-24"
-          onClose={() => setActiveMenu(null)}
+          onClose={() => {
+            setActiveMenu(null);
+            setMode(defaultMode);
+          }}
           withToggleLock={false}
           withTitleBar={true}
           titleText="Table Numbering"

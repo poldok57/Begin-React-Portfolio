@@ -46,6 +46,7 @@ export const RoomCreatTools = () => {
   const {
     mode,
     setMode,
+    setDefaultMode,
     tablesStoreName,
     addSelectedTableId,
     removeSelectedTableId,
@@ -54,7 +55,6 @@ export const RoomCreatTools = () => {
   } = useRoomStore();
 
   const namedStore = useZustandTableStore(tablesStoreName);
-  const tables = namedStore((state) => state.tables);
   const namedStoreRef = useRef(namedStore.getState());
   const { getCurrentPlaceId } = usePlaceStore();
   const placeId = getCurrentPlaceId();
@@ -81,6 +81,7 @@ export const RoomCreatTools = () => {
   useEffect(() => {
     if (mode === null) {
       setMode(Mode.create);
+      setDefaultMode(Mode.create);
     } else if (mode !== Mode.draw) {
       setDrawingMode(DRAWING_MODES.PAUSE);
     }
@@ -147,7 +148,6 @@ export const RoomCreatTools = () => {
               {typeListMode === "plan" ? (
                 <>
                   <ListTablesPlan
-                    tables={tables}
                     btnSize={btnSize}
                     editable={mode !== Mode.numbering}
                     onClick={onTableClick}

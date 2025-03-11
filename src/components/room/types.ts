@@ -38,6 +38,7 @@ export enum Mode {
   create = "create",
   numbering = "numbering",
   settings = "settings",
+  show = "show",
 }
 
 export interface Table {

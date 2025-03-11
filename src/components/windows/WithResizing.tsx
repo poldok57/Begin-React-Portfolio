@@ -540,6 +540,7 @@ export const WithResizing: React.FC<WithResizingProps> = ({
       // component.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
     };
     const extendMouseMoveStop = () => {
+      if (trace) console.log(`[${componentName}] extendMouseMoveStop`);
       document.removeEventListener(EVENT.MOUSE_MOVE, handleResize);
     };
 

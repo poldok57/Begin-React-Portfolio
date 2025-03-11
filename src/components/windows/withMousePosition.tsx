@@ -12,6 +12,8 @@ import { generateRandomKey } from "./store";
 import { getContrastColor } from "../../lib/utils/colors";
 import { isAlignedRight, isAlignedBottom } from "../../lib/utils/position";
 
+import { debounceThrottle } from "@/lib/utils/debounce";
+
 import { cn } from "@/lib/utils/cn";
 
 import { Coordinate, RectPosition } from "../../lib/canvas/types";
@@ -113,14 +115,15 @@ export function withMousePosition<P extends object>(
     const isAlignedRightRef = useRef(false);
     const isAlignedBottomRef = useRef(false);
 
-    const setMouseCoordinates = (x: number, y: number) => {
-      mouseCoordinatesRef.current.x = x;
-      mouseCoordinatesRef.current.y = y;
+    const setMouseCoordinates = (coord: Coordinate) => {
+      mouseCoordinatesRef.current.x = coord.x;
+      mouseCoordinatesRef.current.y = coord.y;
     };
     const getMouseCoordinates: () => Coordinate = () =>
       mouseCoordinatesRef.current;
 
     const setCanMove = (value: boolean) => {
+      if (trace) console.log(`[${WrappedComponent.name}] setCanMove: ${value}`);
       canMoveRef.current = value;
     };
     const canMove = () => canMoveRef.current;
@@ -324,6 +327,13 @@ export function withMousePosition<P extends object>(
         return;
       }
 
+      const throtteledMove = (coord: Coordinate) => {
+        setMouseCoordinates(coord);
+        calculNewPosition();
+      };
+
+      const throtteleMove = debounceThrottle(throtteledMove, 20, 40);
+
       const handleMove = (
         event: MouseEvent | TouchEvent,
         coord: Coordinate
@@ -336,11 +346,11 @@ export function withMousePosition<P extends object>(
           setCanMove(false);
           return false;
         }
+
         // console.log(`[${WrappedComponent.name}] handleMove preventDefault`);
         event.stopPropagation();
         event.preventDefault();
-        setMouseCoordinates(coord.x, coord.y);
-        calculNewPosition();
+        throtteleMove(coord);
         return true;
       };
 
@@ -352,6 +362,8 @@ export function withMousePosition<P extends object>(
        * Start the drag action
        */
       const startDrag = (event: MouseEvent | TouchEvent, coord: Coordinate) => {
+        if (isLocked) return false;
+
         const { component } = selectComponent();
         if (!component) return false;
 
@@ -359,6 +371,7 @@ export function withMousePosition<P extends object>(
         const rectWaitEvent = waitEvent.getBoundingClientRect();
         // if the component is resizable, we need to check if the mouse is inside the border of the component
         // to prevent conflict between the mouse position and the resizing
+
         if (
           resizable &&
           !mouseIsInsideBorder(coord, rectComponent) &&
@@ -375,7 +388,14 @@ export function withMousePosition<P extends object>(
         if (waitEvent && waitEvent.contains(event.target as Node)) {
           setCanMove(true);
 
-          setMouseCoordinates(coord.x, coord.y);
+          if (trace) {
+            console.log(
+              `[${WrappedComponent.name}] startDrag: mouse is inside the border of the component event:`,
+              event
+            );
+          }
+
+          setMouseCoordinates(coord);
 
           // difference between the mouse and the component
           offsetRef.current = getRectOffset(coord, {
@@ -404,10 +424,12 @@ export function withMousePosition<P extends object>(
          * when the mouse is down on the title bar
          */
         if (isLocked) return;
-        startDrag(event, { x: event.clientX, y: event.clientY });
-        // if (startDrag(event, { x: event.clientX, y: event.clientY })) {
-        // event.preventDefault();
-        // }
+        // startDrag(event, { x: event.clientX, y: event.clientY });
+        if (startDrag(event, { x: event.clientX, y: event.clientY })) {
+          if (trace)
+            console.log(`[${WrappedComponent.name}] mouseDown: preventDefault`);
+          event.preventDefault();
+        }
       };
 
       /**
@@ -415,8 +437,9 @@ export function withMousePosition<P extends object>(
        * @param {MouseEvent} event
        */
       const mouseUp = (event: MouseEvent) => {
+        if (trace) console.log(`[${WrappedComponent.name}] mouseUp`);
         setCanMove(false);
-        setMouseCoordinates(event.clientX, event.clientY);
+        setMouseCoordinates({ x: event.clientX, y: event.clientY });
         handleOnMove();
       };
 
@@ -450,7 +473,7 @@ export function withMousePosition<P extends object>(
         handleMove(event, {
           x: touch.clientX,
           y: touch.clientY,
-        } as MouseEvent);
+        } as Coordinate);
       };
 
       /**
@@ -465,6 +488,10 @@ export function withMousePosition<P extends object>(
       waitEvent.addEventListener(EVENT.TOUCH_END, mouseUp as EventListener);
       waitEvent.addEventListener(EVENT.TOUCH_CANCEL, mouseUp as EventListener);
       return () => {
+        if (trace)
+          console.log(
+            `[${WrappedComponent.name}] removeEventListener: ${canMove()}`
+          );
         waitEvent.removeEventListener(EVENT.MOUSE_MOVE, handleMouseMove);
         waitEvent.removeEventListener(EVENT.MOUSE_UP, mouseUp);
         waitEvent.removeEventListener(EVENT.MOUSE_DOWN, mouseDown);

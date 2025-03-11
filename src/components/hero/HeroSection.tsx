@@ -28,12 +28,13 @@ export const HeroSection = () => {
       <ImageResizable
         className="top-0 right-0 h-fit md:absolute"
         withToggleLock={true}
-        resizable={true}
+        resizable={false}
         draggable={false}
         minWidth={120}
         minHeight={120}
         width={300}
         height={300}
+        trace={false}
         src="/images/alinenkarl-300.png"
         alt="avatar"
       />

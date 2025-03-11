@@ -35,6 +35,8 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
   const ref = useRef<HTMLDivElement>(null);
   const {
     mode,
+    setMode,
+    defaultMode,
     scale,
     setScale,
     clearSelectedTableIds,
@@ -75,6 +77,22 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     namedStoreRef.current?.deleteSelectedTable();
     namedStoreRef.current?.setActiveTable(null);
     setSelectedRect(null);
+  };
+
+  const handleUndo = () => {
+    const lastEntry = getLastEntry();
+    if (!lastEntry) return;
+
+    lastEntry.tables.forEach((tableHistory) => {
+      namedStoreRef.current?.updateTable(tableHistory.id, {
+        center: tableHistory.previousPosition,
+        ...(tableHistory.previousRotation !== undefined && {
+          rotation: tableHistory.previousRotation,
+        }),
+      });
+    });
+
+    removeLastEntry();
   };
 
   useEffect(() => {
@@ -167,21 +185,11 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
     setIsPlanMode(typeListMode === TypeListTables.plan);
   }, [typeListMode]);
 
-  const handleUndo = () => {
-    const lastEntry = getLastEntry();
-    if (!lastEntry) return;
-
-    lastEntry.tables.forEach((tableHistory) => {
-      namedStoreRef.current?.updateTable(tableHistory.id, {
-        center: tableHistory.previousPosition,
-        ...(tableHistory.previousRotation !== undefined && {
-          rotation: tableHistory.previousRotation,
-        }),
-      });
-    });
-
-    removeLastEntry();
-  };
+  useEffect(() => {
+    if (!mode) {
+      setMode(defaultMode);
+    }
+  }, [mode]);
 
   return (
     <div className="flex items-center w-full align-middle bg-gray-100 min-h-12">

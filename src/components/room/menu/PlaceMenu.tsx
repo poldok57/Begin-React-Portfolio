@@ -1,7 +1,7 @@
 import { Button } from "@/components/atom/Button";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { PlaceCreat } from "./PlaceCreat";
-import { Menu, Mode } from "../types";
+import { Menu } from "../types";
 import { useRoomStore } from "@/lib/stores/room";
 
 const PlaceRoomWP = withMousePosition(PlaceCreat);
@@ -19,7 +19,7 @@ export const PlaceMenu: React.FC<PlaceMenuProps> = ({
   setActiveMenu,
   disabled = false,
 }) => {
-  const { setMode } = useRoomStore();
+  const { setMode, defaultMode } = useRoomStore();
 
   return (
     <>
@@ -28,7 +28,7 @@ export const PlaceMenu: React.FC<PlaceMenuProps> = ({
           className={className}
           onClick={() => {
             setActiveMenu(Menu.place);
-            setMode(Mode.create);
+            setMode(defaultMode);
           }}
           selected={activeMenu === Menu.place}
           disabled={disabled}
