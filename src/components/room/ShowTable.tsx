@@ -154,7 +154,7 @@ export const ShowTable: React.FC<ShowTableProps> = ({
           </button>
         </div>
         <RangeInput
-          className="w-24 h-4"
+          className="w-20 h-4"
           id="flashDuration"
           label="Flash duration"
           value={flashDurationValue || 0}

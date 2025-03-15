@@ -5,12 +5,29 @@ import { isTouchDevice } from "@/lib/utils/device";
 import { useGroupStore } from "@/lib/stores/groups";
 import { useRoomStore } from "@/lib/stores/room";
 import { useZustandTableStore } from "@/lib/stores/tables";
-import { Palette, ArrowBigUpDash, Trash2, Pencil } from "lucide-react";
+import {
+  Palette,
+  ArrowBigUpDash,
+  Trash2,
+  Pencil,
+  Save,
+  FolderOpen,
+} from "lucide-react";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { ModifyColor } from "../ModifyColor";
+import {
+  useTableTemplateStore,
+  TableTemplate,
+} from "@/lib/stores/tableTemplates";
+import { TableTemplateList } from "./TableTemplateList";
+import { withMousePosition } from "@/components/windows/withMousePosition";
+import { menuRoomContainer } from "@/styles/menu-variants";
 
 import { cn } from "@/lib/utils/cn";
 import { menuRoomVariants } from "@/styles/menu-variants";
+
+const TableTemplateListWP = withMousePosition(TableTemplateList);
+
 const DEFAULT_COLORS = {
   borderColor: "#333333",
   fillColor: "#aaaaaa",
@@ -32,6 +49,12 @@ export const GroupCreat = ({
   const [settings, setSettings] = useState<TableSettings | null>(null);
   const [editing, setEditing] = useState(false);
   const [showColors, setShowColors] = useState(true);
+  const [showTemplateList, setShowTemplateList] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [showSaveTemplateForm, setShowSaveTemplateForm] = useState(false);
+
+  const { addTemplate } = useTableTemplateStore();
+
   const getGroup = (id: string) => {
     return groups.find((group) => group.id === id);
   };
@@ -138,6 +161,29 @@ export const GroupCreat = ({
   }, [groupId]);
 
   const TableComponent = getTableComponent(tableType);
+
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) return;
+
+    addTemplate({
+      name: templateName,
+      type: tableType,
+      colors: { ...colors },
+      settings: settings || undefined,
+    });
+
+    setShowSaveTemplateForm(false);
+    setTemplateName("");
+  };
+
+  const handleSelectTemplate = (template: TableTemplate) => {
+    setColors(template.colors);
+    setTableType(template.type);
+    if (template.settings) {
+      setSettings(template.settings);
+    }
+    setShowTemplateList(false);
+  };
 
   return (
     <div className={menuRoomVariants({ width: editing ? 96 : 80 })}>
@@ -317,9 +363,76 @@ export const GroupCreat = ({
                 </div>
               </form>
             </div>
+
+            {/* Boutons pour les templates */}
+            <div className="flex gap-2 justify-center mt-4">
+              <button
+                className="flex gap-2 items-center btn btn-sm btn-outline"
+                onClick={() => setShowSaveTemplateForm(true)}
+              >
+                <Save size={btnSize} />
+                Save as template
+              </button>
+              <button
+                className="flex gap-2 items-center btn btn-sm btn-outline"
+                onClick={() => setShowTemplateList(true)}
+              >
+                <FolderOpen size={btnSize} />
+                Load a template
+              </button>
+            </div>
+
+            {/* Form for saving a template */}
+            {showSaveTemplateForm && (
+              <div className="p-4 mt-4 rounded-lg border shadow-lg border-primary">
+                <h3 className="mb-2 text-lg font-semibold">Save as template</h3>
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Template name</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input input-bordered"
+                    value={templateName}
+                    onChange={(e) => setTemplateName(e.target.value)}
+                    placeholder="Template name"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end mt-4">
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => setShowSaveTemplateForm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={handleSaveTemplate}
+                    disabled={!templateName.trim()}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {/* Liste des templates */}
+      {showTemplateList && (
+        <TableTemplateListWP
+          onSelectTemplate={handleSelectTemplate}
+          onClose={() => setShowTemplateList(false)}
+          className={menuRoomContainer({ alignement: "translateRight" })}
+          withToggleLock={false}
+          withTitleBar={true}
+          titleText="Templates de tables"
+          titleHidden={false}
+          titleBackground={"#6699ee"}
+          draggable={true}
+        />
+      )}
     </div>
   );
 };
