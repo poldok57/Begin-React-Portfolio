@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { GithubPicker, SliderPicker, SwatchesPicker } from "react-color";
 import { X } from "lucide-react";
-import clsx from "clsx";
+import { cn } from "@/lib/utils/cn";
 // import { getContrastColor } from "./colors";
 import { ColorInput } from "./ColorInput";
 
@@ -77,8 +77,8 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   return (
     <dialog
       open={true}
-      className={clsx(
-        "flex flex-col gap-2 items-center p-2 rounded-lg border shadow-xl z-[100] w-fit min-w-72 bg-base-200 border-base-200",
+      className={cn(
+        "flex flex-col gap-2 items-center p-2 rounded-lg border shadow-xl z-[100] w-fit min-w-72 bg-base-200 border-base-300",
         "translate-x-3/4 -translate-y-1/2"
       )}
       ref={pickerRef}
@@ -92,7 +92,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
         </div>
         {withCloseBtn && (
           <button
-            className={clsx([
+            className={cn([
               "btn btn-sm btn-square bg-base-300 border-base-300 hover:border-neutral",
               "translate-x-1 -translate-y-1",
               "transition-opacity duration-300",
@@ -106,7 +106,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
       <ul className="gap-2 justify-center w-full menu menu-horizontal bg-base-200 rounded-box">
         <li>
           <a
-            className={clsx({
+            className={cn({
               "border border-opacity-40 border-neutral bg-base-300":
                 !showSwatches,
             })}
@@ -117,7 +117,7 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
         </li>
         <li>
           <a
-            className={clsx({
+            className={cn({
               "border border-opacity-40 border-neutral bg-base-300":
                 showSwatches,
             })}

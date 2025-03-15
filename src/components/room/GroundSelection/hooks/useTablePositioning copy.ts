@@ -24,8 +24,7 @@ export interface ChangeCoordinatesParams {
 }
 
 export const useTablePositioning = () => {
-  const { tablesStoreName, getElementRect, getMode, alignBy, getScale } =
-    useRoomStore();
+  const { tablesStoreName, getMode, getScale } = useRoomStore();
   const namedStore = useZustandTableStore(tablesStoreName);
   const { addEntry } = useHistoryStore();
 
@@ -50,21 +49,8 @@ export const useTablePositioning = () => {
     let x = table.center.x;
     let y = table.center.y;
     if (position) {
-      if (alignBy === "topLeft") {
-        // get element rect with real size without scale
-        const rect = getElementRect(table.id);
-        // convert axis position to border position
-        if (position.left !== undefined) {
-          // Log pour comparer offsetWidth et Rect.width
-          x = Math.round(position.left - (rect?.width ?? 0) / 2);
-        }
-        if (position.top !== undefined) {
-          y = Math.round(position.top - (rect?.height ?? 0) / 2);
-        }
-      } else {
-        x = Math.round(position?.left ?? x);
-        y = Math.round(position?.top ?? y);
-      }
+      x = Math.round(position?.left ?? x);
+      y = Math.round(position?.top ?? y);
     } else {
       // position table by translation
       if (!offset || (offset.left === 0 && offset.top === 0)) {
@@ -185,28 +171,17 @@ export const useTablePositioning = () => {
       if (!movedTable) return;
 
       // Mettre à jour la position de la table
-      if (alignBy === "topLeft") {
-        changeCoordinates({
-          position: {
-            left: scalePosition.x,
-            top: scalePosition.y,
-          },
-          uniqueId: withHistory ? id : null,
-          tableIds: [id],
-        });
-      } else {
-        // Mise à jour directe du centre
-        changeCoordinates({
-          position: {
-            left: scalePosition.x,
-            top: scalePosition.y,
-          },
-          uniqueId: withHistory ? id : null,
-          tableIds: [id],
-        });
-      }
+
+      changeCoordinates({
+        position: {
+          left: scalePosition.x,
+          top: scalePosition.y,
+        },
+        uniqueId: withHistory ? id : null,
+        tableIds: [id],
+      });
     },
-    [getScale, alignBy, changeCoordinates]
+    [getScale, changeCoordinates]
   );
 
   const onSelectionStart = () => {

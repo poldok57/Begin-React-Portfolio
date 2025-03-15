@@ -61,11 +61,13 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
 
     const handleMouseMove = (e: MouseEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       handleMove(e.clientX, e.clientY);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       const touch = e.touches[0];
       handleMove(touch.clientX, touch.clientY);
     };
@@ -87,6 +89,7 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const touch = e.touches[0];
     handleStart(touch.clientX, touch.clientY);
   };
@@ -94,7 +97,7 @@ export const SelectionItems: React.FC<SelectionItemsProps> = ({
   return (
     <div
       ref={ref}
-      className="overflow-hidden absolute left-4 top-full z-40 p-4 mt-2 bg-white rounded-lg shadow-lg translate-x-16 min-w-40 min-h-40"
+      className="overflow-hidden absolute left-4 top-full z-40 p-4 mt-2 bg-white rounded-xl border border-gray-300 shadow-xl translate-x-16 min-w-40 min-h-40"
       style={{
         width: `${width + 10 + 2 * cellSize}px`,
         height: `${height + 50 + 2 * cellSize}px`,

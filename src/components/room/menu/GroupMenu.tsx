@@ -3,6 +3,7 @@ import { withMousePosition } from "@/components/windows/withMousePosition";
 import { GroupCreat } from "./GroupCreat";
 import { Menu, Mode } from "../types";
 import { useRoomStore } from "@/lib/stores/room";
+import { menuRoomContainer } from "@/styles/menu-variants";
 
 const GroupCreatWP = withMousePosition(GroupCreat);
 
@@ -44,7 +45,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({
             setActiveMenu(null);
             setMode(Mode.create);
           }}
-          className="absolute z-30 translate-y-24 w-fit"
+          className={menuRoomContainer({ className: "fit" })}
           withToggleLock={false}
           withTitleBar={true}
           titleText="Group & Tournament"

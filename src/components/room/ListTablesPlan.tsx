@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { TableData } from "./types";
 import { useZustandTableStore } from "@/lib/stores/tables";
-import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
 import { useRoomStore } from "@/lib/stores/room";
 import { Mode } from "./types";
 import { useTablePositioning } from "./GroundSelection/hooks/useTablePositioning";
+
+import { withMousePosition } from "@/components/windows/withMousePosition";
 
 const RoomTableWP = withMousePosition(RoomTable);
 
@@ -18,37 +19,37 @@ interface ListTablesProps {
 export const ListTablesPlan = React.memo(
   ({ btnSize, editable = false, onClick = null }: ListTablesProps) => {
     // const [activeTable, setActiveTable] = useState<string | null>(null);
-    const { scale, mode, tablesStoreName, alignBy } = useRoomStore();
+    const { scale, mode, tablesStoreName } = useRoomStore();
     const [, setNeedRefresh] = useState(0);
 
-    // Référence pour suivre le changement de tablesStoreName
+    // Reference to track changes in tablesStoreName
     const prevStoreNameRef = useRef<string | null>(tablesStoreName);
 
-    // Obtenir le store correspondant à la clé actuelle
+    // Get the store corresponding to the current key
     const tableStore = useZustandTableStore(tablesStoreName);
 
-    // Forcer le rafraîchissement du composant lorsque le store change
+    // Force a component refresh when the store changes
     const [storeState, setStoreState] = useState(tableStore.getState());
 
     useEffect(() => {
-      // Vérifier si la clé du store a changé
+      // Check if the store key has changed
       if (prevStoreNameRef.current !== tablesStoreName) {
-        // Mettre à jour la référence
+        // Update the reference
         prevStoreNameRef.current = tablesStoreName;
-        // Mettre à jour l'état avec le nouveau store
+        // Update the state with the new store
         setStoreState(tableStore.getState());
       }
 
-      // S'abonner aux changements du store
+      // Subscribe to store changes
       const unsubscribe = tableStore.subscribe((state) => {
         setStoreState(state);
       });
 
-      // Se désabonner lors du démontage du composant ou lorsque la clé change
+      // Unsubscribe when the component is unmounted or when the key changes
       return () => unsubscribe();
     }, [tableStore, tablesStoreName]);
 
-    // Utiliser les valeurs du state actuel
+    // Use the current state values
     const {
       tables,
       activeTable,
@@ -111,7 +112,6 @@ export const ListTablesPlan = React.memo(
       const top = (table.center?.y ?? 10) * scale;
       const isActive = table.id === activeTable;
       const showButton = mode === Mode.create && isActive;
-
       const TableComponent =
         isActive && mode === Mode.create ? RoomTableWP : RoomTable;
 
@@ -133,12 +133,14 @@ export const ListTablesPlan = React.memo(
             position: "absolute",
             left: `${left}px`,
             top: `${top}px`,
-            transform:
-              alignBy === "center" ? "translate(-50%, -50%)" : undefined,
+            transform: "translate(-50%, -50%)",
           }}
           scale={scale}
           onClick={
-            mode !== Mode.draw ? (e) => handleClick?.(e, table.id) : undefined
+            mode !== Mode.draw
+              ? (e: React.MouseEvent<HTMLDivElement>) =>
+                  handleClick?.(e, table.id)
+              : undefined
           }
           isActive={isActive}
           mode={mode}

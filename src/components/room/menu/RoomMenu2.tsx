@@ -7,6 +7,7 @@ import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomStore } from "@/lib/stores/room";
 import { usePlaceStore } from "@/lib/stores/places";
 import { TableNumbers } from "./TableNumbers";
+import { RoomExportImport } from "./RoomExportImport";
 
 import { zustandTableStore } from "@/lib/stores/tables";
 import type { TableDataState } from "@/lib/stores/tables";
@@ -243,6 +244,14 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                     setActiveMenu={setActiveMenu}
                   />
                 </li>
+                <li>
+                  <RoomExportImport
+                    className="flex flex-col p-1 w-full rounded-lg bg-secondary"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    disabled={false}
+                  />
+                </li>
               </>
             )}
             {typeListMode !== TypeListTables.list && (
@@ -310,6 +319,14 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               className="px-2 bg-secondary"
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
+              disabled={currentPlace ? false : true}
+            />
+          </li>
+          <li className="flex items-center pr-1">
+            <RoomExportImport
+              className="px-2"
+              activeMenu={activeMenu}
+              setActiveMenu={setActiveMenu}
               disabled={false}
             />
           </li>
@@ -318,7 +335,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
               className="px-2 bg-secondary"
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}
-              disabled={false}
+              disabled={currentPlace ? false : true}
             />
           </li>
           {typeListMode === TypeListTables.plan && currentPlace && (

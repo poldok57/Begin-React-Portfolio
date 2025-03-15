@@ -45,6 +45,7 @@ export interface DesignState {
   setBackgroundColor: (backgroundColor: string) => void;
   moveAllDesignElements: (offset: Coordinate) => void;
   moveDesignElement: (id: string, center: Coordinate, rotation: number) => void;
+  reset: () => void;
 }
 
 const createDesignStore = (storageName: string) => {
@@ -241,6 +242,21 @@ const createDesignStore = (storageName: string) => {
         return {
           designElements: updatedElements,
         };
+      });
+    },
+    reset: async () => {
+      //  clean the image data in IndexedDB before resetting
+      const cleanupPromises = get().designElements.map((element) => {
+        if (element.type === DRAW_TYPE.IMAGE) {
+          return cleanupImageStorage(element.id);
+        }
+        return Promise.resolve();
+      });
+
+      await Promise.all(cleanupPromises);
+      set({
+        designElements: [],
+        selectedDesignElement: null,
       });
     },
   });

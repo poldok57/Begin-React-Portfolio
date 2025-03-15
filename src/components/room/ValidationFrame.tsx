@@ -84,7 +84,6 @@ export const ValidationFrame = ({
 
   const handleValid = () => {
     if (validationValidAction) {
-      console.log("Validation action");
       validationValidAction();
     }
     hideValidationFrame();

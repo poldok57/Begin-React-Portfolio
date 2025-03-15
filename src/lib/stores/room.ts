@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { Rectangle } from "@/lib/canvas/types";
 import { Mode } from "@/components/room/types";
+import { zustandDesignStore } from "./design";
+import { zustandTableStore } from "./tables";
 
 const DESIGN_STORE_NAME = "room-design-storage";
 const TABLES_STORE_NAME = "room-tables-storage";
@@ -56,14 +58,19 @@ interface RoomState {
   // Store names
   designStoreName: string;
   tablesStoreName: string;
+  getStoreName: (storeName?: string | null) => {
+    designStoreName: string;
+    tablesStoreName: string;
+  };
   setStoreName: (storeName?: string | null) => void;
+  resetRoom: (storeName?: string | null) => boolean;
 
   // Layout
   maxRowsPerColumn: number;
   setMaxRowsPerColumn: (maxRowsPerColumn: number) => void;
 
   // temporary information
-  alignBy: "center" | "topLeft";
+  // alignBy: "center" | "topLeft";
 }
 
 export const useRoomStore = create<RoomState>((set, get) => ({
@@ -82,7 +89,7 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   },
 
   // temporary information
-  alignBy: "center",
+  // alignBy: "center",
   // Scale and rotation
   scale: 1,
   setScale: (scale) => set({ scale }),
@@ -162,7 +169,13 @@ export const useRoomStore = create<RoomState>((set, get) => ({
   // Store names
   designStoreName: DESIGN_STORE_NAME,
   tablesStoreName: TABLES_STORE_NAME,
-  setStoreName: (storeName) => {
+  getStoreName: (storeName: string | undefined | null) => {
+    if (!storeName) {
+      return {
+        designStoreName: DESIGN_STORE_NAME,
+        tablesStoreName: TABLES_STORE_NAME,
+      };
+    }
     const baseName = storeName || "";
     const designStoreName = baseName
       ? `room-${baseName}-design`
@@ -171,9 +184,37 @@ export const useRoomStore = create<RoomState>((set, get) => ({
       ? `room-${baseName}-tables`
       : TABLES_STORE_NAME;
 
+    return { designStoreName, tablesStoreName };
+  },
+  setStoreName: (storeName) => {
+    const { designStoreName, tablesStoreName } = get().getStoreName(storeName);
     set({ designStoreName, tablesStoreName });
 
     // return { designStoreName, tablesStoreName };
+  },
+  resetRoom: (storeName: string | undefined | null) => {
+    const { designStoreName, tablesStoreName } = get().getStoreName(storeName);
+    // delete the data from the localStorage for this room
+    try {
+      // reset also the zustand stores
+      const designStore = zustandDesignStore(designStoreName);
+      const tableStore = zustandTableStore(tablesStoreName);
+
+      if (designStore) designStore.getState().reset();
+      if (tableStore) tableStore.getState().reset();
+
+      // delete the data from the localStorage
+      localStorage.removeItem(designStoreName);
+      localStorage.removeItem(tablesStoreName);
+
+      console.log(
+        `[STORAGE] Data deleted for room: design=${designStoreName}, tables=${tablesStoreName}`
+      );
+      return true;
+    } catch (error) {
+      console.error(`[STORAGE] Error deleting data for room`, error);
+      return false;
+    }
   },
 
   // Layout

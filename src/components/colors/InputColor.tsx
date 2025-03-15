@@ -9,6 +9,8 @@ interface InputColorProps {
   themeColors?: string[];
   className: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  openedInputColor?: string | null;
+  setOpenedInputColor?: (value: string) => void;
 }
 
 export const InputColor: React.FC<InputColorProps> = ({
@@ -18,6 +20,8 @@ export const InputColor: React.FC<InputColorProps> = ({
   themeColors,
   onChange,
   className,
+  openedInputColor,
+  setOpenedInputColor,
 }) => {
   const [divColor, setDivColor] = useState(color);
   const [showPicker, setShowPicker] = useState(false);
@@ -41,9 +45,12 @@ export const InputColor: React.FC<InputColorProps> = ({
       <div
         className={clsx(className, "cursor-pointer")}
         style={{ backgroundColor: divColor }}
-        onClick={() => setShowPicker(true)}
+        onClick={() => {
+          setShowPicker(true);
+          setOpenedInputColor?.(fieldName);
+        }}
       ></div>
-      {showPicker && (
+      {showPicker && openedInputColor === fieldName && (
         <DisplayColorPicker
           color={color}
           fieldName={fieldName}

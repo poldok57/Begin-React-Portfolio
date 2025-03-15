@@ -34,7 +34,7 @@ export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
     <>
       {showVerticalBtn && (
         <button
-          className="absolute z-50 px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1/2 translate-y-1 cursor-pointer"
+          className="absolute z-[21] px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1/2 translate-y-1 cursor-pointer"
           onClick={(e) => handleTouch(e, "vertical")}
           onTouchStart={(e) => handleTouch(e, "vertical")}
           style={{
@@ -47,7 +47,7 @@ export const AlignmentButtons: React.FC<AlignmentButtonsProps> = ({
       )}
       {showHorizontalBtn && (
         <button
-          className="absolute z-50 px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2 cursor-pointer"
+          className="absolute z-[21] px-2 py-1 text-white bg-blue-500 rounded transform -translate-x-1 -translate-y-1/2 cursor-pointer"
           onClick={(e) => handleTouch(e, "horizontal")}
           onTouchStart={(e) => handleTouch(e, "horizontal")}
           style={{

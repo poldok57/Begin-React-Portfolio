@@ -22,8 +22,7 @@ export interface ChangeCoordinatesParams {
 }
 
 export const useTablePositioning = () => {
-  const { tablesStoreName, getElementRect, getMode, alignBy, getScale } =
-    useRoomStore();
+  const { tablesStoreName, getMode, getScale } = useRoomStore();
   const namedStore = useZustandTableStore(tablesStoreName);
   const { addEntry } = useHistoryStore();
 
@@ -48,21 +47,8 @@ export const useTablePositioning = () => {
     let x = table.center.x;
     let y = table.center.y;
     if (position) {
-      if (alignBy === "topLeft") {
-        // get element rect with real size without scale
-        const rect = getElementRect(table.id);
-        // convert axis position to border position
-        if (position.left !== undefined) {
-          // Log pour comparer offsetWidth et Rect.width
-          x = Math.round(position.left - (rect?.width ?? 0) / 2);
-        }
-        if (position.top !== undefined) {
-          y = Math.round(position.top - (rect?.height ?? 0) / 2);
-        }
-      } else {
-        x = Math.round(position?.left ?? x);
-        y = Math.round(position?.top ?? y);
-      }
+      x = Math.round(position?.left ?? x);
+      y = Math.round(position?.top ?? y);
     } else {
       // position table by translation
       if (!offset || (offset.left === 0 && offset.top === 0)) {
@@ -184,7 +170,6 @@ export const useTablePositioning = () => {
       //   position,
       //   withHistory ? "with history" : "",
       //   adjustNeeded ? "adjust needed" : "",
-      //   "align:" + alignBy
       // );
 
       const movedTable = namedStoreRef.current?.getTable(id);
@@ -193,11 +178,6 @@ export const useTablePositioning = () => {
       // Get table dimensions from HTML element
       const tableElement = document.getElementById(id);
       if (!tableElement) return;
-
-      const halfSize = {
-        width: tableElement.offsetWidth / (2 * currentScale),
-        height: tableElement.offsetHeight / (2 * currentScale),
-      };
 
       const tableIntervalMin = {
         width: tableElement.offsetWidth / (2 * currentScale),
@@ -238,10 +218,6 @@ export const useTablePositioning = () => {
 
       if (withHistory) {
         // changeCoordinates use center of the table to adjust position
-        if (alignBy === "topLeft") {
-          scalePosition.x = scalePosition.x + halfSize.width;
-          scalePosition.y = scalePosition.y + halfSize.height;
-        }
         changeCoordinates?.({
           position: {
             left: scalePosition.x,

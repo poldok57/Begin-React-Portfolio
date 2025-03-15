@@ -45,7 +45,6 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
     getCtxTemporary,
     clearTemporaryCanvas,
     tablesStoreName,
-    alignBy,
   } = useRoomStore();
   const namedStore = useZustandTableStore(tablesStoreName);
   const {
@@ -333,16 +332,10 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
         let fourthTable = getElementById(fourthTableId);
 
         if (firstTable && secondTable) {
-          let startX = firstTable.left;
-          let startY = firstTable.top;
-          let endX = secondTable.left;
-          let endY = secondTable.top;
-          if (alignBy === "topLeft") {
-            startX += firstTable.width / 2;
-            startY += firstTable.height / 2;
-            endX += secondTable.width / 2;
-            endY += secondTable.height / 2;
-          }
+          const startX = firstTable.left;
+          const startY = firstTable.top;
+          const endX = secondTable.left;
+          const endY = secondTable.top;
 
           drawArrow({
             ctx: ctx,
@@ -355,16 +348,10 @@ export const TableNumbersProcess = ({}: TableNumbersProcessProps) => {
           });
         }
         if (firstTable && secondTable && thirdTable) {
-          let startX = firstTable.left;
-          let startY = firstTable.top;
-          let endX = thirdTable.left;
-          let endY = thirdTable.top;
-          if (alignBy === "topLeft") {
-            startX += firstTable.width / 2;
-            startY += firstTable.height / 2;
-            endX += thirdTable.width / 2;
-            endY += thirdTable.height / 2;
-          }
+          const startX = firstTable.left;
+          const startY = firstTable.top;
+          const endX = thirdTable.left;
+          const endY = thirdTable.top;
 
           if (secondTableId !== thirdTableId) {
             drawArrow({

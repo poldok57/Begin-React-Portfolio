@@ -5,6 +5,7 @@ import { useRoomStore } from "@/lib/stores/room";
 import { Mode, Menu } from "../types";
 import { TableNumbersProcess } from "./TableNumbersProcess";
 import { withMousePosition } from "../../windows/withMousePosition";
+import { menuRoomContainer } from "@/styles/menu-variants";
 
 const TableNumbersProcessWP = withMousePosition(TableNumbersProcess);
 
@@ -62,7 +63,7 @@ const TableNumbers = ({
       </div>
       {activeMenu === Menu.tableNumbers && (
         <TableNumbersProcessWP
-          className="absolute z-30 translate-y-24"
+          className={menuRoomContainer()}
           onClose={() => {
             setActiveMenu(null);
             setMode(defaultMode);

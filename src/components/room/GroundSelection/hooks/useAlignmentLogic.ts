@@ -31,7 +31,7 @@ interface AlignmentLogic {
   findAlignments: (mode: string | null) => {
     vertical: number;
     horizontal: number;
-  };
+  } | null;
 
   drawAlignmentLines: (containerRect: DOMRect | Rectangle | null) => void;
   clicOnLine: (mouseX: number, mouseY: number) => boolean;
@@ -103,14 +103,15 @@ export const useAlignmentLogic = (
         );
       }
     );
+    // console.log("elementsInContainer", elementsInContainer.current.length);
   }, [getContainerRect]);
 
   const findAlignments = (
     mode: string | null = Mode.create
-  ): { vertical: number; horizontal: number } => {
+  ): { vertical: number; horizontal: number } | null => {
     alignmentGroups.current = { vertical: [], horizontal: [] };
     if (mode !== Mode.create && mode !== Mode.settings) {
-      return { vertical: 0, horizontal: 0 };
+      return null;
     }
     elementsInContainer.current.forEach((el) => {
       const rect = el.getBoundingClientRect();
@@ -162,6 +163,12 @@ export const useAlignmentLogic = (
       console.log("horizontal Group", alignmentGroups.current.horizontal);
     }
 
+    if (
+      alignmentGroups.current.vertical.length === 0 &&
+      alignmentGroups.current.horizontal.length === 0
+    ) {
+      return null;
+    }
     return {
       vertical: alignmentGroups.current.vertical.length,
       horizontal: alignmentGroups.current.horizontal.length,

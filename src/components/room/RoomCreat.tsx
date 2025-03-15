@@ -136,7 +136,11 @@ export const RoomCreatTools = () => {
       >
         {placeId === null ? (
           <div className="flex justify-center items-center w-full">
-            <PlaceCreat className="max-w-md" handleClose={() => {}} />
+            <PlaceCreat
+              className="max-w-md"
+              handleClose={() => {}}
+              include={true}
+            />
           </div>
         ) : (
           <div className="flex flex-row w-full">

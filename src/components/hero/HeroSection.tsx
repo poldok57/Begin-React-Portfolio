@@ -1,7 +1,14 @@
 "use client";
-import { FULL_NAME } from "../../lib/config";
-import { withMousePosition } from "../windows/withMousePosition";
-import { ImageResizable } from "../windows/ImageResizable";
+import { FULL_NAME } from "@/lib/config";
+import { withMousePosition } from "@/components/windows/withMousePosition";
+import { ImageResizable } from "@/components/windows/ImageResizable";
+
+import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+
+const eventLogger = (e: DraggableEvent, data: DraggableData) => {
+  console.log("Event: ", e);
+  console.log("Data: ", data);
+};
 
 const HeroPresentation = () => {
   return (
@@ -45,6 +52,24 @@ export const HeroSection = () => {
         withTitleBar={true}
         titleText="Welcome to the React Factory !"
       />
+      <Draggable>
+        <div className="p-4 bg-red-500 h-fit w-fit">Drag me</div>
+      </Draggable>
+      <Draggable
+        onDrag={eventLogger}
+        handle=".handle"
+        defaultPosition={{ x: 0, y: 0 }}
+        // grid={[100, 100]}
+        scale={1}
+        // onStart={this.handleStart}
+        // onDrag={this.handleDrag}
+        // onStop={this.handleStop}
+      >
+        <div className="bg-red-500 border-2 border-black handle w-fit h-15">
+          <div>Drag from here</div>
+          <div>This readme is really dragging on...</div>
+        </div>
+      </Draggable>
     </div>
   );
 };

@@ -29,6 +29,7 @@ export interface TableDataState {
   getAllTables: () => TableData[];
   moveAllTables: (offset: Coordinate) => void;
   moveTable: (id: string, center: Coordinate, rotation: number) => void;
+  reset: () => void;
 }
 
 interface TableDataWithIndex extends TableData {
@@ -157,6 +158,12 @@ const createTableStore = (storageName: string) => {
         };
       });
     },
+    reset: () => {
+      set({
+        tables: [],
+        activeTable: null,
+      });
+    },
   });
 
   return create<TableDataState>()(
@@ -195,6 +202,6 @@ export const zustandTableStore = (storeName: string | null) => {
 
 // For React components
 export const useZustandTableStore = (storeName: string | null) => {
-  // Retourne le store Zustand qui peut être utilisé avec .subscribe() ou .getState()
+  // Return the Zustand store that can be used with .subscribe() or .getState()
   return zustandTableStore(storeName);
 };

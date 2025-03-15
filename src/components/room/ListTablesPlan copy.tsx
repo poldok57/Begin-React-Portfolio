@@ -1,167 +1,162 @@
-import React, { useCallback, useEffect } from "react";
-import { Coordinate, RectPosition as Position } from "@/lib/canvas/types";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { TableData } from "./types";
 import { useZustandTableStore } from "@/lib/stores/tables";
-import { withMousePosition } from "@/components/windows/withMousePosition";
 import { RoomTable } from "./RoomTable";
 import { useRoomStore } from "@/lib/stores/room";
 import { Mode } from "./types";
 import { useTablePositioning } from "./GroundSelection/hooks/useTablePositioning";
+
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 
-const RoomTableWP = withMousePosition(RoomTable);
+// import { withMousePosition } from "@/components/windows/withMousePosition";
+
+// const RoomTableWP = withMousePosition(RoomTable);
 
 interface ListTablesProps {
-  tables: TableData[];
   btnSize: number;
   editable?: boolean;
   onClick?: ((id: string) => void) | null;
-  changeCoordinates: (
-    position: Position,
-    tableIds: string[],
-    uniqueId: string
-  ) => void;
 }
 
-export const ListTablesPlan: React.FC<ListTablesProps> = ({
-  tables,
-  btnSize,
-  editable = true,
-  onClick = null,
-}) => {
-  // const [activeTable, setActiveTable] = useState<string | null>(null);
-  const { scale, mode, tablesStoreName, alignBy } = useRoomStore();
+export const ListTablesPlan = React.memo(
+  ({ btnSize, editable = false, onClick = null }: ListTablesProps) => {
+    // const [activeTable, setActiveTable] = useState<string | null>(null);
+    const { scale, mode, tablesStoreName } = useRoomStore();
+    const [, setNeedRefresh] = useState(0);
 
-  const tableStore = useZustandTableStore(tablesStoreName);
+    // Reference to track changes in tablesStoreName
+    const prevStoreNameRef = useRef<string | null>(tablesStoreName);
 
-  const {
-    updateTable,
-    deleteTable,
-    activeTable,
-    setActiveTable,
-    getTable,
-    selectOneTable,
-  } = tableStore.getState();
+    // Get the store corresponding to the current key
+    const tableStore = useZustandTableStore(tablesStoreName);
 
-  const { handleMove } = useTablePositioning();
+    // Force a component refresh when the store changes
+    const [storeState, setStoreState] = useState(tableStore.getState());
 
-  const handleChangeSelected = useCallback(
-    (id: string, selected: boolean) => {
-      if (!editable) return;
-      updateTable(id, { selected });
-    },
-    [updateTable]
-  );
+    useEffect(() => {
+      // Check if the store key has changed
+      if (prevStoreNameRef.current !== tablesStoreName) {
+        // Update the reference
+        prevStoreNameRef.current = tablesStoreName;
+        // Update the state with the new store
+        setStoreState(tableStore.getState());
+      }
 
-  const isSuperposed = (id: string) => {
-    const tableElement = document.getElementById(id);
-    if (!tableElement) return;
-    const tableIntervalMin = {
-      width: tableElement.offsetWidth / (2 * scale),
-      height: tableElement.offsetHeight / (2 * scale),
-    };
-    const selectedTable = getTable(id);
-    if (!selectedTable) return;
-    const tablePos = selectedTable.center;
-    const otherTables = tables.filter((table) => table.id !== id);
-    const isSuperposed = otherTables.some((table) => {
-      const otherPos: Coordinate = table.center;
-      const horizontalDistance = tablePos.x - otherPos.x;
-      const verticalDistance = tablePos.y - otherPos.y;
-      const absHorizontal = Math.abs(horizontalDistance);
-      const absVertical = Math.abs(verticalDistance);
-      return (
-        absHorizontal < tableIntervalMin.width &&
-        absVertical < tableIntervalMin.height
-      );
-    });
-    if (isSuperposed) {
-      // console.log("table is superposed to another table");
-      // Move the selected table up by the minimum distance
-      const newTop = tablePos.y - tableIntervalMin.height;
-      updateTable(id, {
-        center: {
-          x: tablePos.x,
-          y: newTop,
-        },
+      // Subscribe to store changes
+      const unsubscribe = tableStore.subscribe((state) => {
+        setStoreState(state);
       });
-      return;
-    }
-  };
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
-    if (activeTable === id) {
-      setActiveTable(null);
-      updateTable(id, { selected: undefined });
-    } else {
-      // when a table is selected, verify if is is superposed to another table
-      isSuperposed(id);
+      // Unsubscribe when the component is unmounted or when the key changes
+      return () => unsubscribe();
+    }, [tableStore, tablesStoreName]);
 
-      setActiveTable(id);
-      updateTable(id, { selected: true });
-    }
-    if (!editable) {
-      // For numberinf mode
-      onClick?.(id);
-      return;
-    }
-  };
+    // Use the current state values
+    const {
+      tables,
+      activeTable,
+      updateTable,
+      deleteTable,
+      setActiveTable,
+      selectOneTable,
+    } = storeState;
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+    const { handleMove, isSuperposed } = useTablePositioning();
+
+    const handleChangeSelected = useCallback(
+      (id: string, selected: boolean) => {
+        if (!editable) return;
+        updateTable(id, { selected });
+      },
+      [updateTable, editable]
+    );
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
+      if (activeTable === id) {
         setActiveTable(null);
+        updateTable(id, { selected: undefined });
+      } else {
+        // when a table is selected, verify if is is superposed to another table
+        isSuperposed(id);
+
+        setActiveTable(id);
+        updateTable(id, { selected: true });
+      }
+      if (!editable) {
+        // For numberinf mode
+        onClick?.(id);
+        return;
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          setActiveTable(null);
+        }
+      };
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [tables, updateTable]);
+      window.addEventListener("keydown", handleKeyDown);
 
-  return (
-    <div className="relative w-full h-full">
-      {tables.map((table) => {
-        const left = (table.center?.x ?? 10) * scale;
-        const top = (table.center?.y ?? 10) * scale;
-        const isActive = table.id === activeTable;
-        const showButton = mode === Mode.create && isActive;
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [setActiveTable]);
 
-        const TableComponent =
-          isActive && mode === Mode.create ? RoomTableWP : RoomTable;
+    useEffect(() => {
+      if (tables.length === 0) {
+        setNeedRefresh((current) => current + 1);
+      }
+    }, [tables]);
 
-        return (
-          <Draggable
-            key={table.id}
-            position={{
-              x: table.center.x * scale,
-              y: table.center.y * scale,
-            }}
-            scale={scale}
-            onStop={(_e: DraggableEvent, data: DraggableData) => {
-              editable && handleMove(table.id, { left: data.x, top: data.y });
-            }}
-            disabled={!editable}
+    return tables.map((table: TableData) => {
+      const left = (table.center?.x ?? 10) * scale;
+      const top = (table.center?.y ?? 10) * scale;
+      const isActive = table.id === activeTable;
+      const showButton = mode === Mode.create && isActive;
+
+      // const TableComponent =
+      //   isActive && mode === Mode.create ? RoomTableWP : RoomTable;
+
+      return (
+        <Draggable
+          key={table.id}
+          position={{
+            x: left,
+            y: top,
+          }}
+          scale={scale}
+          onMouseDown={(e: MouseEvent) => {
+            e.stopPropagation();
+          }}
+          onStop={(e: DraggableEvent, data: DraggableData) => {
+            // console.log("onStop", e, data);
+            editable && handleMove(table.id, { left: data.x, top: data.y });
+          }}
+          // disabled={!editable}
+        >
+          <div
+            id={table.id}
+            className="absolute rounded-xl border-2 border-dashed active:border-red-500"
           >
-            <TableComponent
-              id={table.id}
+            <RoomTable
+              key={table.id}
+              // id={table.id}
               table={table}
               btnSize={btnSize}
               onDelete={deleteTable}
+              // onMove={editable ? handleMove : undefined}
               changeSelected={handleChangeSelected}
-              draggable={isActive}
-              trace={false}
-              withTitleBar={false}
-              withToggleLock={false}
-              titleText={table.tableText}
+              // draggable={isActive}
+              // withTitleBar={false}
+              // withToggleLock={false}
+              // titleText={table.tableText}
               style={{
-                position: "absolute",
-                left: `${left}px`,
-                top: `${top}px`,
-                transform:
-                  alignBy === "center" ? "translate(-50%, -50%)" : undefined,
+                //     // position: "absolute",
+                //     // left: `${left}px`,
+                //     // top: `${top}px`,
+                //
+                transform: `translate(-50%, -50%)`,
               }}
               scale={scale}
               onClick={
@@ -176,11 +171,11 @@ export const ListTablesPlan: React.FC<ListTablesProps> = ({
               updateTable={updateTable}
               selectOneTable={selectOneTable}
             />
-          </Draggable>
-        );
-      })}
-    </div>
-  );
-};
+          </div>
+        </Draggable>
+      );
+    });
+  }
+);
 
 ListTablesPlan.displayName = "ListTablesPlan";

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/atom/Button";
-import { SelectionItems } from "../SelectionItems";
+import { SelectionItems } from "./SelectionItems";
 import { TableData, TableType } from "../types";
 import { RectangleHorizontal } from "lucide-react";
 import {
@@ -17,7 +17,7 @@ import {
   DEFAULT_TABLE_SIZE,
 } from "../scripts/room-add-tables";
 import { withMousePosition } from "../../windows/withMousePosition";
-import { menuRoomVariants } from "@/styles/menu-variants";
+import { menuRoomContainer, menuRoomVariants } from "@/styles/menu-variants";
 import { TableDataState, zustandTableStore } from "@/lib/stores/tables";
 interface AddTablesMenuProps {
   handleClose: () => void;
@@ -33,7 +33,7 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
     TableType.poker
   );
 
-  const { getSelectedRect, scale, tablesStoreName, setPreSelection, alignBy } =
+  const { getSelectedRect, scale, tablesStoreName, setPreSelection } =
     useRoomStore();
 
   const storeNameRef = useRef(tablesStoreName);
@@ -56,13 +56,9 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
     selectedRect: Rectangle
   ) => {
     const offsetStart = {
-      left: selectedRect.left,
-      top: selectedRect.top,
+      left: selectedRect.left + DEFAULT_TABLE_SIZE / 2,
+      top: selectedRect.top + DEFAULT_TABLE_SIZE / 4,
     };
-    if (alignBy === "center") {
-      offsetStart.left += DEFAULT_TABLE_SIZE / 2;
-      offsetStart.top += DEFAULT_TABLE_SIZE / 2;
-    }
 
     const center: Coordinate = positionTable(offsetStart, x, y);
     const offset: Position = {
@@ -111,31 +107,27 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
     handleClose();
   };
   return (
-    <div ref={ref} className={menuRoomVariants({ width: 64 })}>
-      <div className="mb-4">
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+    <div
+      ref={ref}
+      className={menuRoomVariants({
+        width: 56,
+      })}
+    >
+      <div className="flex justify-center items-center mb-4">
+        <label
+          htmlFor="add-tables-type"
+          className="flex flex-col gap-1 mb-2 text-sm font-medium text-gray-700"
+        >
           Table Type
+          <SelectTableType
+            id="add-tables-type"
+            tableType={selectedTableType}
+            setTableType={setSelectedTableType}
+          />
         </label>
-        <SelectTableType
-          tableType={selectedTableType}
-          setTableType={setSelectedTableType}
-        />
       </div>
-      <div className="mb-4">
-        <SelectionItems
-          handleClose={handleClose}
-          setSelectedItems={setSelectedItems}
-          selectedItems={selectedItems}
-          addTables={handleAddTables}
-          Component={
-            RectangleHorizontal as React.FC<{
-              size: number;
-              className: string;
-            }>
-          }
-        />
-      </div>
-      <div className="flex justify-end space-x-2">
+
+      <div className="flex gap-2 justify-center">
         <Button onClick={handleClose} className="bg-warning">
           Cancel
         </Button>
@@ -143,6 +135,18 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
           Add Tables
         </Button>
       </div>
+      <SelectionItems
+        handleClose={handleClose}
+        setSelectedItems={setSelectedItems}
+        selectedItems={selectedItems}
+        addTables={handleAddTables}
+        Component={
+          RectangleHorizontal as React.FC<{
+            size: number;
+            className: string;
+          }>
+        }
+      />
     </div>
   );
 };
@@ -184,7 +188,7 @@ export const AddTables: React.FC<AddTablesProps> = ({
         <AddTablesMenuWP
           onClose={() => setActiveMenu(null)}
           handleClose={() => setActiveMenu(null)}
-          className="absolute z-30 translate-y-24"
+          className={menuRoomContainer()}
           withToggleLock={false}
           withTitleBar={true}
           titleText="Add New Tables"

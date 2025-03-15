@@ -9,6 +9,8 @@ export const ModifyColor = ({
   themeColors,
   className = "w-40 h-10 input input-bordered",
   onChange,
+  openedInputColor,
+  setOpenedInputColor,
 }: {
   label: string;
   name: string;
@@ -17,6 +19,8 @@ export const ModifyColor = ({
   themeColors?: string[];
   defaultValue: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  openedInputColor?: string | null;
+  setOpenedInputColor?: (value: string) => void;
 }) => {
   const [color, setColor] = useState("");
 
@@ -41,6 +45,8 @@ export const ModifyColor = ({
         themeColors={themeColors}
         onChange={handleChange}
         className={className}
+        openedInputColor={openedInputColor}
+        setOpenedInputColor={setOpenedInputColor}
       />
     </div>
   );

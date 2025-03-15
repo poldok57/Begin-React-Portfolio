@@ -9,6 +9,7 @@ import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { RoomDesignList } from "./RoomDesignList";
 import { RoomDesignMenu } from "./RoomDesignMenu";
+import { menuRoomContainer } from "@/styles/menu-variants";
 
 const RoomDesignMenuWP = withMousePosition(RoomDesignMenu);
 const RoomDesignListWP = withMousePosition(RoomDesignList);
@@ -69,13 +70,13 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
             isTouch={isTouch}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
-            className="absolute z-30 translate-y-24"
+            className={menuRoomContainer()}
             onClose={handleClose}
             withToggleLock={false}
             withTitleBar={true}
             titleText="Room design"
             titleHidden={false}
-            titleBackground={"#99ee66"}
+            titleBackground={"#ae00ff"}
             draggable={true}
             buttonIconSize={buttonIconSize}
             buttonShapeSize={buttonShapeSize}
@@ -84,12 +85,12 @@ export const RoomDesign: React.FC<RoomDesignProps> = ({
           />
           {showList && (
             <RoomDesignListWP
-              className="fixed top-5 right-6 z-30 translate-y-24"
+              className={menuRoomContainer({ alignement: "right" })}
               withToggleLock={false}
               withTitleBar={true}
               titleText="Design elements"
               titleHidden={false}
-              titleBackground={"#99ee66"}
+              titleBackground={"#ae00ff"}
               onClose={() => setShowList(false)}
             />
           )}

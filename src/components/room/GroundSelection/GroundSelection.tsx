@@ -42,12 +42,16 @@ export const GroundSelection = React.forwardRef<
   const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const temporaryCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const numberOfAlignmentsRef = useRef({ vertical: 0, horizontal: 0 });
+  const numberOfAlignmentsRef = useRef<{
+    vertical: number;
+    horizontal: number;
+  } | null>(null);
   const uniqueIdRef: React.MutableRefObject<string | null> = useRef(null);
   const [showAlignmentLines, setShowAlignmentLines] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
 
   const preSelection = getPreSelection();
+  const selectedRect = getSelectedRect();
 
   const { changeCoordinates, onSelectionStart, onSelectionEnd } =
     useTablePositioning();
@@ -70,11 +74,18 @@ export const GroundSelection = React.forwardRef<
   }, [designStoreName]);
 
   useEffect(() => {
-    // if the selection is null, we need to hide the alignment lines
-    if (getSelectedRect() === null) {
+    // if the selection is null, we need to hide the alignment lines (after delete tables)
+    const newRect = getSelectedRect();
+
+    if (newRect === null) {
       setShowAlignmentLines(false);
+      moveContainer(null);
+      selectZone(null);
+      if (groundRef.current) {
+        groundRef.current.style.cursor = "default";
+      }
     }
-  }, [getSelectedRect]);
+  }, [selectedRect]);
 
   React.useImperativeHandle(ref, () => groundRef.current as HTMLDivElement);
 
@@ -94,6 +105,16 @@ export const GroundSelection = React.forwardRef<
     }
   };
 
+  useEffect(() => {
+    if (
+      numberOfAlignmentsRef.current === null ||
+      (numberOfAlignmentsRef.current?.vertical === 0 &&
+        numberOfAlignmentsRef.current?.horizontal === 0)
+    ) {
+      setShowAlignmentLines(false);
+    }
+  }, [numberOfAlignmentsRef.current]);
+
   /**
    * Select the zone
    * @param rect - The rectangle
@@ -103,7 +124,7 @@ export const GroundSelection = React.forwardRef<
 
     if (rect === null) {
       // start a new selection
-      numberOfAlignmentsRef.current = { vertical: 0, horizontal: 0 };
+      numberOfAlignmentsRef.current = null;
       setRotation(0);
       // clearTemporaryCanvas("select Zone 1");
       setShowAlignmentLines(false);
@@ -215,6 +236,7 @@ export const GroundSelection = React.forwardRef<
     if (disableAction()) {
       return;
     }
+    // console.log("handleMouseDown", e);
 
     // Take into account window scroll to calculate mouse position
     if (handleStartAction(e, e.clientX, e.clientY)) {
@@ -326,7 +348,7 @@ export const GroundSelection = React.forwardRef<
   }, [rotation]);
 
   /**
-   * Set pre selection
+   * Set pre selection comming from AddTables
    */
   useEffect(() => {
     if (!preSelection) {
@@ -417,14 +439,15 @@ export const GroundSelection = React.forwardRef<
               <>
                 {showAlignmentLines &&
                   rotation === 0 &&
+                  numberOfAlignmentsRef.current &&
                   getSelectedRect() !== null && (
                     <AlignmentButtons
                       offset={getGroundOffset()}
                       showVerticalBtn={
-                        numberOfAlignmentsRef.current.vertical > 2
+                        numberOfAlignmentsRef.current?.vertical > 2
                       }
                       showHorizontalBtn={
-                        numberOfAlignmentsRef.current.horizontal > 2
+                        numberOfAlignmentsRef.current?.horizontal > 2
                       }
                       equalizeSpaces={equalizeSpaces}
                       getContainerRect={getContainerRect}

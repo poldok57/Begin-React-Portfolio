@@ -67,7 +67,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
   );
 
   const saveSettings = (newSettings: TableSettings | null) => {
-    console.log("newSettings:", newSettings);
+    // console.log("newSettings:", newSettings);
 
     setEditSettings(newSettings);
     setSettings(newSettings);
@@ -120,11 +120,11 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       style={style}
     >
       <div
-        onClick={(event) => {
+        onClick={(e) => {
           // Do not handle click if it occurred on a button
           if (onClick) {
-            onClick(event);
-            event.stopPropagation();
+            onClick(e);
+            e.stopPropagation();
           } else {
             changeSelected(table.id, !table.selected);
           }
@@ -142,7 +142,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       </div>
       {showButton && (
         <>
-          <div className="flex absolute left-0 -top-5 z-40 w-full">
+          <div className="flex absolute left-0 -top-4 z-40 w-full">
             {table.groupId && (
               <button
                 className="absolute -right-2 bg-red-500 btn btn-circle btn-sm"
@@ -183,7 +183,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
               </button>
             )}
           </div>
-          <div className="flex absolute left-0 bottom-3 z-40 flex-row justify-between w-full">
+          <div className="flex absolute left-0 bottom-4 z-40 flex-row justify-between w-full">
             <Dialog blur={true}>
               <DialogOpen>
                 <button className="absolute -left-2 btn btn-circle btn-sm">

@@ -31,6 +31,7 @@ export enum Menu {
   scale = "scale",
   groupCreat = "groupCreat",
   place = "place",
+  exportImport = "exportImport",
 }
 
 export enum Mode {

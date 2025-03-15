@@ -10,7 +10,7 @@ import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { ModifyColor } from "../ModifyColor";
 
 import { cn } from "@/lib/utils/cn";
-
+import { menuRoomVariants } from "@/styles/menu-variants";
 const DEFAULT_COLORS = {
   borderColor: "#333333",
   fillColor: "#aaaaaa",
@@ -43,6 +43,7 @@ export const GroupCreat = ({
   const { updateSelectedTables, countSelectedTables } = namedStore(
     (state) => state
   );
+  const [openedInputColor, setOpenedInputColor] = useState<string | null>(null);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -139,12 +140,7 @@ export const GroupCreat = ({
   const TableComponent = getTableComponent(tableType);
 
   return (
-    <div
-      className={cn("shadow-xl bg-base-100", {
-        "w-96 card": editing,
-        "w-80 rounded-lg": !editing,
-      })}
-    >
+    <div className={menuRoomVariants({ width: editing ? 96 : 80 })}>
       <div className="card-body">
         <h2 className="card-title">Group or Tournament</h2>
         <p>
@@ -258,6 +254,8 @@ export const GroupCreat = ({
                       defaultValue={DEFAULT_COLORS.borderColor}
                       // themeColors={themeColors}
                       onChange={changeColor}
+                      openedInputColor={openedInputColor}
+                      setOpenedInputColor={setOpenedInputColor}
                     />
                     <ModifyColor
                       label="Background color"
@@ -266,6 +264,8 @@ export const GroupCreat = ({
                       defaultValue={DEFAULT_COLORS.fillColor}
                       themeColors={themeColors}
                       onChange={changeColor}
+                      openedInputColor={openedInputColor}
+                      setOpenedInputColor={setOpenedInputColor}
                     />
                     <ModifyColor
                       label="Number color"
@@ -274,6 +274,8 @@ export const GroupCreat = ({
                       defaultValue={DEFAULT_COLORS.numberColor}
                       themeColors={themeColors}
                       onChange={changeColor}
+                      openedInputColor={openedInputColor}
+                      setOpenedInputColor={setOpenedInputColor}
                     />
                     <ModifyColor
                       label="Text color"
@@ -282,6 +284,8 @@ export const GroupCreat = ({
                       defaultValue={DEFAULT_COLORS.textColor}
                       themeColors={themeColors}
                       onChange={changeColor}
+                      openedInputColor={openedInputColor}
+                      setOpenedInputColor={setOpenedInputColor}
                     />
                   </>
                 )}

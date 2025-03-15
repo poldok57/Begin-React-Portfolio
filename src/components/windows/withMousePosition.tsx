@@ -347,7 +347,9 @@ export function withMousePosition<P extends object>(
           return false;
         }
 
-        // console.log(`[${WrappedComponent.name}] handleMove preventDefault`);
+        if (trace) {
+          console.log(`[${WrappedComponent.name}] handleMove preventDefault`);
+        }
         event.stopPropagation();
         event.preventDefault();
         throtteleMove(coord);
@@ -379,8 +381,7 @@ export function withMousePosition<P extends object>(
         ) {
           if (trace) {
             console.log(
-              `[${WrappedComponent.name}] startDrag: mouse is NOT inside the border of the component event:`,
-              event
+              `[${WrappedComponent.name}] startDrag: mouse is NOT inside the border of the component`
             );
           }
           return false;
@@ -391,7 +392,9 @@ export function withMousePosition<P extends object>(
           if (trace) {
             console.log(
               `[${WrappedComponent.name}] startDrag: mouse is inside the border of the component event:`,
-              event
+              event,
+              "Target type:",
+              (event.target as HTMLElement).tagName
             );
           }
 
@@ -402,8 +405,6 @@ export function withMousePosition<P extends object>(
             left: component.offsetLeft,
             top: component.offsetTop,
           });
-          // console.log("start drag");
-          event.stopPropagation();
           return true;
         }
         return false;
@@ -424,11 +425,16 @@ export function withMousePosition<P extends object>(
          * when the mouse is down on the title bar
          */
         if (isLocked) return;
-        // startDrag(event, { x: event.clientX, y: event.clientY });
+
         if (startDrag(event, { x: event.clientX, y: event.clientY })) {
-          if (trace)
-            console.log(`[${WrappedComponent.name}] mouseDown: preventDefault`);
-          event.preventDefault();
+          if (waitEvent === event.target) {
+            event.preventDefault();
+            if (trace) {
+              console.log(
+                `[${WrappedComponent.name}] mouseDown: preventDefault target: ${event.target}`
+              );
+            }
+          }
         }
       };
 

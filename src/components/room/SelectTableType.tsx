@@ -15,14 +15,17 @@ const StyledSelect = styled.select`
 interface SelectTableTypeProps {
   tableType: TableType;
   setTableType: (type: TableType) => void;
+  id?: string;
 }
 
 export const SelectTableType: React.FC<SelectTableTypeProps> = ({
   tableType,
   setTableType,
+  id,
 }) => {
   return (
     <StyledSelect
+      id={id}
       className="select select-bordered select-sm"
       value={tableType}
       onChange={(e) => setTableType(e.target.value as TableType)}

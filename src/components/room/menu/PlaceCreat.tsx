@@ -6,15 +6,20 @@ import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
 import { useState, useMemo } from "react";
 import { useRoomStore } from "@/lib/stores/room";
+import { menuRoomVariants } from "@/styles/menu-variants";
 
 interface PlaceCreatProps {
   className?: string;
   handleClose: () => void;
+  onPlaceSelected?: () => void;
+  include?: boolean;
 }
 
 export const PlaceCreat: React.FC<PlaceCreatProps> = ({
   className,
   handleClose,
+  onPlaceSelected,
+  include = false,
 }) => {
   const {
     places,
@@ -34,7 +39,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
     endDate: undefined,
     isActive: true,
   });
-  const { setStoreName } = useRoomStore();
+  const { setStoreName, resetRoom } = useRoomStore();
 
   // Function to check if an event has passed
   const isEventPassed = (place: PlaceRoom): boolean => {
@@ -126,9 +131,20 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
     });
   };
 
+  const handleDeletePlace = (placeId: string) => {
+    resetRoom(placeId);
+    deletePlace(placeId);
+    if (placeId === currentPlaceId) {
+      setCurrentPlaceId(null);
+    }
+  };
+
   const handleSelectPlace = (placeId: string) => {
     setStoreName(placeId);
     setCurrentPlaceId(placeId);
+    if (onPlaceSelected) {
+      onPlaceSelected();
+    }
     handleClose();
   };
 
@@ -143,7 +159,11 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
 
   return (
     <div
-      className={cn("p-4 rounded-lg shadow-xl bg-base-100 min-w-72", className)}
+      className={menuRoomVariants({
+        width: 72,
+        zIndex: include ? "none" : undefined,
+        className,
+      })}
     >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-nowrap">Rooms manager</h2>
@@ -336,10 +356,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
 
               <DeleteWithConfirm
                 onConfirm={() => {
-                  deletePlace(place.id);
-                  if (place.id === currentPlaceId) {
-                    setCurrentPlaceId(null);
-                  }
+                  handleDeletePlace(place.id);
                 }}
                 confirmMessage="Delete this room ?"
                 className="btn btn-sm btn-ghost text-error text-nowrap"

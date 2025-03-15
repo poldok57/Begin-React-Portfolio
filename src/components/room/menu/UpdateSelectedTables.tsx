@@ -20,7 +20,7 @@ import { useRoomStore } from "@/lib/stores/room";
 import { Mode, TableType, Menu, TableData } from "../types";
 
 import { withMousePosition } from "../../windows/withMousePosition";
-import { menuRoomVariants } from "@/styles/menu-variants";
+import { menuRoomContainer, menuRoomVariants } from "@/styles/menu-variants";
 
 interface UpdateSelectedTablesMenuProps {
   btnSize: number;
@@ -193,7 +193,7 @@ export const UpdateSelectedTables: React.FC<UpdateSelectedTablesProps> = ({
           isTouch={isTouch}
           setActiveMenu={setActiveMenu}
           onClose={() => setActiveMenu(null)}
-          className="absolute z-30 translate-y-24"
+          className={menuRoomContainer()}
           withToggleLock={false}
           withTitleBar={true}
           titleText="Update Tables"
