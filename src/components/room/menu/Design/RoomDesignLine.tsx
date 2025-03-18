@@ -8,6 +8,10 @@ import { useDrawingContext } from "@/context/DrawingContext";
 import { TbLine } from "react-icons/tb";
 import { Spline } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import {
+  designFieldsetVariants,
+  designLabelVariants,
+} from "@/styles/menu-variants";
 
 interface RoomDesignLineProps {
   buttonIconSize?: number;
@@ -38,11 +42,12 @@ export const RoomDesignLine: React.FC<RoomDesignLineProps> = ({
 
   return (
     <fieldset
-      className={cn([
-        "flex flex-col gap-2 p-2 rounded-lg border border-secondary",
-      ])}
+      className={designFieldsetVariants({
+        gap: "2",
+        flex: "col",
+      })}
     >
-      <legend>Line, curve & path</legend>
+      <legend className={designLabelVariants()}>Line, curve & path</legend>
       <div className="flex flex-row justify-between p-0 w-full">
         <Button
           className="px-3 py-1"

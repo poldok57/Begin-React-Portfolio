@@ -6,6 +6,8 @@ import { fontOptions } from "@/lib/canvas/font-family";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { cn } from "@/lib/utils/cn";
 import { inputSelectVariants } from "@/styles/input-variants";
+import { designLabelVariants } from "@/styles/menu-variants";
+import { designFieldsetVariants } from "@/styles/menu-variants";
 
 interface RoomDesignTextProps {
   isTouch?: boolean;
@@ -34,9 +36,11 @@ export const RoomDesignText: React.FC<RoomDesignTextProps> = ({
 
   return (
     <fieldset
-      className={cn("flex flex-col gap-4 p-2 border-2 border-secondary", {})}
+      className={designFieldsetVariants({
+        gap: "4",
+      })}
     >
-      <legend>Text</legend>
+      <legend className={designLabelVariants()}>Text</legend>
       <div className={cn("flex flex-row gap-3 justify-between")}>
         <label
           htmlFor="text-font-selector"

@@ -123,6 +123,7 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
       ref={ref}
       className={menuRoomVariants({
         width: 56,
+        maxHeight: "none",
       })}
     >
       <div className="flex justify-center items-center mb-4">

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useGroupStore } from "@/lib/stores/groups";
 import { TableData } from "./types";
-import { GroupCreat } from "./menu/Groups/GroupCreat";
+import { GroupSelection } from "./menu/Groups/GroupSelection";
 import { Dialog, DialogOpen, DialogContent } from "@/components/atom/Dialog";
 import { Power, PowerOff, Trash2 } from "lucide-react";
 import { Button } from "../atom/Button";
@@ -51,7 +51,7 @@ export const GroupTitle = ({
         </h3>
       </DialogOpen>
       <DialogContent position="modal">
-        <GroupCreat groupId={groupId} selectOnly={true} />
+        <GroupSelection groupId={groupId} selectOnly={true} />
       </DialogContent>
     </Dialog>
   );
@@ -246,7 +246,7 @@ const ListTablesTournament: React.FC<ListTablesTournamentProps> = ({
             </DialogOpen>
 
             <DialogContent position="modal">
-              <GroupCreat
+              <GroupSelection
                 selectOnly={true}
                 onSelect={(_) => updateWithCheckBox(false)}
               />

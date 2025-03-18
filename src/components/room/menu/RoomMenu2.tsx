@@ -18,7 +18,7 @@ import {
 import { TypeListTables, Menu, Mode } from "../types";
 import { NotepadText, Undo } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history";
-import { GroupMenu } from "./Groups/GroupMenu";
+import { GroupCreat } from "./Groups/GroupCreat";
 import { PlaceMenu } from "./Places/PlaceMenu";
 
 interface RoomMenu2Props {
@@ -222,7 +222,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                   />
                 </li>
                 <li>
-                  <GroupMenu
+                  <GroupCreat
                     className="flex flex-col p-1 w-full rounded-lg bg-secondary"
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
@@ -331,7 +331,7 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
             />
           </li>
           <li className="flex items-center pr-1 border-r-2 border-gray-400">
-            <GroupMenu
+            <GroupCreat
               className="px-2 bg-secondary"
               activeMenu={activeMenu}
               setActiveMenu={setActiveMenu}

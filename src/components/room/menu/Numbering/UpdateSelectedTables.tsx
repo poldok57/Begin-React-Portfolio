@@ -21,7 +21,7 @@ import { DeleteSelectedTables } from "../../control/DeleteSelectedTables";
 import { RotationSquad } from "../../control/RotationSquad";
 import { useRoomStore } from "@/lib/stores/room";
 import { Mode, TableType, Menu, TableData } from "../../types";
-import { GroupCreat } from "../Groups/GroupCreat";
+import { GroupSelection } from "../Groups/GroupSelection";
 import { withMousePosition } from "../../../windows/withMousePosition";
 import { menuRoomContainer, menuRoomVariants } from "@/styles/menu-variants";
 
@@ -232,7 +232,7 @@ const UpdateSelectedTablesMenu: React.FC<UpdateSelectedTablesMenuProps> = ({
                     <X size={btnSize} />
                   </button>
                 </DialogClose>
-                <GroupCreat
+                <GroupSelection
                   onSelect={handleOpenTables}
                   selectOnly={true}
                   preSelectType={tableType || TableType.poker}

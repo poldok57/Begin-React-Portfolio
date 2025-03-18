@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
-import { GroupCreat } from "../menu/Groups/GroupCreat";
+import { GroupSelection } from "../menu/Groups/GroupSelection";
 import { TableData, TableSettings, TableColors, TableType } from "../types";
 import { useGroupStore } from "@/lib/stores/groups";
 import { Trash2, PowerOff, Power, Settings, X, PencilOff } from "lucide-react";
@@ -173,7 +173,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                 </DialogOpen>
 
                 <DialogContent position="modal">
-                  <GroupCreat
+                  <GroupSelection
                     onSelect={(groupId) => setGroup(groupId)}
                     selectOnly={true}
                     preSelectType={

@@ -10,6 +10,10 @@ import { MutableRefObject } from "react";
 import { ImageUp, X } from "lucide-react";
 import { PiSelectionPlusLight } from "react-icons/pi";
 import { cn } from "@/lib/utils/cn";
+import {
+  designFieldsetVariants,
+  designLabelVariants,
+} from "@/styles/menu-variants";
 interface RoomDesignSelectProps {
   buttonIconSize?: number;
 }
@@ -71,7 +75,10 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
 
   return (
     <fieldset
-      className={cn("flex relative flex-col p-2 border-2 border-secondary", {})}
+      className={designFieldsetVariants({
+        gap: "2",
+        className: "relative",
+      })}
     >
       <div className="flex absolute right-0 -top-4 justify-end">
         <button
@@ -90,7 +97,9 @@ export const RoomDesignSelect: React.FC<RoomDesignSelectProps> = ({
           <X size={16} />
         </button>
       </div>
-      <legend className="text-sm font-bold">Files and selection</legend>
+      <legend className={designLabelVariants({ bold: true })}>
+        Files and selection
+      </legend>
       <div className="flex flex-col gap-2">
         <div className="flex flex-row gap-3">
           <div

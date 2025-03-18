@@ -1,7 +1,7 @@
 /*
  *  Template list for tables
  *  This component is used to display a list of templates for tables
- *  It is used in the GroupCreat component
+ *  It is used in the GroupSelection component
  * @author [@GuyRump](https://github.com/Poldok57) with Claude-37-Sonnet
  * @version 1.0.0
  */

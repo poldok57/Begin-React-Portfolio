@@ -18,6 +18,10 @@ import { inputRangeVariants } from "../../../../styles/input-variants";
 import { cn } from "@/lib/utils/cn";
 import { MdRadioButtonUnchecked } from "react-icons/md";
 import { useRoomStore } from "@/lib/stores/room";
+import {
+  designFieldsetVariants,
+  designLabelVariants,
+} from "@/styles/menu-variants";
 interface RoomDesignShapeProps {
   isTouch?: boolean;
   buttonShapeSize?: number;
@@ -71,8 +75,12 @@ export const RoomDesignShape: React.FC<RoomDesignShapeProps> = ({
 
   return (
     <>
-      <fieldset className="flex flex-col gap-2 p-2 rounded-lg border-2 border-secondary">
-        <legend>Square and ellipse</legend>
+      <fieldset
+        className={designFieldsetVariants({
+          gap: "2",
+        })}
+      >
+        <legend className={designLabelVariants()}>Square and ellipse</legend>
         <div className="flex flex-row gap-3">
           <div className="flex flex-row gap-2 justify-between w-full">
             <Button

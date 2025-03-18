@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 
 export const menuRoomVariants = cva(
-  "relative p-2 bg-white rounded-md select-none gap-2 flex flex-col",
+  ["relative p-2 rounded-md select-none gap-2 flex flex-col"],
   {
     variants: {
       width: {
@@ -30,15 +30,84 @@ export const menuRoomVariants = cva(
         "40": "z-40",
         "50": "z-50",
       },
+      bg: {
+        white: "bg-white",
+        base: "bg-base-100",
+        "100": "bg-gray-100",
+        "200": "bg-gray-200",
+        "300": "bg-gray-300",
+        "400": "bg-gray-400",
+        "500": "bg-gray-500",
+      },
+      maxHeight: {
+        "200": "overflow-y-auto max-h-[calc(100vh-200px)]",
+        "300": "overflow-y-auto max-h-[calc(100vh-300px)]",
+        "400": "overflow-y-auto max-h-[calc(100vh-400px)]",
+        none: "",
+      },
     },
     defaultVariants: {
       width: 44,
       shadow: "md",
       border: "gray",
       zIndex: "40",
+      bg: "white",
+      maxHeight: "200",
     },
   }
 );
+
+export const designFieldsetVariants = cva(
+  ["flex p-2 rounded-lg", "border-2 border-secondary"],
+  {
+    variants: {
+      gap: {
+        "2": "gap-2",
+        "4": "gap-4",
+        "5": "gap-5",
+        "6": "gap-6",
+        none: "",
+      },
+      flex: {
+        row: "flex-row",
+        col: "flex-col",
+        none: "",
+      },
+      justify: {
+        center: "justify-center",
+        between: "justify-between",
+        end: "justify-end",
+        start: "justify-start",
+        none: "",
+      },
+    },
+    defaultVariants: {
+      gap: "4",
+      justify: "none",
+      flex: "col",
+    },
+  }
+);
+export const designLabelVariants = cva("text-sm font-bold", {
+  variants: {
+    size: {
+      sm: "text-sm",
+    },
+    bold: {
+      true: "font-bold",
+      false: "font-normal",
+    },
+    padding: {
+      none: "",
+      "2": "p-2",
+    },
+  },
+  defaultVariants: {
+    size: "sm",
+    bold: true,
+    padding: "2",
+  },
+});
 
 export const menuRoomContainer = cva("translate-y-24", {
   variants: {

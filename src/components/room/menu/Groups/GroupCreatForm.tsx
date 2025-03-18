@@ -29,10 +29,12 @@ export const GroupCreatForm = ({
   groupId,
   setEditing,
   onSubmit,
+  btnSize = 16,
 }: {
   groupId: string | null;
   setEditing: (editing: boolean) => void;
   onSubmit?: (newGroupId: string) => void;
+  btnSize?: number;
 }) => {
   const { addGroup, updateGroup, deleteGroup, groups } = useGroupStore();
   if (groupId === "new") {
@@ -55,7 +57,6 @@ export const GroupCreatForm = ({
     return groups.find((group) => group.id === id);
   };
   const isTouch = isTouchDevice();
-  const btnSize = isTouch ? 20 : 16;
   const [tableType, setTableType] = useState<TableType>(TableType.poker);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

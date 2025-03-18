@@ -1,7 +1,10 @@
 import React from "react";
 import { useDrawingContext } from "@/context/DrawingContext";
-import { cn } from "@/lib/utils/cn";
 import { inputSelectVariants } from "@/styles/input-variants";
+import {
+  designFieldsetVariants,
+  designLabelVariants,
+} from "@/styles/menu-variants";
 
 interface RoomDesignArrowProps {
   isTouch?: boolean;
@@ -14,11 +17,14 @@ export const RoomDesignArrow: React.FC<RoomDesignArrowProps> = ({}) => {
 
   return (
     <fieldset
-      className={cn([
-        "flex flex-row gap-2 justify-between px-2 py-1 align-middle border border-secondary",
-      ])}
+      className={designFieldsetVariants({
+        gap: "2",
+        justify: "between",
+        flex: "row",
+        className: "px-2 py-1 align-middle",
+      })}
     >
-      <legend className="text-sm font-bold">Arrow</legend>
+      <legend className={designLabelVariants()}>Arrow</legend>
 
       <div className="flex flex-col gap-0 items-center">
         <label htmlFor="arrow-head-size" className="text-nowrap">

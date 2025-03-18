@@ -14,7 +14,10 @@ import {
   inputRangeVariants,
   inputSelectVariants,
 } from "../../../../styles/input-variants";
-import { cn } from "@/lib/utils/cn";
+import {
+  designFieldsetVariants,
+  designLabelVariants,
+} from "@/styles/menu-variants";
 
 interface RoomDesignBorderProps {
   isTouch?: boolean;
@@ -44,18 +47,16 @@ export const RoomDesignBorder: React.FC<RoomDesignBorderProps> = ({
     <>
       {withBorder && (isDrawingShape(mode) || isDrawingSelect(mode)) && (
         <fieldset
-          className={cn(
-            "flex flex-row gap-2 p-2 rounded-lg border-2 border-secondary",
-            {
-              "gap-4": isTouch,
-            }
-          )}
+          className={designFieldsetVariants({
+            gap: isTouch ? "4" : "2",
+            flex: "row",
+          })}
         >
-          <legend>Border</legend>
+          <legend className={designLabelVariants()}>Border</legend>
 
           <label
             htmlFor="border-color-picker"
-            className="flex flex-col gap-1 justify-center items-center text-sm"
+            className="flex flex-col gap-1 justify-center items-center text-sm font-bold"
           >
             color
             <ColorPicker
