@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { Button } from "@/components/atom/Button";
-import { useZustandTableStore } from "../../../lib/stores/tables";
+import { useZustandTableStore } from "../../../../lib/stores/tables";
 import { useRoomStore } from "@/lib/stores/room";
-import { Mode, Menu } from "../types";
+import { Mode, Menu } from "../../types";
 import { TableNumbersProcess } from "./TableNumbersProcess";
-import { withMousePosition } from "../../windows/withMousePosition";
+import { withMousePosition } from "../../../windows/withMousePosition";
 import { menuRoomContainer } from "@/styles/menu-variants";
 
 const TableNumbersProcessWP = withMousePosition(TableNumbersProcess);

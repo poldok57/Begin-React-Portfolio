@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/atom/Button";
 import { SelectionItems } from "./SelectionItems";
-import { TableData, TableType } from "../types";
+import { TableData, TableType } from "../../types";
 import { RectangleHorizontal } from "lucide-react";
 import {
   Rectangle,
@@ -9,16 +9,18 @@ import {
   Coordinate,
 } from "@/lib/canvas/types";
 import { useRoomStore } from "@/lib/stores/room";
-import { Menu, Mode } from "../types";
-import { SelectTableType } from "../SelectTableType";
+import { Menu, Mode } from "../../types";
+import { SelectTableType } from "./SelectTableType";
 import {
   positionTable,
   calculateSelectedRect,
   DEFAULT_TABLE_SIZE,
-} from "../scripts/room-add-tables";
-import { withMousePosition } from "../../windows/withMousePosition";
+} from "../../scripts/room-add-tables";
+import { withMousePosition } from "../../../windows/withMousePosition";
 import { menuRoomContainer, menuRoomVariants } from "@/styles/menu-variants";
 import { TableDataState, zustandTableStore } from "@/lib/stores/tables";
+import { usePlaceStore } from "@/lib/stores/places";
+
 interface AddTablesMenuProps {
   handleClose: () => void;
 }
@@ -32,9 +34,13 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
   const [selectedTableType, setSelectedTableType] = useState<TableType>(
     TableType.poker
   );
+  const [useAsPoker, setUseAsPoker] = useState(false);
 
   const { getSelectedRect, scale, tablesStoreName, setPreSelection } =
     useRoomStore();
+
+  const { getCurrentPlace } = usePlaceStore();
+  const currentPlace = getCurrentPlace();
 
   const storeNameRef = useRef(tablesStoreName);
   const namedStoreRef = useRef<TableDataState | null>(
@@ -76,6 +82,7 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
       rotation: 0,
       tableNumber: `tmp${tableNumber}`,
       tableText: `Table ${tableNumber}`,
+      useAsPoker: useAsPoker ?? undefined,
     } as TableData;
     namedStoreRef.current?.addTable(newTable);
   };
@@ -106,6 +113,11 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
     setPreSelection(selectedRect);
     handleClose();
   };
+
+  // Check if we should show the useAsPoker toggle
+  const shouldShowUseAsPokerToggle =
+    currentPlace?.isPokerEvent && selectedTableType !== TableType.poker;
+
   return (
     <div
       ref={ref}
@@ -126,6 +138,20 @@ const AddTablesMenu: React.FC<AddTablesMenuProps> = ({ handleClose }) => {
           />
         </label>
       </div>
+
+      {shouldShowUseAsPokerToggle && (
+        <div className="mb-4 form-control">
+          <label className="gap-2 justify-start cursor-pointer label">
+            <span className="label-text">Use as poker table?</span>
+            <input
+              type="checkbox"
+              className="toggle toggle-primary"
+              checked={useAsPoker}
+              onChange={(e) => setUseAsPoker(e.target.checked)}
+            />
+          </label>
+        </div>
+      )}
 
       <div className="flex gap-2 justify-center">
         <Button onClick={handleClose} className="bg-warning">

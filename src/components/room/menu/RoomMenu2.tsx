@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { AddTables } from "./AddTables";
-import { UpdateSelectedTables } from "./UpdateSelectedTables";
-import { RoomDesign } from "./RoomDesign";
+import { AddTables } from "./Tables/AddTables";
+import { UpdateSelectedTables } from "./Numbering/UpdateSelectedTables";
+import { RoomDesign } from "./Design/RoomDesign";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomStore } from "@/lib/stores/room";
 import { usePlaceStore } from "@/lib/stores/places";
-import { TableNumbers } from "./TableNumbers";
-import { RoomExportImport } from "./RoomExportImport";
+import { TableNumbers } from "./Numbering/TableNumbers";
+import { RoomExportImport } from "./Places/RoomExportImport";
 
 import { zustandTableStore } from "@/lib/stores/tables";
 import type { TableDataState } from "@/lib/stores/tables";
@@ -18,8 +18,8 @@ import {
 import { TypeListTables, Menu, Mode } from "../types";
 import { NotepadText, Undo } from "lucide-react";
 import { useHistoryStore } from "@/lib/stores/history";
-import { GroupMenu } from "./GroupMenu";
-import { PlaceMenu } from "./PlaceMenu";
+import { GroupMenu } from "./Groups/GroupMenu";
+import { PlaceMenu } from "./Places/PlaceMenu";
 
 interface RoomMenu2Props {
   btnSize: number;
@@ -214,6 +214,14 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                   />
                 </li>
                 <li>
+                  <RoomExportImport
+                    className="flex flex-col p-1 w-full rounded-lg bg-secondary"
+                    activeMenu={activeMenu}
+                    setActiveMenu={setActiveMenu}
+                    disabled={false}
+                  />
+                </li>
+                <li>
                   <GroupMenu
                     className="flex flex-col p-1 w-full rounded-lg bg-secondary"
                     activeMenu={activeMenu}
@@ -242,14 +250,6 @@ export const RoomMenu2: React.FC<RoomMenu2Props> = ({
                     className="flex flex-col p-1 w-full rounded-lg"
                     activeMenu={activeMenu}
                     setActiveMenu={setActiveMenu}
-                  />
-                </li>
-                <li>
-                  <RoomExportImport
-                    className="flex flex-col p-1 w-full rounded-lg bg-secondary"
-                    activeMenu={activeMenu}
-                    setActiveMenu={setActiveMenu}
-                    disabled={false}
                   />
                 </li>
               </>

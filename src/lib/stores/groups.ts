@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { GroupTable } from "@/components/room/types";
+import { generateUniqueId } from "../utils/unique-id";
 
 interface GroupState {
   groups: GroupTable[];
@@ -19,11 +20,7 @@ export const useGroupStore = create<GroupState>()(
       addGroup: (group) => {
         const newGroup = {
           ...group,
-          id:
-            group.id ||
-            `grp_${Date.now().toString().slice(5, 11)}_${Math.random()
-              .toString(36)
-              .slice(2, 11)}`,
+          id: group.id || generateUniqueId("grp"),
         };
         set((state) => ({
           groups: [...state.groups, newGroup],

@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { TableData } from "./types";
 import { useZustandTableStore } from "@/lib/stores/tables";
-import { RoomTable } from "./RoomTable";
+import { RoomTable } from "./Tables/RoomTable";
 import { useRoomStore } from "@/lib/stores/room";
 import { Mode } from "./types";
 import { useTablePositioning } from "./GroundSelection/hooks/useTablePositioning";
 
 import { withMousePosition } from "@/components/windows/withMousePosition";
+import { usePlaceStore } from "@/lib/stores/places";
 
 const RoomTableWP = withMousePosition(RoomTable);
 
@@ -21,6 +22,8 @@ export const ListTablesPlan = React.memo(
     // const [activeTable, setActiveTable] = useState<string | null>(null);
     const { scale, mode, tablesStoreName } = useRoomStore();
     const [, setNeedRefresh] = useState(0);
+    const { getCurrentPlace } = usePlaceStore();
+    const currentPlace = getCurrentPlace();
 
     // Reference to track changes in tablesStoreName
     const prevStoreNameRef = useRef<string | null>(tablesStoreName);
@@ -129,6 +132,7 @@ export const ListTablesPlan = React.memo(
           withTitleBar={false}
           withToggleLock={false}
           titleText={table.tableText}
+          isPokerEvent={currentPlace?.isPokerEvent ?? false}
           style={{
             position: "absolute",
             left: `${left}px`,

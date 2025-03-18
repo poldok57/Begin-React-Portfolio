@@ -48,6 +48,7 @@ export interface Table {
   type: TableType;
   tableNumber?: string;
   tableText?: string;
+  useAsPoker?: boolean;
 }
 
 export enum TypeListTables {
@@ -75,6 +76,7 @@ export interface TableProps extends Table, TableColors, TableSettings {
   flashDuration?: number;
   flashDelay?: number;
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 export interface TableData extends Table {
@@ -93,6 +95,8 @@ export interface GroupTable {
   tables?: Table[];
   colors: TableColors;
   settings?: TableSettings;
+  isActive?: boolean;
+  isPokerEvent?: boolean;
 }
 
 export interface PlaceRoom {
@@ -102,6 +106,7 @@ export interface PlaceRoom {
   startDate?: Date;
   endDate?: Date;
   isActive?: boolean;
+  isPokerEvent?: boolean;
 }
 export interface DesignElement {
   id: string;

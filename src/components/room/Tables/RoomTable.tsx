@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
-import { GroupCreat } from "./menu/GroupCreat";
-import { TableData, TableSettings, TableColors, TableType } from "./types";
+import { GroupCreat } from "../menu/Groups/GroupCreat";
+import { TableData, TableSettings, TableColors, TableType } from "../types";
 import { useGroupStore } from "@/lib/stores/groups";
 import { Trash2, PowerOff, Power, Settings, X, PencilOff } from "lucide-react";
 import { ShowTable, getTableComponent } from "./ShowTable";
@@ -12,7 +12,7 @@ import {
   DialogClose,
 } from "@/components/atom/Dialog";
 import { isTouchDevice } from "@/lib/utils/device";
-import { Mode } from "./types";
+import { Mode } from "../types";
 import { cn } from "@/lib/utils/cn";
 
 const withButtonStop = false;
@@ -31,6 +31,7 @@ interface RoomTableProps {
   setActiveTable: (id: string | null) => void;
   updateTable: (id: string, updatedTable: Partial<TableData>) => void;
   selectOneTable: (id: string) => void;
+  isPokerEvent: boolean;
 }
 
 export const RoomTable: React.FC<RoomTableProps> = ({
@@ -47,6 +48,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
   setActiveTable,
   updateTable,
   selectOneTable,
+  isPokerEvent,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const group = useGroupStore((state) => state.groups).find(
@@ -83,6 +85,10 @@ export const RoomTable: React.FC<RoomTableProps> = ({
 
   const handleSize = (newSize: number) => {
     updateTable(table.id, { size: newSize });
+  };
+
+  const handleUseAsPoker = (useAsPoker: boolean) => {
+    updateTable(table.id, { useAsPoker: useAsPoker ?? undefined });
   };
 
   const setTableType = (type: TableType) => {
@@ -167,7 +173,13 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                 </DialogOpen>
 
                 <DialogContent position="modal">
-                  <GroupCreat onSelect={(groupId) => setGroup(groupId)} />
+                  <GroupCreat
+                    onSelect={(groupId) => setGroup(groupId)}
+                    selectOnly={true}
+                    preSelectType={
+                      table?.useAsPoker ? TableType.poker : table.type
+                    }
+                  />
                 </DialogContent>
               </Dialog>
             )}
@@ -206,6 +218,8 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                   rotationStep={5}
                   handleRotation={handleRotation}
                   size={(table?.size ?? 200) * 2}
+                  handleUseAsPoker={handleUseAsPoker}
+                  useAsPoker={table.useAsPoker ?? false}
                   handleSize={(size) => handleSize(size / 2)}
                   withTopPanel={true}
                   tableNumber={table.tableNumber}
@@ -217,6 +231,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
                   setTableType={setTableType}
                   editing={true}
                   isTouch={isTouch}
+                  isPokerEvent={isPokerEvent}
                 />
               </DialogContent>
             </Dialog>

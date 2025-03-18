@@ -10,22 +10,20 @@ import {
   useTableTemplateStore,
   TableTemplate,
 } from "@/lib/stores/tableTemplates";
-import { getTableComponent } from "../ShowTable";
-import { Trash2, Filter, Download, Upload } from "lucide-react";
+import { getTableComponent } from "../../Tables/ShowTable";
+import { Trash2, Filter, Download, Upload, Shuffle } from "lucide-react";
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { menuRoomVariants } from "@/styles/menu-variants";
 import { isTouchDevice } from "@/lib/utils/device";
+import { TableType } from "../../types";
+import { generateMultipleColorSchemes } from "@/lib/utils/colorUtils";
 
 interface TableTemplateListProps {
   onSelectTemplate: (template: TableTemplate) => void;
-  onClose?: () => void;
-  className?: string;
 }
 
 export const TableTemplateList: React.FC<TableTemplateListProps> = ({
   onSelectTemplate,
-  onClose,
-  className,
 }) => {
   const { templates, deleteTemplate, addTemplate } = useTableTemplateStore();
   const isTouch = isTouchDevice();
@@ -53,6 +51,43 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
     });
     return Array.from(types);
   }, [templates]);
+
+  // Function to create random templates
+  const createRandomTemplates = () => {
+    try {
+      setMessage({ text: "Creating random templates...", type: "info" });
+
+      // Determine the table type to use
+      const tableType =
+        selectedType !== "all" ? (selectedType as TableType) : TableType.poker;
+
+      // Generate 6 color schemes ensuring no duplicates
+      const colorSchemes = generateMultipleColorSchemes(6);
+
+      // Create 6 random templates with unique color schemes
+      colorSchemes.forEach((colorScheme, index) => {
+        const colorName = colorScheme.colorName || `Color ${index + 1}`;
+        addTemplate({
+          name: `${colorName} ${tableType}`,
+          type: tableType as TableType,
+          colors: colorScheme,
+          settings: null,
+        });
+      });
+
+      setMessage({
+        text: "6 random templates created successfully!",
+        type: "success",
+      });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      console.error("Error creating random templates:", error);
+      setMessage({
+        text: `Error creating: ${(error as Error).message}`,
+        type: "error",
+      });
+    }
+  };
 
   // Function to export templates
   const handleExportTemplates = () => {
@@ -87,9 +122,9 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
       setMessage({ text: "Templates exported successfully", type: "success" });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error("Erreur lors de l'export des templates:", error);
+      console.error("Error exporting templates:", error);
       setMessage({
-        text: `Erreur lors de l'export: ${(error as Error).message}`,
+        text: `Error exporting: ${(error as Error).message}`,
         type: "error",
       });
     }
@@ -108,7 +143,7 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
     if (!file) return;
 
     try {
-      setMessage({ text: "Import en cours...", type: "info" });
+      setMessage({ text: "Import in progress...", type: "info" });
 
       // Read the file
       const reader = new FileReader();
@@ -169,14 +204,9 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
   };
 
   return (
-    <div className={menuRoomVariants({ width: 96, className })}>
-      <div className="flex justify-between items-center mb-4">
+    <div className={menuRoomVariants({ width: 96 })}>
+      <div className="flex flex-col gap-2 p-2 rounded-lg border-2 border-accent">
         <h2 className="text-xl font-bold">Table templates</h2>
-        {onClose && (
-          <button className="btn btn-sm btn-ghost" onClick={onClose}>
-            ×
-          </button>
-        )}
       </div>
 
       {/* Notification message */}
@@ -193,40 +223,6 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
           {message.text}
         </div>
       )}
-
-      {/* Export and import buttons */}
-      <div className="flex gap-2 justify-between mb-4">
-        <button
-          className="flex gap-1 items-center btn btn-sm btn-outline"
-          onClick={handleExportTemplates}
-          disabled={templates.length === 0}
-          title={
-            templates.length === 0
-              ? "No template to export"
-              : "Export templates"
-          }
-        >
-          <Download size={btnSize} />
-          Exporter
-        </button>
-
-        <button
-          className="flex gap-1 items-center btn btn-sm btn-outline"
-          onClick={handleImportClick}
-          title="Import templates"
-        >
-          <Upload size={btnSize} />
-          Import
-        </button>
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".json"
-          className="hidden"
-        />
-      </div>
 
       {/* Select box to filter by table type */}
       <div className="flex gap-2 items-center mb-4">
@@ -252,18 +248,18 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
             : "No template matches the selected type"}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-3 gap-3 mb-3">
           {filteredTemplates.map((template) => {
             const TableComponent = getTableComponent(template.type);
             return (
               <div
                 key={template.id}
-                className="flex relative flex-col justify-center items-center p-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md"
+                className="flex relative flex-col gap-3 justify-center items-center p-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md"
               >
-                <h3 className="mb-2 w-full text-base font-semibold text-center truncate">
+                <h3 className="w-full text-base font-semibold text-center truncate">
                   {template.name}
                 </h3>
-                <div className="flex flex-col justify-center items-center p-2 w-full bg-gray-50 rounded-md">
+                <div className="flex flex-col justify-center items-center w-full bg-gray-50 rounded-md">
                   <TableComponent
                     size={80}
                     rotation={0}
@@ -272,12 +268,11 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
                     tableText={template.name}
                     {...template.colors}
                     {...template.settings}
+                    onClick={() => onSelectTemplate(template)}
+                    style={{ cursor: "pointer" }}
                   />
-                  <span className="mt-1 text-xs text-gray-500">
-                    {template.type}
-                  </span>
                 </div>
-                <div className="flex gap-1 justify-center mt-3 w-full">
+                <div className="flex gap-1 justify-between w-full">
                   <button
                     className="flex-1 btn btn-xs btn-primary"
                     onClick={() => onSelectTemplate(template)}
@@ -286,7 +281,7 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
                   </button>
                   <DeleteWithConfirm
                     onConfirm={() => deleteTemplate(template.id)}
-                    confirmMessage="Delete this template ?"
+                    confirmMessage="Delete this template?"
                     className="btn btn-xs btn-ghost text-error"
                   >
                     <Trash2 size={btnSize - 2} />
@@ -297,6 +292,48 @@ export const TableTemplateList: React.FC<TableTemplateListProps> = ({
           })}
         </div>
       )}
+      {/* Export, import, and random templates buttons */}
+      <div className="flex gap-2 justify-between py-2 mt-2">
+        <button
+          className="flex gap-1 items-center btn btn-sm btn-outline"
+          onClick={handleExportTemplates}
+          disabled={templates.length === 0}
+          title={
+            templates.length === 0
+              ? "No template to export"
+              : "Export templates"
+          }
+        >
+          <Download size={btnSize} />
+          Export
+        </button>
+
+        <button
+          className="flex gap-1 items-center btn btn-sm btn-outline btn-success"
+          onClick={createRandomTemplates}
+          title="Create random templates"
+        >
+          <Shuffle size={btnSize} />
+          Random templates
+        </button>
+
+        <button
+          className="flex gap-1 items-center btn btn-sm btn-outline"
+          onClick={handleImportClick}
+          title="Import templates"
+        >
+          <Upload size={btnSize} />
+          Import
+        </button>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".json"
+          className="hidden"
+        />
+      </div>
     </div>
   );
 };

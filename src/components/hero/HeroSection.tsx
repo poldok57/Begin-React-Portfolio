@@ -6,8 +6,7 @@ import { ImageResizable } from "@/components/windows/ImageResizable";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 
 const eventLogger = (e: DraggableEvent, data: DraggableData) => {
-  console.log("Event: ", e);
-  console.log("Data: ", data);
+  console.log("Event: ", e, "Data: ", data);
 };
 
 const HeroPresentation = () => {
@@ -30,6 +29,7 @@ const HeroPresentation = () => {
 const HeroPresentationWP = withMousePosition(HeroPresentation);
 
 export const HeroSection = () => {
+  const testDrag = false;
   return (
     <div className="flex relative flex-col m-auto w-full max-w-4xl">
       <ImageResizable
@@ -52,24 +52,28 @@ export const HeroSection = () => {
         withTitleBar={true}
         titleText="Welcome to the React Factory !"
       />
-      <Draggable>
-        <div className="p-4 bg-red-500 h-fit w-fit">Drag me</div>
-      </Draggable>
-      <Draggable
-        onDrag={eventLogger}
-        handle=".handle"
-        defaultPosition={{ x: 0, y: 0 }}
-        // grid={[100, 100]}
-        scale={1}
-        // onStart={this.handleStart}
-        // onDrag={this.handleDrag}
-        // onStop={this.handleStop}
-      >
-        <div className="bg-red-500 border-2 border-black handle w-fit h-15">
-          <div>Drag from here</div>
-          <div>This readme is really dragging on...</div>
-        </div>
-      </Draggable>
+      {testDrag && (
+        <>
+          <Draggable>
+            <div className="p-4 bg-red-500 h-fit w-fit">Drag me</div>
+          </Draggable>
+          <Draggable
+            onDrag={eventLogger}
+            handle=".handle"
+            defaultPosition={{ x: 0, y: 0 }}
+            // grid={[100, 100]}
+            scale={1}
+            // onStart={this.handleStart}
+            // onDrag={this.handleDrag}
+            // onStop={this.handleStop}
+          >
+            <div className="bg-red-500 border-2 border-black handle w-fit h-15">
+              <div>Drag from here</div>
+              <div>This readme is really dragging on...</div>
+            </div>
+          </Draggable>
+        </>
+      )}
     </div>
   );
 };

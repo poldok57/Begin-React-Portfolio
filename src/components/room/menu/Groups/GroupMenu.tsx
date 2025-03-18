@@ -1,7 +1,7 @@
 import { Button } from "@/components/atom/Button";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { GroupCreat } from "./GroupCreat";
-import { Menu, Mode } from "../types";
+import { Menu, Mode } from "../../types";
 import { useRoomStore } from "@/lib/stores/room";
 import { menuRoomContainer } from "@/styles/menu-variants";
 
@@ -50,7 +50,7 @@ export const GroupMenu: React.FC<GroupMenuProps> = ({
           withTitleBar={true}
           titleText="Group & Tournament"
           titleHidden={false}
-          titleBackground={"#99ee66"}
+          titleBackground={"#ff5a1E"}
           draggable={true}
         />
       )}

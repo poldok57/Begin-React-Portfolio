@@ -22,6 +22,7 @@ const MemorizedRouletteTable = React.memo(
     opacity = 0.3,
     style,
     type,
+    onClick,
   }: TableProps) => {
     const strokeWidth = size * widthLine;
     const textSize = size * textRatio;
@@ -100,6 +101,7 @@ const MemorizedRouletteTable = React.memo(
         $rotation={rotation}
         $animationkey={animationkey}
         style={style}
+        onClick={onClick}
       >
         {/* Table shape */}
         <path

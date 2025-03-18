@@ -8,7 +8,7 @@ import { ToggleSwitch } from "@/components/atom/ToggleSwitch";
 
 // import { getContrastColor } from "../colors/colors";
 import { useRoomStore } from "@/lib/stores/room";
-import { Menu } from "../types";
+import { Menu } from "../../types";
 import { menuRoomVariants } from "@/styles/menu-variants";
 
 import { ColorPikerBg } from "@/components/colors/ColorPikerBg";
@@ -25,8 +25,8 @@ import { useZustandDesignStore } from "@/lib/stores/design";
 import { updateParamFromElement } from "@/lib/canvas/updateParamFromElement";
 
 import { cn } from "@/lib/utils/cn";
-import { ColorPicker } from "../../atom/ColorPicker";
-import { RangeInput } from "../../atom/RangeInput";
+import { ColorPicker } from "../../../atom/ColorPicker";
+import { RangeInput } from "../../../atom/RangeInput";
 
 import { CaseSensitive, MoveUpRight, Pencil, Search } from "lucide-react";
 import { TbTimeline } from "react-icons/tb";
@@ -42,7 +42,7 @@ import { RoomDesignSelect } from "./RoomDesignSelect";
 
 interface RoomDesignMenuProps {
   isTouch: boolean;
-  activeMenu: Menu | null;
+  activeMenu?: Menu | null;
   setActiveMenu: (menu: Menu | null) => void;
   showList: boolean;
   setShowList: (showList: boolean) => void;
@@ -52,17 +52,17 @@ interface RoomDesignMenuProps {
 
 export const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
   isTouch,
-  activeMenu,
+  // activeMenu,
   showList,
   setShowList,
   buttonIconSize = 20,
   buttonShapeSize = 16,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const [menuPosition, setMenuPosition] = useState<React.CSSProperties>({
-    top: "100%",
-  });
+  // const ref = useRef<HTMLDivElement>(null);
+  // const [menuPosition, setMenuPosition] = useState<React.CSSProperties>({
+  //   top: "100%",
+  // });
   const selectedElementRef = useRef<string | null>(null);
 
   const { needRefresh, designStoreName } = useRoomStore();
@@ -103,25 +103,25 @@ export const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
 
   useControlKeyboard(isTouch);
 
-  useEffect(() => {
-    if (activeMenu === Menu.roomDesign) {
-      if (!ref.current) return;
-      const rectDiv = ref.current.getBoundingClientRect();
-      const menu = document.getElementById("menu-design");
-      if (menu) {
-        const rect = menu.getBoundingClientRect();
-        if (rect.bottom > window.innerHeight) {
-          setMenuPosition({
-            top: "auto",
-            left: "20%",
-            bottom: `${rectDiv.top - window.innerHeight + 60}px`,
-          });
-        } else {
-          setMenuPosition({ top: "100%", bottom: "auto" });
-        }
-      }
-    }
-  }, [activeMenu]);
+  // useEffect(() => {
+  //   if (activeMenu === Menu.roomDesign) {
+  //     if (!ref.current) return;
+  //     const rectDiv = ref.current.getBoundingClientRect();
+  //     const menu = document.getElementById("menu-design");
+  //     if (menu) {
+  //       const rect = menu.getBoundingClientRect();
+  //       if (rect.bottom > window.innerHeight) {
+  //         setMenuPosition({
+  //           top: "auto",
+  //           left: "20%",
+  //           bottom: `${rectDiv.top - window.innerHeight + 60}px`,
+  //         });
+  //       } else {
+  //         setMenuPosition({ top: "100%", bottom: "auto" });
+  //       }
+  //     }
+  //   }
+  // }, [activeMenu]);
 
   // update controle panel when an element is selected
   useEffect(() => {
@@ -153,7 +153,6 @@ export const RoomDesignMenu: React.FC<RoomDesignMenuProps> = ({
       <div
         id="menu-design"
         className={menuRoomVariants({ width: 64 })}
-        style={menuPosition}
         onMouseEnter={() => addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)}
         onTouchStartCapture={() =>
           addEventAction(DRAWING_MODES.CONTROL_PANEL.IN)

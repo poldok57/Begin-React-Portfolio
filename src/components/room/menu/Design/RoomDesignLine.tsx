@@ -1,7 +1,7 @@
-import { inputRangeVariants } from "../../../styles/input-variants";
-import { RangeInput } from "../../atom/RangeInput";
-import { Button } from "../../atom/Button";
-import { ColorPicker } from "../../atom/ColorPicker";
+import { inputRangeVariants } from "../../../../styles/input-variants";
+import { RangeInput } from "../../../atom/RangeInput";
+import { Button } from "../../../atom/Button";
+import { ColorPicker } from "../../../atom/ColorPicker";
 import { DRAWING_MODES, ParamsPath } from "@/lib/canvas/canvas-defines";
 import { useDrawingContext } from "@/context/DrawingContext";
 

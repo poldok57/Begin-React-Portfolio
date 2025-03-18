@@ -427,7 +427,10 @@ export function withMousePosition<P extends object>(
         if (isLocked) return;
 
         if (startDrag(event, { x: event.clientX, y: event.clientY })) {
-          if (waitEvent === event.target) {
+          if (
+            waitEvent === event.target ||
+            (event.target as HTMLElement).tagName === "IMG"
+          ) {
             event.preventDefault();
             if (trace) {
               console.log(
@@ -520,7 +523,7 @@ export function withMousePosition<P extends object>(
       styleRef.current = { ...style };
       if (trace) {
         console.log(
-          `[${WrappedComponent.name}] useEffect =>`,
+          `[${WrappedComponent.name}] useEffect => style:`,
           styleRef.current
         );
       }

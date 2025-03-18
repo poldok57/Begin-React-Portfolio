@@ -17,7 +17,7 @@ import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { TypeListTables } from "./types";
 import { useRoomStore } from "@/lib/stores/room";
 import { usePlaceStore } from "@/lib/stores/places";
-import { PlaceCreat } from "./menu/PlaceCreat";
+import { PlaceCreat } from "./menu/Places/PlaceCreat";
 export const GROUND_ID = "back-ground";
 
 export const getGroundOffset = () => {

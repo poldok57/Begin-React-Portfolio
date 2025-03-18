@@ -2,18 +2,18 @@ import React, { useEffect, useState } from "react";
 import { MdLineWeight, MdOpacity } from "react-icons/md";
 import { CgDisplaySpacing } from "react-icons/cg";
 
-import { RangeInput } from "../../atom/RangeInput";
-import { ColorPicker } from "../../atom/ColorPicker";
+import { RangeInput } from "../../../atom/RangeInput";
+import { ColorPicker } from "../../../atom/ColorPicker";
 import { useDrawingContext } from "@/context/DrawingContext";
 
 import {
   isDrawingSelect,
   isDrawingShape,
-} from "../../../lib/canvas/canvas-defines";
+} from "../../../../lib/canvas/canvas-defines";
 import {
   inputRangeVariants,
   inputSelectVariants,
-} from "../../../styles/input-variants";
+} from "../../../../styles/input-variants";
 import { cn } from "@/lib/utils/cn";
 
 interface RoomDesignBorderProps {

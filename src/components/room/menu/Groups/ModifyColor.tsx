@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { InputColor } from "../colors/InputColor";
+import { InputColor } from "../../../colors/InputColor";
 
 export const ModifyColor = ({
   label,

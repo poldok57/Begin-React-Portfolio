@@ -22,6 +22,7 @@ const MemorizedSymetricTable = React.memo(
     opacity = 0.25,
     style,
     type,
+    onClick,
   }: TableProps) => {
     const strokeWidth = size * widthLine;
     const textSize = size * textRatio;
@@ -98,6 +99,7 @@ const MemorizedSymetricTable = React.memo(
         $rotation={rotation}
         $animationkey={animationkey}
         style={style}
+        onClick={onClick}
       >
         {type === TableType.craps && (
           <>

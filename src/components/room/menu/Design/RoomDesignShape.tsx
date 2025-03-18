@@ -4,17 +4,17 @@ import {
   AiOutlineRadiusBottomright,
 } from "react-icons/ai";
 import { WiMoonFirstQuarter } from "react-icons/wi";
-import { Button } from "../../atom/Button";
-import { RangeInput } from "../../atom/RangeInput";
-import ToggleSwitch from "../../atom/ToggleSwitch";
+import { Button } from "../../../atom/Button";
+import { RangeInput } from "../../../atom/RangeInput";
+import ToggleSwitch from "../../../atom/ToggleSwitch";
 import { useDrawingContext } from "@/context/DrawingContext";
 
 import {
   DRAWING_MODES,
   isDrawingSelect,
   isDrawingShape,
-} from "../../../lib/canvas/canvas-defines";
-import { inputRangeVariants } from "../../../styles/input-variants";
+} from "../../../../lib/canvas/canvas-defines";
+import { inputRangeVariants } from "../../../../styles/input-variants";
 import { cn } from "@/lib/utils/cn";
 import { MdRadioButtonUnchecked } from "react-icons/md";
 import { useRoomStore } from "@/lib/stores/room";

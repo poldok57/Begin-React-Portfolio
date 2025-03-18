@@ -3,8 +3,8 @@ import { Button } from "@/components/atom/Button";
 
 // import { getContrastColor } from "../colors/colors";
 import { useRoomStore } from "@/lib/stores/room";
-import { Mode, Menu } from "../types";
-import { withMousePosition } from "../../windows/withMousePosition";
+import { Mode, Menu } from "../../types";
+import { withMousePosition } from "../../../windows/withMousePosition";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { useDrawingContext } from "@/context/DrawingContext";
 import { RoomDesignList } from "./RoomDesignList";

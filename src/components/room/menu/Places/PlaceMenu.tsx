@@ -1,7 +1,7 @@
 import { Button } from "@/components/atom/Button";
 import { withMousePosition } from "@/components/windows/withMousePosition";
 import { PlaceCreat } from "./PlaceCreat";
-import { Menu } from "../types";
+import { Menu } from "../../types";
 import { useRoomStore } from "@/lib/stores/room";
 import { menuRoomContainer } from "@/styles/menu-variants";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -83,7 +83,7 @@ export const PlaceMenu: React.FC<PlaceMenuProps> = ({
         !isInitialRender.current &&
         wasPlaceExplicitlySelected
       ) {
-        console.log("Opening AddTables menu - no tables found");
+        // console.log("Opening AddTables menu - no tables found");
         // Automatically open the AddTables menu
         setActiveMenu(Menu.addTable);
         setMode(defaultMode);

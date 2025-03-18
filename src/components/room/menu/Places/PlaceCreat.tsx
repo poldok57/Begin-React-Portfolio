@@ -1,7 +1,17 @@
 import { usePlaceStore } from "@/lib/stores/places";
 import { PlaceRoom } from "@/components/room/types";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2, X, Archive, RotateCcw } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Archive,
+  RotateCcw,
+  // Trophy,
+} from "lucide-react";
+import { GiPokerHand } from "react-icons/gi";
+
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
 import { cn } from "@/lib/utils/cn";
 import { useState, useMemo } from "react";
@@ -38,6 +48,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
     startDate: undefined,
     endDate: undefined,
     isActive: true,
+    isPokerEvent: false,
   });
   const { setStoreName, resetRoom } = useRoomStore();
 
@@ -85,6 +96,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
       startDate: undefined,
       endDate: undefined,
       isActive: true,
+      isPokerEvent: false,
     });
   };
 
@@ -98,6 +110,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
       startDate: place.startDate,
       endDate: place.endDate,
       isActive: place.isActive,
+      isPokerEvent: place.isPokerEvent,
     });
   };
 
@@ -116,6 +129,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
       startDate: undefined,
       endDate: undefined,
       isActive: true,
+      isPokerEvent: false,
     });
   };
 
@@ -128,6 +142,7 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
       startDate: undefined,
       endDate: undefined,
       isActive: true,
+      isPokerEvent: false,
     });
   };
 
@@ -282,6 +297,24 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
 
           <div className="form-control">
             <label className="cursor-pointer label">
+              <span className="label-text">Poker Event</span>
+              <input
+                type="checkbox"
+                className={`toggle ${
+                  formData.isPokerEvent
+                    ? "toggle-primary border-2 border-primary"
+                    : "bg-gray-400 border-2 border-gray-400"
+                }`}
+                checked={formData.isPokerEvent}
+                onChange={(e) =>
+                  setFormData({ ...formData, isPokerEvent: e.target.checked })
+                }
+              />
+            </label>
+          </div>
+
+          <div className="form-control">
+            <label className="cursor-pointer label">
               <span className="label-text">Active</span>
               <input
                 type="checkbox"
@@ -328,7 +361,14 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
             )}
           >
             <div className="flex-1" onClick={() => handleSelectPlace(place.id)}>
-              <h3 className="font-semibold text-nowrap">{place.name}</h3>
+              <div className="flex gap-2 items-center">
+                <h3 className="font-semibold text-nowrap">{place.name}</h3>
+                {place.isPokerEvent && (
+                  <span title="Poker Event">
+                    <GiPokerHand size={16} className="text-primary" />
+                  </span>
+                )}
+              </div>
               {place.title && (
                 <div className="text-sm italic text-gray-500">
                   {place.title}

@@ -6,7 +6,7 @@
  */
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/atom/Button";
-import { Menu } from "../types";
+import { Menu } from "../../types";
 import { useRoomStore } from "@/lib/stores/room";
 import { usePlaceStore } from "@/lib/stores/places";
 import {

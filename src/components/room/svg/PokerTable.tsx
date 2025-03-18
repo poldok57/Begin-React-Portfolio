@@ -20,6 +20,7 @@ const MemorizedPokerTable = React.memo(
     textRatio = 0.3,
     opacity = 0.4,
     style,
+    onClick,
   }: TableProps) => {
     const strokeWidth = size * widthLine;
     const textSize = size * textRatio;
@@ -77,6 +78,7 @@ const MemorizedPokerTable = React.memo(
         $rotation={rotation}
         $animationkey={animationkey}
         style={style}
+        onClick={onClick}
       >
         <path
           d={

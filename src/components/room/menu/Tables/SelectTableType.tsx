@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-import { TableType } from "./types";
+import { TableType } from "../../types";
 
 const StyledSelect = styled.select`
   position: relative;

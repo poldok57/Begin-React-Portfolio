@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { AddTables } from "./AddTables";
-import { UpdateSelectedTables } from "./UpdateSelectedTables";
-import { RoomDesign } from "./RoomDesign";
+import { AddTables } from "./Tables/AddTables";
+import { UpdateSelectedTables } from "./Numbering/UpdateSelectedTables";
+import { RoomDesign } from "./Design/RoomDesign";
 import { RangeInput } from "@/components/atom/RangeInput";
 import { isTouchDevice } from "@/lib/utils/device";
 import { useRoomStore } from "@/lib/stores/room";
 import { DesignType, Menu } from "@/components/room/types";
-import { TableNumbers } from "./TableNumbers";
+import { TableNumbers } from "./Numbering/TableNumbers";
 
 import {
   showValidationFrame,

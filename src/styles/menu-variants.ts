@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 
 export const menuRoomVariants = cva(
-  "relative p-2 bg-white rounded-md select-none",
+  "relative p-2 bg-white rounded-md select-none gap-2 flex flex-col",
   {
     variants: {
       width: {
