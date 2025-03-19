@@ -7,7 +7,6 @@ import { useDrawingContext } from "@/context/DrawingContext";
 
 import { TbLine } from "react-icons/tb";
 import { Spline } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
 import {
   designFieldsetVariants,
   designLabelVariants,
