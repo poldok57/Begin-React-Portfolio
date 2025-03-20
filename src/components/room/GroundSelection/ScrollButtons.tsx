@@ -55,6 +55,8 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
   const scrollAmount = 100;
   let hideTimeout: NodeJS.Timeout;
 
+  const zIndex = "z-20";
+
   // components stores
   const { designStoreName, tablesStoreName } = useRoomStore();
   const designStoreRef = useRef(zustandDesignStore(designStoreName));
@@ -418,7 +420,10 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
         <>
           <button
             className={cn(
-              "fixed top-4 left-1/2 z-50 p-2 rounded-full -translate-x-1/2 bg-blue-500/50 hover:bg-blue-500",
+              [
+                "fixed top-4 left-1/2 p-2 rounded-full -translate-x-1/2 bg-blue-500/50 hover:bg-blue-500",
+                zIndex,
+              ],
               { hidden: !canScroll.up }
             )}
             onTouchStart={(e) => handleTouch(e, "up")}
@@ -427,7 +432,10 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
           </button>
           <button
             className={cn(
-              "fixed bottom-4 left-1/2 z-50 p-2 rounded-full -translate-x-1/2 bg-blue-500/50 hover:bg-blue-500",
+              [
+                "fixed bottom-4 left-1/2 p-2 rounded-full -translate-x-1/2 bg-blue-500/50 hover:bg-blue-500",
+                zIndex,
+              ],
               { hidden: !canScroll.down }
             )}
             onTouchStart={(e) => handleTouch(e, "down")}
@@ -436,7 +444,10 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
           </button>
           <button
             className={cn(
-              "fixed left-4 top-1/2 z-50 p-2 rounded-full -translate-y-1/2 bg-blue-500/50 hover:bg-blue-500",
+              [
+                "fixed left-4 top-1/2 p-2 rounded-full -translate-y-1/2 bg-blue-500/50 hover:bg-blue-500",
+                zIndex,
+              ],
               { hidden: !canScroll.left }
             )}
             onTouchStart={(e) => handleTouch(e, "left")}
@@ -445,7 +456,10 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
           </button>
           <button
             className={cn(
-              "fixed right-4 top-1/2 z-50 p-2 rounded-full -translate-y-1/2 bg-blue-500/50 hover:bg-blue-500",
+              [
+                "fixed right-4 top-1/2 p-2 rounded-full -translate-y-1/2 bg-blue-500/50 hover:bg-blue-500",
+                zIndex,
+              ],
               { hidden: !canScroll.right }
             )}
             onTouchStart={(e) => handleTouch(e, "right")}
@@ -457,26 +471,34 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
 
       {/* Zoom buttons */}
       <button
-        className="fixed right-8 bottom-8 z-50 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500"
-        onTouchStart={(e) => handleZoom(e, true)}
+        className={cn([
+          "fixed right-8 bottom-8 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500",
+          zIndex,
+        ])}
         onClick={(e) => handleZoom(e, true)}
       >
         <ZoomIn className="text-white" />
       </button>
       <button
-        className="fixed bottom-8 right-24 z-50 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500"
-        onTouchStart={(e) => handleZoom(e, false)}
+        className={cn([
+          "fixed bottom-8 right-24 p-2 rounded-full bg-blue-500/50 hover:bg-blue-500",
+          zIndex,
+        ])}
         onClick={(e) => handleZoom(e, false)}
       >
         <ZoomOut className="text-white" />
       </button>
 
       {/* Buttons for moving all elements */}
-      <div className="flex fixed right-8 bottom-24 z-50 flex-col items-center p-1 bg-cyan-300 bg-opacity-30 rounded-xl border-2 border-cyan-500">
+      <div
+        className={cn([
+          "flex fixed right-8 bottom-24 flex-col items-center p-1 bg-cyan-300 bg-opacity-30 rounded-xl border-2 border-cyan-500",
+          zIndex,
+        ])}
+      >
         {/* Up button */}
         <button
           className="items-center p-1 mb-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"
-          onTouchStart={() => moveAllElements("up")}
           onClick={() => moveAllElements("up")}
         >
           <ArrowUp className="text-white" />
@@ -486,14 +508,12 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
         <div className="flex justify-between w-24">
           <button
             className="p-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"
-            onTouchStart={() => moveAllElements("left")}
             onClick={() => moveAllElements("left")}
           >
             <ArrowLeft className="text-white" />
           </button>
           <button
             className="p-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"
-            onTouchStart={() => moveAllElements("right")}
             onClick={() => moveAllElements("right")}
           >
             <ArrowRight className="text-white" />
@@ -503,7 +523,6 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
         {/* Down button */}
         <button
           className="p-1 mt-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"
-          onTouchStart={() => moveAllElements("down")}
           onClick={() => moveAllElements("down")}
         >
           <ArrowDown className="text-white" />
@@ -512,14 +531,12 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({
         <div className="flex justify-between w-24">
           <button
             className="p-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"
-            onTouchStart={() => rotateAllElements("left")}
             onClick={() => rotateAllElements("left")}
           >
             <RotateCcwSquare className="text-white" />
           </button>
           <button
             className="p-1 btn-sm btn-circle bg-blue-500/50 hover:bg-blue-500"
-            onTouchStart={() => rotateAllElements("right")}
             onClick={() => rotateAllElements("right")}
           >
             <RotateCwSquare className="text-white" />

@@ -49,14 +49,13 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected isClosed: boolean = false;
   protected maxLineWidth: number = 0;
   protected canvasImage: HTMLCanvasElement | null = null;
-  protected hasChanged = {
-    position: false,
-    draw: false,
-  };
+
   protected realSize: Area | null = null;
   protected trueSize: boolean = true;
   protected arrowArea: Area | null = null;
+  protected positionChanged: boolean = false;
 
+  private areaHasChanged: boolean = false;
   private canModifyOnRotation: boolean = false;
 
   constructor() {
@@ -104,7 +103,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         this.data.path = { ...data.path };
       }
     }
-    this.hasChanged = { position: false, draw: false };
+    this.areaHasChanged = false;
     this.canvasImage = null;
     if (this.isPathClosed()) {
       this.isClosed = true;
@@ -120,11 +119,10 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     this.data.general = { ...this.data.general, ...params };
     if (this.data.general.lineWidth !== previousParams.lineWidth) {
       this.maxLineWidth = this.data.general.lineWidth;
-      this.hasChanged.draw = true;
-      this.hasChanged.position = true;
+      this.areaHasChanged = true;
     }
     if (this.data.general.filled !== previousParams.filled) {
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
     }
     // Check if any property of data.general has changed
     if (
@@ -132,12 +130,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       previousParams.lineWidth !== this.data.general.lineWidth ||
       previousParams.opacity !== this.data.general.opacity
     ) {
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
     }
-  }
-
-  setHasChanged(type: "position" | "draw", hasChanged: boolean = true) {
-    this.hasChanged[type] = hasChanged;
   }
 
   setErase(erase: boolean) {
@@ -199,7 +193,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
     // if elarge
     if (previousSize.x !== area.x || previousSize.y !== area.y) {
-      this.hasChanged.position = true;
       const offset = {
         x: previousSize.x - area.x,
         y: previousSize.y - area.y,
@@ -207,6 +200,12 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       area.width += offset.x;
       area.height += offset.y;
       this.calculateRelativePositions(offset);
+      this.setArea(area);
+    } else if (
+      previousSize.width !== area.width ||
+      previousSize.height !== area.height
+    ) {
+      this.areaHasChanged = true;
       this.setArea(area);
     }
   }
@@ -291,7 +290,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     }
     this.angleFound = -1;
 
-    this.hasChanged.draw = true;
+    this.areaHasChanged = true;
     return true;
   }
 
@@ -359,7 +358,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
       this.angleFound = -1;
       this.coordFound = -1;
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
       this.isClosed = false;
       return true;
     }
@@ -391,7 +390,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         line.y += offset.y;
       }
     });
-    this.hasChanged.position = false;
   }
 
   /**
@@ -519,20 +517,17 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
 
     // check if the position has changed
     if (previousSize.x !== x || previousSize.y !== y) {
-      this.hasChanged.position = true;
       this.calculateRelativePositions({
         x: previousSize.x - x,
         y: previousSize.y - y,
       });
-      this.hasChanged.draw = true;
     }
     // check if the draw has changed
     if (previousSize.width !== width || previousSize.height !== height) {
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
     }
 
     this.realSize = { x, y, width, height };
-    // console.log("get-Area", this.realSize);
     return this.realSize;
   }
 
@@ -717,7 +712,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         const lastItem = this.getLastItem() as LinePath;
         lastItem.end = { ...newCoord };
       }
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
     }
     // clic on an angle
     else if (
@@ -731,7 +726,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         (line as Coordinate).x = newCoord.x;
         (line as Coordinate).y = newCoord.y;
       }
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
     }
     // clic on a coord (for arcs)
     else if (this.coordFound > 0 && this.coordFound <= this.data.items.length) {
@@ -739,9 +734,9 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       if ("coordinates" in line) {
         line.coordinates = newCoord;
       }
-      this.hasChanged.draw = true;
+      this.areaHasChanged = true;
     }
-    return this.hasChanged.draw;
+    return this.areaHasChanged;
   }
 
   deboucedMoveAngle = debounceThrottle(
@@ -901,12 +896,8 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     ) {
       this.trueSize = true;
     }
-    if (this.hasChanged.position) {
-      const newArea = this.calculateArea();
-      this.setArea(newArea);
-    }
     // draw the path in a temporyCanvas
-    if (this.hasChanged.draw || !this.canvasImage) {
+    if (this.areaHasChanged || !this.canvasImage) {
       if (!this.canvasImage) {
         this.canvasImage = document.createElement("canvas");
       }
@@ -928,7 +919,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
         if (!this.drawLines(ctxTemp)) {
           return false;
         }
-        this.hasChanged.draw = false;
+        this.areaHasChanged = false;
       }
     }
 

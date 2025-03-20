@@ -148,7 +148,7 @@ export const RoomTable: React.FC<RoomTableProps> = ({
       </div>
       {showButton && (
         <>
-          <div className="flex absolute left-0 -top-4 z-40 w-full">
+          <div className="flex absolute left-0 -top-4 z-[18] w-full">
             {table.groupId && (
               <button
                 className="absolute -right-2 bg-red-500 btn btn-circle btn-sm"

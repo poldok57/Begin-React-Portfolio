@@ -32,6 +32,7 @@ export class CanvasFreeCurve extends CanvasPoints {
     general: ParamsGeneral;
   }) {
     this.data.id = "";
+    this.data.rotation = 0;
     this.data.items = [];
 
     this.setParamsGeneral({
