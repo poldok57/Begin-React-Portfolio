@@ -30,11 +30,10 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   closeColorPicker,
   withTransparent = true,
 }) => {
-  const pickerRef = useRef<HTMLDialogElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
   const [showSwatches, setShowSwatches] = useState(false);
 
   const handleClose = () => {
-    pickerRef.current?.close();
     closeColorPicker();
   };
   const windowHeight = window.innerHeight;
@@ -59,8 +58,6 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   }, [closeColorPicker, withCloseBtn]);
 
   useEffect(() => {
-    if (!pickerRef.current) return;
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleClose();
@@ -75,14 +72,13 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
   }, []);
 
   return (
-    <dialog
-      open={true}
+    <div
       className={cn(
-        "flex flex-col gap-2 items-center p-2 rounded-lg border shadow-xl z-[100] w-fit min-w-72 bg-base-200 border-base-300",
-        "translate-x-3/4 -translate-y-1/2"
+        "flex flex-col gap-2 items-center p-2 rounded-lg border shadow-xl z-[9999] w-fit min-w-72 bg-base-200 border-base-300",
+        "color-picker-popup"
       )}
       ref={pickerRef}
-      onMouseOver={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
       <div className="flex flex-row gap-2 justify-between items-center w-full">
         <div className="flex flex-grow justify-center">
@@ -182,6 +178,6 @@ export const DisplayColorPicker: React.FC<DisplayColorPickerProps> = ({
           />
         </>
       )}
-    </dialog>
+    </div>
   );
 };

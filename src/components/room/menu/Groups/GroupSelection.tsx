@@ -228,6 +228,7 @@ export const GroupSelection = ({
       id="menu-creat"
       className={menuRoomVariants({
         width: editing ? 96 : 80,
+        maxHeight: "none",
       })}
     >
       {selectOnly ? (
@@ -239,56 +240,62 @@ export const GroupSelection = ({
           </h2>
 
           {/* Filtres */}
-          <GroupCreatFilter
-            activeFilter={activeFilter}
-            setActiveFilter={setActiveFilter}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            uniqueTableTypes={uniqueTableTypes}
-            btnSize={btnSize}
-          />
+          {!editing && (
+            <GroupCreatFilter
+              activeFilter={activeFilter}
+              setActiveFilter={setActiveFilter}
+              typeFilter={typeFilter}
+              setTypeFilter={setTypeFilter}
+              uniqueTableTypes={uniqueTableTypes}
+              btnSize={btnSize}
+            />
+          )}
         </>
       )}
-
-      <p>
-        <select
-          className={cn("w-full select select-primary", {
-            "h-32": selectOnly && preSelectType && filteredGroups.length > 3,
-            "h-fit": selectOnly && preSelectType && filteredGroups.length <= 3,
-          })}
-          onChange={(e) => {
-            selectGroup(e.target.value);
-          }}
-          value={currentId ?? "-"}
-          size={
-            selectOnly && preSelectType ? Math.min(3, filteredGroups.length) : 1
-          }
-        >
-          {(filteredGroups.length === 0 || !selectOnly) && (
-            <option value="-" disabled>
-              Choose a group
-            </option>
-          )}
-          {!selectOnly && <option value="new">New group</option>}
-          {filteredGroups.map((group: GroupTable) => (
-            <option
-              value={group.id}
-              key={group.id}
-              onClick={() => {
-                selectGroup(group.id);
-              }}
-              style={{
-                fontSize: "1.2rem",
-                backgroundColor: group.colors.fillColor,
-                color: group.colors.textColor,
-                cursor: "pointer",
-              }}
-            >
-              {group.title} {group.isActive === false && "(inactif)"}
-            </option>
-          ))}
-        </select>
-      </p>
+      {!editing && (
+        <p>
+          <select
+            className={cn("w-full select select-primary", {
+              "h-32": selectOnly && preSelectType && filteredGroups.length > 3,
+              "h-fit":
+                selectOnly && preSelectType && filteredGroups.length <= 3,
+            })}
+            onChange={(e) => {
+              selectGroup(e.target.value);
+            }}
+            value={currentId ?? "-"}
+            size={
+              selectOnly && preSelectType
+                ? Math.min(3, filteredGroups.length)
+                : 1
+            }
+          >
+            {(filteredGroups.length === 0 || !selectOnly) && (
+              <option value="-" disabled>
+                Choose a group
+              </option>
+            )}
+            {!selectOnly && <option value="new">New group</option>}
+            {filteredGroups.map((group: GroupTable) => (
+              <option
+                value={group.id}
+                key={group.id}
+                onClick={() => {
+                  selectGroup(group.id);
+                }}
+                style={{
+                  fontSize: "1.2rem",
+                  backgroundColor: group.colors.fillColor,
+                  color: group.colors.textColor,
+                  cursor: "pointer",
+                }}
+              >
+                {group.title} {group.isActive === false && "(inactif)"}
+              </option>
+            ))}
+          </select>
+        </p>
+      )}
 
       {!editing ? (
         <div className="flex relative flex-col justify-center items-center p-2 mx-auto mt-1 w-full rounded-lg border border-opacity-50 h-fit border-secondary">

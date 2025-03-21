@@ -227,12 +227,15 @@ export const GroupCreatForm = ({
           bgTable="rgb(210,210,210, 0.5)"
         />
       </div>
-      <div className="p-2 rounded-lg border shadow-lg border-primary bg-paper">
-        <form className="space-y-1 min-w-72" onSubmit={handleSubmit}>
+      <div className="overflow-visible p-2 rounded-lg border shadow-lg border-primary bg-paper">
+        <form
+          className="overflow-visible space-y-1 min-w-72"
+          onSubmit={handleSubmit}
+        >
           <input type="hidden" name="currentId" value={currentId ?? ""} />
           <div className="form-control">
             {/* Buttons for templates */}
-            <div className="flex gap-2 justify-center mt-1">
+            <div className="flex overflow-visible gap-2 justify-center mt-1">
               {!showTemplateList && (
                 <button
                   type="button"

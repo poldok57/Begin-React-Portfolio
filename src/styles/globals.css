@@ -26,3 +26,60 @@ a {
 input {
   background-color: rgb(var(--color-paper));
 }
+
+/* Styles pour le conteneur du menu avec color pickers */
+.color-picker-container {
+  overflow-y: auto !important;
+  position: relative !important;
+}
+
+/* Conteneur pour l'input de couleur avec son picker */
+.color-input-container {
+  position: relative;
+}
+
+/* Wrapper pour le color picker */
+.color-picker-wrapper {
+  position: absolute;
+  z-index: 9999;
+  left: 100%;
+  margin-left: 20px; /* Espace entre le menu et le picker */
+}
+
+/* Position du picker quand on est proche du bord droit */
+.color-picker-left {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 20px;
+}
+
+/* Media query pour gérer les écrans plus petits */
+@media (max-width: 1200px) {
+  .color-picker-wrapper {
+    left: auto;
+    right: 100%;
+    margin-left: 0;
+    margin-right: 20px;
+  }
+}
+
+/* Positionnement vertical du color picker selon sa position sur l'écran */
+.color-picker-top {
+  top: 0; /* Aligner en haut quand le bouton est en haut de l'écran */
+}
+
+.color-picker-middle {
+  top: -150px; /* Centré verticalement (approx. la moitié de la hauteur du picker) */
+}
+
+.color-picker-bottom {
+  bottom: 0; /* Aligner en bas quand le bouton est en bas de l'écran */
+}
+
+/* Style du picker lui-même */
+.color-picker-popup {
+  z-index: 9999 !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+}

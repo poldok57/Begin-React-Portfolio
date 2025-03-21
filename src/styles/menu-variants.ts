@@ -43,6 +43,8 @@ export const menuRoomVariants = cva(
         "200": "overflow-y-auto max-h-[calc(100vh-200px)]",
         "300": "overflow-y-auto max-h-[calc(100vh-300px)]",
         "400": "overflow-y-auto max-h-[calc(100vh-400px)]",
+        colorpicker:
+          "overflow-y-auto max-h-[calc(100vh-200px)] overflow-x-visible",
         none: "",
       },
     },
