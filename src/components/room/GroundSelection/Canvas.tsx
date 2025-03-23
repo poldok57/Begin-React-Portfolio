@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Mode } from "../types";
 
-import { getCanvasSize } from "../scripts/canvas-size";
-import { useRoomStore } from "@/lib/stores/room";
 import { useZustandDesignStore } from "@/lib/stores/design";
+import { useRoomStore } from "@/lib/stores/room";
+import { getCanvasSize } from "../scripts/canvas-size";
 // import { cn } from "@/lib/utils/cn";
 import { useCanvas } from "@/components/draw/hooks/useCanvas";
 import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
@@ -53,7 +53,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     if (tempCanvas) {
       temporaryCanvasRef.current = tempCanvas;
       setCtxTemporary(temporaryCanvasRef.current.getContext("2d"));
-      if (mode === Mode.numbering) {
+      if (mode === Mode.numbering || mode === Mode.draw) {
         tempCanvas.style.zIndex = "15";
       } else {
         tempCanvas.style.zIndex = "0";
