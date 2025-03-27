@@ -1,23 +1,21 @@
-import React, { useEffect, useRef, useState } from "react";
+import { DrawingProvider, useDrawingContext } from "@/context/DrawingContext";
+import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
+import { usePlaceStore } from "@/lib/stores/places";
+import { useRoomStore } from "@/lib/stores/room";
+import { isTouchDevice } from "@/lib/utils/device";
+import { addEscapeKeyListener } from "@/lib/utils/keyboard";
+import { useEffect, useRef, useState } from "react";
 import {
   useZustandTableStore,
   zustandTableStore,
 } from "../../lib/stores/tables";
-import { isTouchDevice } from "@/lib/utils/device";
-import { addEscapeKeyListener } from "@/lib/utils/keyboard";
-import { RoomMenu2 } from "./menu/RoomMenu2";
 import { GroundSelection } from "./GroundSelection/GroundSelection";
 import { ListTablesPlan } from "./ListTablesPlan";
 import { ListTablesText } from "./ListTablesText";
 import { ValidationFrame } from "./ValidationFrame";
-import { Mode } from "./types";
-import { DrawingProvider } from "@/context/DrawingContext";
-import { useDrawingContext } from "@/context/DrawingContext";
-import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
-import { TypeListTables } from "./types";
-import { useRoomStore } from "@/lib/stores/room";
-import { usePlaceStore } from "@/lib/stores/places";
 import { PlaceCreat } from "./menu/Places/PlaceCreat";
+import { RoomMenu2 } from "./menu/RoomMenu2";
+import { Mode, TypeListTables } from "./types";
 export const GROUND_ID = "back-ground";
 
 export const getGroundOffset = () => {
@@ -52,10 +50,12 @@ export const RoomCreatTools = () => {
     removeSelectedTableId,
     setPreSelection,
     setStoreName,
+    loadScaleForCurrentPlace,
   } = useRoomStore();
 
   const namedStore = useZustandTableStore(tablesStoreName);
   const namedStoreRef = useRef(namedStore.getState());
+
   const { getCurrentPlaceId } = usePlaceStore();
   const placeId = getCurrentPlaceId();
 
@@ -65,8 +65,10 @@ export const RoomCreatTools = () => {
     const placeId = getCurrentPlaceId();
     if (placeId) {
       setStoreName(placeId);
+      // Make sure to load the correct scale when changing place
+      loadScaleForCurrentPlace();
     }
-  }, [getCurrentPlaceId]);
+  }, [getCurrentPlaceId, setStoreName, loadScaleForCurrentPlace]);
 
   const { setDrawingMode } = useDrawingContext();
 

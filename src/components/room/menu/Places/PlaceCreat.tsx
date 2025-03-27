@@ -1,22 +1,14 @@
-import { usePlaceStore } from "@/lib/stores/places";
 import { PlaceRoom } from "@/components/room/types";
+import { usePlaceStore } from "@/lib/stores/places";
 import { format } from "date-fns";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  Archive,
-  RotateCcw,
-  // Trophy,
-} from "lucide-react";
+import { Archive, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { GiPokerHand } from "react-icons/gi";
 
 import { DeleteWithConfirm } from "@/components/atom/DeleteWithConfirm";
-import { cn } from "@/lib/utils/cn";
-import { useState, useMemo } from "react";
 import { useRoomStore } from "@/lib/stores/room";
+import { cn } from "@/lib/utils/cn";
 import { menuRoomVariants } from "@/styles/menu-variants";
+import { useMemo, useState } from "react";
 
 interface PlaceCreatProps {
   className?: string;
@@ -52,13 +44,24 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
   });
   const { setStoreName, resetRoom } = useRoomStore();
 
+  // Add 7 hours to the current date to avoid archiving events that end after midnight
+  const today = new Date();
+  // if hour is less than 7, delete one day
+  if (today.getHours() < 7) {
+    today.setDate(today.getDate() - 1);
+  }
+  // around day at 00:00
+  today.setHours(0, 0, 0, 0);
+
   // Function to check if an event has passed
   const isEventPassed = (place: PlaceRoom): boolean => {
     if (!place.endDate) return false;
-    // Add 7 hours to the current date to avoid archiving events that end after midnight
-    const today = new Date();
-    today.setHours(today.getHours() + 7);
-    return new Date(place.endDate) < today;
+
+    if (new Date(place.endDate) < today) {
+      // console.log("place ", place.name, " end date", place.endDate);
+      return true;
+    }
+    return false;
   };
 
   const totalPlaces = places.length;
@@ -398,7 +401,9 @@ export const PlaceCreat: React.FC<PlaceCreatProps> = ({
                 onConfirm={() => {
                   handleDeletePlace(place.id);
                 }}
+                position="left"
                 confirmMessage="Delete this room ?"
+                confirmClassName="btn btn-sm btn-warning text-warning-content text-nowrap"
                 className="btn btn-sm btn-ghost text-error text-nowrap"
               >
                 <Trash2 size={16} />

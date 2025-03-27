@@ -3,30 +3,30 @@
  * @description
  * this interface is used to manage data of a shape or image to draw on a canvas
  */
-import { Area, Coordinate } from "./types";
 import {
   AllParams,
+  DRAWING_MODES,
+  isDrawingShape,
   ParamsGeneral,
   ParamsShape,
   ParamsText,
   ShapeDefinition,
-  DRAWING_MODES,
-  isDrawingShape,
 } from "./canvas-defines";
+import { Area, Coordinate } from "./types";
 
+import { getImageDataURL } from "@/lib/stores/design";
+import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
+import { changeBlack } from "./canvas-change-black";
+import { drawDashedRedRectangle } from "./canvas-dashed-rect";
+import { compressImage } from "./canvas-images";
 import { CanvasDrawableObject } from "./CanvasDrawableObject";
 import { CanvasShapeDraw } from "./CanvasShapeDraw";
 import { imageLoadInCanvas } from "./image-load";
-import { compressImage } from "./canvas-images";
 import {
-  makeWhiteTransparent,
-  makeCornerTransparent,
   getTopCornerColors,
+  makeCornerTransparent,
+  makeWhiteTransparent,
 } from "./image-transparency";
-import { getImageDataURL } from "@/lib/stores/design";
-import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
-import { drawDashedRedRectangle } from "./canvas-dashed-rect";
-import { changeBlack } from "./canvas-change-black";
 
 export class CanvasShape extends CanvasDrawableObject {
   protected data: ShapeDefinition;
@@ -219,7 +219,18 @@ export class CanvasShape extends CanvasDrawableObject {
   setSizeForText(ctx: CanvasRenderingContext2D): boolean {
     if (this.drawer && this.data.text) {
       const textSize = this.drawer.textSize(ctx, this.data.text);
-      this.setDataSize(textSize);
+      const rotation = this.data.text.rotation;
+
+      // Calculer la taille minimale du rectangle contenant le texte en tenant compte de la rotation
+      const angleRad = (rotation * Math.PI) / 180;
+      const cos = Math.abs(Math.cos(angleRad));
+      const sin = Math.abs(Math.sin(angleRad));
+
+      // Calculer la largeur et hauteur du rectangle contenant le texte
+      const width = textSize.width * cos + textSize.height * sin;
+      const height = textSize.width * sin + textSize.height * cos;
+
+      this.setDataSize({ width, height });
       return true;
     }
     return false;
