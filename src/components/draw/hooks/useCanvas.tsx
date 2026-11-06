@@ -33,7 +33,7 @@ import { isTouchDevice } from "@/lib/utils/device";
 const TEMPORTY_OPACITY = 0.6;
 
 interface DrawCanvasProps {
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   storeName?: string | null;
   scale: number;
   defaultMode?: string;

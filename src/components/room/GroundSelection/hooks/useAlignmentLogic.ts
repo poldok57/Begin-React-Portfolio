@@ -47,8 +47,8 @@ interface AlignmentLogic {
 }
 
 export const useAlignmentLogic = (
-  groundRef: React.RefObject<HTMLDivElement>,
-  temporaryCanvasRef: React.RefObject<HTMLCanvasElement>,
+  groundRef: React.RefObject<HTMLDivElement | null>,
+  temporaryCanvasRef: React.RefObject<HTMLCanvasElement | null>,
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
   getGroundOffset: () => Coordinate,
   getContainerRect: () => DOMRect | Rectangle | null,

@@ -9,7 +9,7 @@ import Image from "next/image";
 
 export const MemoryCard = ({ card, idx }: { card: Card; idx: number }) => {
   // const [showLayer, setShowLayer] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const isReturned =
     card.state === CARD_STATE.RETURNED || card.state === CARD_STATE.FIND;
   const { onClick, getWidthCards } = useMemoryContext();
@@ -56,7 +56,7 @@ export const MemoryCard = ({ card, idx }: { card: Card; idx: number }) => {
               }, 1000);
             }}
             onMouseOut={(e) => {
-              clearTimeout(timerRef.current);
+              if (timerRef.current) clearTimeout(timerRef.current);
               removeHightLight(e);
             }}
             className="block p-1 rounded-md bg-paper"

@@ -29,7 +29,7 @@ import { roundToTwoDigits } from "@/lib/utils/number";
 import { getProgressiveStep } from "@/lib/utils/progressive-step";
 
 interface ScrollButtonsProps {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   isWorking: boolean;
   isTouchDevice: boolean;
   scale: number;

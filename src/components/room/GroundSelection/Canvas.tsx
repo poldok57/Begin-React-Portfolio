@@ -10,7 +10,7 @@ import { DRAWING_MODES } from "@/lib/canvas/canvas-defines";
 import { clearCanvasByCtx } from "@/lib/canvas/canvas-tools";
 
 interface CanvasProps {
-  backgroundCanvasRef: React.RefObject<HTMLCanvasElement>;
+  backgroundCanvasRef: React.RefObject<HTMLCanvasElement | null>;
   temporaryCanvasRef: {
     current: HTMLCanvasElement | null;
   };

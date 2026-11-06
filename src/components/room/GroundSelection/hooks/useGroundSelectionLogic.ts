@@ -16,7 +16,7 @@ interface Position {
 const LINE_OVERLAP = 30;
 
 export const useGroundSelectionLogic = (
-  groundRef: React.RefObject<HTMLDivElement>,
+  groundRef: React.RefObject<HTMLDivElement | null>,
   onSelectionStart: () => void,
   changeCoordinates: (params: ChangeCoordinatesParams) => void,
   setSelectedRect: (rect: Rectangle | null) => void,

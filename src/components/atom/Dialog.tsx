@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils/cn";
 
 type DialogContextType = {
   blur: boolean | null;
-  dialogRef: RefObject<HTMLDialogElement>;
+  dialogRef: RefObject<HTMLDialogElement | null>;
 };
 
 const DialogContext = createContext<DialogContextType | null>(null);
@@ -57,14 +57,19 @@ const useEventListener = ({
   }, [isEnabled, type, element]);
 };
 
-const getFocusableElements = (ref: RefObject<HTMLElement>): HTMLElement[] => {
+const getFocusableElements = (
+  ref: RefObject<HTMLElement | null>
+): HTMLElement[] => {
   if (!ref.current) return [];
   return Array.from(
     ref.current.querySelectorAll("a[href], button, textarea, input, select")
   ) as HTMLElement[];
 };
 
-const useFocusTrap = (ref: RefObject<HTMLElement>, isEnabled: boolean) => {
+const useFocusTrap = (
+  ref: RefObject<HTMLElement | null>,
+  isEnabled: boolean
+) => {
   useEventListener({
     type: "keydown",
     isEnabled,

@@ -1,7 +1,7 @@
 import React from "react";
 
 interface SelectionContainerProps {
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   rotation: number;
 }
 
