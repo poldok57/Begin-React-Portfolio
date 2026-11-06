@@ -26,8 +26,6 @@ import { CanvasPath } from "@/lib/canvas/CanvasPath";
 import { MouseCircle } from "./MouseCircle";
 import { duplicateCanvas } from "@/lib/canvas/canvas-tools";
 
-const MIN_ROTATION = 15;
-
 /**
  * DrawLine class , manager all actions to draw a line on the canvas
  */
@@ -488,18 +486,15 @@ export class drawLine extends drawingHandler {
             toReset: true,
             deleteId: this.path.getDataId(),
           };
-        case BORDER.ON_BUTTON_LEFT:
-        case BORDER.ON_BUTTON_RIGHT:
-          const rotation =
-            mouseOnButton === BORDER.ON_BUTTON_RIGHT
-              ? MIN_ROTATION
-              : -MIN_ROTATION;
-          this.path.changeRotation(rotation);
-          this.refreshDrawing(0, mouseOnButton);
+        case BORDER.ON_ROTATE: {
+          const pointer = this.line.getCoordinates() as Coordinate;
+          this.path.beginRotation(pointer);
           return {
             toReset: false,
-            pointer: "pointer",
+            toExtend: true,
+            pointer: "grabbing",
           } as returnMouseDown;
+        }
 
         default:
           if (mouseOnButton && isBorder(mouseOnButton)) {
@@ -652,6 +647,7 @@ export class drawLine extends drawingHandler {
    * Function to stop drawing on the canvas
    */
   actionMouseUp() {
+    this.path?.stopRotation();
     this.setResizingBorder(null);
     this.line.eraseCoordinates();
     this.path?.eraseAngleCoordFound();

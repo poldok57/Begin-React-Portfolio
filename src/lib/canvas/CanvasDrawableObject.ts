@@ -5,13 +5,19 @@
  */
 
 import { isOnSquareBorder } from "../square-position";
-import { BORDER } from "../mouse-position";
-import { coordinateIsInsideRect } from "../mouse-position";
+import {
+  BORDER,
+  coordinateIsInsideRect,
+  pointerHitsRotationHandle,
+  rotationFromPointer,
+  ROTATE_SNAP_STEP,
+  snapRotation,
+} from "../mouse-position";
 import { scaledCoordinate, scaledSize } from "../utils/scaledSize";
 import { drawDashedRedRectangle } from "./canvas-dashed-rect";
 import { DRAWING_MODES, ThingsToDraw } from "./canvas-defines";
 import { resizingElement } from "./canvas-resize";
-import { Area, ButtonArgs, Coordinate, MiddleButton, Size } from "./types";
+import { Area, ButtonArgs, Coordinate, RotationHandle, Size } from "./types";
 import { debounceThrottle } from "@/lib/utils/debounce";
 
 export const DEBOUNCE_TIME = 30;
@@ -23,7 +29,9 @@ export abstract class CanvasDrawableObject {
   protected withTurningButtons: boolean = false;
   protected btnValidPos: ButtonArgs | null = null;
   protected btnDeletePos: ButtonArgs | null = null;
-  protected btnMiddlePos: MiddleButton | null = null;
+  protected btnRotatePos: RotationHandle | null = null;
+  protected rotating = false;
+  private rotationOffset = 0;
   private area: Area | null = null;
 
   constructor() {
@@ -163,6 +171,38 @@ export abstract class CanvasDrawableObject {
     return this.data.rotation;
   }
 
+  isRotating(): boolean {
+    return this.rotating;
+  }
+
+  /**
+   * Start a drag that keeps the current angle under the pointer
+   * (no jump when the knob is grabbed off-center).
+   */
+  beginRotation(pointer: Coordinate): void {
+    this.rotating = true;
+    const pointed = rotationFromPointer(this.data.center, pointer);
+    this.rotationOffset =
+      pointed === null ? 0 : this.data.rotation - pointed;
+  }
+
+  updateRotation(pointer: Coordinate, snap: boolean): void {
+    const pointed = rotationFromPointer(this.data.center, pointer);
+    if (pointed === null) return;
+    let degrees = pointed + this.rotationOffset;
+    if (snap) {
+      degrees = snapRotation(degrees, ROTATE_SNAP_STEP);
+    } else {
+      degrees = (degrees % 360 + 360) % 360;
+    }
+    this.setRotation(degrees);
+  }
+
+  stopRotation(): void {
+    this.rotating = false;
+    this.rotationOffset = 0;
+  }
+
   /**
    * Change the position of the path
    * @param offset - The offset to move the path
@@ -223,11 +263,9 @@ export abstract class CanvasDrawableObject {
         return BORDER.ON_BUTTON_DELETE;
       }
     }
-    if (this.withTurningButtons && this.btnMiddlePos) {
-      if (coordinateIsInsideRect(coord, this.btnMiddlePos)) {
-        if (coord.x < this.btnMiddlePos.middle) return BORDER.ON_BUTTON_LEFT;
-        if (coord.x > this.btnMiddlePos.middle) return BORDER.ON_BUTTON_RIGHT;
-        return BORDER.INSIDE;
+    if (this.withTurningButtons && this.btnRotatePos) {
+      if (pointerHitsRotationHandle(coord, this.btnRotatePos)) {
+        return BORDER.ON_ROTATE;
       }
     }
     return null;

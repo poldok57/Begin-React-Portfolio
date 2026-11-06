@@ -18,12 +18,11 @@ import {
   isOnButton,
   isBorder,
   mousePointer,
-  middleButtonPosition,
 } from "../mouse-position";
 import {
   drawCornerButton,
   drawCornerButtonDelete,
-  drawTurningButtons,
+  drawRotationHandle,
 } from "./canvas-buttons";
 import { CanvasDrawableObject, DEBOUNCE_TIME } from "./CanvasDrawableObject";
 import { showCanvasImage } from "./canvas-elements";
@@ -45,6 +44,7 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
   protected coordFound: number;
   protected lastMousePosition: Coordinate | null;
   protected lastButtonOpacity: number = DEFAULT_OPACITY;
+  protected rotateHovered = false;
   protected isFinished: boolean = false;
   protected isClosed: boolean = false;
   protected maxLineWidth: number = 0;
@@ -598,10 +598,19 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       );
     }
     if (this.withTurningButtons) {
-      this.btnMiddlePos = middleButtonPosition(center, size);
-      if (this.btnMiddlePos) {
-        drawTurningButtons(ctx, center, size, mouseOnRectangle);
-      }
+      const active =
+        mouseOnRectangle === BORDER.ON_ROTATE ||
+        this.rotating ||
+        this.rotateHovered;
+      this.btnRotatePos = drawRotationHandle(
+        ctx,
+        center,
+        size,
+        this.data.rotation,
+        active
+      );
+    } else {
+      this.btnRotatePos = null;
     }
   }
 
@@ -802,6 +811,27 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
     if (!ctx) {
       return "none";
     }
+
+    const btnPressed =
+      event === null
+        ? false
+        : event instanceof MouseEvent
+        ? event.buttons === 1
+        : event instanceof TouchEvent
+        ? event.touches.length > 0
+        : false;
+
+    if (this.rotating) {
+      if (btnPressed) {
+        const snap = event instanceof MouseEvent && event.shiftKey;
+        this.updateRotation(mousePosition, snap);
+        clearCanvasByCtx(ctx);
+        this.draw(ctx, true);
+        return "grabbing";
+      }
+      this.stopRotation();
+    }
+
     if (resizingBorder && !this.findAngle(mousePosition)) {
       // mouse is over a border, we can resize the path
 
@@ -826,14 +856,6 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       cursorType = "move";
       inArea = true;
     }
-    const btnPressed =
-      event === null
-        ? false
-        : event instanceof MouseEvent
-        ? event.buttons === 1
-        : event instanceof TouchEvent
-        ? event.touches.length > 0
-        : false;
 
     if (!btnPressed && inArea) {
       // mouse Up => end of the angle move
@@ -856,19 +878,23 @@ export abstract class CanvasPoints extends CanvasDrawableObject {
       cursorType = "grabbing";
     } else {
       const mouseOnRectangle = this.handleMouseOnElement(mousePosition);
-      if (
+      if (mouseOnRectangle === BORDER.ON_ROTATE) {
+        cursorType = "grab";
+        if (!this.rotateHovered) {
+          this.rotateHovered = true;
+          clearCanvasByCtx(ctx);
+          this.draw(ctx, true);
+        }
+      } else if (this.rotateHovered) {
+        this.rotateHovered = false;
+        clearCanvasByCtx(ctx);
+        this.draw(ctx, true);
+      } else if (
         mouseOnRectangle === BORDER.ON_BUTTON ||
         mouseOnRectangle === BORDER.ON_BUTTON_DELETE
       ) {
         this.drawActionButtons(ctx, mouseOnRectangle);
         cursorType = "pointer";
-      } else if (
-        this.withTurningButtons &&
-        (mouseOnRectangle === BORDER.ON_BUTTON_LEFT ||
-          mouseOnRectangle === BORDER.ON_BUTTON_RIGHT)
-      ) {
-        cursorType = "pointer";
-        this.drawActionButtons(ctx, mouseOnRectangle);
       } else if (this.lastButtonOpacity !== DEFAULT_OPACITY) {
         clearCanvasByCtx(ctx);
         this.draw(ctx, true);

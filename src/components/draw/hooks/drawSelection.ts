@@ -4,7 +4,7 @@ import {
   DRAWING_MODES,
   ShapeDefinition,
 } from "@/lib/canvas/canvas-defines";
-import { BORDER, isOnTurnButton } from "@/lib/mouse-position";
+import { BORDER, isOnRotateHandle } from "@/lib/mouse-position";
 
 import { copyInVirtualCanvas, calculateSize } from "@/lib/canvas/canvas-images";
 
@@ -326,7 +326,7 @@ export class drawSelection extends drawShape {
   actionMouseDblClick = () => {
     const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
 
-    if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
+    if (mouseOnShape && isOnRotateHandle(mouseOnShape)) {
       // on turn button we can double click to rotate faster
       return;
     }

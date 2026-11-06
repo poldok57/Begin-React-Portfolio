@@ -4,7 +4,7 @@ import {
   Coordinate,
   RectPosition,
   ButtonArgs,
-  MiddleButton,
+  RotationHandle,
   Size,
 } from "./canvas/types";
 import { isTouchDevice } from "./utils/device";
@@ -23,15 +23,14 @@ export const BORDER = {
   ON_BUTTON: "btn",
   ON_BUTTON_DELETE: "btn-del",
   ON_MIDDLE_BUTTON: "btn-mid",
-  ON_BUTTON_LEFT: "btn-turn-Left", // avoid confusion with border left
-  ON_BUTTON_RIGHT: "btn-turn-Right", // avoid confusion with border right
+  ON_ROTATE: "btn-rotate",
   INSIDE: "inside",
 } as const;
 
+export const ROTATE_SNAP_STEP = 15;
+
 const BADGE_RADIUS = 10;
-const MIDDLE_BTN_RADIUS = 12;
 const BADGE_RADIUS_TOUCH = 15;
-const MIDDLE_BTN_RADIUS_TOUCH = 18;
 
 export const MARGIN_ON_BORDER = 6;
 let margin = MARGIN_ON_BORDER;
@@ -78,8 +77,8 @@ export const isOnButtonDelete = (border: string): boolean => {
   return border ? border.startsWith("btn-del") : false;
 };
 
-export const isOnTurnButton = (border: string): boolean => {
-  return border ? border.startsWith("btn-turn") : false;
+export const isOnRotateHandle = (border: string): boolean => {
+  return border === BORDER.ON_ROTATE;
 };
 
 export const isInside = (border: string): boolean => {
@@ -173,6 +172,9 @@ export const mouseDistanceFromBorder = (
   return Math.max(distanceLeft, distanceRight, distanceTop, distanceBottom);
 };
 export const mousePointer = (mouseOnBorder: string): string => {
+  if (mouseOnBorder === BORDER.ON_ROTATE) {
+    return "grab";
+  }
   if (mouseOnBorder.startsWith("btn")) {
     return "pointer";
   }
@@ -289,24 +291,95 @@ export const topRightPositionOver = (
   );
 };
 
-export const middleButtonPosition = (center: Coordinate, size: Size) => {
-  const btnRadius = isTouchDevice()
-    ? MIDDLE_BTN_RADIUS_TOUCH
-    : MIDDLE_BTN_RADIUS;
-  const middleButton: MiddleButton = {
-    left: center.x - btnRadius * 2,
-    right: center.x + btnRadius * 2,
-    middle: center.x,
-    top: size.height < 60 ? center.y + 30 - size.height / 2 : center.y,
-    axeX1: center.x - 1 - btnRadius,
-    axeX2: center.x + 1 + btnRadius,
-    radius: btnRadius,
-    axeY: 0,
-  } as MiddleButton;
-  middleButton.axeY = middleButton.top + btnRadius;
-  middleButton.bottom = middleButton.top + btnRadius * 2;
+const ROTATE_HANDLE_RADIUS = 8;
+const ROTATE_HANDLE_RADIUS_TOUCH = 14;
+const ROTATE_HANDLE_GAP = 26;
+const ROTATE_HANDLE_GAP_TOUCH = 36;
 
-  return middleButton;
+/**
+ * Lever geometry: stem leaves the center along the element's "up" axis,
+ * knob sits just outside the bounding box.
+ * `center` and `size` must be in the same space (screen pixels when drawn).
+ */
+export const rotationHandleGeometry = (
+  center: Coordinate,
+  size: Size,
+  rotation: number
+): RotationHandle => {
+  const radius = isTouchDevice()
+    ? ROTATE_HANDLE_RADIUS_TOUCH
+    : ROTATE_HANDLE_RADIUS;
+  const gap = isTouchDevice() ? ROTATE_HANDLE_GAP_TOUCH : ROTATE_HANDLE_GAP;
+  const radians = (rotation * Math.PI) / 180;
+  const dirX = Math.sin(radians);
+  const dirY = -Math.cos(radians);
+  const absX = Math.abs(dirX);
+  const absY = Math.abs(dirY);
+  const toVerticalEdge =
+    absX > 1e-6 ? size.width / 2 / absX : Number.POSITIVE_INFINITY;
+  const toHorizontalEdge =
+    absY > 1e-6 ? size.height / 2 / absY : Number.POSITIVE_INFINITY;
+  const edgeDistance = Math.min(toVerticalEdge, toHorizontalEdge);
+    const borderClearance = isTouchDevice() ? 12 : 8;
+    const length = edgeDistance + gap;
+
+    return {
+      centerX: center.x,
+      centerY: center.y,
+      handleX: center.x + dirX * length,
+      handleY: center.y + dirY * length,
+      radius,
+      outerStart:
+        length > 0 ? Math.min(1, (edgeDistance + borderClearance) / length) : 1,
+    };
+};
+
+/** True when the pointer is on the knob or on the stem outside the shape. */
+export const pointerHitsRotationHandle = (
+  coord: Coordinate,
+  handle: RotationHandle
+): boolean => {
+  const dx = coord.x - handle.handleX;
+  const dy = coord.y - handle.handleY;
+  const slop = isTouchDevice() ? 10 : 6;
+  const hit = handle.radius + slop;
+  if (dx * dx + dy * dy <= hit * hit) return true;
+
+  const sx = handle.handleX - handle.centerX;
+  const sy = handle.handleY - handle.centerY;
+  const len2 = sx * sx + sy * sy;
+  if (len2 === 0) return false;
+
+  const t = ((coord.x - handle.centerX) * sx + (coord.y - handle.centerY) * sy) / len2;
+  if (t < handle.outerStart || t > 1.05) return false;
+
+  const px = handle.centerX + t * sx;
+  const py = handle.centerY + t * sy;
+  const corridor = isTouchDevice() ? 14 : 7;
+  const ddx = coord.x - px;
+  const ddy = coord.y - py;
+  return ddx * ddx + ddy * ddy <= corridor * corridor;
+};
+
+/**
+ * Angle so the lever points at `pointer`.
+ * 0° keeps the lever straight up (canvas Y grows downward).
+ */
+export const rotationFromPointer = (
+  center: Coordinate,
+  pointer: Coordinate
+): number | null => {
+  const dx = pointer.x - center.x;
+  const dy = pointer.y - center.y;
+  if (dx * dx + dy * dy < 4) return null;
+  const degrees = (Math.atan2(dx, -dy) * 180) / Math.PI;
+  return (degrees + 360) % 360;
+};
+
+export const snapRotation = (degrees: number, step: number): number => {
+  if (step <= 0) return (degrees + 360) % 360;
+  const snapped = Math.round(degrees / step) * step;
+  return (snapped + 360) % 360;
 };
 
 export const mouseIsOnBorderRect = (

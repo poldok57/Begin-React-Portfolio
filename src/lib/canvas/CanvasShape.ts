@@ -447,7 +447,7 @@ export class CanvasShape extends CanvasDrawableObject {
 
     this.btnValidPos = this.drawer.getBtnValidPos();
     this.btnDeletePos = this.drawer.getBtnDeletePos();
-    this.btnMiddlePos = this.drawer.getBtnMiddlePos();
+    this.btnRotatePos = this.drawer.getBtnRotatePos();
   }
 
   hightLightDrawing(ctx: CanvasRenderingContext2D | null) {

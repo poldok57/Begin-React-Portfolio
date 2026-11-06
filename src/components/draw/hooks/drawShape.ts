@@ -10,7 +10,7 @@ import {
   BORDER,
   mousePointer,
   isInside,
-  isOnTurnButton,
+  isOnRotateHandle,
   isBorder,
 } from "@/lib/mouse-position";
 import { isInsideSquare } from "@/lib/square-position";
@@ -20,7 +20,6 @@ import { drawingHandler, returnMouseDown } from "./drawingHandler";
 import { CanvasShape } from "@/lib/canvas/CanvasShape";
 
 const [SQUARE_WIDTH, SQUARE_HEIGHT] = [200, 200];
-const MIN_ROTATION = 7.5;
 
 export class drawShape extends drawingHandler {
   protected fixed: boolean = false;
@@ -282,6 +281,19 @@ export class drawShape extends drawingHandler {
     return cursorType; // Default
   }
   /**
+   * Immediate redraw while dragging the rotation lever.
+   * Debounce would lag behind the pointer.
+   */
+  private paintRotatedShape() {
+    const ctx = this.ctxTemporary;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.globalAlpha = this.shape.getOpacity();
+    this.shape.draw(ctx, true, BORDER.ON_ROTATE);
+    this.lastMouseOnShape = BORDER.ON_ROTATE;
+  }
+
+  /**
    * Function to refresh the element on the temporary canvas
    */
   refreshDrawing(opacity: number = 0, mouseOnShape: string | null = null) {
@@ -363,13 +375,13 @@ export class drawShape extends drawingHandler {
           retunData.deleteId = this.shape.getDataId();
           retunData.toReset = true;
           break;
-        case BORDER.ON_BUTTON_LEFT:
-          this.shape.changeRotation(-MIN_ROTATION);
-          this.refreshDrawing(0, mouseOnShape);
-          break;
-        case BORDER.ON_BUTTON_RIGHT:
-          this.shape.changeRotation(MIN_ROTATION);
-          this.refreshDrawing(0, mouseOnShape);
+        case BORDER.ON_ROTATE:
+          if (this.coordinates) {
+            this.shape.beginRotation(this.coordinates);
+            this.paintRotatedShape();
+          }
+          retunData.pointer = "grabbing";
+          retunData.toExtend = true;
           break;
         default:
           alertMessage("resizing: " + mouseOnShape);
@@ -394,6 +406,15 @@ export class drawShape extends drawingHandler {
   ): string | null {
     this.setCoordinates(coord);
 
+    if (this.shape.isRotating()) {
+      if (this.coordinates) {
+        const snap = event instanceof MouseEvent && event.shiftKey;
+        this.shape.updateRotation(this.coordinates, snap);
+        this.paintRotatedShape();
+      }
+      return "grabbing";
+    }
+
     const type = this.getType();
 
     if (this.resizingBorder !== null) {
@@ -416,6 +437,7 @@ export class drawShape extends drawingHandler {
   }
 
   actionMouseUp() {
+    this.shape.stopRotation();
     this.setFixed(true);
     this.setResizingBorder(null);
 
@@ -456,6 +478,7 @@ export class drawShape extends drawingHandler {
       return;
     }
     this.setResizingBorder(null);
+    this.shape.stopRotation();
     this.clearTemporaryCanvas();
 
     this.eraseOffset();
@@ -508,7 +531,7 @@ export class drawShape extends drawingHandler {
     // check position of the mouse, if mouse is on a button, do nothing
     if (!this.coordinates) return;
     const mouseOnShape = this.shape.handleMouseOnElement(this.coordinates);
-    if (mouseOnShape && isOnTurnButton(mouseOnShape)) {
+    if (mouseOnShape && isOnRotateHandle(mouseOnShape)) {
       return;
     }
 

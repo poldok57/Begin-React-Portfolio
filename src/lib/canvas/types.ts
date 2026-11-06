@@ -37,13 +37,15 @@ export interface RectangleArgs {
   height?: number;
   bottom?: number;
 }
-export interface MiddleButton extends Rectangle {
-  middle: number;
-  axeX1: number;
-  axeX2: number;
-  axeY: number;
+/** Rotation lever drawn from the element center to a draggable knob. */
+export interface RotationHandle {
+  centerX: number;
+  centerY: number;
+  handleX: number;
+  handleY: number;
   radius: number;
-  bottom: number;
+  /** Ratio along the stem where the bar leaves the shape (0..1). */
+  outerStart: number;
 }
 
 export interface MouseCircle {

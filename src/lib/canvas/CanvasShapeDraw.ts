@@ -5,7 +5,7 @@ import {
   SHAPE_TYPE,
   ShapeDefinition,
 } from "./canvas-defines";
-import { Area, ButtonArgs, Coordinate, MiddleButton, Size } from "./types";
+import { Area, ButtonArgs, Coordinate, RotationHandle, Size } from "./types";
 import { drawDashedRectangle } from "@/lib/canvas/canvas-dashed-rect";
 import {
   drawRoundedRect,
@@ -16,7 +16,7 @@ import {
 import {
   drawCornerButton,
   drawCornerButtonDelete,
-  drawTurningButtons,
+  drawRotationHandle,
 } from "./canvas-buttons";
 import {
   BORDER,
@@ -45,7 +45,7 @@ export class CanvasShapeDraw {
   protected scale: number = 1;
   protected btnValidPos: ButtonArgs | null = null;
   protected btnDeletePos: ButtonArgs | null = null;
-  protected btnMiddlePos: MiddleButton | null = null;
+  protected btnRotatePos: RotationHandle | null = null;
 
   constructor(data: ShapeDefinition) {
     this.data = data;
@@ -63,8 +63,8 @@ export class CanvasShapeDraw {
     return this.btnDeletePos;
   }
 
-  getBtnMiddlePos() {
-    return this.btnMiddlePos;
+  getBtnRotatePos() {
+    return this.btnRotatePos;
   }
 
   /**
@@ -371,9 +371,15 @@ export class CanvasShapeDraw {
      * draw the middle button used to rotate the shape
      */
     if (withTurningButtons) {
-      this.btnMiddlePos = drawTurningButtons(ctx, center, sSize, border);
+      this.btnRotatePos = drawRotationHandle(
+        ctx,
+        center,
+        sSize,
+        square.rotation,
+        border === BORDER.ON_ROTATE
+      );
     } else {
-      this.btnMiddlePos = null;
+      this.btnRotatePos = null;
     }
 
     const rotation =
